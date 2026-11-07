@@ -211,7 +211,7 @@ function analyze(){const K=R.key,C=R.chords,items=[];
   if(met&&want!=='perfect'&&id5.inv!==0)add(8,`The ${cadName(want,K)} sounds stronger with the last chord in root position.`,[{c:4,v:'B'}]);
   if(met&&(want==='deceptive'||want==='mod')&&id4.inv!==0)add(6,`Put the ${id4.base}${id4.suf} in root position for a clearer ${cadName(want,K)}.`,[{c:3,v:'B'}]);
  }
- R.met=met;
+ R.met=met;if(met&&want==='half'&&wrote==='mod')items.push({pen:0,info:1,msg:'Accepted: V/V → V is a half cadence that tonicizes the dominant (cadenza sospesa preceded by a secondary dominant). Without the raised fourth degree (ii6, IV or I → V) it is a plain half cadence.',marks:[{c:3,v:'S'},{c:3,v:'A'},{c:3,v:'T'},{c:3,v:'B'}].filter(m=>{const n=C[3][m.v];return n&&n.a!==K.sig[L(n)]}),lines:[]});
  for(const c of[3,4]){const ch=C[c],m=v=>M(ch[v]);
   for(const v of VO){const[a,b]=RANGE[v];if(m(v)<a||m(v)>b)add(5,`The ${VN[v]} is out of its range in chord ${c+1} (${nName(ch[v])}).`,[{c,v}])}
   for(const[u,l]of[['S','A'],['A','T'],['T','B']])if(m(u)<m(l))add(10,`The ${VN[u]} and the ${VN[l]} cross in chord ${c+1}.`,[{c,v:u},{c,v:l}]);
@@ -459,7 +459,7 @@ addEventListener('keydown',e=>{if(phase==='menu'||phase==='end'||!R||ASK.open)re
   else if(k==='Backspace'||k==='Delete'){$('del').click();e.preventDefault()}}
  if(k===' '){playAll();e.preventDefault()}else if(k==='Enter'){$('check').click();e.preventDefault()}});
 function doCheck(){phase='result';const res=analyze();R.res=res;total+=res.score;$('sc').textContent=total;
- const K=R.key,N=AV[avKey].name,wn=R.wrote?cadName(R.wrote,K):null,tn=cadName(R.task,K);let msg;
+ const K=R.key,N=AV[avKey].name,wn=R.wrote?cadName(R.met?R.task:R.wrote,K):null,tn=cadName(R.task,K);let msg;
  if(!R.ids[3]||!R.ids[4])msg=pick(['Interesting sounds! A few notes don’t belong to the chords yet. My notes are below.','Curious harmony! Some notes wander outside the chords. Have a look below.']);
  else if(R.met&&res.score>=90)msg=pick([`Bravissimo! A textbook ${wn}.`,`Beautiful! That ${wn} really sings.`,`Gnam! A delicious ${wn}.`]);
  else if(R.met)msg=pick([`Yes, a ${wn}! Just a few details to polish.`,`Lovely ${wn}! Check my notes below.`]);
@@ -467,7 +467,7 @@ function doCheck(){phase='result';const res=analyze();R.res=res;total+=res.score
  sayHTML(`${msg} <b>+${res.score}</b>`);
  const ants=res.score>=90?4:res.score>=70?3:res.score>=45?2:res.score>0?1:0;if(ants)setTimeout(()=>feed(ants),300);
  const items=res.items.slice().sort((a,b)=>b.pen-a.pen);
- $('report').innerHTML=`<h3>${res.score}<small>points this round · ${R.ids[3]?R.ids[3].label:'?'} → ${R.ids[4]?R.ids[4].label:'?'}</small></h3><ul>${items.map(it=>`<li class="${it.good?'good':it.pen<8?'tip':''}"><span class="p">${it.good?'✓':'−'+it.pen}</span><span>${it.msg}</span></li>`).join('')}</ul>`;
+ $('report').innerHTML=`<h3>${res.score}<small>points this round · ${R.ids[3]?R.ids[3].label:'?'} → ${R.ids[4]?R.ids[4].label:'?'}</small></h3><ul>${items.map(it=>`<li class="${it.good?'good':it.pen<8?'tip':''}"><span class="p">${it.good?'✓':it.info?'i':'−'+it.pen}</span><span>${it.msg}</span></li>`).join('')}</ul>`;
  $('report').hidden=false;$('check').textContent=round>=ROUNDS?'Results':'Next';updateUI();$('check').disabled=false;setTimeout(playAll,200)}
 function finish(){phase='end';let best=0;const k='cadencesBest_'+lvKey;try{best=+localStorage.getItem(k)||0;if(total>best){localStorage.setItem(k,total);best=total}}catch(e){}
  const N=AV[avKey].name;$('endlv').textContent=LV.name+' · '+ROUNDS+' rounds';$('endsc').textContent=total+' / '+ROUNDS*100;
