@@ -2,274 +2,98 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Igor Time</title>
-<meta name="description" content="Igor the anteater floats through the sea-cosmos, hunting tiny tofu ants. Igor is vegan.">
+<title>Igor time</title>
+<meta name="description" content="Igor the anteater, astronaut and diver, invites you to play: float in space, train your ears, write cadences.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-:root{--abyss:#04070c;--ink:#dbe7ea;--dim:#7f949b;--glow:#7fe3ef;--bone:#efe4cf;
+:root{--abyss:#04070c;--ink:#dbe7ea;--dim:#7f949b;--glow:#7fe3ef;--bone:#efe4cf;--warm:#f1b46e;
  --display:'Instrument Serif',Georgia,'Times New Roman',serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
-html,body{height:100%;margin:0;background:var(--abyss);color:var(--ink);overflow:hidden;font-family:var(--mono)}
-#sea{position:fixed;inset:0;display:block;width:100%;height:100%;cursor:crosshair;touch-action:manipulation}
-header{position:fixed;top:0;left:0;right:0;display:flex;align-items:baseline;justify-content:space-between;gap:16px;pointer-events:none;
- padding:calc(14px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) 0 max(18px,env(safe-area-inset-left,0px))}
-h1{margin:0;font:400 clamp(28px,4vw,40px)/1 var(--display);letter-spacing:-.01em}
+html,body{margin:0;min-height:100%;background:var(--abyss);color:var(--ink);font-family:var(--mono)}
+body{background:radial-gradient(ellipse at 50% 0%,rgba(127,227,239,.10),transparent 60%),var(--abyss)}
+#sky{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+main{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:calc(28px + env(safe-area-inset-top,0px)) 16px calc(36px + env(safe-area-inset-bottom,0px));text-align:center}
+#igor{width:min(240px,56vw);height:min(240px,56vw);display:block;margin:0 auto;cursor:pointer}
+h1{margin:4px 0 0;font:400 clamp(56px,11vw,112px)/.9 var(--display);letter-spacing:-.02em}
 h1 em{color:var(--glow)}
-#count{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
-#count b{color:var(--bone);font-weight:500}
-#hint{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));font-size:10px;letter-spacing:.08em;color:var(--dim);pointer-events:none;text-align:right}
-#bubble{position:fixed;left:0;top:0;z-index:3;pointer-events:none;font:400 italic 18px/1.2 var(--display);color:var(--abyss);background:var(--bone);
- padding:8px 15px 9px;border-radius:20px;box-shadow:0 0 0 1px rgba(4,7,12,.35),0 6px 22px rgba(127,227,239,.18);white-space:normal;max-width:min(300px,70vw);opacity:0;transition:opacity .35s;will-change:transform}
-#bubble::after{content:'';position:absolute;left:var(--tx,16px);bottom:-13px;width:20px;height:15px;background:var(--bone);clip-path:polygon(0 0,100% 0,8% 100%)}
-#bubble.flip::after{clip-path:polygon(0 0,100% 0,92% 100%)}
-@media (max-width:600px){#bubble{font-size:16px}}
-#tiltBtn{position:fixed;left:50%;bottom:calc(46px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:5;font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--abyss);background:var(--glow);border:0;border-radius:999px;padding:12px 18px;box-shadow:0 0 24px rgba(127,227,239,.35);cursor:pointer}
+.tag{margin:14px auto 0;max-width:34rem;font-size:13px;line-height:1.7;color:var(--dim)}
+#say{min-height:1.4em;margin:10px 0 0;font:400 italic 20px/1.3 var(--display);color:var(--bone)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:34px 0 0;text-align:left}
+.card{display:block;text-decoration:none;color:inherit;padding:20px 20px 22px;border-radius:20px;background:rgba(219,231,234,.04);
+ box-shadow:inset 0 0 0 1px rgba(219,231,234,.1);transition:transform .2s,box-shadow .2s,background .2s}
+.card:hover,.card:focus-visible{transform:translateY(-3px);background:rgba(127,227,239,.07);box-shadow:inset 0 0 0 1px rgba(127,227,239,.55),0 10px 30px rgba(127,227,239,.12);outline:none}
+.card .k{font:500 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--glow)}
+.card h2{margin:8px 0 6px;font:400 34px/1 var(--display);color:var(--bone)}
+.card p{margin:0;font-size:12px;line-height:1.65;color:var(--dim)}
+.card .go{display:inline-block;margin-top:14px;font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+footer{margin-top:40px;font-size:10.5px;letter-spacing:.08em;color:var(--dim)}
+footer a{color:var(--dim)}
 </style>
 </head><body>
-<canvas id="sea" aria-label="Igor the anteater floats through a dark sea of stars, hunting tiny white tofu ants"></canvas>
-<header><h1><em>Igor</em> time</h1><div id="count">tofu ants eaten <b id="n">0</b></div></header>
-<div id="bubble"></div>
-<div id="hint">click anywhere to set an ant loose · click Igor</div>
+<canvas id="sky" aria-hidden="true"></canvas>
+<main>
+ <canvas id="igor" width="480" height="480" role="img" aria-label="Igor, a green anteater in an astronaut helmet"></canvas>
+ <h1><em>Igor</em> time</h1>
+ <p id="say" aria-live="polite"></p>
+ <p class="tag">Igor is a vegan anteater in a diving helmet. He eats only tofu ants, and he loves music. Pick a game.</p>
+ <div class="cards">
+  <a class="card" href="/space/"><span class="k">Explore</span><h2>Float in space</h2><p>Drift through the deep cosmos with Igor and help him catch the tofu ants. On a phone, tilt to steer.</p><span class="go">Float →</span></a>
+  <a class="card" href="/pitch-stairs/"><span class="k">Ear training</span><h2>Pitch Stairs</h2><p>A tofu ant sings behind the curtain. Take Igor up the spiral staircase to the very same pitch.</p><span class="go">Play →</span></a>
+  <a class="card" href="/cadences/"><span class="k">Harmony</span><h2>Cadences</h2><p>Finish the phrase in four voices. Igor names your cadence and checks fifths, octaves, doublings and resolutions.</p><span class="go">Write →</span></a>
+ </div>
+ <footer>Igor time · © Fabio Machiavelli · <a href="https://fabiomachiavelli.com">fabiomachiavelli.com</a></footer>
+</main>
 <script>
-(()=>{
 const IGOR_SRC='https://fabiomachiavelli.com/wp-content/uploads/2026/11/igor-helmet.webp';
-const TAU=Math.PI*2,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const rnd=s=>(Math.random()*2-1)*s,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t;
-const cv=document.getElementById('sea'),g=cv.getContext('2d');
-let W=0,H=0,DPR=1,bg=null;
-
-/* ---------- the sea-cosmos: nebulae (prerendered), stars, plankton ---------- */
-let STARS=[],DUST=[];
-function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;
- bg=document.createElement('canvas');bg.width=W*DPR;bg.height=H*DPR;const b=bg.getContext('2d');b.scale(DPR,DPR);
- b.fillStyle='#04070c';b.fillRect(0,0,W,H);
- const neb=['42,26,94','15,51,80','61,18,64','18,58,58'];
- for(let k=0;k<9;k++){const x=Math.random()*W,y=Math.random()*H,r=(.25+Math.random()*.35)*Math.max(W,H);
-  const gr=b.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,`rgba(${neb[k%4]},${.22+Math.random()*.12})`);gr.addColorStop(1,`rgba(${neb[k%4]},0)`);
-  b.fillStyle=gr;b.fillRect(0,0,W,H)}
- const v=b.createRadialGradient(W/2,H*.55,Math.min(W,H)*.2,W/2,H*.55,Math.max(W,H)*.8);v.addColorStop(0,'rgba(4,7,12,0)');v.addColorStop(1,'rgba(4,7,12,.75)');b.fillStyle=v;b.fillRect(0,0,W,H);
- const area=W*H/1e6;
- STARS=Array.from({length:Math.round((reduce?90:200)*area+40)},()=>({x:Math.random()*W,y:Math.random()*H,r:.5+Math.random()*1.3,c:['232,251,255','207,233,255','255,243,220'][Math.floor(Math.random()*3)],ph:Math.random()*TAU,sp:.6+Math.random()*2,z:Math.random()}));
- DUST=Array.from({length:Math.round((reduce?120:320)*area+60)},()=>({x:Math.random()*W,y:Math.random()*H,r:.6+Math.random()*1.4,z:.2+Math.random()*.8,vx:rnd(4),vy:-2-Math.random()*5}));
- IG.size=clamp(Math.min(W,H)*.26,120,230);
-}
-
-/* ---------- passing critters: faint LED fish and jellyfish ---------- */
-const CRIT=[],critCols=['127,227,239','154,215,255','183,240,208','201,184,255'];let nextCrit=1.5;
-function spawnCrit(){const jelly=Math.random()<.45,col=critCols[Math.floor(Math.random()*4)],s=jelly?(18+Math.random()*16):(10+Math.random()*10);
- const pts=[];if(jelly){for(let i=0;i<46;i++){const y=Math.random(),ph=Math.random()*TAU;pts.push([Math.cos(ph)*Math.sqrt(1-y*y),-y*.8,-1])}
-  for(let k=0;k<5;k++)for(let j=1;j<=9;j++)pts.push([(k-2)*.28,j*.22,j])}
- else{for(let i=0;i<34;i++){const a=Math.random()*TAU,r=Math.sqrt(Math.random());pts.push([Math.cos(a)*r*1.1,Math.sin(a)*r*.45,0])}for(let i=0;i<10;i++){const u=Math.random();pts.push([-1.2-u*.8,rnd(.15+u*.5),0])}}
- const dir=jelly?{x:rnd(.25),y:-1}:{x:Math.random()<.5?1:-1,y:rnd(.2)};
- const c={jelly,col,s,pts,dir,sp:jelly?12+Math.random()*8:30+Math.random()*30,ph:Math.random()*10,a:0,
-  x:jelly?Math.random()*W:(dir.x>0?-80:W+80),y:jelly?H+80:H*(.15+Math.random()*.7)};CRIT.push(c)}
-function drawCrit(c,t){g.save();g.translate(c.x,c.y);if(!c.jelly&&c.dir.x<0)g.scale(-1,1);
- const pl=1+.12*Math.sin(t*1.8+c.ph);g.fillStyle=`rgba(${c.col},${.32*c.a})`;
- for(const p of c.pts){let x=p[0],y=p[1];if(c.jelly){if(p[2]<0){x*=pl;y/=pl}else x+=Math.sin(t*1.4+p[2]*.5+p[0]*9)*.06*p[2]}else{const w=Math.max(0,-x-.3)*.25;y+=Math.sin(t*6+x*3)*w}
-  g.fillRect(x*c.s-1,y*c.s-1,2,2)}g.restore()}
-
-/* ---------- ants ---------- */
-const ANTS=[];
-function antTarget(){return W<600?4:7}
-function spawnAnt(x,y,pop){const edge=x===undefined;let vx=rnd(10),vy=rnd(10);
- if(edge){const s=Math.floor(Math.random()*4);x=s===0?-20:s===1?W+20:Math.random()*W;y=s===2?-20:s===3?H+20:Math.random()*H;
-  const tx=W*(.2+Math.random()*.6),ty=H*(.25+Math.random()*.6),d=Math.hypot(tx-x,ty-y)||1;vx=(tx-x)/d*(12+Math.random()*10);vy=(ty-y)/d*(12+Math.random()*10)}
- ANTS.push({x,y,vx,vy,ang:Math.random()*TAU,spin:rnd(.6),leg:Math.random()*TAU,a:edge?1:0,pop:pop?1:0,caught:false,gone:false,sz:.9+Math.random()*.35})}
-function rr(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.quadraticCurveTo(x+w,y,x+w,y+r);g.lineTo(x+w,y+h-r);g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);g.lineTo(x+r,y+h);g.quadraticCurveTo(x,y+h,x,y+h-r);g.lineTo(x,y+r);g.quadraticCurveTo(x,y,x+r,y);g.closePath()}
-/* tofu ants: Igor is a vegan anteater. Three soft white cubes, little legs, a tiny helmet */
-function drawAnt(a,t){const k=a.sz*(W<600?1:1.15)*(1+a.pop*.6);g.save();g.translate(a.x,a.y);g.rotate(a.ang);g.scale(k,k);g.globalAlpha=Math.min(1,a.a);
- const lw=Math.sin(t*9+a.leg);
- g.strokeStyle='rgba(232,230,220,.8)';g.lineWidth=.9;g.lineCap='round';
- for(let i=0;i<3;i++)for(const s of[-1,1]){const bx=-1+i*1.6,w=(i%2?1:-1)*lw*1.4*s;g.beginPath();g.moveTo(bx,0);g.lineTo(bx+(i-1)*1.8+w,s*3.8);g.lineTo(bx+(i-1)*3+w*1.4,s*6.2);g.stroke()}
- g.beginPath();g.moveTo(7.2,-1.2);g.quadraticCurveTo(9.6,-4.6+lw*.6,12,-4.2);g.moveTo(7.2,1.2);g.quadraticCurveTo(9.6,4.6-lw*.6,12,4.2);g.stroke();
- g.shadowColor='rgba(255,253,240,.8)';g.shadowBlur=9;g.fillStyle='#f8f5ec';
- rr(-11,-3.9,8.6,7.8,1.7);g.fill();rr(-2.4,-2.3,4.8,4.6,1.1);g.fill();rr(2.9,-2.8,5.4,5.6,1.3);g.fill();
- g.shadowBlur=0;g.strokeStyle='rgba(205,198,178,.75)';g.lineWidth=.45;rr(-11,-3.9,8.6,7.8,1.7);g.stroke();rr(2.9,-2.8,5.4,5.6,1.3);g.stroke();
- g.fillStyle='rgba(196,186,160,.6)'; // tofu pores
- for(const[px,py]of[[-8.6,-1.6],[-6.2,1.4],[-4.4,-2.2],[-9.3,1.9],[4.4,1.6]]){g.beginPath();g.arc(px,py,.42,0,TAU);g.fill()}
- g.fillStyle='#2b2b2b';g.beginPath();g.arc(6.9,-1.1,.62,0,TAU);g.fill(); // eye
- g.strokeStyle='rgba(127,227,239,.55)';g.lineWidth=.7;g.beginPath();g.arc(5.6,0,4.9,0,TAU);g.stroke(); // tiny helmet
- g.fillStyle='rgba(255,255,255,.65)';g.beginPath();g.arc(4.3,-2.7,.8,0,TAU);g.fill();
- g.restore()}
-
-/* ---------- tilt: on a phone, tilting it pushes Igor (and the plankton) through space ---------- */
-const TILT={x:0,y:0,rx:0,ry:0,on:false,x0:null,y0:null};
-const DBG={on:/debug/.test(location.search),ori:0,mot:0,src:'',b:0,g:0};
-function onOri(e){DBG.ori++;if(e.beta==null||e.gamma==null)return;if(DBG.src==='motion')return;DBG.src='orientation';feed(e.beta,e.gamma)}
-/* fallback: some browsers (e.g. Brave) give no orientation data, so read gravity from the accelerometer */
-const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-function onMot(e){DBG.mot++;const a=e.accelerationIncludingGravity;if(!a||a.x==null||a.y==null)return;if(DBG.src==='orientation')return;
- const sg=isIOS?-1:1,G=9.81,deg=v=>Math.asin(clamp(v/G,-1,1))*57.2958;DBG.src='motion';feed(deg(sg*a.y),deg(-sg*a.x))}
-function feed(b,gm){DBG.b=b;DBG.g=gm;
- const ang=((screen.orientation&&screen.orientation.angle)!=null?screen.orientation.angle:(window.orientation||0));
- let x,y;if(ang===90){x=b;y=-gm}else if(ang===-90||ang===270){x=-b;y=gm}else if(ang===180){x=-gm;y=-b}else{x=gm;y=b}
- if(TILT.x0===null){TILT.x0=x;TILT.y0=y} // the way you hold the phone at the start is "flat"
- const dz=v=>Math.abs(v)<.06?0:v;TILT.rx=dz(clamp((x-TILT.x0)/20,-1,1));TILT.ry=dz(clamp((y-TILT.y0)/20,-1,1)); // about 20 degrees = full speed
- if(!TILT.on){TILT.on=true;const t=document.getElementById('tiltBtn');if(t)t.remove();setHint()}}
-function startTilt(){addEventListener('deviceorientation',onOri);addEventListener('devicemotion',onMot)}
-setInterval(()=>{if(!DBG.on)return;let d=document.getElementById('dbg');if(!d){d=document.createElement('div');d.id='dbg';d.style.cssText='position:fixed;left:8px;top:60px;z-index:9;font:11px monospace;color:#7fe3ef;background:rgba(0,0,0,.6);padding:6px 8px;pointer-events:none;white-space:pre';document.body.appendChild(d)}
- d.textContent='orientation events: '+DBG.ori+'\nmotion events: '+DBG.mot+'\nsource: '+(DBG.src||'none')+'\nbeta '+DBG.b.toFixed(1)+'  gamma '+DBG.g.toFixed(1)+'\ntilt x '+TILT.x.toFixed(2)+'  y '+TILT.y.toFixed(2)+'\nsecure: '+isSecureContext},250);
-addEventListener('orientationchange',()=>{TILT.x0=TILT.y0=null});document.addEventListener('visibilitychange',()=>{if(!document.hidden)TILT.x0=TILT.y0=null});
-const touch=matchMedia('(pointer: coarse)').matches;
-function setHint(){document.getElementById('hint').textContent=touch?(TILT.on?'tilt your phone to move Igor · tap to set a tofu ant loose · tap Igor':'tap to set a tofu ant loose · tap Igor'):'click anywhere to set a tofu ant loose · click Igor'}
-if(window.DeviceOrientationEvent){startTilt(); // Android: works straight away
- if(isIOS&&typeof DeviceOrientationEvent.requestPermission==='function'){ // iPhone: needs a tap to ask (the button goes away as soon as tilt data arrives)
-  if(touch){const b=document.createElement('button');b.id='tiltBtn';b.type='button';b.textContent='Tilt to swim with Igor';document.body.appendChild(b);
-   b.addEventListener('click',ev=>{ev.stopPropagation();DeviceOrientationEvent.requestPermission().then(()=>{if(window.DeviceMotionEvent&&DeviceMotionEvent.requestPermission)DeviceMotionEvent.requestPermission().catch(()=>{});b.remove()}).catch(()=>b.remove())})}}}
-
-/* ---------- Igor ---------- */
-const igorCv=document.createElement('canvas');igorCv.width=igorCv.height=512;const igx=igorCv.getContext('2d');let igorImg=null;
+const TAU=Math.PI*2;
+const igorImg=new Image();let igorOK=false;igorImg.onload=()=>{igorOK=true;spr.key=''};igorImg.src=IGOR_SRC;
+const AV={igor:{name:'Igor',rim:null},she:{name:'Shigor',rim:'#ffa0c8'},queer:{name:'Queegor',rim:'#b48ce6'}};
+let avKey='igor';try{const v=localStorage.getItem('igorAvatar')||localStorage.getItem('pitchStairsAvatar');if(AV[v])avKey=v}catch(e){}
 const EYES=[{x:306,y:194,rx:19,ry:21},{x:341,y:190.5,rx:16,ry:19.5}];
-const SNOUT={x:354-256,y:413-256}; // where the tongue leaves the snout, from the centre of the 512px picture
-/* his tongue, traced from the original drawing (512px picture coords), drawn live so there is only ever one tongue */
-const TONGUE=[[361,409],[354,413],[343,419],[331,423],[319,425],[307,424],[295,422],[283,418],[271,411],[259,401],[247,387],[237,372],[227,361],[217,355],[208,354],[200,358],[196,365]];
-const TG={e:0,len:1,grow:1,ax:0,ay:0,follow:null,carry:null};
-const ease=u=>u*u*(3-2*u);
-function frame(bob,sq){const k=IG.size/512,sx=IG.faceS*sq,sy=1/sq*(1+(sq-1)*.3);return{k,sx,sy,bob,c:Math.cos(IG.rot),s:Math.sin(IG.rot)}}
-function toWorld(x,y,F){const lx=(x-256)*F.k*F.sx,ly=(y-256)*F.k*F.sy;return{x:IG.x+lx*F.c-ly*F.s,y:IG.y+F.bob+lx*F.s+ly*F.c}}
-function toLocal(x,y,F){const dx=x-IG.x,dy=y-IG.y-F.bob,lx=dx*F.c+dy*F.s,ly=-dx*F.s+dy*F.c,sx=Math.sign(F.sx||1)*Math.max(.2,Math.abs(F.sx));return{x:lx/(F.k*sx)+256,y:ly/(F.k*F.sy)+256}}
-function tonguePts(t){const n=TONGUE.length,b=TONGUE[1],P=[];
- for(let i=0;i<n;i++){const s=Math.max(0,(i-1)/(n-2));let[x,y]=TONGUE[i];
-  const a=Math.sin(t*1.6)*.08*s,dx=x-b[0],dy=y-b[1];x=b[0]+dx*Math.cos(a)-dy*Math.sin(a);y=b[1]+dx*Math.sin(a)+dy*Math.cos(a)+Math.sin(t*3.1-s*5)*3*s;
-  if(TG.e>0&&i>0){const L=TG.len,tx=b[0]+(TG.ax-b[0])*s*L,ty=b[1]+(TG.ay-b[1])*s*L+Math.sin(Math.PI*s)*14*L;x=lerp(x,tx,TG.e);y=lerp(y,ty,TG.e)}
-  P.push([x,y])}
- return P}
-function redrawLip(F){if(!igorImg)return;g.save();g.translate(IG.x,IG.y+F.bob);g.rotate(IG.rot);g.scale(F.sx*F.k,F.sy*F.k);g.translate(-256,-256);
- g.beginPath();g.arc(358,410,11,0,TAU);g.clip();g.drawImage(igorCv,0,0,512,512);g.restore()}
-function drawTongue(P,F){let m=1+(P.length-2)*TG.grow;const n=Math.floor(m),f=m-n,Q=P.slice(0,n+1);
- if(f>0&&n+1<P.length)Q.push([lerp(P[n][0],P[n+1][0],f),lerp(P[n][1],P[n+1][1],f)]);
- g.save();g.translate(IG.x,IG.y+F.bob);g.rotate(IG.rot);g.scale(F.sx*F.k,F.sy*F.k);g.translate(-256,-256);
- g.lineCap=g.lineJoin='round';g.beginPath();g.moveTo(Q[0][0],Q[0][1]);
- for(let i=1;i<Q.length-1;i++){const mx=(Q[i][0]+Q[i+1][0])/2,my=(Q[i][1]+Q[i+1][1])/2;g.quadraticCurveTo(Q[i][0],Q[i][1],mx,my)}
- const z=Q[Q.length-1];g.lineTo(z[0],z[1]);
- g.strokeStyle='#111';g.lineWidth=8.6;g.stroke();g.strokeStyle='#6cd48b';g.lineWidth=4.4;g.stroke();g.restore();return Q[Q.length-1]}
-function lid(e,c){c=c*c*(3-2*c);const top=e.y-e.ry-2,bot=e.y+e.ry+2,m=e.y+e.ry*.35,Lu=top+(m-top)*c,Ll=bot-(bot-m)*c,bend=6*c,L=e.x-e.rx-3,R=e.x+e.rx+3;
- igx.save();igx.beginPath();igx.ellipse(e.x,e.y,e.rx,e.ry,0,0,TAU);igx.clip();igx.fillStyle='#a8d721';
- igx.beginPath();igx.moveTo(L,top);igx.lineTo(R,top);igx.lineTo(R,Lu);igx.quadraticCurveTo(e.x,Lu+bend*2,L,Lu);igx.closePath();igx.fill();
- igx.beginPath();igx.moveTo(L,bot);igx.lineTo(R,bot);igx.lineTo(R,Ll);igx.quadraticCurveTo(e.x,Ll+bend*2,L,Ll);igx.closePath();igx.fill();
- igx.strokeStyle='#111';igx.lineCap='round';igx.lineWidth=3.2;igx.beginPath();igx.moveTo(L,Lu);igx.quadraticCurveTo(e.x,Lu+bend*2,R,Lu);igx.stroke();
- if(c>.05&&c<.98){igx.lineWidth=2;igx.beginPath();igx.moveTo(L,Ll);igx.quadraticCurveTo(e.x,Ll+bend*2,R,Ll);igx.stroke()}igx.restore()}
-function drawIgor(c0,c1){if(!igorImg)return;igx.clearRect(0,0,512,512);igx.drawImage(igorImg,0,0,512,512);if(c0>0)lid(EYES[0],c0);if(c1>0)lid(EYES[1],c1)}
-const BL={next:2,start:-9,lag:[0,.08]};let lastC=[-1,-1];
+const spr=document.createElement('canvas');spr.width=spr.height=512;const sx=spr.getContext('2d');spr.key='';
+function lid(c,e,k){k=k*k*(3-2*k);const top=e.y-e.ry-2,bot=e.y+e.ry+2,m=e.y+e.ry*.35,Lu=top+(m-top)*k,Ll=bot-(bot-m)*k,bend=6*k,Lx=e.x-e.rx-3,Rx=e.x+e.rx+3;
+ c.save();c.beginPath();c.ellipse(e.x,e.y,e.rx,e.ry,0,0,TAU);c.clip();c.fillStyle='#a8d721';
+ c.beginPath();c.moveTo(Lx,top);c.lineTo(Rx,top);c.lineTo(Rx,Lu);c.quadraticCurveTo(e.x,Lu+bend*2,Lx,Lu);c.closePath();c.fill();
+ c.beginPath();c.moveTo(Lx,bot);c.lineTo(Rx,bot);c.lineTo(Rx,Ll);c.quadraticCurveTo(e.x,Ll+bend*2,Lx,Ll);c.closePath();c.fill();
+ c.strokeStyle='#111';c.lineCap='round';c.lineWidth=3.2;c.beginPath();c.moveTo(Lx,Lu);c.quadraticCurveTo(e.x,Lu+bend*2,Rx,Lu);c.stroke();
+ if(k>.05&&k<.98){c.lineWidth=2;c.beginPath();c.moveTo(Lx,Ll);c.quadraticCurveTo(e.x,Ll+bend*2,Rx,Ll);c.stroke()}c.restore();return Lu-top}
+function lashes(c,e,dy,n){c.save();c.strokeStyle='#111';c.lineCap='round';c.lineWidth=4;
+ for(let i=0;i<n;i++){const a=(-125+i*(70/(Math.max(n,2)-1)))*Math.PI/180,x0=e.x+e.rx*1.05*Math.cos(a),y0=e.y+e.ry*1.05*Math.sin(a)+dy,x1=e.x+(e.rx+13)*Math.cos(a-.12),y1=e.y+(e.ry+13)*Math.sin(a-.12)+dy*1.25;
+  c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke()}c.restore()}
+function bowAt(c,x,y,s,col){c.save();c.fillStyle=col;c.strokeStyle='#141414';c.lineWidth=3;c.lineJoin='round';
+ for(const d of[-1,1]){c.beginPath();c.moveTo(x,y);c.lineTo(x+d*s,y-s*.7);c.lineTo(x+d*s,y+s*.7);c.closePath();c.fill();c.stroke()}
+ c.beginPath();c.arc(x,y,s*.3,0,TAU);c.fill();c.stroke();c.restore()}
+function starAt(c,x,y,r,cols){c.save();c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?r*.45:r;c.lineTo(x+q*Math.cos(a),y+q*Math.sin(a))}c.closePath();
+ c.save();c.clip();const h=2*r/cols.length;cols.forEach((col,i)=>{c.fillStyle=col;c.fillRect(x-r,y-r+i*h,2*r,h+.6)});c.restore();c.strokeStyle='#141414';c.lineWidth=3;c.lineJoin='round';c.stroke();c.restore()}
+function paintAvatar(c,key,k0,k1){c.clearRect(0,0,512,512);c.drawImage(igorImg,0,0,512,512);const A=AV[key];
+ if(A.rim){c.save();c.strokeStyle=A.rim;c.lineWidth=5;c.beginPath();c.arc(251,251,216,Math.PI/2+.47,Math.PI/2-.47+TAU);c.stroke();c.restore()}
+ const d0=lid(c,EYES[0],k0),d1=lid(c,EYES[1],k1);
+ if(key==='she'){lashes(c,EYES[0],d0,2);lashes(c,EYES[1],d1,2);bowAt(c,352,32,22,'#ff8ab6')}
+ else if(key==='queer'){lashes(c,EYES[0],d0,1);lashes(c,EYES[1],d1,1);starAt(c,352,30,22,['#fcf434','#ffffff','#9c59d1','#2c2c2c'])}}
+function drawSprite(k0,k1){if(!igorOK)return;const key=avKey+'|'+k0.toFixed(2)+'|'+k1.toFixed(2);if(key===spr.key)return;spr.key=key;paintAvatar(sx,avKey,k0,k1)}
+const BL={next:2,start:-9,lag:[0,.08]};
 function blink(t){if(t>BL.next){BL.start=t;const lag=.06+Math.random()*.05;BL.lag=Math.random()<.5?[0,lag]:[lag,0];BL.next=t+(Math.random()<.2?.45:2.5+Math.random()*4)}
- const cc=BL.lag.map(l=>{const u=t-BL.start-l;if(u<0||u>.26)return 0;return u<.07?u/.07:u<.12?1:1-(u-.12)/.14});
- if(cc[0]!==lastC[0]||cc[1]!==lastC[1]){lastC=cc;drawIgor(cc[0],cc[1])}}
-{const im=new Image();im.onload=()=>{igorImg=im;drawIgor(0,0)};im.src=IGOR_SRC}
+ const cc=BL.lag.map(l=>{const u=t-BL.start-l;if(u<0||u>.26)return 0;return u<.07?u/.07:u<.12?1:1-(u-.12)/.14});drawSprite(cc[0],cc[1])}
+function drawAvButtons(){if(!igorOK)return;document.querySelectorAll('.av button').forEach(b=>{const c=b.querySelector('canvas').getContext('2d');const tmp=document.createElement('canvas');tmp.width=tmp.height=512;paintAvatar(tmp.getContext('2d'),b.dataset.av,0,0);c.clearRect(0,0,128,128);c.drawImage(tmp,0,0,128,128)})}
 
-const IG={x:0,y:0,vx:0,vy:0,size:180,face:1,faceS:1,rot:0,bump:0,state:'wander',tx:0,ty:0,timer:0,cool:3,prey:null,look:0};
-function snoutAt(){const k=IG.size/512,ox=SNOUT.x*k*IG.faceS,oy=SNOUT.y*k,c=Math.cos(IG.rot),s=Math.sin(IG.rot);return{x:IG.x+ox*c-oy*s,y:IG.y+ox*s+oy*c}}
-function newWander(){const m=IG.size*.55;IG.tx=m+Math.random()*(W-2*m);IG.ty=Math.max(m+40,90)+Math.random()*Math.max(10,H-2*m-60);IG.timer=4+Math.random()*4}
-let eaten=0;const nEl=document.getElementById('n');
 
-/* ---------- Igor talks ---------- */
-const bubble=document.getElementById('bubble');let bubT=0;
-const LINES={hunt:['I smell tofu.','Tofu ant! Tofu ant!','Here, little one…','Don’t move.','Dinner is floating by.'],
- eat:['Gnam.','Mmm, silken.','Tastes like stardust.','One more.','Smoked tofu, my favourite.','100% plant-based.','Burp. Sorry.'],
- look:['Where did they go?','Tofu? Anyone?','I know you’re out there.','So quiet down here.'],
- hi:['Hi, I’m Igor.']};
-/* clicking Igor: he stops, turns to you, and explains he isn't ready yet (two bubbles, then a punchline) */
-const NOTREADY=[
- ['Wait, wait. I’m not ready yet.','I’ll come and help you soon. Right now: tofu.'],
- ['Shh! I’m still practising.','Soon I’ll be your guide. Today I’m just hungry.'],
- ['Not yet! My helmet is still loading…','…87%… I’ll be back to help you soon.'],
- ['Oh, hi! Sorry, I’m on lunch break.','Come back soon, I’ll show you around.'],
- ['I’m not ready yet.','Give me a minute. Or a few million years. Space is big.'],
- ['Please hold. Your anteater is important to us.','I’ll come and help you very soon.'],
- ['Hey! I’m still learning to swim in space.','Soon I’ll guide you. Promise. Pinky snout.'],
- ['Not now, I’m concentrating.','Soon I’ll help you. First I need to count my tofu ants.']];
-let nrI=Math.floor(Math.random()*NOTREADY.length),Q=[];
-function notReady(x){const L=NOTREADY[nrI++%NOTREADY.length];Q=[[L[0],2.2],[L[1],3.4]];bubT=0;
- IG.state='pause';IG.timer=6;IG.face=x>IG.x?1:-1;IG.bump=1;IG.vx*=.2;IG.vy*=.2}
-const last={};function line(k){const L=LINES[k];let s;do{s=L[Math.floor(Math.random()*L.length)]}while(L.length>1&&s===last[k]);last[k]=s;return s}
-function say(txt,sec=2.2){bubble.textContent=txt;bubT=sec}
-function placeBubble(dt){if(bubT<=0&&Q.length){const[q,sec]=Q.shift();say(q,sec)}if(bubT<=0){bubble.style.opacity=0;return}bubT-=dt;bubble.style.opacity=bubT>0?1:0;
- const bw=bubble.offsetWidth,bh=bubble.offsetHeight,r=IG.size*.42;let x=IG.x+r*.25,y=IG.y-r-bh-6,flip=false;
- if(x+bw>W-12){x=IG.x-r*.25-bw;flip=true}x=clamp(x,12,W-bw-12);if(y<70)y=IG.y+r+16;
- bubble.classList.toggle('flip',flip);bubble.style.setProperty('--tx',flip?(bw-36)+'px':'16px');bubble.style.transform=`translate(${x}px,${y}px)`}
-
-/* ---------- loop ---------- */
-let last_t=performance.now()/1000,T=0;
-function step(now){now/=1000;let dt=Math.min(.05,now-last_t);last_t=now;if(reduce)dt*=.6;T+=dt;const t=T;
- {const k=1-Math.exp(-dt*12);TILT.x+=(TILT.rx-TILT.x)*k;TILT.y+=(TILT.ry-TILT.y)*k}
- g.setTransform(DPR,0,0,DPR,0,0);g.drawImage(bg,0,0,W,H);
- const px=(IG.x-W/2)/W-TILT.x*.35,py=(IG.y-H/2)/H-TILT.y*.35;
- for(const s of STARS){const a=.35+.45*(.5+.5*Math.sin(t*s.sp+s.ph));g.fillStyle=`rgba(${s.c},${a})`;g.beginPath();g.arc(s.x-px*8*s.z,s.y-py*8*s.z,s.r,0,TAU);g.fill()}
- g.fillStyle='rgba(111,138,147,.5)';
- for(const d of DUST){d.x+=d.vx*dt*d.z;d.y+=d.vy*dt*d.z;if(d.y<-5)d.y=H+5;if(d.x<-5)d.x=W+5;if(d.x>W+5)d.x=-5;g.globalAlpha=.25+.5*d.z;g.fillRect(d.x-px*24*d.z,d.y-py*24*d.z,d.r,d.r)}
- g.globalAlpha=1;
-
- if(!reduce){nextCrit-=dt;if(nextCrit<=0&&CRIT.length<4){nextCrit=5+Math.random()*7;spawnCrit()}}
- for(let i=CRIT.length-1;i>=0;i--){const c=CRIT[i];c.x+=c.dir.x*c.sp*dt;c.y+=c.dir.y*c.sp*dt;c.a=Math.min(1,c.a+dt*.4);
-  if(c.x<-160||c.x>W+160||c.y<-160){CRIT.splice(i,1);continue}drawCrit(c,t+c.ph)}
-
- // ants drift, spin, and shy away from a hungry snout
- const sn=snoutAt();
- while(ANTS.filter(a=>!a.gone).length<antTarget())spawnAnt();
- for(let i=ANTS.length-1;i>=0;i--){const a=ANTS[i];if(a.gone){ANTS.splice(i,1);continue}
-  a.pop=Math.max(0,a.pop-dt*3);a.a=Math.min(1,a.a+dt*2);
-  if(a.caught)continue;
-  const dx=a.x-sn.x,dy=a.y-sn.y,d=Math.hypot(dx,dy);
-  if(d<IG.size*.8&&IG.state==='hunt'&&IG.prey===a){a.vx+=dx/d*30*dt;a.vy+=dy/d*30*dt;a.spin+=rnd(2)*dt}
-  const v=Math.hypot(a.vx,a.vy),vm=TILT.on?46:34;if(v>vm){a.vx*=vm/v;a.vy*=vm/v}
-  a.vx+=rnd(6)*dt+TILT.x*40*dt;a.vy+=rnd(6)*dt+TILT.y*40*dt;
-  const m=24;if(a.x<m)a.vx+=20*dt;if(a.x>W-m)a.vx-=20*dt;if(a.y<70)a.vy+=20*dt;if(a.y>H-m)a.vy-=20*dt;
-  a.x+=a.vx*dt;a.y+=a.vy*dt;a.ang+=a.spin*dt;a.leg+=dt*.5}
-
- // Igor's mind
- IG.cool-=dt;IG.timer-=dt;let speed=70+IG.size*.25,want={x:IG.tx,y:IG.ty};
- if(IG.state==='wander'){
-  if(IG.timer<=0||Math.hypot(IG.tx-IG.x,IG.ty-IG.y)<30)newWander();
-  if(IG.cool<=0){const free=ANTS.filter(a=>!a.caught&&a.a>.9&&a.x>30&&a.x<W-30&&a.y>80&&a.y<H-30);
-   if(free.length){free.sort((p,q)=>Math.hypot(p.x-IG.x,p.y-IG.y)-Math.hypot(q.x-IG.x,q.y-IG.y));IG.prey=free[Math.floor(Math.random()*Math.min(2,free.length))];IG.state='hunt';IG.timer=11;if(Math.random()<.45)say(line('hunt'))}
-   else{IG.state='look';IG.timer=2.4;IG.look=0;if(Math.random()<.6)say(line('look'))}}
- }
- if(IG.state==='look'){speed=0;want={x:IG.x,y:IG.y};IG.look+=dt;if(IG.look>.7&&IG.look-dt<=.7)IG.face*=-1;if(IG.look>1.5&&IG.look-dt<=1.5)IG.face*=-1;if(IG.timer<=0){IG.state='wander';IG.cool=1.5;newWander()}}
- if(IG.state==='hunt'){const p=IG.prey;
-  if(!p||p.gone||p.caught||IG.timer<=0||p.x<10||p.x>W-10||p.y<60||p.y>H-10){IG.state='wander';IG.cool=2;newWander()}
-  else{const f=Math.abs(p.x-IG.x)>IG.size*.25?Math.sign(p.x-IG.x):IG.face;IG.face=f;
-   const k=IG.size/512;want={x:p.x-SNOUT.x*k*IG.faceS-f*IG.size*.08,y:p.y-SNOUT.y*k-IG.size*.04};speed*=1.5;
-   const reach=IG.size*.42;if(Math.hypot(p.x-sn.x,p.y-sn.y)<reach){IG.state='lick';IG.tongue=0;IG.lt=0}}}
- if(IG.state==='lick'){speed*=.15;const p=IG.prey;IG.lt+=dt;
-  const out=.22,back=.42;if(IG.lt<out){TG.e=ease(IG.lt/out);TG.len=1;TG.follow=p}
-  else{if(!p.caught){p.caught=true;TG.follow=null;TG.carry=p}const u=clamp((IG.lt-out)/back,0,1);TG.e=1;TG.len=1-ease(u);p.ang+=dt*6;
-   if(u>=1){p.gone=true;TG.carry=null;TG.e=0;TG.len=1;TG.grow=0;IG.state='gulp';IG.timer=.55;IG.bump=1;eaten++;nEl.textContent=eaten;if(Math.random()<.75)say(line('eat'),1.8)}}}
- if(IG.state==='pause'){speed=0;want={x:IG.x,y:IG.y};IG.rot+=Math.sin(t*9)*.004;if(IG.timer<=0||(!Q.length&&bubT<=0)){IG.state='wander';IG.cool=1.5+Math.random()*2;newWander()}}
- if(IG.state==='gulp'){speed=0;if(IG.timer<=0&&IG.later!==undefined){const lx=IG.later;IG.later=undefined;notReady(lx)}else if(IG.timer<=0){IG.state='wander';IG.cool=2.5+Math.random()*5;newWander()}}
-
- // steering
- const dx=want.x-IG.x,dy=want.y-IG.y,d=Math.hypot(dx,dy)||1,arrive=Math.min(1,d/(IG.size*.9));
- const tm=TILT.on?Math.min(1,Math.hypot(TILT.x,TILT.y)*1.8):0,tsp=220+IG.size*1.1; // the more you tilt, the more the phone drives Igor
- const dvx=lerp(dx/d*speed*arrive,TILT.x*tsp,tm),dvy=lerp(dy/d*speed*arrive,TILT.y*tsp,tm),kk=1-Math.exp(-dt*(tm>.05?7:(IG.state==='hunt'?2.4:1.4)));
- IG.vx+=(dvx-IG.vx)*kk;IG.vy+=(dvy-IG.vy)*kk;IG.x+=IG.vx*dt;IG.y+=IG.vy*dt;
- const mg=IG.size*.4;IG.x=clamp(IG.x,mg,W-mg);IG.y=clamp(IG.y,mg+30,H-mg);
- if((IG.state==='wander'||tm>.35)&&Math.abs(IG.vx)>14)IG.face=Math.sign(IG.vx);
- IG.faceS+=(IG.face-IG.faceS)*(1-Math.exp(-dt*7));
- const tilt=clamp(IG.vy/260,-.35,.35)*IG.face+Math.sin(t*.7)*.05;IG.rot+=(tilt-IG.rot)*(1-Math.exp(-dt*3));
- IG.bump=Math.max(0,IG.bump-dt*2.2);
-
- for(const a of ANTS)if(!a.caught)drawAnt(a,t);
- // draw Igor (and his tongue, on top of the helmet glass)
- blink(t);const bob=Math.sin(t*1.3)*IG.size*.025,sq=1+Math.sin(IG.bump*Math.PI)*.08;
- g.save();g.translate(IG.x,IG.y+bob);g.rotate(IG.rot);g.scale(IG.faceS*sq,1/sq*(1+(sq-1)*.3));
- g.shadowColor='rgba(127,227,239,.18)';g.shadowBlur=30;g.drawImage(igorCv,-IG.size/2,-IG.size/2,IG.size,IG.size);g.restore();
- // the one and only tongue: drawn after the picture so it sits in front of the helmet glass; it starts inside the snout tip
- {const F=frame(bob,sq);if(IG.state!=='lick'&&IG.state!=='gulp')TG.grow=Math.min(1,TG.grow+dt*1.3);else if(IG.state==='gulp')TG.grow=0;
-  if(TG.follow){const L=toLocal(TG.follow.x,TG.follow.y,F);TG.ax=L.x;TG.ay=L.y}
-  const tip=drawTongue(tonguePts(t),F);redrawLip(F);
-  if(TG.carry){const w=toWorld(tip[0],tip[1],F);TG.carry.x=w.x;TG.carry.y=w.y}}
- for(const a of ANTS)if(a.caught)drawAnt(a,t);
- placeBubble(dt);
- requestAnimationFrame(step)}
-
-/* ---------- input ---------- */
-cv.addEventListener('pointerdown',e=>{const x=e.clientX,y=e.clientY;
- if(Math.hypot(x-IG.x,y-IG.y)<IG.size*.45){if(IG.state==='lick'||IG.state==='gulp'){IG.later=x}else if(IG.state!=='pause')notReady(x);return}
- spawnAnt(x,y,true);if(ANTS.length>14){const old=ANTS.find(a=>!a.caught);if(old)old.gone=true}});
-addEventListener('resize',()=>{resize();IG.x=clamp(IG.x,0,W);IG.y=clamp(IG.y,0,H)});
-
-resize();IG.x=W*.5;IG.y=H*.55;newWander();for(let i=0;i<antTarget();i++)spawnAnt(W*(.15+Math.random()*.7),H*(.25+Math.random()*.6));for(const a of ANTS)a.a=1;
-setHint();setTimeout(()=>say('Hi, I’m Igor.',2.4),900);
-requestAnimationFrame(step);
-})();
+/* stars */
+const sky=document.getElementById('sky'),sg=sky.getContext('2d');let SW=0,SH=0,stars=[];
+function sizeSky(){const d=Math.min(2,devicePixelRatio||1);SW=innerWidth;SH=innerHeight;sky.width=SW*d;sky.height=SH*d;sg.setTransform(d,0,0,d,0,0);
+ stars=Array.from({length:Math.round(SW*SH/5000)},()=>({x:Math.random()*SW,y:Math.random()*SH,r:Math.random()*1.2+.2,p:Math.random()*TAU,s:.3+Math.random()*1.2}))}
+addEventListener('resize',sizeSky);sizeSky();
+/* igor */
+const ic=document.getElementById('igor'),ig=ic.getContext('2d');
+const LINES=['Hi! Pick a game.','Gnam! Any tofu ants around?','I tuned my helmet to A 440.','Parallel fifths? Not on my watch.','Psst… the cadences are delicious.'];
+let li=0,sayT=0;const say=document.getElementById('say');function talk(){say.textContent=LINES[li%LINES.length];li++;sayT=4}
+ic.addEventListener('click',talk);setTimeout(talk,900);
+let last=performance.now()/1000,T=0;
+function frame(){const now=performance.now()/1000,dt=Math.min(.05,now-last);last=now;T+=dt;
+ sg.clearRect(0,0,SW,SH);for(const s of stars){sg.globalAlpha=.25+.55*(.5+.5*Math.sin(T*s.s+s.p));sg.fillStyle='#dbe7ea';sg.beginPath();sg.arc(s.x,s.y,s.r,0,TAU);sg.fill()}sg.globalAlpha=1;
+ blink(T);ig.clearRect(0,0,480,480);ig.save();ig.translate(240,240+Math.sin(T*1.4)*10);ig.rotate(Math.sin(T*.7)*.05);
+ ig.shadowColor='rgba(127,227,239,.25)';ig.shadowBlur=30;if(igorOK)ig.drawImage(spr,-215,-215,430,430);ig.restore();
+ if(sayT>0){sayT-=dt;if(sayT<=0)say.textContent=''}
+ requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
 </script>
 </body></html>
