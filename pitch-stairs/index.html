@@ -58,6 +58,7 @@ button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
  <h2>Pitch <em>Stairs</em></h2>
  <p>A tofu ant is hiding on the staircase <b>behind the curtain</b>. When the light comes on, it sings.</p>
  <p><b>Drag <span class="nm">Igor</span></b> up and down the staircase: the higher you climb, the higher the note. Reach the same height as the ant and it’s lunchtime.</p>
+ <p class="small" id="acctline" hidden></p>
  <div class="row av" role="group" aria-label="Choose your anteater">
   <button type="button" data-av="igor" aria-pressed="true"><canvas width="128" height="128"></canvas>Igor</button>
   <button type="button" data-av="she" aria-pressed="false"><canvas width="128" height="128"></canvas>Shigor</button>
@@ -79,6 +80,7 @@ button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
  <p class="small">out of 500</p>
  <p id="endmsg"></p>
  <p class="small" id="endbest"></p>
+ <p id="endants" style="color:#f1b46e"></p>
  <div class="row"><button class="main" id="again" type="button">Play again</button><button id="menu" type="button">Change level</button></div>
  <p class="small"><a href="/">← back to Igor time</a></p>
 </div></div>
@@ -148,6 +150,13 @@ function drawStair(S,litU){const N=Math.round(13*S.turns),steps=[];for(let i=0;i
 const igorImg=new Image();let igorOK=false;igorImg.onload=()=>{igorOK=true;spr.key='';drawSprite(0,0);drawAvButtons()};igorImg.src=IGOR_SRC;
 const AV={igor:{name:'Igor',rim:null},she:{name:'Shigor',rim:'#ffa0c8'},queer:{name:'Queegor',rim:'#b48ce6'}};
 let avKey='igor';try{const v=localStorage.getItem('pitchStairsAvatar');if(AV[v])avKey=v}catch(e){}
+/* account (set by the home): registered players use their own Igor */
+let ACCT=null,HOME=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'));HOME=JSON.parse(localStorage.getItem('igortime_v1'))}catch(e){}
+if(ACCT&&HOME&&AV[HOME.avatar]){avKey=HOME.avatar;if(HOME.rim)AV[avKey]={...AV[avKey],rim:HOME.rim}}
+const MULT={easy:1,medium:2,extreme:3};
+function reward(total){const n=Math.round(total/100*MULT[lvKey]);let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
+ p.ants=(p.ants|0)+n;p.scores=p.scores||{};const g=p.scores.pitchStairs=p.scores.pitchStairs||{};if(!(g[lvKey]>=total))g[lvKey]=total;
+ try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n}
 const EYES=[{x:306,y:194,rx:19,ry:21},{x:341,y:190.5,rx:16,ry:19.5}];
 const spr=document.createElement('canvas');spr.width=spr.height=512;const sx=spr.getContext('2d');spr.key='';
 function lid(c,e,k){k=k*k*(3-2*k);const top=e.y-e.ry-2,bot=e.y+e.ry+2,m=e.y+e.ry*.35,Lu=top+(m-top)*k,Ll=bot-(bot-m)*k,bend=6*k,L=e.x-e.rx-3,R=e.x+e.rx+3;
@@ -232,7 +241,8 @@ function confirm(){if(phase!=='guess')return;myStop();if(antVoice)antVoice.off()
 function finish(){phase='end';let best=0;try{best=+localStorage.getItem('pitchStairsBest_'+lvKey)||0;if(total>best)localStorage.setItem('pitchStairsBest_'+lvKey,total)}catch(e){}
  $('endlv').textContent=LV.name+' · your score';$('endsc').textContent=total;
  const N=AV[avKey].name;$('endmsg').textContent=total>=450?'Golden ears. '+N+' is full and very grateful.':total>=350?'Great ears! '+N+' had a lovely meal.':total>=200?'Nice ears! '+N+' had a tasty snack and is ready for a second course.':N+' loved the concert! One more round and lunch is yours.';
- $('endbest').textContent=total>best?'New personal best on '+LV.name+'!':'Your best on '+LV.name+': '+best;$('end').hidden=false;updateButtons()}
+ $('endbest').textContent=total>best?'New personal best on '+LV.name+'!':'Your best on '+LV.name+': '+best;
+ const won=reward(total);$('endants').textContent=won?'+'+won+' tofu ants for '+N+'’s farm'+(MULT[lvKey]>1?' (×'+MULT[lvKey]+' on '+LV.name+')':'')+'. Collect them back home.':'';$('end').hidden=false;updateButtons()}
 function updateButtons(){const gu=phase==='guess';$('ok').disabled=!gu;$('mine').disabled=!gu;
  const L=$('listen');L.disabled=!gu||(R&&R.played&&R.left<=0);L.textContent=R&&R.played&&isFinite(R.left)?`▶ Listen (${R.left})`:'▶ Listen'}
 
@@ -261,7 +271,9 @@ addEventListener('keyup',e=>{if(e.key===' ')myStop()});
 function setLevel(k){lvKey=k;LV=LEVELS[k];document.querySelectorAll('.lv button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lv===k));$('lvinfo').textContent=LV.info;try{localStorage.setItem('pitchStairsLevel',k)}catch(e){}}
 document.querySelectorAll('.lv button').forEach(b=>b.onclick=()=>setLevel(b.dataset.lv));setLevel(lvKey);
 function setAv(k){avKey=k;spr.key='';document.querySelectorAll('.av button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.av===k));document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[k].name);try{localStorage.setItem('pitchStairsAvatar',k)}catch(e){}}
-document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset.av));setAv(avKey);
+document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset.av));
+if(ACCT){spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent='Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · easy ×1, medium ×2, extreme ×3 tofu ants'}
+else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent='Tofu ants won: easy ×1, medium ×2, extreme ×3'}
 function begin(){audio();if(AC.state==='suspended')AC.resume();if(!antVoice){antVoice=voice();myVoice=voice()}
  round=0;total=0;$('sc').textContent=0;$('start').hidden=true;$('end').hidden=true;newRound()}
 $('go').onclick=begin;$('again').onclick=begin;$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;phase='menu'};
