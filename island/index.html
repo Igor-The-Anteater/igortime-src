@@ -96,7 +96,7 @@ button.link{border:0;padding:9px 4px;color:var(--dim);text-transform:none;letter
 <nav id="index" hidden aria-label="Index"></nav>
 <div id="bubble"></div>
 <div id="toast"></div>
-<div id="hint">Tap a place and Igor takes you there</div>
+<div id="hint">Tap a place and Igor takes you there · drag to turn</div>
 <div id="labels"></div>
 
 <aside class="sheet" id="sheet" hidden aria-live="polite"><button class="x" type="button" aria-label="Close">×</button><div id="sheetBody"></div></aside>
@@ -124,7 +124,7 @@ const IGOR_SRC='/igor.webp';
 const KEY='igortime_v1';
 const CROP={cost:1,min:2,gain:3};
 const MAXPLOTS=8,PLOTCOST=n=>6+n*4;
-function fresh(){return{v:1,ants:5,plots:[{c:null},{c:null},{c:null}],scores:{},avatar:'igor',rim:null,ball:null,seen:0}}
+function fresh(){return{v:1,ants:1,plots:[{c:null},{c:null},{c:null}],scores:{},avatar:'igor',rim:null,ball:null,seen:0}}
 let S;try{S=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){S=fresh()}
 if(!S.plots)S=fresh();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.IgorCloud)window.IgorCloud.push(S)}
@@ -185,21 +185,21 @@ scene.add(new THREE.HemisphereLight('#a9b8de','#26332a',.9));
 const moonL=new THREE.DirectionalLight('#dfe6ff',.8);moonL.position.set(-8,12,5);scene.add(moonL);
 const V3=THREE.Vector3;
 // rolling-world curvature, applied to every solid material
-const FOCUS=7,K=.024;
-function curve(m){m.onBeforeCompile=s=>{s.vertexShader=s.vertexShader.replace('#include <project_vertex>',`
+const FOCUS=7,K=.024,CURV={value:K};
+function curve(m){m.onBeforeCompile=s=>{s.uniforms.uCurv=CURV;s.vertexShader='uniform float uCurv;\n'+s.vertexShader.replace('#include <project_vertex>',`
  vec4 mvPosition = vec4( transformed, 1.0 );
  mvPosition = modelViewMatrix * mvPosition;
  float dz = max(0.0, -mvPosition.z - ${FOCUS.toFixed(1)});
- mvPosition.y -= dz * dz * ${K.toFixed(4)};
+ mvPosition.y -= dz * dz * uCurv;
  gl_Position = projectionMatrix * mvPosition;`)};return m}
 const lam=(c,o={})=>curve(new THREE.MeshLambertMaterial({color:c,...o}));
 const glowM=(c,i=1,o={})=>curve(new THREE.MeshLambertMaterial({color:c,emissive:c,emissiveIntensity:i,...o}));
 let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
 const dot=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');const r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.3,'rgba(255,255,255,.55)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
 function halo(col,size,op=.5,flat=false){const mat=new THREE.SpriteMaterial({map:dot,color:col,transparent:true,opacity:op,depthWrite:false,blending:THREE.AdditiveBlending,fog:false});
- if(!flat)mat.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('gl_Position = projectionMatrix * mvPosition;',`float dz = max(0.0, -mvPosition.z - ${FOCUS.toFixed(1)});mvPosition.y -= dz * dz * ${K.toFixed(4)};gl_Position = projectionMatrix * mvPosition;`)};
+ if(!flat)mat.onBeforeCompile=sh=>{sh.uniforms.uCurv=CURV;sh.vertexShader='uniform float uCurv;\n'+sh.vertexShader.replace('gl_Position = projectionMatrix * mvPosition;',`float dz = max(0.0, -mvPosition.z - ${FOCUS.toFixed(1)});mvPosition.y -= dz * dz * uCurv;gl_Position = projectionMatrix * mvPosition;`)};
  const s=new THREE.Sprite(mat);s.scale.set(size,size,1);return s}
-function projC(v){v.applyMatrix4(camera.matrixWorldInverse);const dz=Math.max(0,-v.z-FOCUS);v.y-=dz*dz*K;return v.applyMatrix4(camera.projectionMatrix)}
+function projC(v){v.applyMatrix4(camera.matrixWorldInverse);const dz=Math.max(0,-v.z-FOCUS);v.y-=dz*dz*CURV.value;return v.applyMatrix4(camera.projectionMatrix)}
 
 /* sky: deep, quiet stars that drift */
 const sky=new THREE.Group();scene.add(sky);
@@ -220,7 +220,7 @@ const gg=new THREE.PlaneGeometry(80,80,140,140);gg.rotateX(-Math.PI/2);
   if(r>R+2.6){y=-.6;t.copy(sea)}else if(r>R){y=-.2*(r-R)/2.6;t.copy(sand)}
   else{const n=Math.sin(x*.37)*Math.cos(z*.31)+Math.sin((x-z)*.13);t.copy(n>.5?c:n>-.25?a:b);y=Math.max(0,Math.sin(x*.21+1)*Math.cos(z*.19)*.25-.05);
    // footpaths: house ↔ field, house ↔ school, house ↔ shore
-   const dpath=Math.min(segD(x,z,0,-4.2,6.6,-2.6),segD(x,z,0,-4.2,-9,-7.5),segD(x,z,0,-4.2,0,8),segD(x,z,0,3,-10.5,5));if(dpath<.75){t.lerp(path,.6*(1-dpath/.75));y*=.3}}
+   const dpath=Math.min(segD(x,z,0,-4.2,8,-0.5),segD(x,z,0,-4.2,-9,-7.5),segD(x,z,0,-4.2,0,8),segD(x,z,0,3,-10.5,5));if(dpath<.75){t.lerp(path,.6*(1-dpath/.75));y*=.3}}
   pos.setY(i,y);cols.push(t.r,t.g,t.b)}
  gg.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));gg.computeVertexNormals()}
 function segD(px,pz,ax,az,bx,bz){const dx=bx-ax,dz=bz-az,u=clamp(((px-ax)*dx+(pz-az)*dz)/(dx*dx+dz*dz),0,1);return Math.hypot(px-ax-u*dx,pz-az-u*dz)}
@@ -248,14 +248,15 @@ function grass(x,z){const g=new THREE.Group();const m=lam('#55804f');for(let i=0
 
 /* ================= places ================= */
 const PLACES={};const clickables=[];const hitMat=new THREE.MeshBasicMaterial({colorWrite:false,depthWrite:false});
-function hit(obj,r,act,name,y=1){const m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),hitMat);m.position.y=y;m.userData={act,name};obj.add(m);clickables.push(m);return m}
-const labels=[];function label(text,sub,pos,onclick){const el=document.createElement('div');el.className='lbl';el.innerHTML=text+(sub?`<small>${sub}</small>`:'');el.onclick=onclick;$('labels').appendChild(el);const L={el,pos};labels.push(L);return L}
+let BUILD='out';
+function hit(obj,r,act,name,y=1){const m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),hitMat);m.position.y=y;m.userData={act,name,room:BUILD};obj.add(m);clickables.push(m);return m}
+const labels=[];function label(text,sub,pos,onclick){const el=document.createElement('div');el.className='lbl';el.innerHTML=text+(sub?`<small>${sub}</small>`:'');el.onclick=onclick;$('labels').appendChild(el);const L={el,pos,room:BUILD};labels.push(L);return L}
 function lantern(x,z){const t=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,1.5,6),lam('#2a2a2c'));pole.position.y=.75;t.add(pole);
  const lamp=new THREE.Mesh(new THREE.BoxGeometry(.22,.28,.22),glowM('#f6c27a',1.1));lamp.position.y=1.6;t.add(lamp);const h=halo('#f1b46e',2.2,.45);h.position.y=1.6;t.add(h);
  t.position.set(x,0,z);scene.add(t);block(x,z,.2);updaters.push(tt=>{h.material.opacity=.38+.07*Math.sin(tt*2.3+x)})}
 
 /* --- Igor's house: the games are inside --- */
-{const t=new THREE.Group();t.position.set(0,0,-7);PLACES.house={pos:new V3(0,0,-4.4),obj:t,open:()=>openHouse(),name:'Igor’s house'};
+{const t=new THREE.Group();t.position.set(0,0,-7);PLACES.house={pos:new V3(0,0,-3.9),obj:t,open:()=>enterRoom('house'),name:'Igor’s house'};
  const wall=lam('#e6dccb',{side:THREE.DoubleSide}),wood=lam('#5a3f2e'),roofM=lam('#5b4a5e');
  const body=new THREE.Mesh(new THREE.RoundedBoxGeometry(4.2,2.3,3.2,3,.12),wall);body.position.y=1.15;t.add(body);
  {const a=.62,half=1.85,ridge=2.3+half*Math.tan(a),L=half/Math.cos(a)+.05;for(const sgn of[-1,1]){const sl=new THREE.Mesh(new THREE.BoxGeometry(4.7,.16,L),roofM);sl.rotation.x=sgn*a;sl.position.set(0,ridge-half/2*Math.tan(a)+.06,sgn*half/2);t.add(sl)}
@@ -272,11 +273,11 @@ function lantern(x,z){const t=new THREE.Group();const pole=new THREE.Mesh(new TH
  const n=24,sm=[];for(let i=0;i<n;i++){const s=halo('#9aa6b2',.6,.0);s.material.blending=THREE.NormalBlending;t.add(s);sm.push({s,u:i/n})}
  updaters.push((tt,dt)=>{for(const o of sm){o.u=(o.u+dt*.06)%1;o.s.position.set(1.2+Math.sin(o.u*5+tt*.3)*.4*o.u+o.u*1.2,4.2+o.u*3.2,-.4);const k=o.u;o.s.scale.setScalar(.5+k*1.6);o.s.material.opacity=.16*(1-k)*Math.min(1,k*6)}});
  blob(t,2.8,.85);scene.add(t);block(0,-7,2.6);hit(t,2.4,()=>goTo('house'),'house',1.3);
- label('Igor’s house','games inside',new V3(0,4.6,-7),()=>goTo('house'))}
+ label('Igor’s house','tap to go in',new V3(0,4.6,-7),()=>goTo('house'))}
 lantern(-1.4,-4.6);lantern(1.6,-4.4);
 
 /* --- tofu ant field: tap a patch to plant, Igor eats what grows --- */
-const FIELD=new V3(7,0,-3.2);
+const FIELD=new V3(8,0,-3.4);
 const plotObjs=[];
 const tofuM=glowM('#f6f2e6',.45),antInk=lam('#1b1b1b'),legM=lam('#cfc9bb');
 const antGeos=[new THREE.RoundedBoxGeometry(.2,.17,.2,2,.04),new THREE.RoundedBoxGeometry(.13,.12,.13,2,.03),new THREE.RoundedBoxGeometry(.24,.2,.22,2,.05)];
@@ -285,28 +286,28 @@ function makeAnt(sc=1){const a=new THREE.Group();[-.17,0,.15].forEach((z,i)=>{co
  a.userData.legs=[];for(let i=0;i<3;i++)for(const sd of[-1,1]){const l=new THREE.Mesh(new THREE.BoxGeometry(.16,.02,.02),legM);l.position.set(sd*.1,.05,-.1+i*.1);l.rotation.z=sd*.45;a.add(l);a.userData.legs.push(l)}
  a.scale.setScalar(sc);return a}
 const soilM=lam('#7a5a40'),soilWet=lam('#5e4330'),soilLock=lam('#4c5e45',{transparent:true,opacity:.6}),sproutM=lam('#7fb069',{emissive:'#2d4a22',emissiveIntensity:.4});
-function plotPos(i){return new V3(FIELD.x+(i%4-1.5)*1.45,0,FIELD.z+(Math.floor(i/4)-.5)*1.5)}
-{const fence=lam('#4b3a2c');const W=6.4,D=3.6;
+function plotPos(i){return new V3(FIELD.x+(i%4-1.5)*2.05,0,FIELD.z+(Math.floor(i/4)-.5)*2.05)}
+{const fence=lam('#4b3a2c');const W=8.8,D=4.8;
  for(const[x0,z0,x1,z1]of[[-W/2,-D/2,W/2,-D/2],[-W/2,D/2,-.6,D/2],[.6,D/2,W/2,D/2],[-W/2,-D/2,-W/2,D/2],[W/2,-D/2,W/2,D/2]]){const L=Math.hypot(x1-x0,z1-z0),nPosts=Math.max(2,Math.round(L/1.1)+1);
   for(let k=0;k<nPosts;k++){const u=k/(nPosts-1);const p=new THREE.Mesh(new THREE.BoxGeometry(.1,.55,.1),fence);p.position.set(FIELD.x+x0+(x1-x0)*u,.27,FIELD.z+z0+(z1-z0)*u);scene.add(p)}
   const rail=new THREE.Mesh(new THREE.BoxGeometry(L,.06,.05),fence);rail.position.set(FIELD.x+(x0+x1)/2,.42,FIELD.z+(z0+z1)/2);rail.rotation.y=-Math.atan2(z1-z0,x1-x0);scene.add(rail)}}
 for(let i=0;i<MAXPLOTS;i++){const g=new THREE.Group();g.position.copy(plotPos(i));scene.add(g);
- const bed=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.15,.16,1.15,2,.06),soilM);bed.position.y=.06;g.add(bed);
- const sprouts=[];for(let k=0;k<9;k++){const s=new THREE.Mesh(new THREE.ConeGeometry(.05,.35,5),sproutM);s.position.set((k%3-1)*.32,.12,(Math.floor(k/3)-1)*.32);g.add(s);sprouts.push(s)}
+ const bed=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.65,.16,1.65,2,.06),soilM);bed.position.y=.06;g.add(bed);
+ const sprouts=[];for(let k=0;k<9;k++){const s=new THREE.Mesh(new THREE.ConeGeometry(.05,.35,5),sproutM);s.position.set((k%3-1)*.48,.12,(Math.floor(k/3)-1)*.48);g.add(s);sprouts.push(s)}
  const ants=[];for(let k=0;k<CROP.gain;k++){const a=makeAnt(1);g.add(a);ants.push(a)}
  const h=halo('#fff6dc',1.6,0);h.position.y=.4;g.add(h);
  const sign=label('+','',plotPos(i).add(new V3(0,.7,0)),()=>plotTap(i));sign.el.style.fontSize='15px';sign.hidden=true;
- hit(g,.68,()=>plotTap(i),'plot',.3);plotObjs.push({g,bed,sprouts,ants,h,sign})}
-PLACES.field={pos:new V3(FIELD.x-3.9,0,FIELD.z+.3),open:()=>say(S.ants>0?'Tap a patch: I’ll plant a tofu ant.':'No tofu ants left. Play a game in my house!',3),name:'Tofu ant field'};
-label('Tofu ant field','',new V3(FIELD.x,1.9,FIELD.z-1.9),()=>goTo('field'));
-function walkToPlot(i,then){const P=plotPos(i).add(new V3(0,0,.85));closeSheet();$('index').hidden=true;IG.target=P;IG.arrive=then;mark.position.set(P.x,.04,P.z);mark.material.opacity=.8;hideHint();poke();
+ hit(g,.95,()=>plotTap(i),'plot',.3);plotObjs.push({g,bed,sprouts,ants,h,sign})}
+PLACES.field={pos:new V3(FIELD.x,0,FIELD.z+3.2),open:()=>say(S.ants>0?'Tap a patch: I’ll plant a tofu ant.':'Earn new tofu ants to plant more: play the games in my house!',3.4),name:'Tofu ant field'};
+label('Tofu ant field','',new V3(FIELD.x,1.9,FIELD.z-2.6),()=>goTo('field'));
+function walkToPlot(i,then){const P=plotPos(i).add(new V3(0,0,1.15));closeSheet();$('index').hidden=true;IG.target=P;IG.arrive=then;mark.position.set(P.x,.04,P.z);mark.material.opacity=.8;hideHint();poke();
  if(igor.position.distanceTo(P)<.3){IG.target=null;IG.arrive=null;then&&then()}}
 function plotTap(i){const n=S.plots.length;
  if(i>=n){if(i!==n)return say('One patch at a time!',2);const c=PLOTCOST(n);if(S.ants<c)return say(`A new patch costs ${c} tofu ants. I have ${S.ants}.`,3);
   walkToPlot(i,()=>{if(S.ants<c||S.plots.length!==i)return;S.ants-=c;S.plots.push({c:null});save();refresh();floatText('−'+c,plotPos(i));say('A new patch! Lovely.')});return}
  const p=S.plots[i],st=plotState(p);
- if(st==='empty'){if(S.ants<CROP.cost)return say('No tofu ants left to plant. Play a game in my house!',3.2);
-  walkToPlot(i,()=>{const q=S.plots[i];if(plotState(q)!=='empty'||S.ants<CROP.cost)return;S.ants-=CROP.cost;S.plots[i]={c:'tofu',start:now(),end:now()+CROP.min*60000,left:CROP.gain};save();refresh();floatText('−1',plotPos(i));say(pick(['Planted! Come back in a couple of minutes.','Grow, little ants, grow.','In the ground it goes.']),2.8)})}
+ if(st==='empty'){if(S.ants<CROP.cost)return say('Earn new tofu ants to plant more: play the games in my house!',3.6);
+  walkToPlot(i,()=>{const q=S.plots[i];if(plotState(q)!=='empty'||S.ants<CROP.cost)return;S.ants-=CROP.cost;S.plots[i]={c:'tofu',start:now(),end:now()+CROP.min*60000,left:CROP.gain};save();refresh();floatText('−1',plotPos(i));say(S.ants>0?pick(['Planted! Come back in a couple of minutes.','Grow, little ants, grow.']):'Planted! To plant more, earn tofu ants in my house.',3.4)})}
  else if(st==='growing'){walkToPlot(i,null);say('Not yet… ready in '+fmt(p.end-now())+'.',2.6)}
  else walkToPlot(i,null)}
 let eatCD=0;
@@ -319,29 +320,29 @@ updaters.push((t,dt)=>{eatCD-=dt;const n=S.plots.length;
   if(st==='empty'&&S.ants>0&&i===S.plots.findIndex(q=>plotState(q)==='empty')){o.sign.hidden=false;o.sign.el.innerHTML='+ plant'}
   o.sprouts.forEach((s,k)=>{s.visible=st==='growing'||(st==='ready'&&left>0);const hgt=.15+prog*.85*(.7+.3*Math.sin(k*2.1));s.scale.set(1,hgt,1);s.position.y=.12+.175*hgt;s.rotation.z=Math.sin(t*1.3+k)*.06});
   o.ants.forEach((a,k)=>{const show=k<left;a.visible=show||!!a.userData.eating;if(a.userData.eating){a.userData.e+=dt*3;const w=igor.position.clone().sub(o.g.position);a.position.lerp(w.setY(.6),dt*7);a.scale.setScalar(Math.max(.01,1-a.userData.e));if(a.userData.e>=1){a.userData.eating=false;a.visible=false;a.scale.setScalar(1)}return}
-   if(!show)return;const ang=t*.6+k*2.1+i;a.position.set(Math.cos(ang)*.38,.12,Math.sin(ang)*.38);a.rotation.y=-ang;a.userData.legs.forEach((l,j)=>l.rotation.y=Math.sin(t*14+j)*.5)});
+   if(!show)return;const ang=t*.6+k*2.1+i;a.position.set(Math.cos(ang)*.55,.12,Math.sin(ang)*.55);a.rotation.y=-ang;a.userData.legs.forEach((l,j)=>l.rotation.y=Math.sin(t*14+j)*.5)});
   o.h.material.opacity=left>0?.32+.1*Math.sin(t*2+i):0;
-  if(left>0&&eatCD<=0&&Math.hypot(igor.position.x-o.g.position.x,igor.position.z-o.g.position.z)<1.1){eatCD=.45;const a=o.ants[left-1];a.userData.eating=true;a.userData.e=0;
+  if(where==='out'&&left>0&&eatCD<=0&&Math.hypot(igor.position.x-o.g.position.x,igor.position.z-o.g.position.z)<1.45){eatCD=.45;const a=o.ants[left-1];a.userData.eating=true;a.userData.e=0;
    p.left=left-1;S.ants+=1;if(p.left<=0)S.plots[i]={c:null};save();refresh();floatText('+1',igor.position);if(Math.random()<.4)say(pick(['Gnam!','Crunchy.','Mmm, tofu.','One more!']),1.2)}}});
-/* --- the old music school: a small ruin --- */
-{const t=new THREE.Group();t.position.set(-10,0,-9.5);t.rotation.y=.5;PLACES.school={pos:new V3(-7.6,0,-7.2),open:()=>openSchool(),name:'Music school'};
- const st=lam('#8d8678',{flatShading:true}),st2=lam('#77705f',{flatShading:true});
- const back=new THREE.Mesh(new THREE.BoxGeometry(3.4,2.2,.3),st);back.position.set(0,1.1,-1.3);t.add(back);
- const left=new THREE.Mesh(new THREE.BoxGeometry(.3,1.5,2.6),st2);left.position.set(-1.6,.75,0);t.add(left);
- const right=new THREE.Mesh(new THREE.BoxGeometry(.3,2.6,1.2),st);right.position.set(1.6,1.3,-.7);t.add(right);
- const front=new THREE.Mesh(new THREE.BoxGeometry(1.2,1,.3),st2);front.position.set(-1,.5,1.3);t.add(front);
- const beam=new THREE.Mesh(new THREE.BoxGeometry(3.8,.18,.22),lam('#4b3a2c'));beam.position.set(.1,2.45,-.4);beam.rotation.z=-.18;t.add(beam);
- const beam2=new THREE.Mesh(new THREE.BoxGeometry(.18,.18,2.8),lam('#4b3a2c'));beam2.position.set(-.8,2.0,-.1);beam2.rotation.x=.25;t.add(beam2);
- for(let i=0;i<5;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(.4,.25,.3),st2);b.position.set(-.4+rnd()*2.4,.12,1.4+rnd()*1.2);b.rotation.y=rnd()*3;t.add(b)}
- // an old upright piano inside, faintly lit
- const piano=new THREE.Mesh(new THREE.BoxGeometry(1.3,1,.5),lam('#2a1d18'));piano.position.set(.3,.5,-.85);t.add(piano);
- const keys=new THREE.Mesh(new THREE.BoxGeometry(1.2,.05,.25),glowM('#efe4cf',.25));keys.position.set(.3,.78,-.5);t.add(keys);
- const candle=halo('#f1b46e',1.6,.5);candle.position.set(.9,1.25,-.8);t.add(candle);
+/* --- the old music school: worn, but standing --- */
+{const t=new THREE.Group();t.position.set(-10,0,-9.5);t.rotation.y=.5;PLACES.school={pos:new V3(-7.6,0,-7.2),open:()=>enterRoom('school'),name:'Music school'};
+ const st=lam('#a39b8b'),st2=lam('#8a8273',{flatShading:true}),roofM=lam('#4a4048'),wood=lam('#4b3a2c');
+ const body=new THREE.Mesh(new THREE.RoundedBoxGeometry(3.8,2.2,3,3,.1),st);body.position.y=1.1;t.add(body);
+ {const a=.6,half=1.75,ridge=2.2+half*Math.tan(a),L=half/Math.cos(a)+.05;for(const sgn of[-1,1]){const sl=new THREE.Mesh(new THREE.BoxGeometry(4.2,.14,L),roofM);sl.rotation.x=sgn*a;sl.position.set(0,ridge-half/2*Math.tan(a)+.05,sgn*half/2);t.add(sl)}
+  const sh=new THREE.Shape();sh.moveTo(-1.5,0);sh.lineTo(1.5,0);sh.lineTo(0,1.5*Math.tan(a));sh.closePath();for(const sgn of[-1,1]){const gm=new THREE.Mesh(new THREE.ShapeGeometry(sh),lam('#a39b8b',{side:THREE.DoubleSide}));gm.rotation.y=sgn*Math.PI/2;gm.position.set(sgn*1.9,2.2,0);t.add(gm)}
+  // a few missing tiles and a crooked chimney: old, not ruined
+  const hole=new THREE.Mesh(new THREE.BoxGeometry(.8,.16,.6),lam('#1c1a20'));hole.rotation.x=a;hole.position.set(.9,ridge-half*.55*Math.tan(a)+.08,half*.55);t.add(hole)}
+ const ch=new THREE.Mesh(new THREE.BoxGeometry(.4,1,.4),st2);ch.position.set(-1.1,3.2,-.5);ch.rotation.z=.12;t.add(ch);
+ const door=new THREE.Mesh(new THREE.PlaneGeometry(.8,1.35),glowM('#f3c07a',.45));door.position.set(0,.68,1.53);t.add(door);
+ const fr=new THREE.Mesh(new THREE.BoxGeometry(1,1.5,.08),wood);fr.position.set(0,.75,1.5);t.add(fr);
+ for(const x of[-1.2,1.2]){const w=new THREE.Mesh(new THREE.PlaneGeometry(.6,.55),glowM('#e9c98e',.55));w.position.set(x,1.3,1.53);t.add(w);const f=new THREE.Mesh(new THREE.BoxGeometry(.75,.7,.06),wood);f.position.set(x,1.3,1.51);t.add(f)}
+ const crack=new THREE.Mesh(new THREE.BoxGeometry(.05,.9,.02),lam('#5a5348'));crack.position.set(1.6,1.4,1.52);crack.rotation.z=.4;t.add(crack);
+ for(let i=0;i<3;i++){const b=new THREE.Mesh(new THREE.DodecahedronGeometry(.22,0),st2);b.position.set(1.4+rnd()*.8,.12,1.4+rnd()*.8);t.add(b)}
  const noteC=document.createElement('canvas');noteC.width=noteC.height=64;{const g=noteC.getContext('2d');g.fillStyle='#efe4cf';g.font='46px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('♪',32,34)}
- const nt=new THREE.CanvasTexture(noteC),notes=[];for(let k=0;k<4;k++){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:nt,transparent:true,depthWrite:false,opacity:0}));s.scale.set(.5,.5,1);t.add(s);notes.push(s)}
- updaters.push(tt=>{candle.material.opacity=.4+.12*Math.sin(tt*7)*Math.sin(tt*3.1);notes.forEach((s,k)=>{const u=(tt*.1+k/4)%1;s.position.set(.3+Math.sin(tt*.8+k)*.6,1.3+u*2.4,-.7);s.material.opacity=Math.sin(u*Math.PI)*.7})});
- blob(t,2.4,.9);scene.add(t);block(-10,-9.5,2.3);hit(t,2.2,()=>goTo('school'),'school',1);
- label('Music school','only for composers',new V3(-10,3.4,-9.5),()=>goTo('school'))}
+ const nt=new THREE.CanvasTexture(noteC),notes=[];for(let k=0;k<3;k++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:nt,transparent:true,depthWrite:false,opacity:0}));sp.scale.set(.45,.45,1);t.add(sp);notes.push(sp)}
+ updaters.push(tt=>{notes.forEach((sp,k)=>{const u=(tt*.1+k/3)%1;sp.position.set(-1.1+Math.sin(tt*.8+k)*.4,3.8+u*1.8,-.5);sp.material.opacity=Math.sin(u*Math.PI)*.6})});
+ blob(t,2.6,.9);scene.add(t);block(-10,-9.5,2.4);hit(t,2.3,()=>goTo('school'),'school',1);
+ label('Music school','only for composers',new V3(-10,4.2,-9.5),()=>goTo('school'))}
 
 /* --- the jetty: other places, soon --- */
 {const t=new THREE.Group();t.position.set(-11.5,0,5.5);PLACES.jetty={pos:new V3(-9.4,0,4.6),open:()=>openPlaces(),name:'The jetty'};
@@ -355,19 +356,19 @@ updaters.push((t,dt)=>{eatCD-=dt;const n=S.plots.length;
  label('Other places','coming soon',new V3(-11.5,2.2,5.5),()=>goTo('jetty'))}
 
 /* vegetation, kept away from the places */
-const free=(x,z)=>Math.hypot(x,z+7)<5||Math.hypot(x-FIELD.x,z-FIELD.z)<4.6||Math.hypot(x+10,z+9.5)<4.2||Math.hypot(x+11,z-5.5)<3.5||Math.hypot(x,z)<4.2||segD(x,z,0,-4.2,0,8)<1.4||segD(x,z,0,-4.2,6.6,-2.6)<1.3||segD(x,z,0,-4.2,-9,-7.5)<1.4||segD(x,z,0,3,-10.5,5)<1.3;
+const free=(x,z)=>Math.hypot(x,z+7)<5||(Math.abs(x-FIELD.x)<7&&z>FIELD.z-4.5&&z<FIELD.z+9)||Math.hypot(x+10,z+9.5)<4.2||Math.hypot(x+11,z-5.5)<3.5||Math.hypot(x,z)<4.2||segD(x,z,0,-4.2,0,8)<1.4||segD(x,z,0,-4.2,8,-0.5)<1.3||segD(x,z,0,-4.2,-9,-7.5)<1.4||segD(x,z,0,3,-10.5,5)<1.3;
 let placed=0,tries=0;while(placed<38&&tries<4000){tries++;const a=rnd()*TAU,r=5+rnd()*(R-6),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z)||blocked.some(b=>Math.hypot(b.x-x,b.z-z)<2.4))continue;(rnd()<.4?pine:roundTree)(x,z,.8+rnd()*.5);placed++}
 for(let i=0;i<14;i++){const a=rnd()*TAU,r=4+rnd()*(R-4),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z)||blocked.some(b=>Math.hypot(b.x-x,b.z-z)<1.5))continue;rock(x,z,.6+rnd()*.8)}
 for(let i=0;i<90;i++){const a=rnd()*TAU,r=2+rnd()*(R-2.5),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z))continue;grass(x,z)}
 
 /* a few wild tofu ants wander about: Igor eats them when he passes */
-const wild=[];function wildSpot(){for(let k=0;k<50;k++){const a=Math.random()*TAU,r=3+Math.random()*12,x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.4)&&Math.hypot(x-FIELD.x,z-FIELD.z)>3.6)return new V3(x,0,z)}return new V3(2,0,2)}
+const wild=[];function wildSpot(){for(let k=0;k<50;k++){const a=Math.random()*TAU,r=3+Math.random()*12,x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.4)&&!(Math.abs(x-FIELD.x)<5&&Math.abs(z-FIELD.z)<3.2))return new V3(x,0,z)}return new V3(2,0,2)}
 for(let i=0;i<3;i++){const a=makeAnt(1.5);a.position.copy(wildSpot());a.userData.to=wildSpot();a.userData.ph=Math.random()*6;scene.add(a);wild.push(a)}
 updaters.push((t,dt)=>{for(const a of wild){const u=a.userData;if(u.gone>0){u.gone-=dt;if(u.gone<=0){a.position.copy(wildSpot());a.visible=true;a.scale.setScalar(1.5)}continue}
  if(u.e!==undefined){u.e+=dt*3;a.position.lerp(igor.position.clone().setY(.6),dt*7);a.scale.setScalar(1.5*Math.max(.01,1-u.e));if(u.e>=1){u.e=undefined;a.visible=false;u.gone=40+Math.random()*30}continue}
  const v=u.to.clone().sub(a.position);const L=v.length();if(L<.2)u.to=wildSpot();else{v.divideScalar(L);a.position.addScaledVector(v,dt*.6);a.rotation.y=Math.atan2(v.x,v.z)}
  u.legs.forEach((l,j)=>l.rotation.y=Math.sin(t*14+j+u.ph)*.5);
- if(started&&a.position.distanceTo(igor.position)<.9){u.e=0;S.ants+=1;save();refresh();floatText('+1',igor.position);say(pick(['Gnam!','A wild one!','Tasty.']),1.2)}}});
+ if(started&&where==='out'&&a.position.distanceTo(igor.position)<.9){u.e=0;S.ants+=1;save();refresh();floatText('+1',igor.position);say(pick(['Gnam!','A wild one!','Tasty.']),1.2)}}});
 
 /* fireflies: a few warm sparks, nothing more */
 const FF=reduce?14:36;const ffP=new Float32Array(FF*3),ffD=[];for(let i=0;i<FF;i++){const a=rnd()*TAU,r=3+rnd()*13;ffD.push({x:Math.cos(a)*r,z:Math.sin(a)*r/1.12,y:.6+rnd()*1.8,ph:rnd()*6})}
@@ -385,19 +386,103 @@ const igLight=new THREE.PointLight('#cfe9ff',.6,5,2);igLight.position.y=2;igor.a
 igor.position.set(0,0,-2.6);scene.add(igor);
 const mark=new THREE.Mesh(new THREE.RingGeometry(.25,.34,28).rotateX(-Math.PI/2),curve(new THREE.MeshBasicMaterial({color:'#efe4cf',transparent:true,opacity:0,depthWrite:false})));mark.position.y=.04;scene.add(mark);
 const IG={target:null,arrive:null,face:1,walk:0,idle:3};
-function walkable(x,z){if(Math.hypot(x,z*1.12)>R-.6)return false;return!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3)}
-function goTo(k,arg){const P=PLACES[k];if(!P)return;closeSheet();$('index').hidden=true;IG.target=P.pos.clone();IG.arrive=()=>P.open(arg);mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke();
+let where='out';const ROOMS={};
+function walkable(x,z){if(where!=='out'){const Rm=ROOMS[where];if(Math.abs(x)>Rm.w/2-.7||z<-Rm.d/2+1.1||z>Rm.d/2-.3)return false;return!Rm.blocks.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3)}
+ if(Math.hypot(x,z*1.12)>R-.6)return false;return!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3)}
+function goTo(k,arg){const P=PLACES[k];if(!P)return;if(where!=='out'){exitRoom(true);}closeSheet();$('index').hidden=true;IG.target=P.pos.clone();IG.arrive=()=>P.open(arg);mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke();
  if(igor.position.distanceTo(P.pos)<.6){IG.target=null;const f=IG.arrive;IG.arrive=null;f()}else say(pick(LINES['go_'+k]||['Follow me.']),2.2)}
 function igorUpdate(t,dt){blink(t);let moving=false;
  if(IG.target){const v=IG.target.clone().sub(igor.position);v.y=0;const L=v.length();
   if(L<.15){IG.target=null;if(IG.arrive){const f=IG.arrive;IG.arrive=null;f()}}
   else{v.divideScalar(L);const sp=Math.min(L,4.2*dt);const nx=igor.position.x+v.x*sp,nz=igor.position.z+v.z*sp;
-   if(walkable(nx,nz)){igor.position.x=nx;igor.position.z=nz}else if(walkable(nx,igor.position.z))igor.position.x=nx;else if(walkable(igor.position.x,nz))igor.position.z=nz;else{IG.target=null;IG.arrive=null}
+   if(walkable(nx,nz)){igor.position.x=nx;igor.position.z=nz}else if(walkable(nx,igor.position.z))igor.position.x=nx;else if(walkable(igor.position.x,nz))igor.position.z=nz;else{const f=L<1.3?IG.arrive:null;IG.target=null;IG.arrive=null;if(f)f()}
    const camRight=new V3().setFromMatrixColumn(camera.matrixWorld,0);const d=v.dot(camRight);if(Math.abs(d)>.25)IG.face=d>0?1:-1;moving=true;IG.walk+=dt*10}}
- else if(started&&!reduce){IG.idle-=dt;if(IG.idle<=0&&sheet.hidden){IG.idle=6+Math.random()*7;for(let k=0;k<12;k++){const a=Math.random()*TAU,r=1+Math.random()*2.2,x=igor.position.x+Math.cos(a)*r,z=igor.position.z+Math.sin(a)*r;if(walkable(x,z)&&Math.hypot(x,z+3)<6){IG.target=new V3(x,0,z);IG.arrive=null;break}}}}
+ else if(started&&!reduce&&where==='out'){IG.idle-=dt;if(IG.idle<=0&&sheet.hidden){IG.idle=6+Math.random()*7;for(let k=0;k<12;k++){const a=Math.random()*TAU,r=1+Math.random()*2.2,x=igor.position.x+Math.cos(a)*r,z=igor.position.z+Math.sin(a)*r;if(walkable(x,z)&&Math.hypot(x,z+3)<6){IG.target=new V3(x,0,z);IG.arrive=null;break}}}}
  igPlane.position.y=IH/2+.05+(moving?Math.abs(Math.sin(IG.walk))*.16:Math.sin(t*2)*.04);igPlane.rotation.z=moving?Math.sin(IG.walk)*.05:0;
  igPlane.scale.x=IG.face;
  mark.material.opacity*=IG.target?1:.94}
+
+
+/* ================= inside: Igor's house and the music school ================= */
+const outsideObjs=scene.children.filter(o=>!o.isLight&&o!==igor&&o!==mark);
+function room(key,o){BUILD=key;const g=new THREE.Group();g.visible=false;scene.add(g);const Rm={g,w:o.w,d:o.d,blocks:[],stations:{},entry:new V3(0,0,o.d/2-1.3)};ROOMS[key]=Rm;
+ const floor=new THREE.Mesh(new THREE.RoundedBoxGeometry(o.w,.3,o.d,2,.08),lam(o.floor));floor.position.y=-.15;g.add(floor);Rm.floor=floor;
+ for(let i=0;i<o.w/1.2;i++){const ln=new THREE.Mesh(new THREE.BoxGeometry(.02,.01,o.d-.2),lam(o.floorLine));ln.position.set(-o.w/2+.6+i*1.2,.01,0);g.add(ln)}
+ const wallM=lam(o.wall),H=3.2;
+ const back=new THREE.Mesh(new THREE.BoxGeometry(o.w,H,.25),wallM);back.position.set(0,H/2,-o.d/2);g.add(back);
+ for(const sgn of[-1,1]){const side=new THREE.Mesh(new THREE.BoxGeometry(.25,H,o.d),wallM);side.position.set(sgn*o.w/2,H/2,0);g.add(side)}
+ const skirt=lam(o.trim);const sk=new THREE.Mesh(new THREE.BoxGeometry(o.w,.18,.3),skirt);sk.position.set(0,.09,-o.d/2+.05);g.add(sk);
+ const pl=new THREE.PointLight('#f6c98f',1.5,18,1.6);pl.position.set(0,3.2,0);g.add(pl);
+ const lamp=new THREE.Mesh(new THREE.SphereGeometry(.22,14,10),glowM('#f6d29a',1.2));lamp.position.set(0,2.9,-.5);g.add(lamp);
+ // the way out: a lit doormat at the front
+ const mat=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.6,.05,.8,2,.02),lam('#7a4b3a'));mat.position.set(0,.03,o.d/2-.5);g.add(mat);
+ hit(mat,.9,()=>walkIn(new V3(0,0,o.d/2-.6),()=>exitRoom()),'exit',.3);
+ const out=label('Back outside','',new V3(0,.6,o.d/2-.5),()=>walkIn(new V3(0,0,o.d/2-.6),()=>exitRoom()));out.el.style.fontSize='15px';
+ BUILD='out';return Rm}
+function station(Rm,key,{name,sub,pos,stand,obj,act,r=1.3,y=1}){BUILD=key;obj.position.copy(pos);Rm.g.add(obj);Rm.blocks.push({x:pos.x,z:pos.z,r:r*.75});
+ const go=()=>walkIn(stand,act);hit(obj,r,go,name,y);label(name,sub||'',pos.clone().add(new V3(0,y+1.6,0)),go);BUILD='out'}
+function walkIn(P,then){closeSheet();$('index').hidden=true;IG.target=P.clone();IG.arrive=then;mark.position.set(P.x,.04,P.z);mark.material.opacity=.8;poke();if(igor.position.distanceTo(P)<.3){IG.target=null;IG.arrive=null;then&&then()}}
+function enterRoom(k){const Rm=ROOMS[k];if(!Rm)return;closeSheet();where=k;outsideObjs.forEach(o=>o.visible=false);Rm.g.visible=true;igor.position.copy(Rm.entry);IG.target=null;IG.arrive=null;CURV.value=0;
+ scene.background=new THREE.Color('#0d0b0c');scene.fog=null;camSnap=true;say(k==='house'?pick(['Welcome to my house!','Make yourself at home.']):'Shh… the old school. Tap the piano.',3)}
+function exitRoom(quiet){const k=where;if(k==='out')return;ROOMS[k].g.visible=false;outsideObjs.forEach(o=>o.visible=true);where='out';CURV.value=K;scene.background=new THREE.Color('#0b1424');scene.fog=new THREE.Fog(NIGHT,28,66);
+ const P=PLACES[k];igor.position.copy(P.pos).add(new V3(0,0,.6));IG.target=null;IG.arrive=null;camSnap=true;if(!quiet)say(pick(['Fresh air!','Back outside.']),1.8)}
+let camSnap=false;
+const wipSay=t=>{say(t+': work in progress, coming soon!',3);toast(t+' · coming soon')};
+
+/* Igor's house: four corners, four games */
+{const Rm=room('house',{w:12,d:9,floor:'#6e5440',floorLine:'#5a4333',wall:'#d6c8ae',trim:'#7a5a40'});const g=Rm.g;
+ const rug=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.2,.03,40),lam('#5b4b50'));rug.scale.set(1.3,1,.8);rug.position.set(0,.02,.6);g.add(rug);
+ // the staircase: Pitch Stairs
+ {const o=new THREE.Group();const wood=lam('#8a6446'),dark=lam('#5a3f2e');for(let i=0;i<7;i++){const st=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.6,.28,.55,2,.04),i%2?wood:dark);st.position.set(0,.14+i*.28,.9-i*.5);o.add(st)}
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,3.6),dark);rail.position.set(.8,1.9,-.6);rail.rotation.x=.52;o.add(rail);
+  const ant=makeAnt(1.4);ant.position.set(0,2.1,-2.1);o.add(ant);updaters.push(t=>{ant.rotation.y=Math.sin(t)*.6;ant.userData.legs.forEach((l,j)=>l.rotation.y=Math.sin(t*10+j)*.4)});
+  station(Rm,'house',{name:'The staircase',sub:'Pitch Stairs · play',pos:new V3(-4.2,0,-1.8),stand:new V3(-2.8,0,0),obj:o,act:()=>openStairs(),r:1.6})}
+ // the kitchen
+ {const o=new THREE.Group();const counter=new THREE.Mesh(new THREE.RoundedBoxGeometry(2.6,1,.9,2,.06),lam('#9c8a74'));counter.position.y=.5;o.add(counter);
+  const top=new THREE.Mesh(new THREE.BoxGeometry(2.7,.08,1),lam('#d8cfc0'));top.position.y=1.04;o.add(top);
+  const pot=new THREE.Mesh(new THREE.CylinderGeometry(.32,.28,.4,18),lam('#3d4148'));pot.position.set(.5,1.28,0);o.add(pot);
+  const bowl=new THREE.Mesh(new THREE.SphereGeometry(.25,14,8,0,TAU,Math.PI/2,Math.PI/2),lam('#e9e2d4',{side:THREE.DoubleSide}));bowl.position.set(-.6,1.32,.1);o.add(bowl);
+  for(let k=0;k<3;k++){const c=new THREE.Mesh(new THREE.BoxGeometry(.12,.1,.12),tofuM);c.position.set(-.65+k*.08,1.22,.1);o.add(c)}
+  const steam=[];for(let k=0;k<6;k++){const h=halo('#e9eef5',.35,.0);h.material.blending=THREE.NormalBlending;o.add(h);steam.push({h,u:k/6})}
+  updaters.push((t,dt)=>{for(const q of steam){q.u=(q.u+dt*.25)%1;q.h.position.set(.5+Math.sin(q.u*6+t)*.1,1.55+q.u*1.1,0);q.h.material.opacity=.25*(1-q.u)}});
+  station(Rm,'house',{name:'The kitchen',sub:'coming soon',pos:new V3(3.9,0,-3.6),stand:new V3(3.6,0,-2.1),obj:o,act:()=>wipSay('The kitchen'),r:1.5})}
+ // the window
+ {const o=new THREE.Group();const fr=new THREE.Mesh(new THREE.BoxGeometry(.12,1.6,1.9),lam('#7a5a40'));fr.position.y=1.7;o.add(fr);
+  const pane=new THREE.Mesh(new THREE.PlaneGeometry(1.7,1.4),glowM('#2b4a78',.9));pane.rotation.y=Math.PI/2;pane.position.set(.08,1.7,0);o.add(pane);
+  for(let k=0;k<8;k++){const st=new THREE.Mesh(new THREE.CircleGeometry(.025,6),glowM('#ffffff',1.5));st.rotation.y=Math.PI/2;st.position.set(.09,1.2+rnd()*1.1,-.7+rnd()*1.4);o.add(st)}
+  const moonW=new THREE.Mesh(new THREE.CircleGeometry(.16,20),glowM('#f3ecd8',1.4));moonW.rotation.y=Math.PI/2;moonW.position.set(.09,2.1,.45);o.add(moonW);
+  const sill=new THREE.Mesh(new THREE.BoxGeometry(.4,.08,2),lam('#7a5a40'));sill.position.set(.15,.88,0);o.add(sill);
+  const chair=new THREE.Mesh(new THREE.RoundedBoxGeometry(.7,.6,.7,2,.08),lam('#5d6b7a'));chair.position.set(1.2,.3,0);o.add(chair);
+  station(Rm,'house',{name:'The window',sub:'coming soon',pos:new V3(-5.85,0,1.4),stand:new V3(-4.3,0,1.4),obj:o,act:()=>wipSay('The window'),r:1.1,y:1.4})}
+ // the bedroom corner
+ {const o=new THREE.Group();const frame=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.8,.45,2.8,2,.08),lam('#6b4a36'));frame.position.y=.23;o.add(frame);
+  const mattress=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.65,.25,2.6,2,.1),lam('#e8e1d3'));mattress.position.y=.55;o.add(mattress);
+  const blanket=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.7,.12,1.6,2,.05),lam('#56708f'));blanket.position.set(0,.7,.45);o.add(blanket);
+  const pillow=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.1,.2,.5,2,.08),lam('#f4efe6'));pillow.position.set(0,.75,-.95);o.add(pillow);
+  const head=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.8,1.1,.15,2,.05),lam('#6b4a36'));head.position.set(0,.8,-1.35);o.add(head);
+  const lampN=halo('#f6c98f',1.1,.55);lampN.position.set(-1.2,1.1,-1.2);o.add(lampN);
+  station(Rm,'house',{name:'The bedroom',sub:'coming soon',pos:new V3(4.4,0,1.2),stand:new V3(2.6,0,1.6),obj:o,act:()=>wipSay('The bedroom'),r:1.6})}
+}
+
+/* the old music school, inside */
+{const Rm=room('school',{w:11,d:8.5,floor:'#5e5a54',floorLine:'#4e4a45',wall:'#a39b8b',trim:'#5a5348'});const g=Rm.g;
+ for(let k=0;k<4;k++){const c=new THREE.Mesh(new THREE.BoxGeometry(.05,1+rnd(),.02),lam('#6f6759'));c.position.set(-4+rnd()*8,1.2+rnd()*1.2,-4.11);c.rotation.z=rnd()-.5;g.add(c)}
+ const beam=new THREE.Mesh(new THREE.BoxGeometry(11,.22,.3),lam('#4b3a2c'));beam.position.set(0,3.05,-1);g.add(beam);
+ // the piano: Cadences
+ {const o=new THREE.Group();const body=new THREE.Mesh(new THREE.RoundedBoxGeometry(2.2,1.5,.8,2,.05),lam('#2b1e18'));body.position.y=.75;o.add(body);
+  const kb=new THREE.Mesh(new THREE.BoxGeometry(2,.08,.35),lam('#efe9dc'));kb.position.set(0,.98,.5);o.add(kb);
+  for(let k=0;k<14;k++){if([2,6,9,13].includes(k))continue;const bk=new THREE.Mesh(new THREE.BoxGeometry(.06,.06,.18),lam('#151515'));bk.position.set(-.93+k*.14,1.04,.42);o.add(bk)}
+  const sheetM=new THREE.Mesh(new THREE.PlaneGeometry(.6,.42),lam('#f4efe2'));sheetM.position.set(0,1.35,.42);sheetM.rotation.x=-.25;o.add(sheetM);
+  const bench=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.1,.45,.45,2,.05),lam('#3a2a20'));bench.position.set(0,.23,1.2);o.add(bench);
+  const candle=halo('#f1b46e',1.4,.6);candle.position.set(.85,1.75,0);o.add(candle);updaters.push(t=>{candle.material.opacity=.5+.12*Math.sin(t*7)*Math.sin(t*3.1)});
+  station(Rm,'school',{name:'The piano',sub:'Cadences · enter',pos:new V3(0,0,-3.2),stand:new V3(0,0,-1.1),obj:o,act:()=>openSchool(),r:1.5})}
+ // closed doors: future games
+ const door=(x,z,ry,n)=>{const o=new THREE.Group();const d=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.1,2.1,.12,2,.04),lam('#5a3f2e'));d.position.y=1.05;o.add(d);
+  const knob=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),lam('#c9a24a'));knob.position.set(.38,1,.08);o.add(knob);
+  const lock=new THREE.Mesh(new THREE.BoxGeometry(.5,.08,.04),lam('#2b2b2b'));lock.position.set(0,1.35,.08);lock.rotation.z=.6;o.add(lock);
+  o.rotation.y=ry;station(Rm,'school',{name:'Closed door',sub:'a future game',pos:new V3(x,0,z),stand:new V3(x*.75,0,z<-3?z+1.6:z),obj:o,act:()=>say('This door is closed. A new game will live here soon.',3),r:.9})};
+ door(-3.9,-4.1,0);door(3.9,-4.1,0);door(-5.4,0,Math.PI/2);door(5.4,0,-Math.PI/2);
+}
 
 /* ================= Igor talks ================= */
 const LINES={
@@ -430,12 +515,9 @@ sb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
  if(b.dataset.go){location.href=b.dataset.go}
  if(b.dataset.wip){openWip(b.dataset.wip)}
  if(b.dataset.sign){openAccount()}});
-function openHouse(){const sc=(S.scores.pitchStairs)||{};const best=['easy','medium','extreme'].map(l=>sc[l]??'–');
- const soon=(n,d)=>`<div class="room"><div class="t"><b>${n}</b><span>soon</span></div><p>${d}</p></div>`;
- openSheet('house',`<div class="k">Igor’s house</div><h3>Come in</h3><p>Every room is a game. Harder levels give more tofu ants.</p>
- <div class="room"><div class="t"><b>The staircase</b><span style="color:var(--ok)">Pitch Stairs</span></div><p>A tofu ant sings: take Igor up the stairs to the same note.</p>
-  <div class="score"><span>Best · easy</span><span>${best[0]}</span><span>Best · medium</span><span>${best[1]}</span><span>Best · extreme</span><span>${best[2]}</span></div><div class="row"><button class="main" data-go="/pitch-stairs/">Play</button></div></div>
- ${soon('The window','Look out at night with Igor. Being built.')}${soon('The kitchen','Cook with tofu ants. Being built.')}${soon('The bedroom','Where Igor dreams. Being built.')}`)}
+function openStairs(){const sc=(S.scores.pitchStairs)||{};const best=['easy','medium','extreme'].map(l=>sc[l]??'–');
+ openSheet('stairs',`<div class="k">Igor’s house · the staircase</div><h3>Pitch Stairs</h3><p>A tofu ant sings: take Igor up the stairs to the same note. Harder levels give more tofu ants.</p>
+ <div class="score"><span>Best · easy</span><span>${best[0]}</span><span>Best · medium</span><span>${best[1]}</span><span>Best · extreme</span><span>${best[2]}</span></div><div class="row"><button class="main" data-go="/pitch-stairs/">Play</button></div>`)}
 function openWip(t){openSheet('wip',`<div class="k">Igor’s house</div><h3>${t}</h3><span class="wip">work in progress · coming soon</span><p>Igor is still building this room. Come back soon!</p>`)}
 function openSchool(){openSheet('school',`<div class="k">Music school · only for composers</div><h3>The old music school</h3><p>The roof is gone and the piano is out of tune, but the harmony teacher is still here. Finish phrases in four voices: Igor checks your cadences, fifths, octaves and resolutions.</p><p style="color:var(--warm)">Not a real game yet: an exercise room.</p><div class="row"><button class="main" data-go="/cadences/">Enter the school</button></div>`)}
 function openPlaces(){openSheet('places',`<div class="k">The jetty</div><h3>Other places</h3><span class="wip">coming soon</span><p>One day this boat will take Igor to other islands and places. For now it just rocks on the water.</p><div class="row"><button data-go="/space/">Old ride: float in space</button></div>`)}
@@ -474,7 +556,7 @@ const idx=$('index');
 idx.innerHTML=`<h2>Igor’s island</h2><ul><li><button data-i="house">Igor’s house<small>games</small></button></li><li><button data-i="field">Tofu ant field</button></li><li><button data-i="school">Music school<small>composers</small></button></li><li><button data-i="jetty">Other places<small>soon</small></button></li></ul>
  <h2>Games in the house</h2><ul><li><button data-i="stairs">Pitch Stairs</button></li><li><button data-i="w">The window<small>soon</small></button></li><li><button data-i="k">The kitchen<small>soon</small></button></li><li><button data-i="b">The bedroom<small>soon</small></button></li></ul>`;
 idx.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.i;idx.hidden=true;$('indexBtn').setAttribute('aria-expanded','false');
- if(k==='stairs'){location.href='/pitch-stairs/';return}if(k==='w'||k==='k'||k==='b'){openWip({w:'The window',k:'The kitchen',b:'The bedroom'}[k]);return}goTo(k)});
+ if(k==='stairs'){location.href='/pitch-stairs/';return}if(k==='w'||k==='k'||k==='b'){openWip({w:'The window',k:'The kitchen',b:'The bedroom'}[k]);return}if(where!=='out')exitRoom(true);goTo(k)});
 function toggleIndex(){idx.hidden=!idx.hidden;$('indexBtn').setAttribute('aria-expanded',String(!idx.hidden));if(!idx.hidden)say(pick(['Where to?','Pick a place, I’ll take you.']),2)}
 $('indexBtn').onclick=toggleIndex;
 $('ants').onclick=()=>goTo('field');$('me').onclick=()=>openAccount();
@@ -489,27 +571,31 @@ const hh=()=>document.documentElement.style.setProperty('--hh',document.querySel
 
 /* ================= tapping ================= */
 const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();let downAt=null;
-renderer.domElement.addEventListener('pointerdown',e=>{downAt=[e.clientX,e.clientY]});
-renderer.domElement.addEventListener('pointerup',e=>{if(!downAt||Math.hypot(e.clientX-downAt[0],e.clientY-downAt[1])>8)return;downAt=null;if(!started)return;
+const CAM={yaw:0,tilt:1};
+renderer.domElement.addEventListener('pointerdown',e=>{downAt={x:e.clientX,y:e.clientY,yaw:CAM.yaw,tilt:CAM.tilt,moved:false}});
+addEventListener('pointermove',e=>{if(!downAt||!e.buttons)return;const dx=e.clientX-downAt.x,dy=e.clientY-downAt.y;if(!downAt.moved&&Math.hypot(dx,dy)>9){downAt.moved=true;hideHint()}
+ if(downAt.moved){CAM.yaw=clamp(downAt.yaw-dx*.006,-1,1);CAM.tilt=clamp(downAt.tilt+dy*.004,.55,1.4)}});
+renderer.domElement.addEventListener('pointerup',e=>{const d=downAt;downAt=null;if(!d||d.moved||!started)return;
  ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,camera);
- const h=ray.intersectObjects(clickables,false);if(h.length){h.sort((a,b)=>(a.object.userData.name==='igor'?-1:0)-(b.object.userData.name==='igor'?-1:0)||a.distance-b.distance);h[0].object.userData.act();return}
- const g=ray.intersectObject(ground)[0];if(!g)return;closeSheet();idx.hidden=true;IG.target=g.point.clone().setY(0);IG.arrive=null;mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke()});
-renderer.domElement.addEventListener('pointermove',e=>{ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,camera);renderer.domElement.style.cursor=ray.intersectObjects(clickables,false).length?'pointer':'default'});
+ const h=ray.intersectObjects(clickables.filter(m=>m.userData.name==='igor'||m.userData.room===where),false);if(h.length){h.sort((a,b)=>(a.object.userData.name==='igor'?-1:0)-(b.object.userData.name==='igor'?-1:0)||a.distance-b.distance);h[0].object.userData.act();return}
+ const g=ray.intersectObject(where==='out'?ground:ROOMS[where].floor)[0];if(!g)return;closeSheet();idx.hidden=true;IG.target=g.point.clone().setY(0);IG.arrive=null;mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke()});
+renderer.domElement.addEventListener('pointermove',e=>{if(downAt&&downAt.moved)return;ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,camera);renderer.domElement.style.cursor=ray.intersectObjects(clickables.filter(m=>m.userData.room===where),false).length?'pointer':'grab'});
 const keys={};addEventListener('keydown',e=>{keys[e.key]=true});addEventListener('keyup',e=>{keys[e.key]=false});
 
 /* ================= intro ================= */
 function start(){$('intro').classList.add('gone');started=true;poke();const first=!S.seen;setTimeout(()=>say(first?'Hi! Tap my house to play.':pick(['Welcome back!','Oh, you’re back. Gnam.']),4),900);S.seen=(S.seen||0)+1;save()}
 $('goGuest').onclick=start;$('goSign').onclick=()=>{start();openAccount()};
-if(S.seen>2){$('intro').classList.add('gone');started=true;setTimeout(()=>say(pick(['Welcome back!','Oh, you’re back.'])),1200);hintOn=true}
+if(S.seen>=1){$('intro').classList.add('gone');started=true;setTimeout(()=>say(pick(['Welcome back!','Oh, you’re back.'])),1200);hintOn=true}
 if(gotAnts)setTimeout(()=>{toast(`+${gotAnts} tofu ants from your games`);say('Gnam! Ants from my games.')},1600);
 refresh();
 
 /* ================= loop ================= */
 const clock=new THREE.Clock(),camGoal=new V3(),lp=new V3();
 const look=new V3();const portrait=()=>innerWidth<innerHeight;
-function lookTarget(){look.set(igor.position.x,0,igor.position.z);if(!sheet.hidden&&portrait())look.z+=3.5;else if(!sheet.hidden&&innerWidth>700)look.x-=3;return look}
-function camTarget(){const L=lookTarget(),k=portrait()?1.3:1;return camGoal.set(L.x,10.5*k,L.z+11*k)}
-camera.position.copy(camTarget());
+function lookTarget(){if(where!=='out'){look.set(igor.position.x*.35,0,-1.2+igor.position.z*.25);if(!sheet.hidden&&portrait())look.z+=2.5;return look}look.set(igor.position.x,0,igor.position.z);if(!sheet.hidden&&portrait())look.z+=3.5;else if(!sheet.hidden&&innerWidth>700)look.x-=3;return look}
+const lookS=new V3();
+function camTarget(){const L=lookTarget(),k=(portrait()?1.3:1)*(where==='out'?1:(portrait()?1.25:1));const up=10.5*k*CAM.tilt*(where==='out'?1:1.1),back=11*k;return camGoal.set(L.x+Math.sin(CAM.yaw)*back,up,L.z+Math.cos(CAM.yaw)*back)}
+camera.position.copy(camTarget());lookS.copy(lookTarget());
 function frame(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  // keyboard walk
  const kx=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0),kz=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0);
@@ -519,9 +605,9 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  sky.rotation.y+=dt*.006;if(sky.userData.big)sky.userData.big.opacity=.62+.18*Math.sin(t*1.3);
  shoot.next-=dt;if(shoot.next<=0&&shoot.t<0&&!reduce){shoot.t=0;shoot.next=9+Math.random()*12;shoot.m.position.set(camera.position.x+(Math.random()-.5)*60,42+Math.random()*12,camera.position.z-80);shoot.m.rotation.set(0,0,-.32)}
  if(shoot.t>=0){shoot.t+=dt;shoot.m.position.x+=dt*55;shoot.m.position.y-=dt*18;shoot.m.material.opacity=Math.sin(Math.min(shoot.t/1.1,1)*Math.PI)*.8;if(shoot.t>1.1){shoot.t=-1;shoot.m.material.opacity=0}}
- camera.position.lerp(camTarget(),1-Math.exp(-dt*3));lp.set(camera.position.x,.9,camera.position.z-11*(portrait()?1.3:1));camera.lookAt(lp);
+ if(camSnap){camera.position.copy(camTarget());lookS.copy(lookTarget());camSnap=false}else{const f=1-Math.exp(-dt*3);camera.position.lerp(camTarget(),f);lookS.lerp(lookTarget(),f)}camera.lookAt(lookS.x,.9,lookS.z);igor.rotation.y=CAM.yaw;
  // labels
- for(const L of labels){projC(pv.copy(L.pos));const vis=!L.hidden&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis){L.el.style.transform=`translate(-50%,-100%) translate(${(pv.x*.5+.5)*innerWidth}px,${(-pv.y*.5+.5)*innerHeight}px)`}}
+ for(const L of labels){projC(pv.copy(L.pos));const vis=!L.hidden&&(L.room||'out')===where&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis){L.el.style.transform=`translate(-50%,-100%) translate(${(pv.x*.5+.5)*innerWidth}px,${(-pv.y*.5+.5)*innerHeight}px)`}}
  if(bubbleT>0)bubbleT-=dt;placeBubble();chatter();
  renderer.render(scene,camera);requestAnimationFrame(frame)}
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.fov=fovFor();camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);hh()});
