@@ -28,6 +28,12 @@ main{max-width:860px;margin:0 auto;padding:10px 16px calc(28px + env(safe-area-i
 #bubble b{font-style:normal;font-family:var(--mono);font-size:.62em;letter-spacing:.06em;font-weight:500;vertical-align:.12em}
 #staffbox{position:relative;margin-top:8px;border-radius:18px;background:rgba(219,231,234,.035);box-shadow:inset 0 0 0 1px rgba(219,231,234,.08)}
 #staff{display:block;width:100%;touch-action:none;cursor:crosshair}
+#ask{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;background:var(--bone);color:var(--abyss);border-radius:18px;padding:14px 16px;box-shadow:0 10px 40px rgba(0,0,0,.6);text-align:center;width:min(340px,86%)}
+#ask[hidden]{display:none}
+#ask p{margin:0 0 12px;font:400 italic 20px/1.25 var(--display)}
+#ask div{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+#ask button{color:var(--abyss);border-color:rgba(4,7,12,.35)}
+#ask button.main{background:var(--abyss);color:var(--bone);border-color:var(--abyss)}
 #tools{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0 4px}
 .grp{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 button{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;padding:11px 14px;border-radius:999px;cursor:pointer;min-width:44px;
@@ -69,7 +75,7 @@ button.acc{font:400 20px/1 'Noto Music',var(--display);padding:4px 12px 10px;let
 <header><h1><a href="https://igor-the-anteater.github.io/igortime/"><em>Igor</em> time</a> · Cadences</h1><div id="stat">round <b id="rd">1/5</b><br>score <b id="sc">0</b></div></header>
 <main>
  <div class="top"><canvas id="ig" aria-hidden="true"></canvas><div id="bubble" aria-live="polite">…</div></div>
- <div id="staffbox"><canvas id="staff" aria-label="Grand staff with five chords: the first three are given, you write the last two"></canvas></div>
+ <div id="staffbox"><div id="ask" hidden><p id="askq"></p><div><button id="askyes" type="button">Yes, cross them</button><button id="askno" class="main" type="button">No, swap them</button></div></div><canvas id="staff" aria-label="Grand staff with five chords: the first three are given, you write the last two"></canvas></div>
  <div id="tools">
   <div class="grp" role="group" aria-label="Voice">
    <button class="v" data-v="S" style="--c:var(--vS)" type="button" aria-pressed="true">S</button>
@@ -90,7 +96,7 @@ button.acc{font:400 20px/1 'Noto Music',var(--display);padding:4px 12px 10px;let
    <button id="check" class="main" type="button">Check</button>
   </div>
  </div>
- <p class="help" id="help">Tap the staff in chords 4 and 5 to write a note for the selected voice · drag a note to move it · keys: S A T B, ↑↓ move, ←→ chord, + − = sharp flat natural, space = listen, enter = check</p>
+ <p class="help" id="help">Tap a staff in chords 4 and 5 to add notes: the lower note is alto (or bass), the higher one soprano (or tenor) · tap a note to select it, drag to move it · keys: S A T B, ↑↓ move, ←→ chord, + − = sharp flat natural, space = listen, enter = check</p>
  <div id="report" hidden></div>
 </main>
 
@@ -390,7 +396,7 @@ let phase='menu',round=0,total=0,R=null;
 function newRound(){round++;const pool=[];LV.maj.forEach(k=>pool.push([k,'major']));LV.min.forEach(k=>pool.push([k,'minor']));
  let task,key,kk,tries=0;do{[kk,key]=pick(pool);task=pick(LV.tasks);tries++}while((key==='minor'&&task==='mod')||(R&&R.task===task&&R.kname===kk+key&&tries<20));
  const K=makeKey(KEYS[kk][0],KEYS[kk][1],key);const given=transposeTpl(TPL[key][task],K);
- R={key:K,kname:kk+key,task,chords:[...given,{},{}],ids:[],sel:{c:3,v:'B'},res:null,wrote:null,met:false};
+ R={key:K,kname:kk+key,task,chords:[...given,{},{}],ids:[],sel:{c:3,v:'B'},res:null,wrote:null,met:false,okX:{}};
  for(let c=0;c<3;c++)R.ids[c]=identify(R.chords[c],K);
  phase='write';$('report').hidden=true;$('report').innerHTML='';$('check').textContent='Check';updateUI();
  const N=AV[avKey].name,hint=LV.hint?` <b>${cadHint(task,K)}</b>`:'';
@@ -409,29 +415,42 @@ let drag=null;
 function hit(e){const r=sc.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const c=Math.floor((x-G.x0)/G.colW);
  const st=y<(G.trebBot+G.bassTop)/2?0:1;let d=st===0?30+Math.round((G.trebBot-y)/(G.h/2)):18+Math.round((G.bassBot-y)/(G.h/2));
  d=st===0?clamp(d,24,44):clamp(d,12,32);return{c,st,d,x,y}}
-sc.addEventListener('pointerdown',e=>{if(!R)return;const p=hit(e);if(p.c<0||p.c>4)return;
+sc.addEventListener('pointerdown',e=>{if(!R||ASK.open)return;const p=hit(e);if(p.c<0||p.c>4)return;
  if(p.c<3||phase!=='write'){playChordNow(p.c);return}
- const ch=R.chords[p.c],pair=p.st===0?['A','S']:['B','T'];
- const onNote=pair.find(v=>ch[v]&&Math.abs(ch[v].d-p.d)<=0);
+ const ch=R.chords[p.c],[lo,hi]=p.st===0?['A','S']:['B','T'],pair=[lo,hi];
+ const onNote=pair.find(v=>ch[v]&&ch[v].d===p.d);
  if(onNote){R.sel={c:p.c,v:onNote};blip(ch[onNote]);drag={c:p.c,v:onNote,id:e.pointerId};sc.setPointerCapture(e.pointerId);updateUI();return}
- const mine=R.sel.c===p.c&&pair.includes(R.sel.v);let v=mine&&R.sel.ex?R.sel.v:(pair.find(x=>!ch[x])||(mine?R.sel.v:pair.reduce((a,b)=>Math.abs(ch[a].d-p.d)<=Math.abs(ch[b].d-p.d)?a:b)));
- const wasEmpty=!ch[v];setNote(p.c,v,p.d);R.sel={c:p.c,v};
- if(wasEmpty){const o=pair.find(x=>!ch[x]);if(o)R.sel={c:p.c,v:o};else{const nx=nextEmpty();if(nx)R.sel=nx}}
- drag={c:p.c,v,id:e.pointerId,moved:false};sc.setPointerCapture(e.pointerId);updateUI()});
+ let v;
+ if(R.sel.ex&&R.sel.c===p.c&&pair.includes(R.sel.v)&&!ch[R.sel.v])v=R.sel.v;
+ else if(!ch[lo]&&!ch[hi])v=lo;
+ else if(!ch[lo]||!ch[hi]){const have=ch[lo]?lo:hi,other=ch[lo]?hi:lo,n=ch[have];
+  if(p.d>=n.d){if(have!==lo){ch[lo]=n;delete ch[hi]}v=hi}else{if(have!==hi){ch[hi]=n;delete ch[lo]}v=lo}}
+ else v=R.sel.c===p.c&&pair.includes(R.sel.v)?R.sel.v:pair.reduce((a,b)=>Math.abs(ch[a].d-p.d)<=Math.abs(ch[b].d-p.d)?a:b);
+ setNote(p.c,v,p.d);R.sel={c:p.c,v};
+ drag={c:p.c,v,id:e.pointerId};sc.setPointerCapture(e.pointerId);updateUI()});
 sc.addEventListener('pointermove',e=>{if(!drag||phase!=='write')return;const p=hit(e),n=R.chords[drag.c][drag.v];if(!n)return;
  const st=staffOf(drag.v);let d=st===0?30+Math.round((G.trebBot-p.y)/(G.h/2)):18+Math.round((G.bassBot-p.y)/(G.h/2));d=st===0?clamp(d,24,44):clamp(d,12,32);
  if(d!==n.d){setNote(drag.c,drag.v,d);R.sel={c:drag.c,v:drag.v};updateUI()}});
-const endDrag=()=>{drag=null};sc.addEventListener('pointerup',endDrag);sc.addEventListener('pointercancel',endDrag);
+const endDrag=()=>{if(drag){const c=drag.c;drag=null;checkCross(c)}};
+const ASK={open:false};
+function checkCross(c){if(phase!=='write'||ASK.open)return;const ch=R.chords[c];R.okX=R.okX||{};
+ for(const[u,l]of[['S','A'],['A','T'],['T','B']]){if(!ch[u]||!ch[l])continue;const k=c+u+l+M(ch[u])+'_'+M(ch[l]);
+  if(M(ch[u])<M(ch[l])&&!R.okX[k]){ASK.open=true;ASK.c=c;ASK.u=u;ASK.l=l;ASK.k=k;
+   $('askq').textContent=`Sure you want the ${VN[u]} below the ${VN[l]}?`;$('ask').hidden=false;$('askno').focus();return}}}
+function answerCross(keep){const{c,u,l,k}=ASK;const ch=R.chords[c];$('ask').hidden=true;ASK.open=false;
+ if(keep){R.okX[k]=1}else{const t=ch[u];ch[u]=ch[l];ch[l]=t;if(R.sel.c===c&&(R.sel.v===u||R.sel.v===l))R.sel.v=R.sel.v===u?l:u}
+ updateUI();checkCross(c)}
+sc.addEventListener('pointerup',endDrag);sc.addEventListener('pointercancel',endDrag);
 function playChordNow(c){audio();if(AC.state==='suspended')AC.resume();playChord(R.chords[c],AC.currentTime+.02,.9)}
-function moveSel(step){const n=cur();if(!n)return;const st=staffOf(R.sel.v),d=st===0?clamp(n.d+step,24,44):clamp(n.d+step,12,32);setNote(R.sel.c,R.sel.v,d);updateUI()}
+function moveSel(step){const n=cur();if(!n)return;const st=staffOf(R.sel.v),d=st===0?clamp(n.d+step,24,44):clamp(n.d+step,12,32);setNote(R.sel.c,R.sel.v,d);updateUI();clearTimeout(ASK.t);ASK.t=setTimeout(()=>checkCross(R.sel.c),700)}
 function setAcc(a){const n=cur();if(!n)return;n.a=a;blip(n);updateUI()}
 document.querySelectorAll('.v').forEach(b=>b.onclick=()=>{if(phase!=='write')return;R.sel.v=b.dataset.v;R.sel.ex=1;const n=cur();if(n)blip(n);updateUI()});
 document.querySelectorAll('.acc').forEach(b=>b.onclick=()=>setAcc(+b.dataset.acc));
 $('up').onclick=()=>moveSel(1);$('dn').onclick=()=>moveSel(-1);
 $('del').onclick=()=>{if(cur()){delete R.chords[R.sel.c][R.sel.v];updateUI()}};
-$('play').onclick=playAll;
+$('play').onclick=playAll;$('askyes').onclick=()=>answerCross(true);$('askno').onclick=()=>answerCross(false);
 $('check').onclick=()=>{if(phase==='write'){if(!complete()){sayHTML('Write all four voices in both chords first!');return}doCheck()}else if(phase==='result'){if(round>=ROUNDS)finish();else newRound()}};
-addEventListener('keydown',e=>{if(phase==='menu'||phase==='end'||!R)return;const k=e.key;
+addEventListener('keydown',e=>{if(phase==='menu'||phase==='end'||!R||ASK.open)return;const k=e.key;
  if(phase==='write'){
   if('satbSATB'.includes(k)&&k.length===1){R.sel.v=k.toUpperCase();updateUI();e.preventDefault();return}
   if(k==='ArrowUp'){moveSel(1);e.preventDefault()}else if(k==='ArrowDown'){moveSel(-1);e.preventDefault()}
