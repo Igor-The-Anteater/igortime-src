@@ -96,7 +96,7 @@ button.acc{font:400 20px/1 'Noto Music',var(--display);padding:4px 12px 10px;let
    <button id="check" class="main" type="button">Check</button>
   </div>
  </div>
- <p class="help" id="help">Tap a staff in chords 4 and 5 to add notes: the lower note is alto (or bass), the higher one soprano (or tenor) · tap a note to select it, drag to move it · keys: S A T B, ↑↓ move, ←→ chord, + − = sharp flat natural, space = listen, enter = check</p>
+ <p class="help" id="help">Tap a staff in your chords to add notes: the lower note is alto (or bass), the higher one soprano (or tenor) · tap a note to select it, drag to move it · keys: S A T B, ↑↓ move, ←→ chord, + − = sharp flat natural, space = listen, enter = check</p>
  <div id="report" hidden></div>
 </main>
 
@@ -142,30 +142,45 @@ function pcName(l,a){return LET[l]+(a?ACC[a]:'')}
 function makeKey(tl,ta,mode){const tpc=mod(NAT[tl]+ta,12),sc=mode==='major'?[0,2,4,5,7,9,11]:[0,2,3,5,7,8,10],deg=[];
  for(let k=0;k<7;k++){const l=(tl+k)%7;deg.push({l,a:mod(tpc+sc[k]-NAT[l]+6,12)-6})}
  const sig={};deg.forEach(x=>sig[x.l]=x.a);return{tl,ta,mode,tpc,deg,sig,name:pcName(tl,ta)+' '+mode}}
+function tn(K,deg,semi,role){const l=(K.tl+deg)%7;return{l,a:mod(K.tpc+semi-NAT[l]+6,12)-6,role}}
 function chordTones(K,root,sev){const raise=K.mode==='minor'&&(root===4||root===6),T=[];
  for(let i=0;i<(sev?4:3);i++){const k=(root+2*i)%7;T.push({l:K.deg[k].l,a:K.deg[k].a+(raise&&k===6?1:0),role:i})}return T}
-function candidates(K){const R=K.mode==='major'?['I','ii','iii','IV','V','vi','vii°']:['i','ii°','III','iv','V','VI','vii°'],C=[];
- for(let r=0;r<7;r++)C.push({base:R[r],suf:'',root:r,sev:false,sec:false,tones:chordTones(K,r,false)});
- C.push({base:'V',suf:'',root:4,sev:true,sec:false,tones:chordTones(K,4,true)});
- if(K.mode==='major'){const D=makeKey(K.deg[4].l,K.deg[4].a,'major');
-  C.push({base:'V',suf:'/V',root:4,sev:false,sec:true,tones:chordTones(D,4,false)});C.push({base:'V',suf:'/V',root:4,sev:true,sec:true,tones:chordTones(D,4,true)})}
+const SEVF=['7','6/5','4/3','4/2'],TRIF=['','6','6/4'];
+function candidates(K){const mi=K.mode==='minor',RN=mi?['i','ii°','III','iv','V','VI','vii°']:['I','ii','iii','IV','V','vi','vii°'],C=[];
+ const add=o=>C.push(Object.assign({suf:'',sec:false,req:[0]},o));
+ for(let r=0;r<7;r++)add({kind:'triad',base:RN[r],root:r,tones:chordTones(K,r,false),figs:TRIF});
+ add({kind:'V7',base:'V',root:4,tones:chordTones(K,4,true),figs:SEVF,req:[0,3]});
+ add({kind:'ii7',base:mi?'iiø':'ii',root:1,tones:chordTones(K,1,true),figs:SEVF,req:[0,3]});
+ for(const s of mi?[8]:[9,8])add({kind:'V9',base:s===9?'V9':'V♭9',root:4,tones:[tn(K,4,7,0),tn(K,6,11,1),tn(K,1,2,2),tn(K,3,5,3),tn(K,5,s,4)],figs:['','',''],req:[0,1,3,4]});
+ add({kind:'vii°7',base:'vii°',root:6,tones:[tn(K,6,11,0),tn(K,1,2,1),tn(K,3,5,2),tn(K,5,8,3)],figs:SEVF,req:[0,3]});
+ if(!mi)add({kind:'viiø7',base:'viiø',root:6,tones:[tn(K,6,11,0),tn(K,1,2,1),tn(K,3,5,2),tn(K,5,9,3)],figs:SEVF,req:[0,3]});
+ add({kind:'N',base:'N',root:1,tones:[tn(K,1,1,0),tn(K,3,5,1),tn(K,5,8,2)],figs:TRIF});
+ const b6=tn(K,5,8,0),one=tn(K,0,0,1),s4=tn(K,3,6,2);
+ add({kind:'aug6',base:'It+6',root:-1,tones:[b6,one,s4],figs:['','',''],req:[0,1,2]});
+ add({kind:'aug6',base:'Fr+6',root:-1,tones:[b6,one,s4,tn(K,1,2,3)],figs:['','',''],req:[0,1,2,3]});
+ add({kind:'aug6',base:'Ger+6',root:-1,tones:[b6,one,s4,tn(K,2,3,3)],figs:['','',''],req:[0,1,2,3]});
+ const D=makeKey(K.deg[4].l,K.deg[4].a,'major');
+ add({kind:'triad',base:'V',suf:'/V',root:4,sec:true,tones:chordTones(D,4,false),figs:TRIF});
+ add({kind:'V7',base:'V',suf:'/V',root:4,sec:true,tones:chordTones(D,4,true),figs:SEVF,req:[0,3]});
  return C}
 function identify(ch,K){if(!ch||VO.some(v=>!ch[v]))return null;let best=null;
  for(const c of candidates(K)){let ok=true,enh=0;const roles={};
   for(const v of VO){const n=ch[v];let t=c.tones.find(t=>t.l===L(n)&&t.a===n.a);
    if(!t){t=c.tones.find(t=>mod(NAT[t.l]+t.a,12)===mod(M(n),12));if(t)enh++;else{ok=false;break}}roles[v]=t.role}
   if(!ok)continue;const has=r=>VO.some(v=>roles[v]===r);
-  if(!has(0)||(c.sev&&!has(3)))continue;const sc=(has(1)?0:3)+enh*2;
-  if(!best||sc<best.sc)best={...c,roles,enh,sc,noThird:!has(1)}}
- if(best){best.inv=best.roles.B;const fig=best.sev?['7','6/5','4/3','4/2'][best.inv]:['','6','6/4'][best.inv];best.label=best.base+fig+best.suf}
+  if(!c.req.every(has))continue;const sc=(c.kind==='triad'&&!has(1)?3:0)+enh*2;
+  if(!best||sc<best.sc)best={...c,roles,enh,sc,noThird:c.kind!=='aug6'&&!has(1)}}
+ if(best){best.inv=best.roles.B;best.label=best.base+(best.figs[best.inv]||'')+best.suf;
+  best.dom=(best.root===4&&['triad','V7','V9'].includes(best.kind))||best.kind==='vii°7'||best.kind==='viiø7'||(best.kind==='triad'&&best.root===6&&!best.sec);
+  best.lt=best.root===4?1:(best.root===6?0:-1);best.cad64=best.kind==='triad'&&best.root===0&&!best.sec&&best.inv===2}
  return best}
 const isTonicNote=(n,K)=>L(n)===K.tl&&mod(M(n),12)===K.tpc;
-function classify(a,b,ch,K){if(!a||!b)return null;if(b.sec)return'other';
+function classify(a,b,ch,K){if(!a||!b)return null;if(b.sec||b.kind!=='triad'&&b.kind!=='V7')return'other';const last=ch[R.n-1];
  if(a.sec&&a.root===4&&b.root===4)return'mod';
- if(b.root===0){if(a.root===4&&!a.sec)return(a.inv===0&&b.inv===0&&isTonicNote(ch[4].S,K))?'perfect':'imperfect';
-  if(a.root===3)return'plagal';if(a.root===6)return'imperfect';return'other'}
- if(b.root===4)return a.root===4?'other':'half';
- if(b.root===5&&a.root===4&&!a.sec)return'deceptive';
+ if(b.root===0&&b.kind==='triad'){if(a.root===4&&!a.sec&&a.dom)return(a.inv===0&&b.inv===0&&isTonicNote(last.S,K))?'perfect':'imperfect';
+  if(a.root===3&&a.kind==='triad')return'plagal';if(a.root===6)return'imperfect';return'other'}
+ if(b.root===4&&!b.sec)return a.root===4&&!a.sec&&a.kind!=='triad'&&false?'other':(a.root===4&&!a.sec)?'other':'half';
+ if(b.root===5&&b.kind==='triad'&&a.dom&&a.root===4)return'deceptive';
  return'other'}
 function cadName(t,K){const mi=K.mode==='minor';return{perfect:'perfect cadence',imperfect:'imperfect cadence',plagal:'plagal cadence',half:'half cadence',
  deceptive:'deceptive cadence',mod:'modulation to the dominant',other:'free ending'}[t]}
@@ -183,6 +198,7 @@ const TPL={major:{
  plagal:[['A4','E4','C4','A2'],['G#4','E4','B3','E3'],['A4','C4','C4','F3']],
  half:[['A4','E4','C4','A2'],['A4','F4','C4','F2'],['A4','E4','C4','A2']],
  deceptive:[['A4','E4','C4','A2'],['A4','F4','C4','F2'],['A4','F4','D4','D3']]}};
+const TPL2={major:[['G4','E4','C4','C3'],['A4','E4','C4','A2']],minor:[['A4','E4','C4','A2'],['A4','F4','C4','F2']]};
 function transposeTpl(rows,K){const bl=K.mode==='major'?0:5,bpc=NAT[bl];const up=mod(K.tl-bl,7),upS=mod(K.tpc-bpc,12);
  const opts=[[up,upS],[up-7,upS-12]].sort((x,y)=>Math.abs(x[1])-Math.abs(y[1]));const[ds,ss]=opts[0];
  return rows.map(r=>{const o={};r.forEach((s,i)=>{const n=parseN(s),d=n.d+ds;o[VO[i]]={d,a:M(n)+ss-M({d,a:0})}});return o})}
@@ -191,33 +207,45 @@ const KEYS={C:[0,0],G:[4,0],F:[3,0],D:[1,0],Bb:[6,-1],A:[5,0],Eb:[2,-1],E:[2,0],
 const LEVELS={
  easy:{name:'Easy',maj:['C','G','F'],min:[],tasks:['perfect','plagal','half'],labels:true,hint:true,info:'Major keys with up to one sharp or flat · perfect, plagal and half cadences · chord symbols and hints shown'},
  medium:{name:'Medium',maj:['C','G','F','D','Bb','A','Eb'],min:[],tasks:['perfect','plagal','half','deceptive','mod'],labels:true,hint:false,info:'Major keys up to three accidentals · adds deceptive cadence and modulation to the dominant · chord symbols shown'},
- extreme:{name:'Extreme',maj:['D','Bb','A','Eb','E','Ab'],min:['A','E','D','G','C','B'],tasks:['perfect','plagal','half','deceptive','mod'],labels:false,hint:false,info:'Major and minor keys up to four accidentals · all cadences · no chord symbols, no hints'}};
+ extreme:{name:'Extreme',maj:['D','Bb','A','Eb','E','Ab'],min:['A','E','D','G','C','B'],tasks:['perfect','half','deceptive'],feats:true,labels:false,hint:false,info:'Major and minor keys up to four accidentals · two chords given, you write four · each phrase needs a chromatic chord: dominant ninth, diminished seventh, Neapolitan sixth, augmented sixth, secondary dominant, cadential six-four or supertonic seventh'}};
 let LV=LEVELS.easy,lvKey='easy';try{const s=localStorage.getItem('cadencesLevel');if(LEVELS[s]){lvKey=s;LV=LEVELS[s]}}catch(e){}
 const ROUNDS=5;
 
 /* ---------- analysis ---------- */
+const FEATS={V9:{name:'a dominant ninth (V9)',cads:['perfect','deceptive'],has:id=>id.kind==='V9'},
+ dim7:{name:'a diminished seventh chord (vii°7)',cads:['perfect','half','deceptive'],has:id=>id.kind==='vii°7'},
+ N6:{name:'a Neapolitan sixth (N6)',cads:['perfect','half','deceptive'],has:id=>id.kind==='N'},
+ aug6:{name:'an augmented sixth chord (It+6, Fr+6 or Ger+6)',cads:['perfect','half','deceptive'],has:id=>id.kind==='aug6'},
+ VofV:{name:'a secondary dominant (V7/V)',cads:['perfect','half','deceptive'],has:id=>id.sec},
+ cad64:{name:'a cadential six-four (I6/4 → V)',cads:['perfect','half','deceptive'],has:(id,i,ids)=>id.cad64&&ids[i+1]&&ids[i+1].root===4&&!ids[i+1].sec&&ids[i+1].dom},
+ ii7:{name:'a supertonic seventh (ii7 or ii6/5)',cads:['perfect','half','deceptive'],has:id=>id.kind==='ii7'}};
 const RANGE={S:[60,79],A:[55,74],T:[48,67],B:[40,60]};
-function analyze(){const K=R.key,C=R.chords,items=[];
+function analyze(){const K=R.key,C=R.chords,items=[],ng=R.ng,n=R.n,SC=[];for(let c=ng;c<n;c++)SC.push(c);
  const add=(pen,msg,marks=[],lines=[])=>items.push({pen,msg,marks,lines});
- const id4=identify(C[3],K),id5=identify(C[4],K);R.ids[3]=id4;R.ids[4]=id5;
- [id4,id5].forEach((id,i)=>{const c=3+i;
+ for(const c of SC){const id=identify(C[c],K);R.ids[c]=id;
   if(!id)add(25,`Chord ${c+1} isn’t a chord of ${K.name} yet: some notes don’t belong together.`,VO.map(v=>({c,v})));
-  else if(id.enh)add(4*id.enh,`Chord ${c+1}: right sound, but spell it as ${id.tones.map(t=>pcName(t.l,t.a)).join('–')}.`)});
- const wrote=classify(id4,id5,C,K);R.wrote=wrote;const want=R.task;let met=false;
+  else if(id.enh)add(4*id.enh,`Chord ${c+1}: right sound, but spell it as ${id.tones.map(t=>pcName(t.l,t.a)).join('–')}.`)}
+ const ids=R.ids,ia=n-2,ib=n-1,A=ids[ia],B=ids[ib];
+ const wrote=classify(A,B,C,K);R.wrote=wrote;const want=R.task;let met=false;
  if(wrote){
   if(wrote===want||(want==='half'&&wrote==='mod'))met=true;
-  else if(want==='perfect'&&wrote==='imperfect'){met=true;add(15,`Almost perfect! For a perfect cadence both chords go in root position and the soprano lands on the tonic (${pcName(K.tl,K.ta)}).`,[{c:4,v:'S'}])}
-  else add(40,`This is a ${cadName(wrote,K)} (${id4.label} → ${id5.label}); the task was a ${cadName(want,K)} (${cadHint(want,K)}).`);
-  if(met&&want!=='perfect'&&id5.inv!==0)add(8,`The ${cadName(want,K)} sounds stronger with the last chord in root position.`,[{c:4,v:'B'}]);
-  if(met&&(want==='deceptive'||want==='mod')&&id4.inv!==0)add(6,`Put the ${id4.base}${id4.suf} in root position for a clearer ${cadName(want,K)}.`,[{c:3,v:'B'}]);
+  else if(want==='perfect'&&wrote==='imperfect'){met=true;add(15,`Almost perfect! For a perfect cadence both chords go in root position and the soprano lands on the tonic (${pcName(K.tl,K.ta)}).`,[{c:ib,v:'S'}])}
+  else add(40,`This is a ${cadName(wrote,K)} (${A.label} → ${B.label}); the task was a ${cadName(want,K)} (${cadHint(want,K)}).`);
+  if(met&&want!=='perfect'&&B.inv!==0)add(8,`The ${cadName(want,K)} sounds stronger with the last chord in root position.`,[{c:ib,v:'B'}]);
+  if(met&&(want==='deceptive'||want==='mod')&&A.inv!==0)add(6,`Put the ${A.label} in root position for a clearer ${cadName(want,K)}.`,[{c:ia,v:'B'}]);
  }
- R.met=met;if(met&&want==='half'&&wrote==='mod')items.push({pen:0,info:1,msg:'Accepted: V/V → V is a half cadence that tonicizes the dominant (cadenza sospesa preceded by a secondary dominant). Without the raised fourth degree (ii6, IV or I → V) it is a plain half cadence.',marks:[{c:3,v:'S'},{c:3,v:'A'},{c:3,v:'T'},{c:3,v:'B'}].filter(m=>{const n=C[3][m.v];return n&&n.a!==K.sig[L(n)]}),lines:[]});
- for(const c of[3,4]){const ch=C[c],m=v=>M(ch[v]);
+ R.met=met;if(met&&want==='half'&&wrote==='mod')items.push({pen:0,info:1,msg:'Accepted: V/V → V is a half cadence that tonicizes the dominant (cadenza sospesa preceded by a secondary dominant). Without the raised fourth degree (ii6, IV or I → V) it is a plain half cadence.',marks:VO.map(v=>({c:ia,v})).filter(m=>{const x=C[ia][m.v];return x&&x.a!==K.sig[L(x)]}),lines:[]});
+ if(R.feat){const F=FEATS[R.feat];const fi=SC.findIndex(c=>ids[c]&&F.has(ids[c],c,ids));R.featOK=fi>=0;
+  if(fi<0)add(30,`I asked for ${F.name} somewhere in your chords, and I couldn’t find it.`);
+  else{const c=SC[fi],id=ids[c];items.push({pen:0,good:1,msg:`Nice ${id.label}! That’s the ${F.name.replace(/^an? /,'')} I asked for.`,marks:VO.map(v=>({c,v})),lines:[]});
+   if(R.feat==='N6'&&id.inv!==1)add(5,`The Neapolitan usually sits in first inversion (N6), with the fourth degree in the bass.`,[{c,v:'B'}]);
+   if(R.feat==='aug6'&&id.roles.B!==0)add(6,`Augmented sixth chords put ♭6 in the bass, so the augmented sixth opens out to the octave on V.`,[{c,v:'B'}])}}
+ for(const c of SC){const ch=C[c],m=v=>M(ch[v]);
   for(const v of VO){const[a,b]=RANGE[v];if(m(v)<a||m(v)>b)add(5,`The ${VN[v]} is out of its range in chord ${c+1} (${nName(ch[v])}).`,[{c,v}])}
   for(const[u,l]of[['S','A'],['A','T'],['T','B']])if(m(u)<m(l))add(10,`The ${VN[u]} and the ${VN[l]} cross in chord ${c+1}.`,[{c,v:u},{c,v:l}]);
   for(const[u,l,mx]of[['S','A',12],['A','T',12],['T','B',19]])if(m(u)-m(l)>mx)add(u==='T'?4:6,`Too much space between ${VN[u]} and ${VN[l]} in chord ${c+1} (more than ${mx===12?'an octave':'a twelfth'}).`,[{c,v:u},{c,v:l}]);
  }
- for(const[p,q]of[[2,3],[3,4]]){const P=C[p],Q=C[q];
+ for(let p=ng-1;p<n-1;p++){const q=p+1,P=C[p],Q=C[q];
   for(let i=0;i<4;i++)for(let j=i+1;j<4;j++){const a=VO[i],b=VO[j];
    const mvA=M(Q[a])-M(P[a]),mvB=M(Q[b])-M(P[b]),c1=mod(Math.abs(M(P[a])-M(P[b])),12),c2=mod(Math.abs(M(Q[a])-M(Q[b])),12);
    const ln=[[{c:p,v:a},{c:q,v:a}],[{c:p,v:b},{c:q,v:b}]];
@@ -233,19 +261,28 @@ function analyze(){const K=R.key,C=R.chords,items=[];
    else if(Math.abs(dl)===6)add(6,`Seventh leap in the ${VN[v]} (${nName(P[v])} → ${nName(Q[v])}).`,[],mk);
    else if(v!=='B'&&Math.abs(dm)>7)add(3,`Big leap in the ${VN[v]}: inner and upper voices prefer steps.`,[],mk)}
  }
- [id4,id5].forEach((id,i)=>{if(!id)return;const c=3+i,cnt=r=>VO.filter(v=>id.roles[v]===r),lt=id.root===4?1:(id.root===6&&!id.sec?0:-1);
-  if(lt>=0&&cnt(lt).length>1)add(12,`Doubled leading tone in chord ${c+1}: the leading tone wants to resolve, so it is never doubled.`,cnt(lt).map(v=>({c,v})));
-  if(id.sev&&cnt(3).length>1)add(12,`Doubled seventh in chord ${c+1}.`,cnt(3).map(v=>({c,v})));
-  if(id.noThird)add(15,`Chord ${c+1} has no third: it sounds empty.`,VO.map(v=>({c,v})));
-  else if(!id.sev&&!cnt(2).length&&cnt(0).length<3)add(4,`Chord ${c+1} leaves out the fifth: then triple the root.`);
-  else if(!id.sev&&id.inv===0&&cnt(1).length>1&&!(c===4&&id.root===5&&R.wrote==='deceptive'))add(3,`In root position double the root, not the third (chord ${c+1}).`,cnt(1).map(v=>({c,v})))});
- if(id4&&id5&&id4.root===4){const P=C[3],Q=C[4];
-  for(const v of VO){const r=id4.roles[v],dm=M(Q[v])-M(P[v]),dl=Q[v].d-P[v].d,mk=[[{c:3,v},{c:4,v}]];
-   if(r===1&&dm!==1){const free=(v==='A'||v==='T')&&id5.root===0&&!id4.sec&&R.wrote!=='deceptive'&&dl===-2;
-    if(!free)add(v==='S'||R.wrote==='deceptive'?10:6,`The leading tone (${nName(P[v])}) in the ${VN[v]} should rise a semitone${R.wrote==='deceptive'?', even in a deceptive cadence':''}.`,[],mk)}
-   if(r===3&&dl!==-1)add(12,`The seventh (${nName(P[v])}) in the ${VN[v]} should resolve down by step.`,[],mk)}}
+ for(const c of SC){const id=ids[c];if(!id)continue;const cnt=r=>VO.filter(v=>id.roles[v]===r);
+  if(id.kind==='aug6'){for(const r of[0,2])if(cnt(r).length>1)add(12,`Doubled ${r?'♯4':'♭6'} in chord ${c+1}: both notes of the augmented sixth must resolve, so never double them.`,cnt(r).map(v=>({c,v})));continue}
+  if(id.kind==='N'){if(cnt(0).length>1)add(8,`In the Neapolitan double the fourth degree (the bass of N6), not the ♭2.`,cnt(0).map(v=>({c,v})));continue}
+  if(id.lt>=0&&id.dom||id.sec)if(cnt(id.lt).length>1)add(12,`Doubled leading tone in chord ${c+1}: the leading tone wants to resolve, so it is never doubled.`,cnt(id.lt).map(v=>({c,v})));
+  if(id.tones.length>=4&&cnt(3).length>1)add(12,`Doubled seventh in chord ${c+1}.`,cnt(3).map(v=>({c,v})));
+  if(id.kind==='V9'&&cnt(4).length>1)add(12,`Doubled ninth in chord ${c+1}.`,cnt(4).map(v=>({c,v})));
+  if(id.kind==='triad'){
+   if(id.noThird)add(15,`Chord ${c+1} has no third: it sounds empty.`,VO.map(v=>({c,v})));
+   else if(!cnt(2).length&&cnt(0).length<3)add(4,`Chord ${c+1} leaves out the fifth: then triple the root.`);
+   else if(id.inv===0&&cnt(1).length>1&&!(c===n-1&&id.root===5&&R.wrote==='deceptive'))add(3,`In root position double the root, not the third (chord ${c+1}).`,cnt(1).map(v=>({c,v})))}}
+ for(let p=ng;p<n-1;p++){const q=p+1,a=ids[p],b=ids[q];if(!a||!b)continue;const P=C[p],Q=C[q],same=a.root===b.root&&a.root>=0&&a.sec===b.sec;
+  for(const v of VO){const r=a.roles[v],dm=M(Q[v])-M(P[v]),dl=Q[v].d-P[v].d,mk=[[{c:p,v},{c:q,v}]];
+   if((a.dom||a.sec)&&r===a.lt&&!same&&!b.cad64&&dm!==1){const free=(v==='A'||v==='T')&&b.root===0&&b.kind==='triad'&&!a.sec&&!(b.root===5)&&dl===-2;
+    if(!free&&(b.root===0||b.root===5||a.sec))add(v==='S'||b.root===5?10:6,`The leading tone (${nName(P[v])}) in the ${VN[v]} should rise a semitone${b.root===5?', even in a deceptive cadence':''}.`,[],mk)}
+   if(a.kind!=='aug6'&&a.tones.length>=4&&r===3&&!same&&!(dl===-1||(dl===0&&b.cad64)))add(12,`The seventh (${nName(P[v])}) in the ${VN[v]} should resolve down by step.`,[],mk);
+   if(a.kind==='V9'&&r===4&&dl!==-1)add(10,`The ninth (${nName(P[v])}) in the ${VN[v]} should resolve down by step.`,[],mk);
+   if(a.kind==='N'&&r===0&&dm>=0)add(8,`The ♭2 of the Neapolitan (${nName(P[v])}) should move down, toward the leading tone or the tonic.`,[],mk);
+   if(a.kind==='aug6'&&(b.root===4||b.cad64)){if(r===0&&dm!==-1)add(10,`♭6 (${nName(P[v])}) should fall a semitone to the dominant.`,[],mk);if(r===2&&dm!==1)add(10,`♯4 (${nName(P[v])}) should rise a semitone to the dominant.`,[],mk)}
+   if(a.cad64&&b.root===4&&!b.sec&&b.dom&&v!=='B'&&(r===0||r===1)&&dl!==-1)add(6,`In the cadential six-four, the ${r===0?'fourth':'sixth'} above the bass (${nName(P[v])}) should step down.`,[],mk)}
+  if(a.cad64&&b.root===4&&!b.sec&&mod(M(P.B),12)!==mod(M(Q.B),12))add(6,`After a cadential six-four the bass stays on the dominant.`,[{c:q,v:'B'}])}
  const pen=items.reduce((s,x)=>s+x.pen,0),score=Math.max(0,100-pen);
- if(!items.some(x=>x.pen>0&&!/cadence|task|chord \d isn’t/.test(x.msg)))items.push({pen:0,good:1,msg:'Clean voice leading: no parallels, no crossings, good doublings.',marks:[],lines:[]});
+ if(!items.some(x=>x.pen>0&&!/cadence|task|chord \d isn’t|I asked/.test(x.msg)))items.push({pen:0,good:1,msg:'Clean voice leading: no parallels, no crossings, good doublings.',marks:[],lines:[]});
  return{score,items}}
 
 /* ---------- Igor sprite ---------- */
@@ -329,15 +366,15 @@ function tone(m,t0,dur,vol=.1){const f=440*2**((m-69)/12),o=AC.createOscillator(
  o.start(t0);o2.start(t0);o.stop(t0+dur+.6);o2.stop(t0+dur+.6)}
 function playChord(ch,t0,dur){VO.forEach(v=>{if(ch&&ch[v])tone(M(ch[v]),t0,dur,v==='B'?.12:.09)})}
 let PLAY={on:false,t0:0,durs:[]};
-function playAll(){audio();if(AC.state==='suspended')AC.resume();const now=AC.currentTime+.06,durs=[.95,.95,.95,1.05,1.7];let t=now;
+function playAll(){audio();if(AC.state==='suspended')AC.resume();const now=AC.currentTime+.06,durs=R.chords.map((_,i)=>i===R.n-1?1.7:i>=R.ng?1.0:.95);let t=now;
  R.chords.forEach((ch,i)=>{playChord(ch,t,durs[i]-.08);t+=durs[i]});PLAY={on:true,t0:now,durs}}
-function playIdx(){if(!PLAY.on||!AC)return-1;let u=AC.currentTime-PLAY.t0;if(u<0)return-1;for(let i=0;i<5;i++){if(u<PLAY.durs[i])return i;u-=PLAY.durs[i]}PLAY.on=false;return-1}
+function playIdx(){if(!PLAY.on||!AC)return-1;let u=AC.currentTime-PLAY.t0;if(u<0)return-1;for(let i=0;i<PLAY.durs.length;i++){if(u<PLAY.durs[i])return i;u-=PLAY.durs[i]}PLAY.on=false;return-1}
 function blip(n){audio();if(AC.state==='suspended')AC.resume();tone(M(n),AC.currentTime+.01,.42,.11)}
 
 /* ---------- staff ---------- */
 const sc=$('staff'),g=sc.getContext('2d');let G={};
 function layout(){const W=sc.clientWidth,h=clamp(W/38,9.5,12),nacc=Object.values(R?R.key.sig:{}).filter(a=>a).length;
- const x0=h*.6+h*3.4+nacc*h*1.05+h*.9,colW=(W-x0-h*.6)/5,trebTop=h*5,trebBot=trebTop+h*4,bassTop=trebBot+h*6.5,bassBot=bassTop+h*4,H=bassBot+h*4.4+h*2.6;
+ const x0=h*.6+h*3.4+nacc*h*1.05+h*.9,colW=(W-x0-h*.6)/(R?R.n:5),trebTop=h*5,trebBot=trebTop+h*4,bassTop=trebBot+h*6.5,bassBot=bassTop+h*4,H=bassBot+h*4.4+h*2.6;
  G={W,H,h,x0,colW,trebTop,trebBot,bassTop,bassBot,nacc};const dpr=Math.min(2,devicePixelRatio||1);
  if(sc.width!==Math.round(W*dpr)||sc.height!==Math.round(H*dpr)){sc.width=Math.round(W*dpr);sc.height=Math.round(H*dpr);sc.style.height=H+'px'}}
 const staffOf=v=>v==='S'||v==='A'?0:1;
@@ -350,9 +387,9 @@ function noteX(c,v){const ch=R.chords[c],o=v==='S'||v==='T'?'S':'A';const pair=s
  if(a&&b&&Math.abs(a.d-b.d)<=1){const up=a.d>=b.d?pair[0]:pair[1];return cx(c)+(v===up?G.h*.62:-G.h*.62)}return cx(c)}
 function drawStaff(t){layout();const{W,H,h}=G,dpr=Math.min(2,devicePixelRatio||1);g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
  const pi=playIdx(),K=R.key;
- for(let c=0;c<5;c++){const x=G.x0+G.colW*c;if(c>=3){g.fillStyle=c===R.sel.c&&phase==='write'?'rgba(127,227,239,.09)':'rgba(127,227,239,.045)';rr(g,x+3,G.trebTop-h*4,G.colW-6,G.bassBot-G.trebTop+h*7.2,12);g.fill()}
+ for(let c=0;c<R.n;c++){const x=G.x0+G.colW*c;if(c>=R.ng){g.fillStyle=c===R.sel.c&&phase==='write'?'rgba(127,227,239,.09)':'rgba(127,227,239,.045)';rr(g,x+3,G.trebTop-h*4,G.colW-6,G.bassBot-G.trebTop+h*7.2,12);g.fill()}
   if(c===pi){g.fillStyle='rgba(241,180,110,.13)';rr(g,x+3,G.trebTop-h*4,G.colW-6,G.bassBot-G.trebTop+h*7.2,12);g.fill()}
-  g.fillStyle=c>=3?'rgba(127,227,239,.7)':'rgba(127,148,155,.75)';g.font=`500 ${Math.round(h*.95)}px "IBM Plex Mono",monospace`;g.textAlign='center';g.fillText(c>=3?(c===3?'4 ?':'5 ?'):String(c+1),cx(c),G.trebTop-h*3)}
+  g.fillStyle=c>=R.ng?'rgba(127,227,239,.7)':'rgba(127,148,155,.75)';g.font=`500 ${Math.round(h*.95)}px "IBM Plex Mono",monospace`;g.textAlign='center';g.fillText(c>=R.ng?(c+1)+' ?':String(c+1),cx(c),G.trebTop-h*3)}
  g.strokeStyle='rgba(219,231,234,.55)';g.lineWidth=1;
  for(const st of[0,1]){const b=st?G.bassBot:G.trebBot;for(let i=0;i<5;i++){const y=Math.round(b-i*h)+.5;g.beginPath();g.moveTo(h*.6,y);g.lineTo(W-h*.6,y);g.stroke()}}
  g.beginPath();g.moveTo(h*.6+.5,G.trebTop);g.lineTo(h*.6+.5,G.bassBot);g.moveTo(W-h*.6-.5,G.trebTop);g.lineTo(W-h*.6-.5,G.bassBot);g.stroke();
@@ -368,55 +405,56 @@ function drawStaff(t){layout();const{W,H,h}=G,dpr=Math.min(2,devicePixelRatio||1
  if(R.res)for(const it of R.res.items){for(const[a,b]of it.lines){const na=R.chords[a.c][a.v],nb=R.chords[b.c][b.v];if(!na||!nb)continue;
    g.strokeStyle=it.pen>0?'rgba(255,138,106,.8)':'rgba(155,227,138,.7)';g.lineWidth=2;g.setLineDash([5,4]);g.beginPath();g.moveTo(noteX(a.c,a.v),yOf(na.d,staffOf(a.v)));g.lineTo(noteX(b.c,b.v),yOf(nb.d,staffOf(b.v)));g.stroke();g.setLineDash([])}}
  // notes
- for(let c=0;c<5;c++){const ch=R.chords[c];if(!ch)continue;
+ for(let c=0;c<R.n;c++){const ch=R.chords[c];if(!ch)continue;
   for(const v of VO){const n=ch[v];if(!n)continue;const st=staffOf(v),x=noteX(c,v),y=yOf(n.d,st);
    // ledger lines
    g.strokeStyle='rgba(219,231,234,.55)';g.lineWidth=1;const lo=st?18:30,hi=st?26:38;
    for(let d=lo-2;d>=n.d;d-=2){const yy=Math.round(yOf(d,st))+.5;g.beginPath();g.moveTo(x-h*1.05,yy);g.lineTo(x+h*1.05,yy);g.stroke()}
    for(let d=hi+2;d<=n.d;d+=2){const yy=Math.round(yOf(d,st))+.5;g.beginPath();g.moveTo(x-h*1.05,yy);g.lineTo(x+h*1.05,yy);g.stroke()}
-   const editable=c>=3,col=editable?VC[v]:'rgba(239,228,207,.9)',sel=editable&&phase==='write'&&R.sel.c===c&&R.sel.v===v;
+   const editable=c>=R.ng,col=editable?VC[v]:'rgba(239,228,207,.9)',sel=editable&&phase==='write'&&R.sel.c===c&&R.sel.v===v;
    if(sel){g.save();g.shadowColor=VC[v];g.shadowBlur=14;g.strokeStyle=VC[v];g.lineWidth=1.5;g.beginPath();g.ellipse(x,y,h*1.15,h*.85,0,0,TAU);g.stroke();g.restore()}
    g.save();g.translate(x,y);g.rotate(-.33);g.fillStyle=col;g.beginPath();g.ellipse(0,0,h*.66,h*.45,0,0,TAU);g.fill();
    g.globalCompositeOperation='destination-out';g.rotate(.95);g.beginPath();g.ellipse(0,0,h*.36,h*.2,0,0,TAU);g.fill();g.restore();
    if(n.a!==K.sig[L(n)]){const ox=x-h*(noteX(c,v)<cx(c)?1.35:1.2)-h*.3;glyph(ACC[n.a],ox,y+(n.a<0?h*.55:h*.32),h*2.6,col)}
   }
   // labels
-  const id=R.ids[c];const show=c<3?LV.labels:(R.res&&true);
-  if(show){g.font=`400 italic ${Math.round(h*1.9)}px "Instrument Serif",Georgia,serif`;g.textAlign='center';g.fillStyle=c<3?'rgba(239,228,207,.75)':(id?'#efe4cf':'#ff8a6a');
+  const id=R.ids[c];const show=c<R.ng?LV.labels:(R.res&&true);
+  if(show){g.font=`400 italic ${Math.round(h*1.9)}px "Instrument Serif",Georgia,serif`;g.textAlign='center';g.fillStyle=c<R.ng?'rgba(239,228,207,.75)':(id?'#efe4cf':'#ff8a6a');g.font=`400 italic ${Math.round(h*(R.n>5?1.5:1.9))}px "Instrument Serif",Georgia,serif`;
    g.fillText(id?id.label:'?',cx(c),G.bassBot+h*6.3)}
  }
  if(R.res)for(const it of R.res.items)for(const m of it.marks){const n=R.chords[m.c][m.v];if(!n)continue;g.strokeStyle=it.pen>0?'#ff8a6a':'#9be38a';g.lineWidth=2;
   g.beginPath();g.ellipse(noteX(m.c,m.v),yOf(n.d,staffOf(m.v)),h*1.2,h*.9,0,0,TAU);g.stroke()}
- if(phase==='write'&&R.chords[3]&&VO.every(v=>!R.chords[3][v])&&R.chords[4]&&VO.every(v=>!R.chords[4][v])&&(t%3)<2){
+ if(phase==='write'&&R.chords.slice(R.ng).every(ch=>VO.every(v=>!ch[v]))&&(t%3)<2){
   g.fillStyle='rgba(127,227,239,.6)';g.font=`500 ${Math.round(h*.95)}px "IBM Plex Mono",monospace`;g.textAlign='center';
-  g.fillText('tap here',cx(3),yOf(36,0));g.fillText('↓',cx(3),yOf(33,0))}}
+  g.fillText('tap here',cx(R.ng),yOf(36,0));g.fillText('↓',cx(R.ng),yOf(33,0))}}
 
 /* ---------- game state ---------- */
 let phase='menu',round=0,total=0,R=null;
 function newRound(){round++;const pool=[];LV.maj.forEach(k=>pool.push([k,'major']));LV.min.forEach(k=>pool.push([k,'minor']));
- let task,key,kk,tries=0;do{[kk,key]=pick(pool);task=pick(LV.tasks);tries++}while((key==='minor'&&task==='mod')||(R&&R.task===task&&R.kname===kk+key&&tries<20));
- const K=makeKey(KEYS[kk][0],KEYS[kk][1],key);const given=transposeTpl(TPL[key][task],K);
- R={key:K,kname:kk+key,task,chords:[...given,{},{}],ids:[],sel:{c:3,v:'B'},res:null,wrote:null,met:false,okX:{}};
- for(let c=0;c<3;c++)R.ids[c]=identify(R.chords[c],K);
+ let task,key,kk,feat=null,tries=0;do{[kk,key]=pick(pool);task=pick(LV.tasks);tries++}while((key==='minor'&&task==='mod')||(R&&R.task===task&&R.kname===kk+key&&tries<20));
+ if(LV.feats){const fs=Object.keys(FEATS).filter(f=>FEATS[f].cads.includes(task)&&f!==(R&&R.feat));feat=pick(fs)}
+ const K=makeKey(KEYS[kk][0],KEYS[kk][1],key);const given=transposeTpl(LV.feats?TPL2[key]:TPL[key][task],K),ng=given.length,n=LV.feats?6:5;
+ R={key:K,kname:kk+key,task,feat,ng,n,chords:[...given,...Array.from({length:n-ng},()=>({}))],ids:[],sel:{c:ng,v:'B'},res:null,wrote:null,met:false,okX:{}};
+ for(let c=0;c<ng;c++)R.ids[c]=identify(R.chords[c],K);
  phase='write';$('report').hidden=true;$('report').innerHTML='';$('check').textContent='Check';updateUI();
  const N=AV[avKey].name,hint=LV.hint?` <b>${cadHint(task,K)}</b>`:'';
  const ask={perfect:'with a perfect cadence',plagal:'with a plagal cadence',half:'with a half cadence',deceptive:'with a deceptive cadence',mod:'by modulating to the dominant'}[task];
- sayHTML(`Finish the phrase in <b>${K.name}</b> ${ask}!${hint}`);
+ sayHTML(feat?`Finish the phrase in <b>${K.name}</b> ${ask}, and use ${FEATS[feat].name} on the way!`:`Finish the phrase in <b>${K.name}</b> ${ask}!${hint}`);
  $('rd').textContent=round+'/'+ROUNDS;setTimeout(playAll,350)}
 function sayHTML(h){$('bubble').innerHTML=h}
 function updateUI(){document.querySelectorAll('.v').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===R.sel.v));
  const n=cur(),w=phase==='write';document.querySelectorAll('.acc,#up,#dn,#del').forEach(b=>b.disabled=!w||!n);document.querySelectorAll('.v').forEach(b=>b.disabled=!w);
  $('check').disabled=w&&!complete()}
 const cur=()=>R&&R.chords[R.sel.c]&&R.chords[R.sel.c][R.sel.v];
-const complete=()=>[3,4].every(c=>VO.every(v=>R.chords[c][v]));
+const complete=()=>R.chords.slice(R.ng).every(ch=>VO.every(v=>ch[v]));
 function setNote(c,v,d,a){const n={d,a:a===undefined?R.key.sig[mod(d,7)]:a};R.chords[c][v]=n;blip(n);return n}
-function nextEmpty(){for(const c of[R.sel.c,3,4])for(const v of['B','T','A','S'])if(!R.chords[c][v])return{c,v};return null}
+function nextEmpty(){for(let c=R.ng;c<R.n;c++)for(const v of['B','T','A','S'])if(!R.chords[c][v])return{c,v};return null}
 let drag=null;
 function hit(e){const r=sc.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;const c=Math.floor((x-G.x0)/G.colW);
  const st=y<(G.trebBot+G.bassTop)/2?0:1;let d=st===0?30+Math.round((G.trebBot-y)/(G.h/2)):18+Math.round((G.bassBot-y)/(G.h/2));
  d=st===0?clamp(d,24,44):clamp(d,12,32);return{c,st,d,x,y}}
-sc.addEventListener('pointerdown',e=>{if(!R||ASK.open)return;const p=hit(e);if(p.c<0||p.c>4)return;
- if(p.c<3||phase!=='write'){playChordNow(p.c);return}
+sc.addEventListener('pointerdown',e=>{if(!R||ASK.open)return;const p=hit(e);if(p.c<0||p.c>=R.n)return;
+ if(p.c<R.ng||phase!=='write'){playChordNow(p.c);return}
  const ch=R.chords[p.c],[lo,hi]=p.st===0?['A','S']:['B','T'],pair=[lo,hi];
  const onNote=pair.find(v=>ch[v]&&ch[v].d===p.d);
  if(onNote){R.sel={c:p.c,v:onNote};blip(ch[onNote]);drag={c:p.c,v:onNote,id:e.pointerId};sc.setPointerCapture(e.pointerId);updateUI();return}
@@ -449,25 +487,25 @@ document.querySelectorAll('.acc').forEach(b=>b.onclick=()=>setAcc(+b.dataset.acc
 $('up').onclick=()=>moveSel(1);$('dn').onclick=()=>moveSel(-1);
 $('del').onclick=()=>{if(cur()){delete R.chords[R.sel.c][R.sel.v];updateUI()}};
 $('play').onclick=playAll;$('askyes').onclick=()=>answerCross(true);$('askno').onclick=()=>answerCross(false);
-$('check').onclick=()=>{if(phase==='write'){if(!complete()){sayHTML('Write all four voices in both chords first!');return}doCheck()}else if(phase==='result'){if(round>=ROUNDS)finish();else newRound()}};
+$('check').onclick=()=>{if(phase==='write'){if(!complete()){sayHTML('Write all four voices in all your chords first!');return}doCheck()}else if(phase==='result'){if(round>=ROUNDS)finish();else newRound()}};
 addEventListener('keydown',e=>{if(phase==='menu'||phase==='end'||!R||ASK.open)return;const k=e.key;
  if(phase==='write'){
   if('satbSATB'.includes(k)&&k.length===1){R.sel.v=k.toUpperCase();updateUI();e.preventDefault();return}
   if(k==='ArrowUp'){moveSel(1);e.preventDefault()}else if(k==='ArrowDown'){moveSel(-1);e.preventDefault()}
-  else if(k==='ArrowLeft'||k==='ArrowRight'){R.sel.c=R.sel.c===3?4:3;updateUI();e.preventDefault()}
+  else if(k==='ArrowLeft'||k==='ArrowRight'){R.sel.c=R.ng+mod(R.sel.c-R.ng+(k==='ArrowLeft'?-1:1),R.n-R.ng);updateUI();e.preventDefault()}
   else if(k==='#'||k==='+'){setAcc(1)}else if(k==='-'){setAcc(-1)}else if(k==='n'||k==='='){setAcc(0)}
   else if(k==='Backspace'||k==='Delete'){$('del').click();e.preventDefault()}}
  if(k===' '){playAll();e.preventDefault()}else if(k==='Enter'){$('check').click();e.preventDefault()}});
 function doCheck(){phase='result';const res=analyze();R.res=res;total+=res.score;$('sc').textContent=total;
  const K=R.key,N=AV[avKey].name,wn=R.wrote?cadName(R.met?R.task:R.wrote,K):null,tn=cadName(R.task,K);let msg;
- if(!R.ids[3]||!R.ids[4])msg=pick(['Interesting sounds! A few notes don’t belong to the chords yet. My notes are below.','Curious harmony! Some notes wander outside the chords. Have a look below.']);
+ if(R.chords.slice(R.ng).some((_,i)=>!R.ids[R.ng+i]))msg=pick(['Interesting sounds! A few notes don’t belong to the chords yet. My notes are below.','Curious harmony! Some notes wander outside the chords. Have a look below.']);
  else if(R.met&&res.score>=90)msg=pick([`Bravissimo! A textbook ${wn}.`,`Beautiful! That ${wn} really sings.`,`Gnam! A delicious ${wn}.`]);
  else if(R.met)msg=pick([`Yes, a ${wn}! Just a few details to polish.`,`Lovely ${wn}! Check my notes below.`]);
  else msg=`Nice idea! That’s a ${wn}. Next time let’s aim for a ${tn}.`;
  sayHTML(`${msg} <b>+${res.score}</b>`);
  const ants=res.score>=90?4:res.score>=70?3:res.score>=45?2:res.score>0?1:0;if(ants)setTimeout(()=>feed(ants),300);
  const items=res.items.slice().sort((a,b)=>b.pen-a.pen);
- $('report').innerHTML=`<h3>${res.score}<small>points this round · ${R.ids[3]?R.ids[3].label:'?'} → ${R.ids[4]?R.ids[4].label:'?'}</small></h3><ul>${items.map(it=>`<li class="${it.good?'good':it.pen<8?'tip':''}"><span class="p">${it.good?'✓':it.info?'i':'−'+it.pen}</span><span>${it.msg}</span></li>`).join('')}</ul>`;
+ $('report').innerHTML=`<h3>${res.score}<small>points this round · ${R.chords.slice(R.ng).map((_,i)=>R.ids[R.ng+i]?R.ids[R.ng+i].label:'?').join(' → ')}</small></h3><ul>${items.map(it=>`<li class="${it.good?'good':it.pen<8?'tip':''}"><span class="p">${it.good?'✓':it.info?'i':'−'+it.pen}</span><span>${it.msg}</span></li>`).join('')}</ul>`;
  $('report').hidden=false;$('check').textContent=round>=ROUNDS?'Results':'Next';updateUI();$('check').disabled=false;setTimeout(playAll,200)}
 function finish(){phase='end';let best=0;const k='cadencesBest_'+lvKey;try{best=+localStorage.getItem(k)||0;if(total>best){localStorage.setItem(k,total);best=total}}catch(e){}
  const N=AV[avKey].name;$('endlv').textContent=LV.name+' · '+ROUNDS+' rounds';$('endsc').textContent=total+' / '+ROUNDS*100;
@@ -481,7 +519,7 @@ document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset
 $('go').onclick=begin;$('again').onclick=begin;$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;phase='menu'};
 sayHTML('Hi! Ready to write some cadences?');
 /* demo phrase behind the menu */
-{const K=makeKey(0,0,'major');R={key:K,kname:'Cmajor',task:'perfect',chords:[...transposeTpl(TPL.major.perfect,K),{S:parseN('B4'),A:parseN('G4'),T:parseN('D4'),B:parseN('G2')},{S:parseN('C5'),A:parseN('G4'),T:parseN('E4'),B:parseN('C3')}],ids:[],sel:{c:3,v:'S'},res:null};for(let c=0;c<5;c++)R.ids[c]=identify(R.chords[c],K)}
+{const K=makeKey(0,0,'major');R={key:K,kname:'Cmajor',task:'perfect',chords:[...transposeTpl(TPL.major.perfect,K),{S:parseN('B4'),A:parseN('G4'),T:parseN('D4'),B:parseN('G2')},{S:parseN('C5'),A:parseN('G4'),T:parseN('E4'),B:parseN('C3')}],ids:[],sel:{c:3,v:'S'},res:null,ng:3,n:5};for(let c=0;c<5;c++)R.ids[c]=identify(R.chords[c],K)}
 if(document.fonts&&document.fonts.load)Promise.all([document.fonts.load('40px "Noto Music"','𝄞𝄢♯♭♮'),document.fonts.load('italic 20px "Instrument Serif"')]).then(()=>FONT_OK=true).catch(()=>{});
 let last=performance.now()/1000,T=0;
 function frame(){const now=performance.now()/1000,dt=Math.min(.05,now-last);last=now;T+=dt;stage(T,dt);if(R)drawStaff(T);requestAnimationFrame(frame)}
