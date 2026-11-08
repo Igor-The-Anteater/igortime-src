@@ -437,7 +437,7 @@ const POOL=new V3(7.6,0,6.6);
  blob(t,2,.95);scene.add(t);block(POOL.x,POOL.z,1.75);hit(t,1.8,()=>goTo('abyss'),'abyss',.4);
  label('The abyss','walk into the pool',new V3(POOL.x,3,POOL.z),()=>goTo('abyss'),13);
  zone('out',POOL.x,POOL.z,2.15,()=>dive(),'pool')}
-let diving=0;function dive(){if(diving)return;diving=.001;closeSheet();IG.target=null;IG.arrive=null;say('Hold your breath!',1.4);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}}
+let diving=0;function dive(){if(diving)return;diving=.001;closeSheet();IG.target=null;IG.arrive=null;say('Hold your breath!',1.4);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}rememberSpot('out',POOL.x,POOL.z+2.6)}
 updaters.push((t,dt)=>{if(!diving)return;diving+=dt;const k=Math.min(1,diving/1.1);igor.position.x+=(POOL.x-igor.position.x)*Math.min(1,dt*4);igor.position.z+=(POOL.z-igor.position.z)*Math.min(1,dt*4);igor.position.y=-k*k*2.2;if(diving>1.25){diving=-1;location.href='/abyss/'}});
 addEventListener('pageshow',e=>{if(e.persisted){diving=0;igor.position.y=0;igor.position.set(POOL.x,0,POOL.z+2.6)}});
 
@@ -562,7 +562,8 @@ function exitRoom(quiet){const k=where;if(k==='out')return;ROOMS[k].g.visible=fa
  const P=PLACES[k];igor.position.copy(P.pos).add(k==='school'?new V3(.5,0,.9):new V3(0,0,.95));IG.target=null;IG.arrive=null;camSnap=true;syncZones();if(!quiet)say(pick(['Fresh air!','Back outside.']),1.8)}
 let camSnap=false;
 const wipSay=t=>{say(t+': work in progress, coming soon!',3);toast(t+' · coming soon')};
-let leaving=false;function launch(url,txt){if(leaving)return;leaving=true;say(txt,2);toast(txt);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}setTimeout(()=>{location.href=url},650)}
+function rememberSpot(where_,x,z){try{localStorage.setItem('igortime_return',JSON.stringify({where:where_,x,z,t:Date.now()}))}catch(e){}}
+let leaving=false;function launch(url,txt,spot){if(leaving)return;leaving=true;say(txt,2);toast(txt);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}if(spot)rememberSpot(...spot);else rememberSpot(where,igor.position.x,igor.position.z);setTimeout(()=>{location.href=url},650)}
 addEventListener('pageshow',e=>{if(e.persisted)leaving=false});
 function frameOn(Rm,x,y,z,ry,w,h,col,draw){const c=document.createElement('canvas');c.width=128;c.height=Math.round(128*h/w);const g2=c.getContext('2d');g2.fillStyle=col;g2.fillRect(0,0,c.width,c.height);draw&&draw(g2,c.width,c.height);
  const pic=new THREE.Mesh(new THREE.PlaneGeometry(w,h),texM(new THREE.CanvasTexture(c)));const fr=new THREE.Mesh(new THREE.BoxGeometry(w+.14,h+.14,.05),lam('#6a4630'));const G=new THREE.Group();G.add(fr);pic.position.z=.03;G.add(pic);G.position.set(x,y,z);G.rotation.y=ry;Rm.g.add(G);return G}
@@ -596,7 +597,7 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   const rail=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,4.3),dark);rail.position.set(.85,1.55,-.68);rail.rotation.x=.5;o.add(rail);
   const ant=makeAnt(1.6);ant.position.set(0,2.35,-2.4);o.add(ant);const note=halo('#ffe7a6',.9,.6,true);note.position.set(0,2.9,-2.4);o.add(note);
   updaters.push(t=>{ant.rotation.y=Math.sin(t)*.6;ant.userData.legs.forEach((l,j)=>l.rotation.y=Math.sin(t*10+j)*.4);note.material.opacity=.4+.25*Math.sin(t*3)});
-  station(Rm,'house',{name:'Pitch Stairs',sub:'walk up the stairs to play',pos:new V3(-4.3,0,-1.6),stand:new V3(-3,0,.4),obj:o,act:()=>launch('/pitch-stairs/','Up the stairs: Pitch Stairs!'),r:1.7,zr:1.9})}
+  station(Rm,'house',{name:'Pitch Stairs',sub:'walk up the stairs to play',pos:new V3(-4.3,0,-1.6),stand:new V3(-3,0,.4),obj:o,act:()=>launch('/pitch-stairs/','Up the stairs: Pitch Stairs!',['house',-2.6,-0.2]),r:1.7,zr:1.9})}
  // the kitchen
  {const o=new THREE.Group();const counter=new THREE.Mesh(new THREE.RoundedBoxGeometry(2.6,1,.9,2,.06),lam('#7aa08a'));counter.position.y=.5;o.add(counter);
   for(let k=0;k<3;k++){const dr=new THREE.Mesh(new THREE.BoxGeometry(.75,.7,.03),lam('#8fb59e'));dr.position.set(-.85+k*.85,.48,.46);o.add(dr);const kn=new THREE.Mesh(new THREE.SphereGeometry(.04,8,6),lam('#e2b84f'));kn.position.set(-.85+k*.85,.7,.49);o.add(kn)}
@@ -656,7 +657,7 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   const nts=[];const nc=document.createElement('canvas');nc.width=nc.height=64;{const q=nc.getContext('2d');q.fillStyle='#f7ecd4';q.font='48px serif';q.textAlign='center';q.textBaseline='middle';q.fillText('♪',32,34)}
   for(let k=0;k<3;k++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(nc),transparent:true,opacity:0,depthWrite:false}));sp.scale.set(.35,.35,1);o.add(sp);nts.push(sp)}
   updaters.push(t=>{nts.forEach((sp,k)=>{const u=(t*.2+k/3)%1;sp.position.set(-.5+k*.5+Math.sin(t+k)*.15,1.8+u*1.1,.2);sp.material.opacity=Math.sin(u*Math.PI)*.8})});
-  station(Rm,'school',{name:'Cadences',sub:'walk to the piano to play',pos:new V3(0,0,-3.1),stand:new V3(0,0,-1.1),obj:o,act:()=>launch('/cadences/','To the piano: Cadences!'),r:1.5,zr:2.15})}
+  station(Rm,'school',{name:'Cadences',sub:'walk to the piano to play',pos:new V3(0,0,-3.1),stand:new V3(0,0,-1.1),obj:o,act:()=>launch('/cadences/','To the piano: Cadences!',['school',0,-0.85]),r:1.5,zr:2.15})}
  // closed doors: future games
  const door=(x,z,ry,n)=>{const o=new THREE.Group();const d=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.1,2.1,.12,2,.04),lam('#7b5638'));d.position.y=1.05;o.add(d);
   for(const yy of[.55,1.45]){const pn=new THREE.Mesh(new THREE.BoxGeometry(.8,.65,.03),lam('#6a4630'));pn.position.set(0,yy,.07);o.add(pn)}
@@ -739,7 +740,7 @@ const idx=$('index');
 idx.innerHTML=`<h2>Igor’s island</h2><ul><li><button data-i="house">Igor’s house<small>games</small></button></li><li><button data-i="field">Tofu ant field</button></li><li><button data-i="school">Music school<small>composers</small></button></li><li><button data-i="abyss">The abyss<small>game</small></button></li><li><button data-i="jetty">Other places<small>soon</small></button></li></ul>
  <h2>Games</h2><ul><li><button data-i="stairs">Pitch Stairs<small>house</small></button></li><li><button data-i="cad">Cadences<small>school</small></button></li><li><button data-i="w">The window<small>soon</small></button></li><li><button data-i="k">The kitchen<small>soon</small></button></li><li><button data-i="b">The bedroom<small>soon</small></button></li></ul>`;
 idx.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.i;idx.hidden=true;$('indexBtn').setAttribute('aria-expanded','false');
- if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!');return}if(k==='cad'){launch('/cadences/','Cadences!');return}if(k==='w'||k==='k'||k==='b'){openWip({w:'The window',k:'The kitchen',b:'The bedroom'}[k]);return}if(where!=='out')exitRoom(true);goTo(k)});
+ if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/','Cadences!',['school',0,-0.85]);return}if(k==='w'||k==='k'||k==='b'){openWip({w:'The window',k:'The kitchen',b:'The bedroom'}[k]);return}if(where!=='out')exitRoom(true);goTo(k)});
 function toggleIndex(){idx.hidden=!idx.hidden;$('indexBtn').setAttribute('aria-expanded',String(!idx.hidden));if(!idx.hidden)say(pick(['Where to?','Pick a place, I’ll take you.']),2)}
 $('indexBtn').onclick=toggleIndex;
 $('ants').onclick=()=>{toast(S.ants+' tofu ants eaten');goTo('field')};$('seeds').onclick=()=>{toast(S.seeds+' tofu seeds · win more in the games');goTo('field')};$('me').onclick=()=>openAccount();
@@ -805,6 +806,12 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  if(bubbleT>0)bubbleT-=dt;placeBubble();chatter();
  renderer.render(scene,camera);requestAnimationFrame(frame)}
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.fov=fovFor();camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);hh()});
+// back from a game: Igor is where you left him
+function comeBack(){let r=null;try{r=JSON.parse(localStorage.getItem('igortime_return'));localStorage.removeItem('igortime_return')}catch(e){}
+ if(!r||!(Date.now()-r.t<12*3600e3))return false;if(r.where!=='out'&&ROOMS[r.where])enterRoom(r.where);else if(where!=='out')exitRoom(true);
+ igor.position.set(r.x,0,r.z);IG.target=null;IG.arrive=null;camSnap=true;syncZones();setTimeout(()=>say(pick(['Welcome back!','How did it go?','Back home. Gnam.'])),700);return true}
+comeBack();
+addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 })();
 </script>
