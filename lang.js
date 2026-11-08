@@ -2,6 +2,15 @@
    The island already speaks Italian and English; the games are written in English.
    This file translates what the player reads at the start, during the rounds and at the end,
    when the language chosen on the island is Italian (localStorage igortime_lang). */
+/* When the player comes from the games page (/games/), the "back to the island" links of the games go back there. */
+(()=>{
+let H='/';try{H=localStorage.getItem('igortime_home')||'/'}catch(e){}
+if(!/^\/games\/?/.test(H))return;
+const M={'← Island':'← Games','← Isola':'← Giochi','← Igor’s island':'← Igor’s games','← L’isola di Igor':'← I giochi di Igor','← back to the island':'← back to the games','← torna all’isola':'← torna ai giochi'};
+const fix=()=>{for(const a of document.querySelectorAll('a')){const v=a.textContent.trim();if(M[v])a.textContent=M[v]}};
+const go=()=>{fix();new MutationObserver(fix).observe(document.body||document.documentElement,{childList:true,subtree:true,characterData:true})};
+if(document.readyState!=='loading')go();else document.addEventListener('DOMContentLoaded',go);
+})();
 (()=>{
 let L='en';try{L=localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en')}catch(e){}
 if(L!=='it')return;
@@ -16,7 +25,7 @@ const D={
  // common
  'Start':'Inizia','Play again':'Gioca ancora','Change level':'Cambia livello','Easy':'Facile','Medium':'Medio','Extreme':'Estremo',
  'Choose your anteater':'Scegli il tuo formichiere','Difficulty':'Difficoltà','round':'round','score':'punti',
- '← Island':'← Isola','← back to the island':'← torna all’isola','← back to Igor time':'← torna a Igor time','← Igor’s island':'← L’isola di Igor',
+ '← Island':'← Isola','← Games':'← Giochi','← Igor’s games':'← I giochi di Igor','← back to the games':'← torna ai giochi','← back to the island':'← torna all’isola','← back to Igor time':'← torna a Igor time','← Igor’s island':'← L’isola di Igor',
  '▶ Listen':'▶ Ascolta','That’s it!':'Ecco!','That\'s it!':'Ecco!','That’s it':'Ecco','Then':'Poi',
  '🎧 Use headphones, and keep your volume fixed for the whole game.':'🎧 Usa le cuffie e non cambiare il volume per tutta la partita.',
  'Tofu seeds won: easy ×1, medium ×2, extreme ×3':'Semi di tofu vinti: facile ×1, medio ×2, estremo ×3',
