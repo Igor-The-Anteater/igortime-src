@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Igor’s games · Igor time</title>
+<meta name="description" content="All of Igor’s games on one page: Pitch Stairs, the kitchen, the bedroom, the window, the abyss and Cadences.">
+<link rel="canonical" href="https://igortime.com/games/">
+<script>try{localStorage.setItem('igortime_view','games');localStorage.setItem('igortime_home','/games/')}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+:root{--abyss:#05080d;--ink:#dbe7ea;--dim:#8a9ca2;--glow:#7fe3ef;--bone:#efe4cf;--cream:#f7ecd4;--line:#2b2018;--warm:#f1b46e;
+ --display:'Instrument Serif',Georgia,serif;--toon:'Fredoka','Trebuchet MS',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;color-scheme:dark}
+*{box-sizing:border-box}
+html{background:var(--abyss)}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:var(--toon);
+ background:radial-gradient(ellipse 90% 60% at 50% 0%,rgba(127,227,239,.13),transparent 70%),radial-gradient(ellipse 70% 50% at 85% 100%,rgba(241,180,110,.10),transparent 70%),var(--abyss);
+ padding:env(safe-area-inset-top,0px) max(14px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+a{color:inherit}
+button{font:inherit;cursor:pointer}
+.pill{display:inline-flex;align-items:center;gap:7px;font:600 15px/1 var(--toon);color:var(--line);background:var(--cream);border:2.5px solid var(--line);border-radius:999px;padding:8px 14px 9px;box-shadow:0 3px 0 var(--line);text-decoration:none;white-space:nowrap}
+.pill:hover,.pill:focus-visible{background:#fff5df;outline:none}
+.pill:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.pill svg{width:20px;height:20px;flex:none}
+header{max-width:1040px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:14px 0 6px;flex-wrap:wrap}
+header h1{margin:0 auto 0 4px;font:400 26px/1 var(--display);letter-spacing:-.01em;color:var(--ink)}
+header h1 em{color:var(--glow)}
+header h1 a{text-decoration:none}
+#langB{padding:5px 7px;gap:0}#langB svg{width:28px;height:19px;border-radius:3px;display:block}
+#me{max-width:44vw;overflow:hidden;text-overflow:ellipsis}
+#islB .s,#me .s{display:none}
+.hero{max-width:1040px;margin:6px auto 4px;display:flex;align-items:flex-end;gap:6px}
+#ig{width:132px;height:auto;flex:none;margin-bottom:-6px}
+.say{position:relative;background:var(--cream);color:var(--line);border:3px solid var(--line);border-radius:18px;padding:12px 16px 13px;box-shadow:0 4px 0 var(--line);margin-bottom:46px;max-width:34rem}
+.say::before{content:'';position:absolute;left:-12px;bottom:16px;width:16px;height:16px;background:var(--cream);border:3px solid var(--line);border-top:0;border-right:0;transform:rotate(45deg);border-radius:0 0 0 4px}
+.say h2{margin:0 0 4px;font:700 22px/1.15 var(--toon)}
+.say p{margin:0;font:500 15px/1.35 var(--toon);color:#5a4030}
+#seedsP{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font:600 13px/1 var(--toon);background:#e9f6d8;border:2px solid var(--line);border-radius:999px;padding:5px 10px 6px;color:var(--line)}
+#seedsP[hidden]{display:none}
+#seedsP svg{width:16px;height:16px}
+.grid{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{display:flex;flex-direction:column;text-decoration:none;color:var(--line);background:var(--cream);border:3px solid var(--line);border-radius:20px;box-shadow:0 5px 0 var(--line),0 14px 28px rgba(0,0,0,.35);overflow:hidden;transition:transform .15s}
+.card:hover,.card:focus-visible{transform:translateY(-3px);outline:none;box-shadow:0 8px 0 var(--line),0 18px 32px rgba(0,0,0,.4)}
+.card:active{transform:translateY(2px);box-shadow:0 2px 0 var(--line)}
+.card .art{display:block;aspect-ratio:4/3;border-bottom:3px solid var(--line)}
+.card .art svg{display:block;width:100%;height:100%}
+.card .tx{padding:12px 14px 14px;display:flex;flex-direction:column;gap:5px;flex:1}
+.card b{font:700 21px/1.1 var(--toon)}
+.card .what{font:600 12px/1 var(--toon);text-transform:uppercase;letter-spacing:.06em;color:#9a5d2c}
+.card p{margin:0;font:500 14.5px/1.35 var(--toon);color:#5a4030}
+.card .ft{margin-top:auto;padding-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;font:500 12.5px/1.2 var(--toon);color:#7a5230}
+.card .go{flex:none;font:700 14px/1 var(--toon);background:var(--line);color:var(--cream);border-radius:999px;padding:7px 12px 8px}
+.note{max-width:1040px;margin:22px auto 0;display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:rgba(247,236,212,.08);border:2px dashed rgba(247,236,212,.35);border-radius:20px;padding:14px 16px}
+.note p{margin:0;flex:1 1 22rem;font:500 15px/1.4 var(--toon);color:var(--bone)}
+.note p strong{color:var(--warm);font-weight:600}
+.note .pill{font-size:17px;padding:11px 18px 12px}
+.note .pill svg{width:26px;height:26px}
+@media (max-width:860px){.grid{grid-template-columns:repeat(2,1fr);gap:14px}}
+@media (max-width:520px){header h1{font-size:22px}#ig{width:96px}.say{padding:10px 12px 11px;margin-bottom:34px}.say h2{font-size:18px}.say p{font-size:13.5px}
+ .grid{gap:11px}.card{border-radius:16px;border-width:2.5px}.card .tx{padding:9px 10px 11px}.card b{font-size:17px}.card p{font-size:12.5px}.card .what{font-size:10.5px}.card .ft{flex-direction:column;align-items:flex-start;font-size:11.5px}.card .go{font-size:13px}
+ #islB .t,#me .t{display:none}#islB .s,#me .s{display:inline}header{flex-wrap:nowrap;gap:7px}header h1{font-size:20px;margin-left:2px}#me{max-width:30vw}}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+<script src="/lang.js"></script>
+</head><body>
+<header>
+ <a class="pill" id="islB" href="/" data-island><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="#2b2018" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>🏝<span class="t" data-k="toIsland">Take me to the island</span><span class="s" data-k="island">Island</span></a>
+ <h1><em>Igor</em> time</h1>
+ <button class="pill" id="langB" type="button"></button>
+ <a class="pill" id="me" href="/?signin"></a>
+</header>
+<section class="hero">
+ <canvas id="ig" width="420" height="573" role="img" aria-label="Igor"></canvas>
+ <div class="say"><h2 data-k="h">All my games!</h2><p data-k="p">Pick one and play. Every game gives tofu seeds: you plant them on my island.</p><span id="seedsP" hidden></span></div>
+</section>
+<main class="grid" id="grid"></main>
+<section class="note">
+ <p data-k="note" data-html>All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom and the window are in my house, Cadences in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.</p>
+ <a class="pill" href="/" data-island><span style="font-size:22px">🏝</span><span data-k="toIsland">Take me to the island</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="#2b2018" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+</section>
+
+<script>
+(()=>{
+/* Igor’s drawing: the same code as /house/kit.js (avatar and accessories, igorAcc) */
+const TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t,ease=u=>u*u*(3-2*u);
+const $=id=>document.getElementById(id);
+const IGOR_SRC=window.IGOR_SRC||'/igor.webp';
+
+/* ================= Igor (island drawing, 663×730 coordinates) ================= */
+const AVN={igor:'Igor',she:'Shigor',queer:'Queegor'};
+const SW=420,SH=462,SC=SW/663;
+const EYES=[{x:465,y:233,rx:41,ry:45},{x:538.5,y:225,rx:34.5,ry:41}];
+const SKIN='#a8d621';
+const igorImg=new Image();let igorOK=false;
+function lid(c,e,k){k=k*k*(3-2*k);const top=e.y-e.ry-3,bot=e.y+e.ry+3,m=e.y+e.ry*.3,Lu=top+(m-top)*k,Ll=bot-(bot-m)*k,bend=9*k,Lx=e.x-e.rx-4,Rx=e.x+e.rx+4;
+ c.save();c.beginPath();c.ellipse(e.x,e.y,e.rx+1,e.ry+1,0,0,TAU);c.clip();c.fillStyle=SKIN;
+ c.beginPath();c.moveTo(Lx,top);c.lineTo(Rx,top);c.lineTo(Rx,Lu);c.quadraticCurveTo(e.x,Lu+bend*2,Lx,Lu);c.closePath();c.fill();
+ c.beginPath();c.moveTo(Lx,bot);c.lineTo(Rx,bot);c.lineTo(Rx,Ll);c.quadraticCurveTo(e.x,Ll+bend*2,Lx,Ll);c.closePath();c.fill();
+ if(k>.02){c.strokeStyle='#111';c.lineCap='round';c.lineWidth=4.5;c.beginPath();c.moveTo(Lx,Lu);c.quadraticCurveTo(e.x,Lu+bend*2,Rx,Lu);c.stroke()}
+ c.restore();return Lu-top}
+function lashes(c,e,dy,n){c.save();c.strokeStyle='#111';c.lineCap='round';c.lineWidth=5.5;
+ for(let i=0;i<n;i++){const a=(-120+i*(60/(Math.max(n,2)-1)))*Math.PI/180;c.beginPath();c.moveTo(e.x+e.rx*1.02*Math.cos(a),e.y+e.ry*1.02*Math.sin(a)+dy);c.lineTo(e.x+(e.rx+18)*Math.cos(a-.12),e.y+(e.ry+18)*Math.sin(a-.12)+dy*1.2);c.stroke()}c.restore()}
+function bowAt(c,x,y,s,col){c.save();c.fillStyle=col;c.strokeStyle='#141414';c.lineWidth=4;c.lineJoin='round';
+ for(const d of[-1,1]){c.beginPath();c.moveTo(x,y);c.lineTo(x+d*s,y-s*.7);c.lineTo(x+d*s,y+s*.7);c.closePath();c.fill();c.stroke()}
+ c.beginPath();c.arc(x,y,s*.3,0,TAU);c.fill();c.stroke();c.restore()}
+function starAt(c,x,y,r,cols){c.save();c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?r*.45:r;c.lineTo(x+q*Math.cos(a),y+q*Math.sin(a))}c.closePath();
+ c.save();c.clip();const h=2*r/cols.length;cols.forEach((col,i)=>{c.fillStyle=col;c.fillRect(x-r,y-r+i*h,2*r,h+.6)});c.restore();c.strokeStyle='#141414';c.lineWidth=4;c.lineJoin='round';c.stroke();c.restore()}
+/* Igor's accessories: the same code as the island (head, glasses, earrings; igorAcc). */
+const ACC_REF=[{x:465,y:233,rx:41,ry:45},{x:538.5,y:225,rx:34.5,ry:41}];
+const ACC_HEADS=[['','None'],['cap','Cap'],['bow','Bow'],['flower','Flower'],['star','Star'],['beanie','Winter hat']];
+const ACC_HCOL=['#e0463c','#ff8ab6','#f1b46e','#f6d34a','#9be38a','#7fe3ef','#2f6fd6','#b48ce6','#ffffff','#2b2b2b'];
+const ACC_GLASS=['#141414','#8a5a2b','#e0463c','#2f6fd6','#f1b46e','#ff8ab6','#ffffff'];
+const ACC_EARS=[['','None'],['r','Right'],['l','Left'],['both','Both']];
+const ACC_ECOL=['#f1c84b','#d9dde3','#ff8ab6','#7fe3ef','#e0463c','#9be38a','#2b2b2b'];
+const ACC_NB=['#fcf434','#ffffff','#9c59d1','#2c2c2c'];
+const ACC_HDEF={cap:'#e0463c',bow:'#ff8ab6',flower:'#f1b46e',star:'nb',beanie:'#2f6fd6'};
+function accOf(o){o=o||{};const r={glasses:o.glasses||null,gcol:o.gcol||'#141414',ears:o.ears||null,ecol:o.ecol||'#f1c84b'};
+ if(o.head!=null){r.head=o.head||null;r.hcol=o.hcol}else if(o.avatar==='she'){r.head='bow';r.hcol=o.ball}else if(o.avatar==='queer'){r.head='star';r.hcol='nb'}else if(o.ball){r.head='cap';r.hcol=o.ball}else r.head=null;
+ if(r.head&&!r.hcol)r.hcol=ACC_HDEF[r.head];return r}
+function accShade(col,k){if(col==='nb')col='#9c59d1';const n=parseInt(col.slice(1),16),f=v=>Math.max(0,Math.min(255,Math.round(v*k)));return`rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`}
+function accMap(c,eyes){const a=ACC_REF,b=eyes,dxa=a[1].x-a[0].x,dya=a[1].y-a[0].y,dxb=b[1].x-b[0].x,dyb=b[1].y-b[0].y;
+ const s=Math.hypot(dxb,dyb)/Math.hypot(dxa,dya),r=Math.atan2(dyb,dxb)-Math.atan2(dya,dxa),cs=s*Math.cos(r),sn=s*Math.sin(r);
+ c.transform(cs,sn,-sn,cs,b[0].x-(cs*a[0].x-sn*a[0].y),b[0].y-(sn*a[0].x+cs*a[0].y))}
+const ACC_INK='#141414';
+function accCap(c,col){const w=86,h=72;c.save();c.translate(384,128);c.rotate(.42);c.lineJoin='round';c.lineCap='round';c.strokeStyle=ACC_INK;c.lineWidth=6;
+ c.fillStyle=accShade(col,.78);c.beginPath();c.moveTo(w*.35,-4);c.quadraticCurveTo(w*1.55,-14,w*2.05,10);c.quadraticCurveTo(w*1.45,22,w*.3,12);c.closePath();c.fill();c.stroke();
+ c.fillStyle=col;c.beginPath();c.moveTo(-w,4);c.bezierCurveTo(-w,-h*1.25,w,-h*1.25,w,4);c.quadraticCurveTo(0,14,-w,4);c.closePath();c.fill();c.stroke();
+ c.lineWidth=3.5;c.globalAlpha=.55;c.beginPath();c.moveTo(-6,-h*.93);c.quadraticCurveTo(14,-h*.4,8,9);c.stroke();
+ c.beginPath();c.moveTo(-w*.92,-12);c.quadraticCurveTo(0,-2,w*.92,-12);c.stroke();c.globalAlpha=1;
+ c.fillStyle=accShade(col,.8);c.lineWidth=4.5;c.beginPath();c.arc(-6,-h*.93-3,9,0,Math.PI*2);c.fill();c.stroke();
+ c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(-w*.42,-h*.55,13,22,-.6,0,Math.PI*2);c.fill();c.restore()}
+function accBeanie(c,col){const w=92,h=92;c.save();c.translate(380,126);c.rotate(.4);c.lineJoin='round';c.lineCap='round';c.strokeStyle=ACC_INK;c.lineWidth=6;
+ c.fillStyle=col==='#ffffff'?'#e9e4da':'#ffffff';c.beginPath();for(let i=0;i<14;i++){const a=i/14*Math.PI*2,r=27+(i%2?5:0);c.lineTo(Math.cos(a)*r,-h-12+Math.sin(a)*r)}c.closePath();c.fill();c.stroke();
+ c.fillStyle=col;c.beginPath();c.moveTo(-w,-14);c.bezierCurveTo(-w*.95,-h*1.3,w*.95,-h*1.3,w,-14);c.closePath();c.fill();c.stroke();
+ c.save();c.clip();c.strokeStyle=accShade(col,.72);c.lineWidth=4;for(let x=-w;x<=w;x+=20){c.beginPath();c.moveTo(x,-14);c.quadraticCurveTo(x*.75,-h*.6,x*.4,-h*1.05);c.stroke()}c.restore();
+ c.fillStyle=accShade(col,.86);c.beginPath();c.moveTo(-w-6,-22);c.quadraticCurveTo(0,-36,w+6,-22);c.lineTo(w+4,12);c.quadraticCurveTo(0,0,-w-4,12);c.closePath();c.fill();c.stroke();
+ c.save();c.clip();c.strokeStyle=accShade(col,.66);c.lineWidth=4;for(let x=-w;x<=w;x+=13){c.beginPath();c.moveTo(x,-34);c.lineTo(x,14);c.stroke()}c.restore();
+ c.fillStyle='rgba(255,255,255,.28)';c.beginPath();c.ellipse(-w*.45,-h*.68,12,20,-.6,0,Math.PI*2);c.fill();c.restore()}
+function accBow(c,col){const x=262,y=92,s=30;c.save();c.fillStyle=col;c.strokeStyle=ACC_INK;c.lineWidth=4;c.lineJoin='round';
+ for(const d of[-1,1]){c.beginPath();c.moveTo(x,y);c.lineTo(x+d*s,y-s*.7);c.lineTo(x+d*s,y+s*.7);c.closePath();c.fill();c.stroke()}
+ c.beginPath();c.arc(x,y,s*.3,0,Math.PI*2);c.fill();c.stroke();c.restore()}
+function accStar(c,col){const x=262,y=90,r=30,cols=col==='nb'?ACC_NB:[col];c.save();c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?r*.45:r;c.lineTo(x+q*Math.cos(a),y+q*Math.sin(a))}c.closePath();
+ c.save();c.clip();const h=2*r/cols.length;cols.forEach((cc,i)=>{c.fillStyle=cc;c.fillRect(x-r,y-r+i*h,2*r,h+.6)});c.restore();c.strokeStyle=ACC_INK;c.lineWidth=4;c.lineJoin='round';c.stroke();c.restore()}
+function accFlower(c,col){const x=262,y=92,r=26;c.save();c.fillStyle=col;c.strokeStyle=ACC_INK;c.lineWidth=3.5;for(let i=0;i<5;i++){const a=i/5*Math.PI*2-Math.PI/2;c.beginPath();c.arc(x+Math.cos(a)*r*.62,y+Math.sin(a)*r*.62,r*.48,0,Math.PI*2);c.fill();c.stroke()}
+ c.fillStyle=col==='#f6d34a'?'#e0463c':'#f6d34a';c.beginPath();c.arc(x,y,r*.38,0,Math.PI*2);c.fill();c.stroke();c.restore()}
+function accGlasses(c,kind,col){const E=ACC_REF,sun=kind==='sun';c.save();c.lineJoin='round';c.lineCap='round';
+ const L=E.map(e=>({x:e.x+(sun?2:0),y:e.y+(sun?6:2),rx:e.rx*(sun?1.3:1.2),ry:e.ry*(sun?1.08:1.16)}));
+ c.strokeStyle=col==='#ffffff'?'#d9d9d9':col;c.lineWidth=sun?9:7;c.beginPath();c.moveTo(L[0].x-L[0].rx+4,L[0].y-L[0].ry*.35);c.quadraticCurveTo(L[0].x-L[0].rx-60,L[0].y-L[0].ry*.75,L[0].x-L[0].rx-118,L[0].y-L[0].ry*.2);c.stroke();
+ c.strokeStyle=ACC_INK;c.lineWidth=2.5;c.stroke();
+ for(const i of[1,0]){const l=L[i];c.beginPath();if(sun){c.moveTo(l.x-l.rx,l.y-l.ry*.55);c.quadraticCurveTo(l.x,l.y-l.ry*1.05,l.x+l.rx,l.y-l.ry*.55);c.bezierCurveTo(l.x+l.rx*1.05,l.y+l.ry*.9,l.x-l.rx*1.05,l.y+l.ry*1.05,l.x-l.rx,l.y-l.ry*.55)}else c.ellipse(l.x,l.y,l.rx,l.ry,0,0,Math.PI*2);c.closePath();
+  c.fillStyle=sun?'rgba(16,20,30,.9)':'rgba(205,232,255,.2)';c.fill();
+  c.strokeStyle=ACC_INK;c.lineWidth=sun?13:11;c.stroke();c.strokeStyle=col;c.lineWidth=sun?8:6;c.stroke();
+  c.save();c.clip();c.strokeStyle='rgba(255,255,255,'+(sun?.55:.6)+')';c.lineWidth=5;c.beginPath();c.arc(l.x-l.rx*.2,l.y-l.ry*.1,l.rx*.62,Math.PI*1.08,Math.PI*1.42);c.stroke();c.restore()}
+ c.restore()}
+function accEar(c,x,y,s,col,ox,oy){c.save();c.lineCap='round';c.strokeStyle=ACC_INK;const hx=x+ox*s,hy=y+oy*s,a0=Math.atan2(y-hy,x-hx);
+ c.lineWidth=8*s;c.beginPath();c.arc(hx,hy,13*s,a0+.35,a0+Math.PI*2-.35);c.stroke();c.strokeStyle=col;c.lineWidth=4.5*s;c.stroke();
+ c.fillStyle=col;c.strokeStyle=ACC_INK;c.lineWidth=3*s;c.beginPath();c.arc(x,y,4.5*s,0,Math.PI*2);c.fill();c.stroke();
+ const bx=hx+(hx-x)*.95,by=hy+(hy-y)*.95;c.beginPath();c.moveTo(bx,by-6*s);c.lineTo(bx-6*s,by+2*s);c.lineTo(bx,by+10*s);c.lineTo(bx+6*s,by+2*s);c.closePath();c.fill();c.stroke();c.restore()}
+function accEars(c,kind,col,side){if(side==='l'&&(kind==='l'||kind==='both'))accEar(c,404,80,1.3,col,10,8);if(side==='r'&&(kind==='r'||kind==='both'))accEar(c,222,223,1.4,col,1,13)}
+function igorAcc0(c,eyes,o){const a=accOf(o);if(!a.head&&!a.glasses&&!a.ears)return;c.save();accMap(c,eyes);
+ if(a.ears)accEars(c,a.ears,a.ecol,'l');
+ const H={cap:accCap,beanie:accBeanie,bow:accBow,star:accStar,flower:accFlower}[a.head];if(H)H(c,a.hcol);
+ if(a.ears)accEars(c,a.ears,a.ecol,'r');
+ if(a.glasses==='eye'||a.glasses==='sun')accGlasses(c,a.glasses,a.gcol);c.restore()}
+/* the cook's outfit for the kitchen: a chef's hat and a little apron (island picture coordinates) */
+function chefHat(c){c.save();c.translate(360,118);c.rotate(.34);c.scale(1.4,1.4);c.lineJoin='round';c.strokeStyle='#141414';c.lineWidth=6;c.fillStyle='#ffffff';
+ c.beginPath();c.arc(-58,-58,46,0,TAU);c.arc(0,-92,58,0,TAU);c.arc(58,-58,46,0,TAU);c.fill();
+ for(const[x,y,r]of[[-58,-58,46],[0,-92,58],[58,-58,46]]){c.beginPath();c.arc(x,y,r,Math.PI*.75,Math.PI*2.25);c.stroke()}
+ c.fillStyle='#ffffff';c.beginPath();c.moveTo(-78,-40);c.lineTo(78,-40);c.lineTo(72,22);c.quadraticCurveTo(0,34,-72,22);c.closePath();c.fill();c.stroke();
+ c.strokeStyle='rgba(0,0,0,.25)';c.lineWidth=3;for(const x of[-36,0,36]){c.beginPath();c.moveTo(x,-34);c.lineTo(x*.95,22);c.stroke()}c.restore()}
+function apron(c){c.save();c.translate(304,388);c.rotate(.5);c.scale(1.2,1.2);c.lineJoin='round';c.lineCap='round';
+ c.strokeStyle='#e0463c';c.lineWidth=7;c.beginPath();c.moveTo(-96,-6);c.quadraticCurveTo(0,8,96,-6);c.stroke(); // the string, tied round Igor
+ c.strokeStyle='#141414';c.lineWidth=5;c.fillStyle='#ffffff';c.beginPath();c.moveTo(-62,0);c.lineTo(62,0);c.lineTo(58,104);c.quadraticCurveTo(0,122,-58,104);c.closePath();c.fill();c.stroke();
+ c.strokeStyle='#e0463c';c.lineWidth=5;c.beginPath();c.moveTo(-60,16);c.lineTo(60,16);c.stroke();
+ c.strokeStyle='#141414';c.lineWidth=4;c.fillStyle='#f3f3f3';c.beginPath();c.rect(-30,48,60,34);c.fill();c.stroke();c.restore()}
+function igorAcc(c,eyes,o){if(o&&o.outfit==='chef'){const a=accOf(o);c.save();accMap(c,eyes);apron(c);if(a.ears)accEars(c,a.ears,a.ecol,'l');chefHat(c);if(a.ears)accEars(c,a.ears,a.ecol,'r');
+  if(a.glasses==='eye'||a.glasses==='sun')accGlasses(c,a.glasses,a.gcol);c.restore();return}
+ igorAcc0(c,eyes,o)}
+const PAD=.24; // room above the head for hats
+function paintAvatar(c,o,k0=0,k1=0,w=SW,h=SH*(1+PAD)){c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,w,h);if(!igorOK)return;const sc=Math.min(w/663,h/(730*(1+PAD)));c.setTransform(sc,0,0,sc,(w-663*sc)/2,PAD*730*sc);c.drawImage(igorImg,0,0,663,730);
+ const d0=lid(c,EYES[0],k0),d1=lid(c,EYES[1],k1);
+ if(o.avatar==='she'){lashes(c,EYES[0],d0,2);lashes(c,EYES[1],d1,2)}
+ else if(o.avatar==='queer'){lashes(c,EYES[0],d0,1);lashes(c,EYES[1],d1,1)}
+ igorAcc(c,EYES,o);c.setTransform(1,0,0,1,0,0)}
+
+/* who is playing: registered players use the Igor of their account */
+let ACCT=null,HOME=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'));HOME=JSON.parse(localStorage.getItem('igortime_v1'))}catch(e){}
+const ME={avatar:'igor'};
+if(ACCT&&HOME&&AVN[HOME.avatar]){for(const k of['avatar','ball','head','hcol','glasses','gcol','ears','ecol'])if(HOME[k]!==undefined)ME[k]=HOME[k]}
+else{try{const v=localStorage.getItem('igortime_houseAvatar');if(AVN[v])ME.avatar=v}catch(e){}}
+
+const spr=document.createElement('canvas');spr.width=SW;spr.height=Math.round(SH*(1+PAD));const sx=spr.getContext('2d');let sprKey='';
+const BL={next:2,start:-9,lag:[0,.08]};
+function blink(t){if(t>BL.next){BL.start=t;const lag=.06+Math.random()*.05;BL.lag=Math.random()<.5?[0,lag]:[lag,0];BL.next=t+(Math.random()<.2?.45:2.5+Math.random()*4)}
+ const cc=BL.lag.map(l=>{const u=t-BL.start-l;if(u<0||u>.26)return 0;return u<.07?u/.07:u<.12?1:1-(u-.12)/.14});
+ const k=[ME.avatar,ME.outfit,cc[0].toFixed(2),cc[1].toFixed(2),igorOK].join('|');if(k===sprKey)return;sprKey=k;paintAvatar(sx,ME,cc[0],cc[1])}
+
+
+let LANG='en';try{LANG=localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en')}catch(e){}
+const tt=(en,it)=>LANG==='it'?it:en;
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const FLAG={it:'<svg viewBox="0 0 30 20"><rect width="10" height="20" fill="#2f9e4f"/><rect x="10" width="10" height="20" fill="#f4f1ea"/><rect x="20" width="10" height="20" fill="#d23b33"/></svg>',
+ en:'<svg viewBox="0 0 60 40"><rect width="60" height="40" fill="#22408c"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="3"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="12"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg>'};
+const SEED='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c4.5 3 6.5 6.6 6.5 10a6.5 6.5 0 0 1-13 0C5.5 9.6 7.5 6 12 3z" fill="#f3ead2" stroke="#2b2018" stroke-width="1.8"/><path d="M12 7c1.6 2.3 2.2 4.6 1.8 7.2" stroke="#5aa64a" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>';
+const ANT='<g stroke="#2b2018" stroke-width="2.2" fill="#f8f5ec"><rect x="0" y="4" width="13" height="11" rx="2.5"/><rect x="14" y="6.5" width="6.5" height="6.5" rx="1.6"/><rect x="21.5" y="5" width="9" height="9" rx="2"/></g><circle cx="27.5" cy="8.5" r="1.3" fill="#2b2018"/>';
+
+/* the six games, in Fabio's order: stairs, kitchen, bedroom, window, abyss, cadences */
+const ART={
+stairs:`<svg viewBox="0 0 160 120"><rect width="160" height="120" fill="#f0dcb4"/><rect y="92" width="160" height="28" fill="#c99a62"/><path d="M0 92H160" stroke="#2b2018" stroke-width="3"/>
+ <path d="M18 104V86H44V68H70V50H96V32H122V14H150V104Z" fill="#b27a45" stroke="#2b2018" stroke-width="3.5" stroke-linejoin="round"/>
+ <path d="M18 86H44M44 68H70M70 50H96M96 32H122" stroke="#e7b77b" stroke-width="3"/>
+ <g transform="translate(52 52) scale(.9)">${ANT}</g>
+ <g fill="#2b2018"><ellipse cx="34" cy="40" rx="8" ry="6" transform="rotate(-20 34 40)"/><rect x="39" y="12" width="3.6" height="28"/><path d="M42.6 12c8 3 11 8 8 15 0-5-3-8-8-9z"/></g>
+ <g fill="#9a5d2c" opacity=".7"><ellipse cx="128" cy="64" rx="6" ry="4.5" transform="rotate(-20 128 64)"/><rect x="132" y="44" width="2.8" height="20"/></g></svg>`,
+kitchen:`<svg viewBox="0 0 160 120"><rect width="160" height="120" fill="#dfe9e4"/><g stroke="#c3d3cc" stroke-width="2"><path d="M0 24H160M0 48H160M40 0V60M80 0V60M120 0V60"/></g>
+ <rect x="14" y="60" width="132" height="60" fill="#e6e1d6" stroke="#2b2018" stroke-width="3.5"/><rect x="14" y="60" width="132" height="12" fill="#3a3a3f" stroke="#2b2018" stroke-width="3.5"/>
+ <rect x="34" y="82" width="92" height="30" rx="4" fill="#2b2b30" stroke="#2b2018" stroke-width="3"/><rect x="40" y="88" width="80" height="18" rx="3" fill="#f1b46e" opacity=".55"/>
+ <ellipse cx="80" cy="60" rx="30" ry="5" fill="#555"/>
+ <path d="M80 18c10 10 16 20 13 31-2 7-7 11-13 11s-11-4-13-11c-3-10 3-17 7-21 0 6 2 9 4 10-1-8 0-14 2-20z" fill="#f08a2c" stroke="#2b2018" stroke-width="3" stroke-linejoin="round"/>
+ <path d="M80 36c5 5 7 10 5 15-1 4-3 5-5 5s-4-1-5-5c-1-4 1-9 5-15z" fill="#5fb7f0"/>
+ <g transform="translate(118 30) scale(.85)">${ANT}</g></svg>`,
+bedroom:`<svg viewBox="0 0 160 120"><rect width="160" height="120" fill="#2d3561"/><rect x="104" y="14" width="40" height="34" rx="3" fill="#121a3a" stroke="#2b2018" stroke-width="3"/><circle cx="126" cy="29" r="9" fill="#f6e7a8"/><circle cx="130" cy="26" r="8" fill="#121a3a"/>
+ <g fill="#f6e7a8"><circle cx="112" cy="22" r="1.4"/><circle cx="136" cy="40" r="1.2"/></g>
+ <rect y="96" width="160" height="24" fill="#4a3c6e"/>
+ <rect x="10" y="50" width="12" height="54" rx="3" fill="#8a5a2b" stroke="#2b2018" stroke-width="3"/>
+ <rect x="16" y="72" width="128" height="26" rx="6" fill="#f3ead2" stroke="#2b2018" stroke-width="3.5"/>
+ <path d="M54 72h90v14c0 8-4 12-12 12H54z" fill="#e0463c" stroke="#2b2018" stroke-width="3.5" stroke-linejoin="round"/><path d="M64 80h70" stroke="#f08a8a" stroke-width="3" stroke-dasharray="6 6"/>
+ <ellipse cx="38" cy="66" rx="18" ry="10" fill="#fff" stroke="#2b2018" stroke-width="3"/>
+ <path d="M30 26l12 22H18z" fill="#b48ce6" stroke="#2b2018" stroke-width="3" stroke-linejoin="round"/><circle cx="30" cy="30" r="3" fill="#9be38a"/><circle cx="22" cy="44" r="3" fill="#e0463c"/><circle cx="38" cy="44" r="3" fill="#7fe3ef"/></svg>`,
+window:`<svg viewBox="0 0 160 120"><rect width="160" height="120" fill="#f0dcb4"/>
+ <rect x="30" y="12" width="100" height="84" rx="4" fill="#9ed8f0" stroke="#2b2018" stroke-width="4"/>
+ <circle cx="104" cy="34" r="10" fill="#fff3b0"/>
+ <path d="M30 78c18-10 30-6 46-12 16-6 32-2 54-8v38H30z" fill="#8cc63f"/>
+ <g fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M42 36h26c6 0 6-8 0-8"/><path d="M48 50h34c6 0 6 8 0 8"/></g>
+ <path d="M80 12v84" stroke="#2b2018" stroke-width="4"/>
+ <path d="M80 12l-28 8v68l28 8z" fill="#cfe9f5" fill-opacity=".55" stroke="#2b2018" stroke-width="3.5" stroke-linejoin="round"/>
+ <rect x="22" y="96" width="116" height="9" rx="2" fill="#b27a45" stroke="#2b2018" stroke-width="3"/>
+ <g transform="translate(122 84)"><path d="M4 12c-2-6 0-12 6-12s8 6 6 12z" fill="#e0463c" stroke="#2b2018" stroke-width="2.4"/></g></svg>`,
+abyss:`<svg viewBox="0 0 160 120"><defs><linearGradient id="gab" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f6f8b"/><stop offset=".55" stop-color="#0b2a44"/><stop offset="1" stop-color="#04070c"/></linearGradient></defs>
+ <rect width="160" height="120" fill="url(#gab)"/><path d="M0 8c20-6 40 6 60 0s40-6 60 0 30 4 40 0" fill="none" stroke="#7fe3ef" stroke-width="2" opacity=".5"/>
+ <g fill="none" stroke="#bdf3fb" stroke-width="2" opacity=".75"><circle cx="40" cy="30" r="5"/><circle cx="48" cy="18" r="3"/><circle cx="118" cy="46" r="4"/></g>
+ <path d="M96 98c18-20 52-18 64-6v28H86c0-8 3-15 10-22z" fill="#0d1d2e" stroke="#2b5470" stroke-width="2"/>
+ <circle cx="118" cy="96" r="5" fill="#f1b46e"/><circle cx="134" cy="94" r="5" fill="#f1b46e"/>
+ <g transform="translate(26 70)"><ellipse cx="14" cy="8" rx="16" ry="8" fill="#e8f3f4" stroke="#2b2018" stroke-width="2.5"/><path d="M-2 8l-8-7v14z" fill="#e8f3f4" stroke="#2b2018" stroke-width="2.5" stroke-linejoin="round"/><circle cx="22" cy="6" r="2" fill="#2b2018"/></g>
+ <g transform="translate(76 26)"><path d="M0 12C0 2 18 2 18 12z" fill="#b48ce6" stroke="#2b2018" stroke-width="2.4"/><path d="M3 12c0 6-3 9 0 13M9 12c0 6 3 9 0 13M15 12c0 6-3 9 0 13" fill="none" stroke="#b48ce6" stroke-width="2.4" stroke-linecap="round"/></g>
+ <path d="M70 66l2.6 5.4 6 .8-4.4 4.1 1.1 5.9-5.3-2.9-5.3 2.9 1.1-5.9-4.4-4.1 6-.8z" fill="#ffd76a" stroke="#2b2018" stroke-width="2"/></svg>`,
+cad:`<svg viewBox="0 0 160 120"><rect width="160" height="120" fill="#efe4cf"/>
+ <g stroke="#2b2018" stroke-width="1.8"><path d="M14 16H146M14 24H146M14 32H146M14 40H146M14 48H146"/></g>
+ <path d="M14 14v36M146 14v36" stroke="#2b2018" stroke-width="2.4"/><path d="M140 14v36" stroke="#2b2018" stroke-width="1.6"/>
+ <g fill="#2b2018"><ellipse cx="58" cy="44" rx="6" ry="4.4" transform="rotate(-20 58 44)"/><ellipse cx="58" cy="36" rx="6" ry="4.4" transform="rotate(-20 58 36)"/><ellipse cx="58" cy="28" rx="6" ry="4.4" transform="rotate(-20 58 28)"/>
+ <ellipse cx="104" cy="40" rx="6" ry="4.4" transform="rotate(-20 104 40)"/><ellipse cx="104" cy="32" rx="6" ry="4.4" transform="rotate(-20 104 32)"/><ellipse cx="104" cy="24" rx="6" ry="4.4" transform="rotate(-20 104 24)"/></g>
+ <path d="M78 30l6 6M84 30l-6 6" stroke="#8cc63f" stroke-width="0"/>
+ <path d="M76 34l5 5 10-12" fill="none" stroke="#5aa64a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+ <rect x="10" y="64" width="140" height="48" rx="4" fill="#fffdf6" stroke="#2b2018" stroke-width="3.5"/>
+ <g stroke="#2b2018" stroke-width="2"><path d="M30 64v48M50 64v48M70 64v48M90 64v48M110 64v48M130 64v48"/></g>
+ <g fill="#2b2018"><rect x="24" y="64" width="11" height="28" rx="1.5"/><rect x="45" y="64" width="11" height="28" rx="1.5"/><rect x="84" y="64" width="11" height="28" rx="1.5"/><rect x="105" y="64" width="11" height="28" rx="1.5"/><rect x="125" y="64" width="11" height="28" rx="1.5"/></g>
+ <rect x="51" y="94" width="18" height="17" fill="#ffd76a"/></svg>`};
+const GAMES=[
+ {k:'stairs',url:'/pitch-stairs/',sc:'pitchStairs',n:['Pitch Stairs','Pitch Stairs'],w:['pitch','altezza'],d:['A tofu ant sings a note: take Igor up the stairs to the same one.','Una formica di tofu canta una nota: porta Igor sulla scala alla stessa nota.'],at:['in the house · the stairs','in casa · le scale']},
+ {k:'kitchen',url:'/kitchen/',sc:'kitchen',n:['The kitchen','La cucina'],w:['duration','durata'],d:['Behind the curtain a flame burns: hold the gas just as long.','Dietro la tenda brucia una fiamma: tieni acceso il gas per lo stesso tempo.'],at:['in the house · the stove','in casa · il fornello']},
+ {k:'bedroom',url:'/bedroom/',sc:'bedroom',n:['The bedroom','La camera'],w:['timbre','timbro'],d:['With the triangle remote, find the same colour of sound.','Col telecomando a triangolo ritrova lo stesso colore del suono.'],at:['in the house · the bed','in casa · il letto']},
+ {k:'window',url:'/window/',sc:'window',n:['The window','La finestra'],w:['loudness','volume'],d:['Wind, rain, birds outside: open the window until it sounds as loud.','Vento, pioggia, uccellini: apri la finestra finché il volume è uguale.'],at:['in the house · the window','in casa · la finestra']},
+ {k:'abyss',url:'/abyss/',sc:'abyss',n:['The abyss','L’abisso'],w:['runner','runner'],d:['Dive deep: eat, jump, duck the jellyfish and beat the leviathans.','Tuffati: mangia, salta, abbassati sotto le meduse e batti i leviatani.'],at:['on the island · the well','sull’isola · il pozzo']},
+ {k:'cad',url:'/cadences/',sc:'cadences',n:['Cadences','Cadenze'],w:['harmony','armonia'],d:['Write the last two chords in four voices: Igor checks your cadence.','Scrivi gli ultimi due accordi a quattro voci: Igor controlla la cadenza.'],at:['on the island · the music school','sull’isola · la scuola di musica']}];
+
+/* what is saved: the island keeps scores in igortime_v1, the games leave new ones in igortime_pending (the island collects them) */
+const J=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+function bests(){const S=J('igortime_v1')||{},P=J('igortime_pending')||{},out={};
+ for(const src of[S.scores||{},P.scores||{}])for(const[g,o]of Object.entries(src))for(const[l,v]of Object.entries(o||{})){const r=out[g]=out[g]||{};if(!(r[l]>=v))r[l]=v}
+ for(const g of['kitchen','window','bedroom'])for(const l of['easy','medium','extreme']){let v=null;try{v=+localStorage.getItem('igortime_'+g+'_best_'+l)}catch(e){}if(v){const r=out[g]=out[g]||{};if(!(r[l]>=v))r[l]=v}}
+ return{out,seeds:(S.seeds|0)+(P.seeds|0)+(P.ants|0)}}
+const LVN={easy:['easy','facile'],medium:['medium','medio'],extreme:['extreme','estremo']};
+function bestTxt(g){const o=bests().out[g.sc];if(!o)return tt('Not played yet','Non ancora giocato');
+ if(g.sc==='abyss')return o.best?tt('Deepest dive: ','Record: ')+o.best:tt('Not played yet','Non ancora giocato');
+ let bl=null,bv=-1;for(const l of['extreme','medium','easy'])if(o[l]>bv){bv=o[l];bl=l}
+ return bl?tt('Best: ','Record: ')+bv+' · '+tt(...LVN[bl]):tt('Not played yet','Non ancora giocato')}
+
+function render(){document.documentElement.lang=LANG;document.title=tt('Igor’s games · Igor time','I giochi di Igor · Igor time');
+ const T={toIsland:['Take me to the island','Portami all’isola'],island:['Island','Isola'],h:['All my games!','Tutti i miei giochi!'],p:['Pick one and play. Every game gives tofu seeds: you plant them on my island.','Scegline uno e gioca. Ogni gioco dà semi di tofu: li pianti sulla mia isola.'],
+  note:['All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom and the window are in my house, Cadences in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.','Tutti questi giochi sono anche <strong>sulla mia isola</strong>: Pitch Stairs, la cucina, la camera e la finestra sono in casa mia, le Cadenze nella scuola di musica e l’abisso giù nel pozzo. Sull’isola i semi diventano campi, formiche di tofu e Igorlets.']};
+ document.querySelectorAll('[data-k]').forEach(el=>{const v=T[el.dataset.k];if(!v)return;if('html' in el.dataset)el.innerHTML=tt(...v);else el.textContent=tt(...v)});
+ $('langB').innerHTML=FLAG[LANG];$('langB').setAttribute('aria-label',tt('Language: English. Switch to Italian','Lingua: italiano. Passa all’inglese'));$('langB').title=$('langB').getAttribute('aria-label');
+ let A=null;A=J('igortime_acct');$('me').innerHTML=A&&A.uid?'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.2" fill="#2b2018"/><path d="M3.5 21c.8-4.6 4.2-7 8.5-7s7.7 2.4 8.5 7z" fill="#2b2018"/></svg>'+esc(A.name||tt('Me','Io')):`<span class="t">${esc(tt('Sign in / register','Accedi / registrati'))}</span><span class="s">${esc(tt('Sign in','Accedi'))}</span>`;
+ $('me').title=A&&A.uid?tt('Your account (opens on the island)','Il tuo account (si apre sull’isola)'):tt('Sign in or register: you can dress up your Igor','Accedi o registrati: puoi vestire il tuo Igor');
+ const sd=bests().seeds,sp=$('seedsP');sp.hidden=!sd;sp.innerHTML=SEED+(LANG==='it'?`${sd} ${sd==1?'seme':'semi'} da piantare sull’isola`:`${sd} seed${sd==1?'':'s'} to plant on the island`);
+ $('grid').innerHTML=GAMES.map(g=>`<a class="card" href="${g.url}" data-g="${g.k}"><span class="art" aria-hidden="true">${ART[g.k]}</span><span class="tx"><span class="what">${tt(...g.w)}</span><b>${tt(...g.n)}</b><p>${tt(...g.d)}</p><span class="ft"><span>${esc(bestTxt(g))}<br><span style="opacity:.75">${tt(...g.at)}</span></span><span class="go">▶ ${tt('Play','Gioca')}</span></span></span></a>`).join('')}
+render();
+$('langB').onclick=()=>{LANG=LANG==='it'?'en':'it';try{localStorage.setItem('igortime_lang',LANG)}catch(e){}location.reload()};
+/* going to the island makes it the favourite view again */
+document.addEventListener('click',e=>{const a=e.target.closest('a[data-island]');if(a)try{localStorage.setItem('igortime_view','island')}catch(_){}});
+$('me').addEventListener('click',()=>{try{sessionStorage.setItem('igortime_onb',JSON.stringify({dest:'games'}))}catch(_){}});
+addEventListener('pageshow',e=>{if(e.persisted){try{localStorage.setItem('igortime_view','games');localStorage.setItem('igortime_home','/games/')}catch(_){}render()}});
+
+/* Igor, with the player's look, blinking */
+const ig=$('ig'),g=ig.getContext('2d');
+function frame(now){blink(now/1000);g.clearRect(0,0,ig.width,ig.height);g.drawImage(spr,0,0,ig.width,ig.height);requestAnimationFrame(frame)}
+igorImg.onload=()=>{igorOK=true;sprKey='';requestAnimationFrame(frame)};igorImg.src=IGOR_SRC;
+})();
+</script>
+</body></html>
