@@ -197,7 +197,7 @@ const TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 let LANG='en';try{LANG=localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en')}catch(e){}
-const tt=(en,it)=>LANG==='it'?it:en,N=x=>Array.isArray(x)?x[LANG==='it'?1:0]:x;document.documentElement.lang=LANG;
+const SIGNS=[];const tt=(en,it)=>LANG==='it'?it:en,N=x=>Array.isArray(x)?x[LANG==='it'?1:0]:x;document.documentElement.lang=LANG;
 const IGOR_SRC='/igor.webp';
 
 /* ================= save ================= */
@@ -661,7 +661,7 @@ function simTo(t,live){const F=FM();let last=F.t||t;if(t-last>4*DAY)last=t-4*DAY
 /* --- messages: said now if you are here, kept for later if you are away --- */
 function note(txt,quiet){const F=FM();F.log.push({t:fmClock||Date.now(),x:txt});if(F.log.length>30)F.log.splice(0,F.log.length-30);
  if(fmLive&&started&&Math.abs((fmClock||Date.now())-Date.now())<20000){say(txt,quiet===1?2.4:3.2)}}
-const fmtL=ms=>{const s=Math.max(0,ms)/1000,h=Math.floor(s/3600),m=Math.round(s%3600/60);return h?`${h} h${m?' '+m+' min':''}`:m?`${m} min`:`${Math.ceil(s)} s`};
+const fmtL=ms=>{const s=Math.max(0,ms)/1000,tm=Math.round(s/60),h=Math.floor(tm/60),m=tm%60;return h?`${h} h${m?' '+m+' min':''}`:m?`${m} min`:`${Math.ceil(s)} s`};
 
 /* --- events: one a day between 9 and 21, the same for everyone; a warning first --- */
 const hsh=n=>{let h=Math.sin(n*12.9898+78.233)*43758.5453;return h-Math.floor(h)};
@@ -869,8 +869,8 @@ const SHOPV=new V3(15.8,0,-5.2);
  const roof=new THREE.Mesh(new THREE.BoxGeometry(2.4,.12,1.7),wood);roof.position.y=1.56;g.add(roof);
  const counter=new THREE.Mesh(new THREE.BoxGeometry(2,.12,.4),wood);counter.position.set(0,.85,.85);g.add(counter);
  const win=new THREE.Mesh(new THREE.PlaneGeometry(1.7,.55),glowM('#f6d38c',.55));win.position.set(0,1.15,.76);g.add(win);
- const sc=document.createElement('canvas');sc.width=256;sc.height=64;{const q=sc.getContext('2d');q.fillStyle='#2b2018';q.fillRect(0,0,256,64);q.fillStyle='#f6d34a';q.font='600 34px Fredoka, sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText('★ PRIZES ★',128,34)}
- const sign=new THREE.Mesh(new THREE.PlaneGeometry(1.6,.4),curve(new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc)})));sign.position.set(0,1.95,.4);g.add(sign);
+ const sc=document.createElement('canvas');sc.width=256;sc.height=64;const scD=()=>{const q=sc.getContext('2d');q.fillStyle='#2b2018';q.fillRect(0,0,256,64);q.fillStyle='#f6d34a';q.font='600 34px Fredoka, sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(tt('★ PRIZES ★','★ PREMI ★'),128,34)};scD();
+ const scT=new THREE.CanvasTexture(sc);SIGNS.push(()=>{scD();scT.needsUpdate=true});const sign=new THREE.Mesh(new THREE.PlaneGeometry(1.6,.4),curve(new THREE.MeshBasicMaterial({map:scT})));sign.position.set(0,1.95,.4);g.add(sign);
  const tr=new THREE.Mesh(new THREE.TorusGeometry(.22,.04,8,18),lam('#2b2b2e'));tr.position.set(-.55,.3,1.05);g.add(tr);const tr2=tr.clone();tr2.position.x=-.05;g.add(tr2);
  blob(g,1.6,.8);scene.add(g);block(SHOPV.x,SHOPV.z,1.3);hit(g,1.4,()=>vehShop(),'prizes',.8);glowObj(g,'out',SHOPV.x-.9,SHOPV.z+1.1,.6,8,1.1);
  label(['Prize shop','Negozietto dei premi'],['bike, car, plane…','bici, auto, aereo…'],SHOPV.clone().add(new V3(0,2.9,0)),()=>vehShop(),5.5)}
@@ -1102,8 +1102,8 @@ updaters.push((t,dt)=>{const F=FM();
  const door=new THREE.Mesh(new THREE.PlaneGeometry(.8,1.35),glowM('#f3c07a',.45));door.position.set(0,.68,1.53);t.add(door);
  const fr=new THREE.Mesh(new THREE.BoxGeometry(1,1.5,.08),wood);fr.position.set(0,.75,1.5);t.add(fr);
  for(const x of[-1.2,1.2]){const w=new THREE.Mesh(new THREE.PlaneGeometry(.6,.55),glowM('#e9c98e',.55));w.position.set(x,1.3,1.53);t.add(w);const f=new THREE.Mesh(new THREE.BoxGeometry(.75,.7,.06),wood);f.position.set(x,1.3,1.51);t.add(f)}
- {const sg=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.5,.42,.08,1,.04),lam('#3b2c22'));sg.position.set(0,1.75,1.56);t.add(sg);const nc=document.createElement('canvas');nc.width=256;nc.height=72;const g2=nc.getContext('2d');g2.fillStyle='#f3e7cf';g2.font='600 34px Fredoka, Trebuchet MS, sans-serif';g2.textAlign='center';g2.textBaseline='middle';g2.fillText('♪ MUSIC ♪',128,38);
-  const sp=new THREE.Mesh(new THREE.PlaneGeometry(1.35,.38),curve(new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(nc),transparent:true})));sp.position.set(0,1.75,1.61);t.add(sp)}
+ {const sg=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.5,.42,.08,1,.04),lam('#3b2c22'));sg.position.set(0,1.75,1.56);t.add(sg);const nc=document.createElement('canvas');nc.width=256;nc.height=72;const g2=nc.getContext('2d');const ncD=()=>{g2.clearRect(0,0,256,72);g2.fillStyle='#f3e7cf';g2.font='600 34px Fredoka, Trebuchet MS, sans-serif';g2.textAlign='center';g2.textBaseline='middle';g2.fillText(tt('♪ MUSIC ♪','♪ MUSICA ♪'),128,38)};ncD();
+  const ncT=new THREE.CanvasTexture(nc);SIGNS.push(()=>{ncD();ncT.needsUpdate=true});const sp=new THREE.Mesh(new THREE.PlaneGeometry(1.35,.38),curve(new THREE.MeshBasicMaterial({map:ncT,transparent:true})));sp.position.set(0,1.75,1.61);t.add(sp)}
  const crack=new THREE.Mesh(new THREE.BoxGeometry(.05,.9,.02),lam('#5a5348'));crack.position.set(1.6,1.4,1.52);crack.rotation.z=.4;t.add(crack);
  for(let i=0;i<3;i++){const b=new THREE.Mesh(new THREE.DodecahedronGeometry(.22,0),st2);b.position.set(1.4+rnd()*.8,.12,1.4+rnd()*.8);t.add(b)}
  const noteC=document.createElement('canvas');noteC.width=noteC.height=64;{const g=noteC.getContext('2d');g.fillStyle='#efe4cf';g.font='46px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('♪',32,34)}
@@ -1193,7 +1193,7 @@ let where='out';const ROOMS={};
 function walkable(x,z){if(where==='out'&&RIDE){const ok=rideOk(x,z);if(ok!==null)return ok}if(where!=='out'){const Rm=ROOMS[where];if(Math.abs(x)>Rm.w/2-.7||z<-Rm.d/2+1.1||z>Rm.d/2-.3)return false;return!Rm.blocks.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3)}
  if(Math.hypot(x,z*1.12)>R-.6)return false;return!blocked.some(b=>{const d=Math.hypot(b.x-x,b.z-z);if(d>=b.r+.3)return false;const d0=Math.hypot(b.x-igor.position.x,b.z-igor.position.z);return!(d0<b.r+.3&&d>d0)})}
 function goTo(k,arg){const P=PLACES[k];if(!P)return;if(where!=='out'){exitRoom(true);}closeSheet();$('index').hidden=true;IG.target=P.pos.clone();IG.manual=true;IG.arrive=()=>P.open(arg);mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke();
- if(igor.position.distanceTo(P.pos)<.6){IG.target=null;const f=IG.arrive;IG.arrive=null;f()}else say(pick(LINES['go_'+k]||['Follow me.']),2.2)}
+ if(igor.position.distanceTo(P.pos)<.6){IG.target=null;const f=IG.arrive;IG.arrive=null;f()}else say(pick(LINES['go_'+k]||[tt('Follow me.','Seguimi.')]),2.2)}
 // draw Igor a little towards the camera (same size and place on screen), so walls behind never cut him
 const _cv=new V3(),_up=new V3();function igBring(){const d0=-pv.copy(igor.position).applyMatrix4(camera.matrixWorldInverse).z;if(!(d0>1))return;_cv.copy(camera.position).sub(igor.position);const Ld=_cv.length();_cv.divideScalar(Ld);
  const off=Math.min(1.2,Ld*.09),d1=d0-off,F=FOC.value,c=CURV.value,dl=c*((Math.max(0,d0-F))**2-(Math.max(0,d1-F))**2);_up.setFromMatrixColumn(camera.matrixWorld,1);
@@ -1844,8 +1844,8 @@ function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igo
  <h2>${tt('Sky','Cielo')}</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">${tt('Igor’s weather','Il meteo di Igor')}<small>${tt('same for everyone','uguale per tutti')}</small></button></li><li><button data-sky="real">${tt('The sky where I am','Il cielo dove sono')}<small>${tt('uses your location','usa la tua posizione')}</small></button></li></ul>`}
 renderIdx();
 function setLang(l){if(l===LANG)return;LANG=l;bubbleQ.length=0;bubbleT=0;try{localStorage.setItem('igortime_lang',l)}catch(e){}document.documentElement.lang=l;applyLang();say(tt('Hello! I speak English now.','Ciao! Adesso parlo italiano.'),2.6)}
-function applyLang(){if(typeof renderGmB==='function')renderGmB();if(typeof renderSndB==='function')renderSndB();renderIdx();skyStatus();relabel();staticTexts();refresh();if(typeof farmRelabel==='function')farmRelabel();if(!sheet.hidden&&sheetKind==='acct')openAccount();if(!sheet.hidden&&sheetKind==='dress')renderDress()}
-function staticTexts(){$('hint').textContent=document.documentElement.classList.contains('touch')?tt('Walk with the joystick · double-tap it to jump · tap a place · drag to turn','Cammina col joystick · doppio tocco per saltare · tocca un posto · trascina per girare'):tt('Walk with the arrows · space to jump · click a place · drag to turn','Cammina con le frecce · spazio per saltare · clicca un posto · trascina per girare');
+function applyLang(){SIGNS.forEach(f=>f());if(typeof renderGmB==='function')renderGmB();if(typeof renderSndB==='function')renderSndB();renderIdx();skyStatus();relabel();staticTexts();refresh();if(typeof farmRelabel==='function')farmRelabel();if(!sheet.hidden&&sheetKind==='acct')openAccount();if(!sheet.hidden&&sheetKind==='dress')renderDress()}
+function staticTexts(){$('index').setAttribute('aria-label',tt('Index','Indice'));document.querySelector('#sheet .x').setAttribute('aria-label',tt('Close','Chiudi'));if($('introIg'))$('introIg').setAttribute('aria-label',tt('Igor, a green anteater','Igor, un formichiere verde'));$('indexBtn').setAttribute('aria-label',tt('Index','Indice'));$('hint').textContent=document.documentElement.classList.contains('touch')?tt('Walk with the joystick · double-tap it to jump · tap a place · drag to turn','Cammina col joystick · doppio tocco per saltare · tocca un posto · trascina per girare'):tt('Walk with the arrows · space to jump · click a place · drag to turn','Cammina con le frecce · spazio per saltare · clicca un posto · trascina per girare');
  $('indexBtn').textContent=tt('Index','Indice');$('seeds').title=tt('Seeds: win them in the games','Semi: si vincono nei giochi');$('ants').title=tt('Ants in your pocket / how many you can keep','Formiche in tasca / quante ne puoi tenere');
  const I=$('intro');if(I){$('iH').innerHTML=tt('Hi, I’m <em>Igor</em>.','Ciao, sono <em>Igor</em>.');$('iAsk').textContent=tt('Where shall we go? Straight to my games, or to my island?','Dove andiamo? Direttamente ai miei giochi, o sulla mia isola?');
   $('pIb').textContent=tt('← My island','← La mia isola');$('pIs').textContent=tt('Walk around and grow tofu ants with the Igorlets. The games are in my house.','Cammina e coltiva formiche di tofu con gli Igorlets. I giochi sono in casa mia.');
