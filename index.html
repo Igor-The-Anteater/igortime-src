@@ -5,6 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
+<script src="/sound.js"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -412,7 +413,7 @@ function glowObj(obj,room,x,z,amp=1,reach=0,ringR=0,parent=null){const ms=new Ma
  GLOW.list.push(G);return G}
 const glowLevel=t=>{const u=t%6.5;return .16+.84*(u<3.2?(.5-.5*Math.cos(u*TAU*.95))*Math.pow(1-u/3.2,.8):0)};
 updaters.push((t,dt)=>{for(const G of GLOW.list){if(G.room!==where){G.seen=false;continue}if(!G.seen){G.seen=true;G.t=0}G.t+=dt;let p=1;
-  if(G.reach){const d=Math.hypot(igor.position.x-G.x,igor.position.z-G.z),nr=d<G.reach;if(nr&&!G.near)G.t=0;G.near=nr;p=clamp((G.reach+4-d)/4,0,1)}
+  if(G.reach){const d=Math.hypot(igor.position.x-G.x,igor.position.z-G.z),nr=d<G.reach;if(nr&&!G.near){G.t=0;snd('wake',GLOW.list.indexOf(G))}G.near=nr;p=clamp((G.reach+4-d)/4,0,1)}
   const k=started?glowLevel(G.t)*p:0,a=k*G.amp*.55;
   for(const q of G.mats){q.m.emissiveIntensity=1;q.m.emissive.setRGB(q.e.r+GLOW.col.r*a,q.e.g+GLOW.col.g*a,q.e.b+GLOW.col.b*a)}
   if(G.ring){G.ring.material.opacity=k*.6;const s=1+.06*Math.sin(G.t*3);G.ring.scale.set(s,1,s)}}});
@@ -627,7 +628,7 @@ function igorAt(q){if(where!=='out'||!started)return false;const P=siteOf(q);ret
 function assign(t){const F=FM();for(const q of F.tasks){if(q.igor||q.w.length>=q.max||tstate(q,t)!=='ok')continue;
   const need=isBuildK(q.k)?2:1,free=F.igs.filter(g=>!g.task&&!g.rest&&g.en>=need).sort((a,b)=>b.en-a.en);
   while(q.w.length<q.max&&free.length){if(q.w.length&&F.tasks.some(o=>o!==q&&!o.igor&&!o.w.length&&tstate(o,t)==='ok'))break;const g=free.shift();g.en-=need;g.task=q.id;q.w.push(g.id);fmDirty=true}}}
-function finish(q,t){const F=FM(),f=q.f!=null?F.fields[q.f]:null;
+function finish(q,t){const F=FM(),f=q.f!=null?F.fields[q.f]:null;if(fmLive)snd(q.k,q.k==='harvest'&&f?yieldOf(f,t):0);
  for(const id of q.w){const g=igById(id);if(g){g.task=null;if(g.en<1){g.rest=true;note(tt(`${g.name} is tired: a nap at home.`,`${g.name} è stanco: un pisolino a casa.`),1)}}}q.w=[];F.tasks=F.tasks.filter(o=>o!==q);fmDirty=true;
  switch(q.k){
   case'clear':f.st='wild';note(tt(`${cap1(fname(q.f))} is cleared!`,`${cap1(fname(q.f))} è pulito!`));break;
@@ -680,7 +681,7 @@ function eventTick(t){const F=FM();let E=F.ev;
  if(!E.started&&t>=E.at){E.started=1;strike(E,t)}
  if(t>=E.end){endEv(E,t);F.evDone[E.id]=1;const ks=Object.keys(F.evDone);if(ks.length>40)for(const k of ks.slice(0,ks.length-40))delete F.evDone[k];F.ev=null;fmDirty=true}}
 const sownFields=()=>FM().fields.map((f,i)=>[f,i]).filter(([f])=>f.st==='sown');
-function onWarn(E,t){const D=EVK[E.k];
+function onWarn(E,t){const D=EVK[E.k];if(fmLive)snd('warn');
  if(D.lead)note(tt(`${N(D.N)} in ${fmtL(E.at-t)}! ${N(D.ask)}`,`${N(D.N)} tra ${fmtL(E.at-t)}! ${N(D.ask)}`));else note(`${N(D.N)}! ${N(D.ask)}`)}
 /* gentle weather: nothing is ever lost. A field that is ready gets a bonus; a field left out only grows a bit slower,
    and only if someone was on the island during the warning: who wasn't there loses nothing */
@@ -719,7 +720,7 @@ function coverAll(){const F=FM(),E=F.ev;if(!E)return;const need=TK[E.k],kk=TKI[n
 function waterAll(){const F=FM(),E=F.ev;if(!E)return;let n=0;for(const[f,i]of sownFields()){if(f.gh||f.heatOK===E.id||F.tasks.some(q=>q.f===i&&q.heat===E.id))continue;addTask({k:'water',f:i,heat:E.id});n++}
  say(n?tt('Water for everyone!','Acqua per tutti!'):tt('All watered!','Tutto annaffiato!'),2.4);simTo(Date.now(),true);save();fmRender()}
 function takeStray(){const F=FM(),E=F.ev;if(!E||E.k!=='stray')return;if(F.igs.length>=IGMAX)return say(tt('The village is full!','Il villaggio è pieno!'),2.4);if(!pay({t:10}))return say(NEED({t:10}),2.6);const extra=F.igs.length>=PENCAP[F.b.pen];if(extra)F.xh=(F.xh||0)+1;
- const g=newIg(F.igs.length);g.id=Math.max(...F.igs.map(x=>x.id))+1;F.igs.push(g);E.taken=1;E.end=Date.now();bubbleQ.length=0;bubbleT=0;say(extra?tt(`Welcome, ${g.name}! We built a new little house for you.`,`Benvenuto, ${g.name}! Ti abbiamo fatto una casetta nuova.`):tt(`Welcome, ${g.name}!`,`Benvenuto, ${g.name}!`),3.4);simTo(Date.now(),true);save();fmRender()}
+ const g=newIg(F.igs.length);g.id=Math.max(...F.igs.map(x=>x.id))+1;F.igs.push(g);E.taken=1;E.end=Date.now();bubbleQ.length=0;bubbleT=0;say(extra?tt(`Welcome, ${g.name}! We built a new little house for you.`,`Benvenuto, ${g.name}! Ti abbiamo fatto una casetta nuova.`):tt(`Welcome, ${g.name}!`,`Benvenuto, ${g.name}!`),3.4);if(window.IgorSound&&started)IgorSound.ig('happy',{id:g.id,trait:g.trait});simTo(Date.now(),true);save();fmRender()}
 function feedBirds(){const F=FM(),E=F.ev;if(!E||E.k!=='birds'||E.scared)return;if(S.seeds<2)return say(tt('We need 2 seeds: play a game!','Servono 2 semi: fai un gioco!'),2.6);S.seeds-=2;E.scared=true;E.fed=true;say(tt('Seeds for the sparrows, far from the fields. Yum!','Semi ai passeri, lontano dai campi. Gnam!'),2.8);save();fmRender()}
 function fieldOk(sp){const F=FM(),n=F.fields.length;if(n>=MAXF){say(tt('No room for more fields.','Non c’è posto per altri campi.'),2.4);return false}if(lvlOf()<n+1){say(tt(`Field ${n+1}: level ${n+1} first!`,`Campo ${n+1}: prima il livello ${n+1}!`),2.6);return false}if(lvlOf()<SPC[sp].lv){say(tt(`${N(SPC[sp].N)}: level ${SPC[sp].lv} first!`,`${N(SPC[sp].N)}: prima il livello ${SPC[sp].lv}!`),2.6);return false}return true}
 const LVFIRST=l=>tt(`Level ${l} first!`,`Prima il livello ${l}!`);
@@ -732,8 +733,8 @@ function buyCrow(i){const f=FM().fields[i];if(!f||f.crow)return;if(!pay(CROW))re
 function useComp(i){const F=FM(),f=F.fields[i];if(!f||f.compNext||F.items.comp<1)return;F.items.comp--;f.compNext=true;say(tt('Compost: next sowing grows faster.','Concime: la prossima semina cresce più in fretta.'),2.6);save();fmRender()}
 function toggleGh(i){const F=FM(),f=F.fields[i],used=F.fields.filter(o=>o.gh).length;if(f.gh){f.gh=false}else{if(used>=F.b.green)return say(tt('The greenhouse is full.','La serra è piena.'),2.4);f.gh=true;f.tarp=null}save();fmRender()}
 function hire(){const F=FM(),n=F.igs.length,c=HIRE[n+1];if(n>=igCap())return say(tt('No free house: build more!','Non ci sono casette libere: costruiscine altre!'),2.6);if(!pay({s:c}))return say(NEED({s:c}),2.4);
- const g=newIg(n);g.id=Math.max(0,...F.igs.map(x=>x.id))+1;F.igs.push(g);say(tt(`Welcome, ${g.name}!`,`Benvenuto, ${g.name}!`),3);save();fmRender()}
-function buyVeh(k){const F=FM(),V=VEH[k];if(F.veh[k])return;if(!pay({t:V.cost}))return say(NEED({t:V.cost}),2.6);F.veh[k]={c:V.c};fmDirty=true;say(tt(`A ${N(V.N).toLowerCase()}! Tap ${V.ic} to hop on.`,`${N(V.N)}! Tocca ${V.ic} per salire.`),3.2);save();fmRender()}
+ const g=newIg(n);g.id=Math.max(0,...F.igs.map(x=>x.id))+1;F.igs.push(g);say(tt(`Welcome, ${g.name}!`,`Benvenuto, ${g.name}!`),3);if(window.IgorSound&&started)IgorSound.ig('happy',{id:g.id,trait:g.trait});save();fmRender()}
+function buyVeh(k){const F=FM(),V=VEH[k];if(F.veh[k])return;if(!pay({t:V.cost}))return say(NEED({t:V.cost}),2.6);F.veh[k]={c:V.c};snd('buy');fmDirty=true;say(tt(`A ${N(V.N).toLowerCase()}! Tap ${V.ic} to hop on.`,`${N(V.N)}! Tocca ${V.ic} per salire.`),3.2);save();fmRender()}
 function buyToy(k){const F=FM();if(F.toys[k])return;if(!pay({s:TOYS[k].s}))return say(NEED({s:TOYS[k].s}),2.4);F.toys[k]=1;say(tt(`A ${N(TOYS[k].N).toLowerCase()} for the yard!`,`${N(TOYS[k].N)} per il cortile!`),2.4);save();fmRender()}
 /* ================= the island: field beds, buildings, Igorlets ================= */
 const soilM=lam('#7a5a40'),soilWet=lam('#5e4330'),soilLock=lam('#4c5e45',{transparent:true,opacity:.55}),soilWild=lam('#5d6b3c'),furM=lam('#4e3626'),weedM=lam('#4f7a3a'),stemM=lam('#6fa35a',{emissive:'#2d4a22',emissiveIntensity:.35}),leafM2=lam('#4f8d45');
@@ -956,9 +957,9 @@ function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>
  if(ballO.a&&ballO.c&&ballO.a.act&&ballO.a.act.k==='ball'&&ballO.c.act&&ballO.c.act.k==='ball'&&ballO.a.grp.position.distanceTo(ballO.a.goal)<.3&&ballO.c.grp.position.distanceTo(ballO.c.goal)<.3){ballO.u+=dt*.7;const u=ballO.u%2,k=u<1?u:2-u,A=ballO.a.grp.position,B=ballO.c.grp.position;
   ballO.b.visible=true;ballO.b.position.set(A.x+(B.x-A.x)*k,.5+Math.sin(k*Math.PI)*1.1,A.z+(B.z-A.z)*k);toyObj.ball.visible=false;if(Math.abs(k-1)<.04&&ballO.c.jump<=0)ballO.c.jump=.35;if(k<.04&&ballO.a.jump<=0)ballO.a.jump=.35}
  else{ballO.b.visible=false;toyObj.ball.visible=!!F.toys.ball}
- for(const[,o]of igObjs){const p=o.grp.position,v=o.goal.clone().sub(p);v.y=0;const L=v.length();let moving=false;
+ for(const[oid,o]of igObjs){const p=o.grp.position,v=o.goal.clone().sub(p);v.y=0;const L=v.length();let moving=false;
   if(L>.08){const sp=Math.min(L,(o.mode==='work'?2.8:1.9)*dt);v.divideScalar(L);p.x+=v.x*sp;p.z+=v.z*sp;moving=true;o.walk+=dt*12;const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0),d=v.dot(cr);if(Math.abs(d)>.2)o.face=d>0?1:-1}
-  o.jump-=dt;const jy=o.jump>0?Math.sin(o.jump/.5*Math.PI)*.35:0;
+  igSnd(oid,o,moving,dt);o.jump-=dt;const jy=o.jump>0?Math.sin(o.jump/.5*Math.PI)*.35:0;
   const working=o.mode==='work'&&!moving,sleeping=o.mode==='sleep'&&!moving;
   o.pl.position.y=(moving?Math.abs(Math.sin(o.walk))*.08:working?Math.abs(Math.sin(t*9+o.ph))*.1:Math.sin(t*2+o.ph)*.015)+jy;
   o.pl.quaternion.copy(camera.quaternion);if(moving)o.pl.rotateZ(Math.sin(o.walk)*.06);if(working)o.pl.rotateZ(Math.sin(t*9+o.ph)*.12);if(sleeping)o.pl.rotateZ(.25*o.face);
@@ -1071,7 +1072,7 @@ function rideAirOrSea(){return!!RIDE&&VEH[RIDE].kind!=='land'}
 function rideOk(x,z){if(!RIDE)return null;const V=VEH[RIDE],r=Math.hypot(x,z*1.12);if(V.kind==='water')return r>R+2.4&&r<R+14;if(V.kind==='air')return r<R+12;return null}
 function vehPaint(k){const o=VO[k];if(o)o.paint.color.set(FM().veh[k].c)}
 function riderOf(k){for(const[,o]of igObjs)if(o.act&&o.act.k==='ride'&&o.act.v===k)return o;return null}
-function mount(k){const F=FM();if(!F.veh[k]||where!=='out')return;if(RIDE)dismount(true);const r=riderOf(k);if(r)r.act=null;RIDE=k;const V=VEH[k];
+function mount(k){const F=FM();if(!F.veh[k]||where!=='out')return;if(RIDE)dismount(true);const r=riderOf(k);if(r)r.act=null;RIDE=k;const V=VEH[k];snd('mount');
  if(V.kind==='water'){igor.position.copy(VPARK.boat);camSnap=true;say(tt('Ahoy! Sail around the island.','Ahoy! Navighiamo intorno all’isola.'),3)}
  else if(V.kind==='air'){rideH=0;say(tt('Up we go!','Si vola!'),2.4)}else say(RIDE==='bike'?tt('Ring ring! Off we go.','Drin drin! Si parte.'):pick(tt(['Vroom!','Let’s go!'],['Brum brum!','Andiamo!'])),2);IG.target=null;IG.arrive=null}
 function dismount(quiet){if(!RIDE)return;bubbleQ.length=0;bubbleT=0;const V=VEH[RIDE];RIDE=null;rideH=0;
@@ -1137,7 +1138,7 @@ const POOL=new V3(7.6,0,6.6);
  blob(t,2,.95);scene.add(t);block(POOL.x,POOL.z,1.75);hit(t,1.8,()=>goTo('abyss'),'abyss',.4);glowObj(t,'out',POOL.x,POOL.z,.8,8,2.3);
  label(['The abyss','L’abisso'],['walk into the pool','tuffati nel pozzo'],new V3(POOL.x,3,POOL.z),()=>goTo('abyss'),13);
  zone('out',POOL.x,POOL.z,2.15,()=>dive(),'pool')}
-let diving=0;function dive(){if(diving)return;diving=.001;closeSheet();IG.target=null;IG.arrive=null;say(tt('Hold your breath!','Trattieni il fiato!'),1.4);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}rememberSpot('out',POOL.x,POOL.z+2.6)}
+let diving=0;function dive(){if(diving)return;diving=.001;snd('dive');closeSheet();IG.target=null;IG.arrive=null;say(tt('Hold your breath!','Trattieni il fiato!'),1.4);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}rememberSpot('out',POOL.x,POOL.z+2.6)}
 updaters.push((t,dt)=>{if(!diving)return;diving+=dt;const k=Math.min(1,diving/1.1);igor.position.x+=(POOL.x-igor.position.x)*Math.min(1,dt*4);igor.position.z+=(POOL.z-igor.position.z)*Math.min(1,dt*4);igor.position.y=-k*k*2.2;if(diving>1.25){diving=-1;location.href='/abyss/'}});
 addEventListener('pageshow',e=>{if(e.persisted){diving=0;igor.position.y=0;igor.position.set(POOL.x,0,POOL.z+2.6)}});
 
@@ -1187,7 +1188,7 @@ const igLight=new THREE.PointLight('#cfe9ff',.6,5,2);igLight.position.y=2;igor.a
 igor.position.set(0,0,-2.6);scene.add(igor);
 const mark=new THREE.Mesh(new THREE.RingGeometry(.25,.34,28).rotateX(-Math.PI/2),curve(new THREE.MeshBasicMaterial({color:'#efe4cf',transparent:true,opacity:0,depthWrite:false})));mark.position.y=.04;scene.add(mark);
 const IG={target:null,arrive:null,face:1,walk:0,idle:3,manual:false,jy:0,jv:0};
-function jump(){if(diving||IG.jy>.05||!started)return;IG.jv=5.6;IG.jy=.001;poke();hideHint()}const IN={x:0,z:0};
+function jump(){if(diving||IG.jy>.05||!started)return;IG.jv=5.6;IG.jy=.001;snd('jump');poke();hideHint()}const IN={x:0,z:0};
 let where='out';const ROOMS={};
 function walkable(x,z){if(where==='out'&&RIDE){const ok=rideOk(x,z);if(ok!==null)return ok}if(where!=='out'){const Rm=ROOMS[where];if(Math.abs(x)>Rm.w/2-.7||z<-Rm.d/2+1.1||z>Rm.d/2-.3)return false;return!Rm.blocks.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3)}
  if(Math.hypot(x,z*1.12)>R-.6)return false;return!blocked.some(b=>{const d=Math.hypot(b.x-x,b.z-z);if(d>=b.r+.3)return false;const d0=Math.hypot(b.x-igor.position.x,b.z-igor.position.z);return!(d0<b.r+.3&&d>d0)})}
@@ -1343,7 +1344,7 @@ function skyTick(dt){skyT+=dt;SKY.acc+=dt;
   stepFall(hailF,W.hail,dt,15,0);hailF.o.material.opacity=Math.min(1,W.hail*1.5);
   const lf=Z?Z.aut*sstep(.05,.2,Z.loss)*(1-sstep(.85,.97,Z.loss))*(1-W.snow):0;stepFall(leafF,lf*.5,dt*.6,1.1,1.2);leafF.o.material.opacity=.9;
   // lightning
-  if(W.storm>.5){SKY.flashNext-=dt;if(SKY.flashNext<=0){SKY.flash=1;SKY.flashNext=5+Math.random()*12}}
+  if(W.storm>.5){SKY.flashNext-=dt;if(SKY.flashNext<=0){SKY.flash=1;if(window.IgorSound)IgorSound.thunder(Math.random()<.3);SKY.flashNext=5+Math.random()*12}}
   if(SKY.flash>0){SKY.flash-=dt*3.2;const k=Math.max(0,SKY.flash)*(Math.sin(SKY.flash*40)>-.3?1:.3);flashEl.style.opacity=(k*.35).toFixed(3);hemi.intensity+=k*1.4}else flashEl.style.opacity=0}
  else{flashEl.style.opacity=0;document.documentElement.style.setProperty('--hd','.9');hemi.color.set('#a9b8de');hemi.groundColor.set('#26332a')}}
 function skyRoom(){for(const w of WINS)paintWin(w)}
@@ -1396,14 +1397,14 @@ function station(Rm,key,{name,sub,pos,stand,obj,act,r=1.3,y=1,zr}){BUILD=key;obj
  const go=()=>walkIn(stand,act);hit(obj,r,go,name,y);glowObj(obj,key,pos.x,pos.z,1,0,zr||(r*.75+.55),Rm.g);label(name,sub||'',pos.clone().add(new V3(0,y+1.75,0)),go);zone(key,pos.x,pos.z,zr||(r*.75+.55),act,name);BUILD='out'}
 function walkIn(P,then){closeSheet();$('index').hidden=true;IG.target=P.clone();IG.arrive=then;IG.manual=true;mark.position.set(P.x,.04,P.z);mark.material.opacity=.8;poke();if(igor.position.distanceTo(P)<.3){IG.target=null;IG.arrive=null;then&&then()}}
 function syncZones(){for(const Z of zones)Z.in=Math.hypot(igor.position.x-Z.x,igor.position.z-Z.z)<Z.r}
-function enterRoom(k){const Rm=ROOMS[k];if(!Rm||where===k)return;closeSheet();where=k;world.visible=false;Rm.g.visible=true;igor.position.copy(Rm.entry);IG.target=null;IG.arrive=null;CURV.value=0;
+function enterRoom(k){const Rm=ROOMS[k];if(!Rm||where===k)return;snd('door');closeSheet();where=k;world.visible=false;Rm.g.visible=true;igor.position.copy(Rm.entry);IG.target=null;IG.arrive=null;CURV.value=0;
  scene.background=BG_IN;scene.fog=null;hemi.intensity=.55;moonL.intensity=.25;moonL.color.set('#dfe6ff');skyRoom();camSnap=true;syncZones();say(k==='house'?pick(tt(['Welcome to my house!','Make yourself at home.'],['Benvenuto a casa mia!','Fai come se fossi a casa tua.'])):tt('Shh… walk to the piano.','Shh… vai al pianoforte.'),3)}
-function exitRoom(quiet){const k=where;if(k==='out')return;ROOMS[k].g.visible=false;world.visible=true;where='out';CURV.value=K;hemi.intensity=.9;moonL.intensity=.8;scene.background=BG_OUT;scene.fog=new THREE.Fog(NIGHT,28,66);
+function exitRoom(quiet){const k=where;if(k==='out')return;snd('door');ROOMS[k].g.visible=false;world.visible=true;where='out';CURV.value=K;hemi.intensity=.9;moonL.intensity=.8;scene.background=BG_OUT;scene.fog=new THREE.Fog(NIGHT,28,66);
  const P=PLACES[k];igor.position.copy(P.pos).add(k==='school'?new V3(.85,0,.4):new V3(0,0,.95));IG.target=null;IG.arrive=null;camSnap=true;syncZones();if(!quiet)say(pick(tt(['Fresh air!','Back outside.'],['Aria fresca!','Di nuovo fuori.'])),1.8)}
 let camSnap=false;
 const wipSay=t=>{say(t+tt(': coming soon!',': presto!'),3)};
 function rememberSpot(where_,x,z){try{localStorage.setItem('igortime_return',JSON.stringify({where:where_,x,z,t:Date.now()}))}catch(e){}}
-let leaving=false;function launch(url,txt,spot){if(leaving)return;leaving=true;say(txt,2);toast(txt);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}if(spot)rememberSpot(...spot);else rememberSpot(where,igor.position.x,igor.position.z);setTimeout(()=>{location.href=url},650)}
+let leaving=false;function launch(url,txt,spot){if(leaving)return;leaving=true;snd('launch');say(txt,2);toast(txt);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}if(spot)rememberSpot(...spot);else rememberSpot(where,igor.position.x,igor.position.z);setTimeout(()=>{location.href=url},650)}
 addEventListener('pageshow',e=>{if(e.persisted)leaving=false});
 function frameOn(Rm,x,y,z,ry,w,h,col,draw){const c=document.createElement('canvas');c.width=128;c.height=Math.round(128*h/w);const g2=c.getContext('2d');g2.fillStyle=col;g2.fillRect(0,0,c.width,c.height);draw&&draw(g2,c.width,c.height);
  const pic=new THREE.Mesh(new THREE.PlaneGeometry(w,h),texM(new THREE.CanvasTexture(c)));const fr=new THREE.Mesh(new THREE.BoxGeometry(w+.14,h+.14,.05),lam('#6a4630'));const G=new THREE.Group();G.add(fr);pic.position.z=.03;G.add(pic);G.position.set(x,y,z);G.rotation.y=ry;Rm.g.add(G);return G}
@@ -1520,7 +1521,7 @@ const LINESB={en:{
  ready:['Si raccoglie! Gnam.','Ci sono formiche pronte!']}};
 const LINES=new Proxy({},{get:(_,k)=>LINESB[LANG][k]});
 const bubble=$('bubble');let bubbleT=0,bubbleS=0;const bubbleQ=[];
-function say(t,sec=3){if(bubbleT>0&&bubble.textContent===t)return;if(bubbleT>0&&bubbleS<Math.min(1.8,bubbleT+bubbleS)){if(!bubbleQ.some(q=>q[0]===t)){bubbleQ.push([t,sec]);if(bubbleQ.length>3)bubbleQ.shift()}return}bubble.textContent=t;bubbleT=sec;bubbleS=0}
+function say(t,sec=3){if(bubbleT>0&&bubble.textContent===t)return;if(bubbleT>0&&bubbleS<Math.min(1.8,bubbleT+bubbleS)){if(!bubbleQ.some(q=>q[0]===t)){bubbleQ.push([t,sec]);if(bubbleQ.length>3)bubbleQ.shift()}return}bubble.textContent=t;bubbleT=sec;bubbleS=0;snd('say')}
 let T=0,lastAct=0,started=false;const poke=()=>{lastAct=T};
 function chatter(){if(!started||bubbleT>0||T-lastAct<12)return;lastAct=T+Math.random()*6;if(S.farm&&Math.random()<.6)say(fieldHint(),3.4);else say(pick(SKY.lines&&Math.random()<.35?SKY.lines:LINES.idle),3.4)}
 const pv=new V3();
@@ -1533,8 +1534,8 @@ function hideHint(){if(hintOn){hintOn=false;$('hint').style.opacity=0}}
 
 /* ================= UI: sheets ================= */
 const sheet=$('sheet'),sb=$('sheetBody');let sheetKind=null,farmFocus=null;
-function openSheet(kind,html){sheetKind=kind;sb.innerHTML=html;sheet.hidden=false;poke()}
-function closeSheet(){const was=sheetKind;sheet.hidden=true;sheetKind=null;farmFocus=null;DRESS_ONB=false;if(ONB&&(was==='acct'||was==='dress'))onbDone()}
+function openSheet(kind,html){const was=sheet.hidden;sheetKind=kind;sb.innerHTML=html;sheet.hidden=false;poke();if(was)snd('open')}
+function closeSheet(){const was=sheetKind;if(!sheet.hidden)snd('close');sheet.hidden=true;sheetKind=null;farmFocus=null;DRESS_ONB=false;if(ONB&&(was==='acct'||was==='dress'))onbDone()}
 /* end of the onboarding: back to where the player chose to go */
 function onbDone(){const o=ONB;setOnb(null);if(!o)return;if(o.dest==='games'){setView('games');launch('/games/',tt('To the games page!','Alla pagina dei giochi!'));return}if(window.IgorCloud&&window.IgorCloud.user)say(pick(tt(['What a look!','Let’s explore the island!'],['Che bel look!','Andiamo a esplorare l’isola!'])),2.4)}
 sheet.querySelector('.x').onclick=closeSheet;
@@ -1672,10 +1673,13 @@ function bubbleAvoid(L,T2,w,h){const ov=(r)=>r&&r.width&&L<r.right+6&&L+w>r.left
  return[L,T2]}
 updaters.push(()=>{const hn=$('hint');if(hn)hn.style.visibility=started?'':'hidden'});
 function igPick(cx,cy){if(where!=='out')return false;let best=null,bd=46;for(const[id,o]of igObjs){if(!o.grp.visible)continue;const v=projC(o.grp.position.clone().add(new V3(0,.42,0)));if(v.z>1)continue;const d=Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy);if(d<bd){bd=d;best=id}}if(best==null)return false;igTap(best);return true}
-function igTap(id){if(PL)return;const g=igById(id);if(!g)return;const T0=TRAITS[g.trait]||TRAITS.shy,o=igObjs.get(id);if(o)o.showT=T+6;bubbleQ.length=0;bubbleT=0;
+function igTap(id){if(PL)return;const g=igById(id);if(!g)return;const T0=TRAITS[g.trait]||TRAITS.shy,o=igObjs.get(id);if(o)o.showT=T+6;if(window.IgorSound&&started)IgorSound.ig('tap',{id,trait:g.trait,pan:0});bubbleQ.length=0;bubbleT=0;
  if(g.rest){say(tt(`${g.name} is sleeping in the little house. Up in ${fmt(restLeft(g))}.`,`${g.name} dorme nella casetta. Si sveglia tra ${fmt(restLeft(g))}.`),3.2);return}say(tt(`${g.name} is ${N(T0.N)}.`,`${g.name} è ${N(T0.N)}.`),2.4);say(`“${N(T0.say)}”`,3)}
 /* the build button and its bar */
-const zb=document.createElement('div');zb.id='zoomB';zb.innerHTML='<button type="button" data-z=".8" aria-label="Zoom in">+</button><button type="button" data-z="1.25" aria-label="Zoom out">−</button>';document.body.appendChild(zb);zb.onclick=e=>{const b=e.target.closest('button');if(b)zoomTo(CAM.z*+b.dataset.z)};
+const zb=document.createElement('div');zb.id='zoomB';zb.innerHTML='<button type="button" data-z=".8" aria-label="Zoom in">+</button><button type="button" data-z="1.25" aria-label="Zoom out">−</button>';document.body.appendChild(zb);zb.onclick=e=>{const b=e.target.closest('button');if(b&&b.dataset.z)zoomTo(CAM.z*+b.dataset.z)};
+const SPK='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="#2b2018"/>',sndB=document.createElement('button');sndB.type='button';sndB.id='sndB';sndB.dataset.snd='0';zb.appendChild(sndB);
+function renderSndB(){const on=!window.IgorSound||IgorSound.on;sndB.innerHTML=SPK+(on?'<path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="#2b2018" stroke-width="2.2" stroke-linecap="round"/></svg>':'<path d="M15.5 9.5l5 5M20.5 9.5l-5 5" stroke="#2b2018" stroke-width="2.2" stroke-linecap="round"/></svg>');sndB.setAttribute('aria-label',on?tt('Sound on: tap to mute','Suono acceso: tocca per spegnere'):tt('Sound off: tap to turn on','Suono spento: tocca per accendere'));sndB.title=sndB.getAttribute('aria-label');sndB.setAttribute('aria-pressed',String(!on))}
+sndB.onclick=e=>{e.stopPropagation();if(!window.IgorSound)return;const on=IgorSound.toggle();renderSndB();say(on?tt('I can hear the sea!','Sento il mare!'):tt('Shh… silence.','Shh… silenzio.'),2)};renderSndB();
 const fab=document.createElement('div');fab.id='fab';fab.innerHTML=`${TESTING?'<button type="button" id="testB" aria-label="Test">🧪</button>':''}<button type="button" id="vehB" aria-label="Ride" hidden>🚲</button><button type="button" id="buildB" aria-label="Build">🔨</button>`;document.body.appendChild(fab);
 const bar=document.createElement('div');bar.id='bar';bar.hidden=true;document.body.appendChild(bar);let barKind=null;
 function closeBar(){bar.hidden=true;barKind=null;document.documentElement.classList.remove('baropen')}
@@ -1756,7 +1760,7 @@ lvB.onclick=()=>{const l=lvlOf(),b=LVX[l];say(b?tt(`Level ${l}. At ${b} tofu ant
 updaters.push(renderLv);
 /* coming back from a game: a little party for the seeds */
 const GNAME={kitchen:['from the kitchen','dalla cucina'],window:['from the window','dalla finestra'],bedroom:['from the bedroom','dalla camera'],stairs:['from Pitch Stairs','da Pitch Stairs'],pitch:['from Pitch Stairs','da Pitch Stairs'],cadences:['from Cadences','da Cadenze'],cad:['from Cadences','da Cadenze'],abyss:['from the abyss','dall’abisso']};
-function seedParty(n){const g=GNAME[window._fromGame||''],from=g?' '+N(g):'';toast(tt(`+${n} seeds${from}!`,`+${n} semi${from}!`));bubbleQ.length=0;bubbleT=0;say(tt(`Hooray! +${n} seeds. Let’s sow them!`,`Evviva! +${n} semi. Seminiamoli!`),4);
+function seedParty(n){snd('seeds',n);const g=GNAME[window._fromGame||''],from=g?' '+N(g):'';toast(tt(`+${n} seeds${from}!`,`+${n} semi${from}!`));bubbleQ.length=0;bubbleT=0;say(tt(`Hooray! +${n} seeds. Let’s sow them!`,`Evviva! +${n} semi. Seminiamoli!`),4);
  const to=$('seeds').getBoundingClientRect(),k=Math.min(14,n+3);for(let j=0;j<k;j++){const el=document.createElement('div');el.className='seedFly';el.textContent='🌱';const x0=innerWidth/2+(Math.random()-.5)*160,y0=innerHeight*.55+(Math.random()-.5)*80;el.style.transform=`translate(${x0}px,${y0}px) scale(1.4)`;document.body.appendChild(el);
   setTimeout(()=>{el.style.transform=`translate(${to.left+to.width/2-10}px,${to.top+to.height/2-10}px) scale(.6)`;el.style.opacity='.2'},60+j*70);setTimeout(()=>{el.remove();const sb=$('seeds');sb.classList.remove('pop');void sb.offsetWidth;sb.classList.add('pop')},1100+j*70)}}
 /* now and then Igor proposes one of the games in his house: a glowing balloon; tap it and he walks there and starts the game */
@@ -1780,7 +1784,7 @@ const ORB=[{k:'stairs',ic:'🎵',n:['Pitch Stairs','Pitch Stairs'],go:()=>playHo
 const orb=document.createElement('button');orb.id='orb';orb.type='button';orb.innerHTML='<span class="ball"><i></i></span><span class="tx"><small></small><b></b></span>';document.body.appendChild(orb);
 let orbI=Math.floor(Math.random()*6),orbNext=Date.now()+12000;
 function renderOrb(flash){const D=ORB[orbI];orb.querySelector('i').textContent=D.ic;orb.querySelector('small').textContent=tt('Jump to','Vai a');orb.querySelector('b').textContent=N(D.n);orb.setAttribute('aria-label',tt('Jump to ','Vai a ')+N(D.n));
- if(flash){orb.classList.remove('flash');void orb.offsetWidth;orb.classList.add('flash')}}
+ if(flash){snd('orb');orb.classList.remove('flash');void orb.offsetWidth;orb.classList.add('flash')}}
 renderOrb(false);
 /* under the orb: straight to the games page (it becomes the favourite view) */
 const gmB=document.createElement('button');gmB.id='gamesB';gmB.type='button';gmB.innerHTML='<span class="gi"><svg viewBox="0 0 32 32" aria-hidden="true"><g stroke="#2b2018" stroke-width="1.6"><rect x="2" y="5" width="8.5" height="10" rx="2" fill="#b27a45"/><rect x="11.8" y="5" width="8.5" height="10" rx="2" fill="#f08a2c"/><rect x="21.5" y="5" width="8.5" height="10" rx="2" fill="#e0463c"/><rect x="2" y="17" width="8.5" height="10" rx="2" fill="#9ed8f0"/><rect x="11.8" y="17" width="8.5" height="10" rx="2" fill="#1f6f8b"/><rect x="21.5" y="17" width="8.5" height="10" rx="2" fill="#efe4cf"/></g></svg></span><span class="tx"><small></small><b></b></span>';document.body.appendChild(gmB);
@@ -1840,7 +1844,7 @@ function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igo
  <h2>${tt('Sky','Cielo')}</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">${tt('Igor’s weather','Il meteo di Igor')}<small>${tt('same for everyone','uguale per tutti')}</small></button></li><li><button data-sky="real">${tt('The sky where I am','Il cielo dove sono')}<small>${tt('uses your location','usa la tua posizione')}</small></button></li></ul>`}
 renderIdx();
 function setLang(l){if(l===LANG)return;LANG=l;bubbleQ.length=0;bubbleT=0;try{localStorage.setItem('igortime_lang',l)}catch(e){}document.documentElement.lang=l;applyLang();say(tt('Hello! I speak English now.','Ciao! Adesso parlo italiano.'),2.6)}
-function applyLang(){if(typeof renderGmB==='function')renderGmB();renderIdx();skyStatus();relabel();staticTexts();refresh();if(typeof farmRelabel==='function')farmRelabel();if(!sheet.hidden&&sheetKind==='acct')openAccount();if(!sheet.hidden&&sheetKind==='dress')renderDress()}
+function applyLang(){if(typeof renderGmB==='function')renderGmB();if(typeof renderSndB==='function')renderSndB();renderIdx();skyStatus();relabel();staticTexts();refresh();if(typeof farmRelabel==='function')farmRelabel();if(!sheet.hidden&&sheetKind==='acct')openAccount();if(!sheet.hidden&&sheetKind==='dress')renderDress()}
 function staticTexts(){$('hint').textContent=document.documentElement.classList.contains('touch')?tt('Walk with the joystick · double-tap it to jump · tap a place · drag to turn','Cammina col joystick · doppio tocco per saltare · tocca un posto · trascina per girare'):tt('Walk with the arrows · space to jump · click a place · drag to turn','Cammina con le frecce · spazio per saltare · clicca un posto · trascina per girare');
  $('indexBtn').textContent=tt('Index','Indice');$('seeds').title=tt('Seeds: win them in the games','Semi: si vincono nei giochi');$('ants').title=tt('Ants in your pocket / how many you can keep','Formiche in tasca / quante ne puoi tenere');
  const I=$('intro');if(I){$('iH').innerHTML=tt('Hi, I’m <em>Igor</em>.','Ciao, sono <em>Igor</em>.');$('iAsk').textContent=tt('Where shall we go? Straight to my games, or to my island?','Dove andiamo? Direttamente ai miei giochi, o sulla mia isola?');
@@ -1902,6 +1906,28 @@ refresh();
 if(/[?&]signin\b/.test(location.search)){try{history.replaceState(null,'','/')}catch(e){}if(!ONB)setOnb({dest:DEST});if(!started){$('intro').classList.add('gone');start()}setTimeout(openAccount,400)}
 else if(ONB&&started){setTimeout(()=>{if(sheet.hidden)openAccount()},700)}
 
+/* ================= sound (sound.js): nature around Igor, footsteps, the Igorlets ================= */
+function snd(n,a){if(window.IgorSound&&started)IgorSound.sfx(n,a)}
+let sndStep=0,sndJy=0,sndLv=-1;const sndV=new V3(),sndR=new V3(),IGV={t:0};
+updaters.push((t,dt)=>{const SN=window.IgorSound;if(!SN)return;IGV.t-=dt;
+ const x=igor.position.x,z=igor.position.z,r=Math.hypot(x,z*1.12);sndR.setFromMatrixColumn(camera.matrixWorld,0);
+ const pan=r>.5?clamp((x*sndR.x+z*sndR.z)/r,-1,1)*clamp(r/(R*.6),0,1):0;
+ SN.frame({dt,W:SKY.W,out:where==='out',coast:where==='out'?R-r:8,pan,night:SKY.nk||0,season:SKY.season,quiet:!started});
+ const sp=Math.floor(IG.walk/Math.PI);if(sp!==sndStep){sndStep=sp;if(IG.jy===0&&!RIDE&&!diving)snd('step',where!=='out'?'wood':SKY.cover>.4?'snow':R-r<1.8?'sand':'grass')}
+ if(sndJy>0&&IG.jy===0)snd('land');sndJy=IG.jy;
+ const lv=lvlOf();if(sndLv>=0&&lv>sndLv)snd('level');sndLv=lv});
+function igSnd(id,o,moving,dt){const SN=window.IgorSound;if(!SN||!started||where!=='out'){o._mv=moving;o._pj=o.jump-dt;return}
+ const hop=o.jump>(o._pj!=null?o._pj:o.jump)+.05;o._pj=o.jump-dt;
+ const p=o.grp.position,d=Math.hypot(p.x-igor.position.x,p.z-igor.position.z),g=Math.pow(clamp(1-d/13,0,1),1.5),gi=igById(id),trait=gi&&gi.trait;
+ projC(sndV.set(p.x,.5,p.z));const pan=clamp(sndV.x,-1,1)*.8;
+ if(o.mode==='sleep'&&!moving&&d<7){o._st=(o._st==null?Math.random()*4:o._st)-dt;if(o._st<=0){o._st=6+Math.random()*5;SN.ig('snore',{g,pan})}}
+ if(g<.03||!o.grp.visible||sndV.z>1){o._mv=moving;return}
+ o._vt=(o._vt||0)-dt;
+ if(hop&&o._vt<.6&&IGV.t<=0){SN.ig('hop',{id,trait,pan,g});o._vt=1.2;IGV.t=.4}
+ else if(moving&&!o._mv&&o._vt<=0&&IGV.t<=0&&Math.random()<.5){SN.ig('move',{id,trait,pan,g});o._vt=4+Math.random()*6;IGV.t=.9}
+ if(o.mode==='work'&&!moving){o._wt=(o._wt||0)-dt;if(o._wt<=0){o._wt=.45+Math.random()*.4;SN.ig('work',{g:g*.8,pan})}}
+ o._mv=moving}
+
 /* ================= loop ================= */
 const clock=new THREE.Clock(),camGoal=new V3(),lp=new V3();
 const look=new V3();const portrait=()=>innerWidth<innerHeight;
@@ -1926,7 +1952,7 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  if(camSnap){camera.position.copy(camTarget());lookS.copy(lookTarget());camSnap=false}else{const f=1-Math.exp(-dt*3);camera.position.lerp(camTarget(),f);lookS.lerp(lookTarget(),f)}camera.lookAt(lookS.x,where==='out'?.9+rideCamY():1.1,lookS.z);
  // labels
  for(const L of labels){projC(pv.copy(L.pos));const vis=started&&!L.hidden&&(L.room||'out')===where&&(!L.near||Math.hypot(L.pos.x-igor.position.x,L.pos.z-igor.position.z)<L.near*(portrait()?.8:1))&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis){const lx=clamp((pv.x*.5+.5)*innerWidth,L.el.offsetWidth/2+6,innerWidth-L.el.offsetWidth/2-6),ly=Math.max((-pv.y*.5+.5)*innerHeight,(window._hh||60)+(window._evh||0)+L.el.offsetHeight+4);L.el.style.transform=`translate(-50%,-100%) translate(${lx}px,${ly}px)`}}
- if(bubbleT>0){bubbleT-=dt;bubbleS+=dt}else if(bubbleQ.length){const[q,s2]=bubbleQ.shift();bubble.textContent=q;bubbleT=s2;bubbleS=0}placeBubble();chatter();
+ if(bubbleT>0){bubbleT-=dt;bubbleS+=dt}else if(bubbleQ.length){const[q,s2]=bubbleQ.shift();bubble.textContent=q;bubbleT=s2;bubbleS=0;snd('say')}placeBubble();chatter();
  renderer.render(scene,camera);requestAnimationFrame(frame)}
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.fov=fovFor();camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);hh()});
 // back from a game: Igor is where you left him
