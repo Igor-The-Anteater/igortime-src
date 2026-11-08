@@ -999,9 +999,9 @@ renderer.domElement.addEventListener('pointerup',e=>{const d=downAt;downAt=null;
 renderer.domElement.addEventListener('pointermove',e=>{if(downAt&&downAt.moved)return;ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,camera);renderer.domElement.style.cursor=ray.intersectObjects(clickables.filter(m=>m.userData.room===where),false).length?'pointer':'grab'});
 const keys={};addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key===' '&&!e.repeat&&e.target.tagName!=='BUTTON'){e.preventDefault();jump();return}keys[e.key.length===1?e.key.toLowerCase():e.key]=true;if(e.key.startsWith('Arrow'))e.preventDefault()});addEventListener('keyup',e=>{keys[e.key.length===1?e.key.toLowerCase():e.key]=false});addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 const joy=$('joy'),knob=joy.querySelector('i'),JOY={id:null,x:0,z:0};
-if(matchMedia('(pointer:coarse)').matches||'ontouchstart' in window){joy.classList.add('on');document.documentElement.classList.add('touch');$('hint').textContent='Walk with the joystick · tap a place · drag to turn'}
+if(matchMedia('(pointer:coarse)').matches||'ontouchstart' in window){joy.classList.add('on');document.documentElement.classList.add('touch');$('hint').textContent='Walk with the joystick · double-tap it to jump · tap a place · drag to turn'}
 function joyMove(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,R0=r.width/2-14;let dx=e.clientX-cx,dy=e.clientY-cy;const L=Math.hypot(dx,dy);if(L>R0){dx*=R0/L;dy*=R0/L}knob.style.transform=`translate(${dx}px,${dy}px)`;JOY.x=dx/R0;JOY.z=dy/R0}
-joy.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();JOY.id=e.pointerId;joy.setPointerCapture(e.pointerId);joyMove(e)});
+joy.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();const tn=performance.now();if(tn-(JOY.t0||0)<320){jump();JOY.t0=0}else JOY.t0=tn;JOY.id=e.pointerId;joy.setPointerCapture(e.pointerId);joyMove(e)});
 joy.addEventListener('pointermove',e=>{if(e.pointerId===JOY.id){e.preventDefault();joyMove(e)}});
 const joyEnd=e=>{if(e.pointerId!==JOY.id)return;JOY.id=null;JOY.x=JOY.z=0;knob.style.transform=''};joy.addEventListener('pointerup',joyEnd);joy.addEventListener('pointercancel',joyEnd);
 
