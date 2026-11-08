@@ -184,6 +184,7 @@ const SFX={
  munch:()=>{for(let i=0;i<3;i++){nz(.06,{f0:R(700,1100),Q:1.2,g:.3,delay:i*.15});tone(300,220,.07,{g:.25,delay:i*.15,type:'triangle'})}},
  star:()=>{tone(2637,2093,1.2,{g:.1,type:'triangle',at:.25});tone(3136,3136,.8,{g:.05,delay:.3,at:.2})},
  sing:()=>{const m=[0,4,7,9,12,9,7,12,16,14,12];m.forEach((n,i)=>{const f=st(784,n);tone(f*.97,f,.42,{g:.4,delay:i*.2,at:.04,glide:.2,vib:f*.01,vibF:5.5,type:'sine'})});for(let i=0;i<10;i++){const f=st(2093,PENTA[i%8]);tone(f,f,.4,{g:.08,delay:2.3+i*.05,at:.003,pan:R(-.6,.6)})}},
+ marimba:f=>{f=f||523;tone(f,f,1.1,{g:.6,at:.003});tone(f*3.9,f*3.9,.18,{g:.16,at:.002});tone(f*9.2,f*9.2,.05,{g:.05,at:.001});nz(.02,{f0:1800,Q:1,g:.1})},
  wish:()=>{for(let i=0;i<8;i++){const f=st(1047,PENTA[i]);tone(f,f,.6,{g:.22,delay:i*.06,at:.003,pan:R(-.6,.6)})}tone(523,523,1.8,{g:.18,at:.3,type:'triangle'})},
 };
 SFX.clear=SFX.weed;
