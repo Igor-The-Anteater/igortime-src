@@ -137,16 +137,19 @@ const $=id=>document.getElementById(id);
 const TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t,ease=u=>u*u*(3-2*u),mod=(a,n)=>((a%n)+n)%n;
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 
+/* ---------- language (the choice made on the island, localStorage igortime_lang) ---------- */
+const IT_=(()=>{try{return(localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en'))==='it'}catch(e){return false}})();
+const tr=(en,it)=>IT_?it:en;
 /* ---------- music theory ---------- */
-const LET='CDEFGAB',NAT=[0,2,4,5,7,9,11],VO=['S','A','T','B'],VN={S:'soprano',A:'alto',T:'tenor',B:'bass'};
+const LET='CDEFGAB',SOLF=['Do','Re','Mi','Fa','Sol','La','Si'],NAT=[0,2,4,5,7,9,11],VO=['S','A','T','B'],VN=IT_?{S:'soprano',A:'contralto',T:'tenore',B:'basso'}:{S:'soprano',A:'alto',T:'tenor',B:'bass'};
 const ACC={'-2':'𝄫','-1':'♭','0':'♮','1':'♯','2':'𝄪'};
 const L=n=>mod(n.d,7),M=n=>12*(Math.floor(n.d/7)+1)+NAT[L(n)]+n.a;
 function parseN(s){const m=s.match(/^([A-G])(#|b)?(\d)$/);return{d:+m[3]*7+LET.indexOf(m[1]),a:m[2]==='#'?1:m[2]==='b'?-1:0}}
-function nName(n){return LET[L(n)]+(n.a?ACC[n.a]:'')+Math.floor(n.d/7)}
-function pcName(l,a){return LET[l]+(a?ACC[a]:'')}
+function nName(n){return(IT_?SOLF:LET)[L(n)]+(n.a?ACC[n.a]:'')+Math.floor(n.d/7)}
+function pcName(l,a){return(IT_?SOLF:LET)[l]+(a?ACC[a]:'')}
 function makeKey(tl,ta,mode){const tpc=mod(NAT[tl]+ta,12),sc=mode==='major'?[0,2,4,5,7,9,11]:[0,2,3,5,7,8,10],deg=[];
  for(let k=0;k<7;k++){const l=(tl+k)%7;deg.push({l,a:mod(tpc+sc[k]-NAT[l]+6,12)-6})}
- const sig={};deg.forEach(x=>sig[x.l]=x.a);return{tl,ta,mode,tpc,deg,sig,name:pcName(tl,ta)+' '+mode}}
+ const sig={};deg.forEach(x=>sig[x.l]=x.a);return{tl,ta,mode,tpc,deg,sig,name:pcName(tl,ta)+' '+(IT_?(mode==='major'?'maggiore':'minore'):mode)}}
 function tn(K,deg,semi,role){const l=(K.tl+deg)%7;return{l,a:mod(K.tpc+semi-NAT[l]+6,12)-6,role}}
 function chordTones(K,root,sev){const raise=K.mode==='minor'&&(root===4||root===6),T=[];
  for(let i=0;i<(sev?4:3);i++){const k=(root+2*i)%7;T.push({l:K.deg[k].l,a:K.deg[k].a+(raise&&k===6?1:0),role:i})}return T}
@@ -187,8 +190,10 @@ function classify(a,b,ch,K){if(!a||!b)return null;if(b.sec||b.kind!=='triad'&&b.
  if(b.root===4&&!b.sec)return a.root===4&&!a.sec&&a.kind!=='triad'&&false?'other':(a.root===4&&!a.sec)?'other':'half';
  if(b.root===5&&b.kind==='triad'&&a.dom&&a.root===4)return'deceptive';
  return'other'}
-function cadName(t,K){const mi=K.mode==='minor';return{perfect:'perfect cadence',imperfect:'imperfect cadence',plagal:'plagal cadence',half:'half cadence',
- deceptive:'deceptive cadence',mod:'modulation to the dominant',other:'free ending'}[t]}
+function cadName(t,K){const mi=K.mode==='minor';return(IT_?{perfect:'cadenza perfetta',imperfect:'cadenza imperfetta',plagal:'cadenza plagale',half:'cadenza sospesa',
+ deceptive:'cadenza d’inganno',mod:'modulazione alla dominante',other:'finale libero'}:{perfect:'perfect cadence',imperfect:'imperfect cadence',plagal:'plagal cadence',half:'half cadence',
+ deceptive:'deceptive cadence',mod:'modulation to the dominant',other:'free ending'})[t]}
+const una=t=>t==='other'?'un ':'una ';
 function cadHint(t,K){const mi=K.mode==='minor';return{perfect:mi?'V → i':'V → I',plagal:mi?'iv → i':'IV → I',half:'… → V',deceptive:mi?'V → VI':'V → vi',mod:'V/V → V'}[t]}
 
 /* templates in C major / A minor: [S,A,T,B] */
@@ -210,84 +215,84 @@ function transposeTpl(rows,K){const bl=K.mode==='major'?0:5,bpc=NAT[bl];const up
 
 const KEYS={C:[0,0],G:[4,0],F:[3,0],D:[1,0],Bb:[6,-1],A:[5,0],Eb:[2,-1],E:[2,0],Ab:[5,-1],B:[6,0]};
 const LEVELS={
- easy:{name:'Easy',maj:['C','G','F'],min:[],tasks:['perfect','plagal','half'],labels:true,hint:true,info:'Major keys with up to one sharp or flat · perfect, plagal and half cadences · chord symbols and hints shown'},
- medium:{name:'Medium',maj:['C','G','F','D','Bb','A','Eb'],min:[],tasks:['perfect','plagal','half','deceptive','mod'],labels:true,hint:false,info:'Major keys up to three accidentals · adds deceptive cadence and modulation to the dominant · chord symbols shown'},
- extreme:{name:'Extreme',maj:['D','Bb','A','Eb','E','Ab'],min:['A','E','D','G','C','B'],tasks:['perfect','half','deceptive'],feats:true,labels:false,hint:false,info:'Major and minor keys up to four accidentals · two chords given, you write four · each phrase needs a chromatic chord: dominant ninth, diminished seventh, Neapolitan sixth, augmented sixth, secondary dominant, cadential six-four or supertonic seventh'}};
+ easy:{name:tr('Easy','Facile'),maj:['C','G','F'],min:[],tasks:['perfect','plagal','half'],labels:true,hint:true,info:tr('Major keys with up to one sharp or flat · perfect, plagal and half cadences · chord symbols and hints shown','Tonalità maggiori fino a un diesis o un bemolle · cadenze perfetta, plagale e sospesa · sigle degli accordi e suggerimenti')},
+ medium:{name:tr('Medium','Medio'),maj:['C','G','F','D','Bb','A','Eb'],min:[],tasks:['perfect','plagal','half','deceptive','mod'],labels:true,hint:false,info:tr('Major keys up to three accidentals · adds deceptive cadence and modulation to the dominant · chord symbols shown','Tonalità maggiori fino a tre alterazioni · in più cadenza d’inganno e modulazione alla dominante · sigle degli accordi')},
+ extreme:{name:tr('Extreme','Estremo'),maj:['D','Bb','A','Eb','E','Ab'],min:['A','E','D','G','C','B'],tasks:['perfect','half','deceptive'],feats:true,labels:false,hint:false,info:tr('Major and minor keys up to four accidentals · two chords given, you write four · each phrase needs a chromatic chord: dominant ninth, diminished seventh, Neapolitan sixth, augmented sixth, secondary dominant, cadential six-four or supertonic seventh','Tonalità maggiori e minori fino a quattro alterazioni · due accordi dati, ne scrivi quattro · ogni frase vuole un accordo cromatico: nona di dominante, settima diminuita, sesta napoletana, sesta eccedente, dominante secondaria, quarta e sesta cadenzale o settima di sopratonica')}};
 let LV=LEVELS.easy,lvKey='easy';try{const s=localStorage.getItem('cadencesLevel');if(LEVELS[s]){lvKey=s;LV=LEVELS[s]}}catch(e){}
 const ROUNDS=5;
 
 /* ---------- analysis ---------- */
-const FEATS={V9:{name:'a dominant ninth (V9)',cads:['perfect','deceptive'],has:id=>id.kind==='V9'},
- dim7:{name:'a diminished seventh chord (vii°7)',cads:['perfect','half','deceptive'],has:id=>id.kind==='vii°7'},
- N6:{name:'a Neapolitan sixth (N6)',cads:['perfect','half','deceptive'],has:id=>id.kind==='N'},
- aug6:{name:'an augmented sixth chord (It+6, Fr+6 or Ger+6)',cads:['perfect','half','deceptive'],has:id=>id.kind==='aug6'},
- VofV:{name:'a secondary dominant (V7/V)',cads:['perfect','half','deceptive'],has:id=>id.sec},
- cad64:{name:'a cadential six-four (I6/4 → V)',cads:['perfect','half','deceptive'],has:(id,i,ids)=>id.cad64&&ids[i+1]&&ids[i+1].root===4&&!ids[i+1].sec&&ids[i+1].dom},
- ii7:{name:'a supertonic seventh (ii7 or ii6/5)',cads:['perfect','half','deceptive'],has:id=>id.kind==='ii7'}};
+const FEATS={V9:{name:tr('a dominant ninth (V9)','una nona di dominante (V9)'),def:'la nona di dominante',cads:['perfect','deceptive'],has:id=>id.kind==='V9'},
+ dim7:{name:tr('a diminished seventh chord (vii°7)','un accordo di settima diminuita (vii°7)'),def:'l’accordo di settima diminuita',cads:['perfect','half','deceptive'],has:id=>id.kind==='vii°7'},
+ N6:{name:tr('a Neapolitan sixth (N6)','una sesta napoletana (N6)'),def:'la sesta napoletana',cads:['perfect','half','deceptive'],has:id=>id.kind==='N'},
+ aug6:{name:tr('an augmented sixth chord (It+6, Fr+6 or Ger+6)','un accordo di sesta eccedente (It+6, Fr+6 o Ger+6)'),def:'l’accordo di sesta eccedente',cads:['perfect','half','deceptive'],has:id=>id.kind==='aug6'},
+ VofV:{name:tr('a secondary dominant (V7/V)','una dominante secondaria (V7/V)'),def:'la dominante secondaria',cads:['perfect','half','deceptive'],has:id=>id.sec},
+ cad64:{name:tr('a cadential six-four (I6/4 → V)','una quarta e sesta cadenzale (I6/4 → V)'),def:'la quarta e sesta cadenzale',cads:['perfect','half','deceptive'],has:(id,i,ids)=>id.cad64&&ids[i+1]&&ids[i+1].root===4&&!ids[i+1].sec&&ids[i+1].dom},
+ ii7:{name:tr('a supertonic seventh (ii7 or ii6/5)','una settima di sopratonica (ii7 o ii6/5)'),def:'la settima di sopratonica',cads:['perfect','half','deceptive'],has:id=>id.kind==='ii7'}};
 const RANGE={S:[60,79],A:[55,74],T:[48,67],B:[40,60]};
 function analyze(){const K=R.key,C=R.chords,items=[],ng=R.ng,n=R.n,SC=[];for(let c=ng;c<n;c++)SC.push(c);
  const add=(pen,msg,marks=[],lines=[])=>items.push({pen,msg,marks,lines});
  for(const c of SC){const id=identify(C[c],K);R.ids[c]=id;
-  if(!id)add(25,`Chord ${c+1} isn’t a chord of ${K.name} yet: some notes don’t belong together.`,VO.map(v=>({c,v})));
-  else if(id.enh)add(4*id.enh,`Chord ${c+1}: right sound, but spell it as ${id.tones.map(t=>pcName(t.l,t.a)).join('–')}.`)}
+  if(!id)add(25,tr(`Chord ${c+1} isn’t a chord of ${K.name} yet: some notes don’t belong together.`,`L’accordo ${c+1} non è ancora un accordo di ${K.name}: alcune note non stanno insieme.`),VO.map(v=>({c,v})));
+  else if(id.enh)add(4*id.enh,tr(`Chord ${c+1}: right sound, but spell it as ${id.tones.map(t=>pcName(t.l,t.a)).join('–')}.`,`Accordo ${c+1}: il suono è giusto, ma scrivilo come ${id.tones.map(t=>pcName(t.l,t.a)).join('–')}.`))}
  const ids=R.ids,ia=n-2,ib=n-1,A=ids[ia],B=ids[ib];
  const wrote=classify(A,B,C,K);R.wrote=wrote;const want=R.task;let met=false;
  if(wrote){
   if(wrote===want||(want==='half'&&wrote==='mod'))met=true;
-  else if(want==='perfect'&&wrote==='imperfect'){met=true;add(15,`Almost perfect! For a perfect cadence both chords go in root position and the soprano lands on the tonic (${pcName(K.tl,K.ta)}).`,[{c:ib,v:'S'}])}
-  else add(40,`This is a ${cadName(wrote,K)} (${A.label} → ${B.label}); the task was a ${cadName(want,K)} (${cadHint(want,K)}).`);
-  if(met&&want!=='perfect'&&B.inv!==0)add(8,`The ${cadName(want,K)} sounds stronger with the last chord in root position.`,[{c:ib,v:'B'}]);
-  if(met&&(want==='deceptive'||want==='mod')&&A.inv!==0)add(6,`Put the ${A.label} in root position for a clearer ${cadName(want,K)}.`,[{c:ia,v:'B'}]);
+  else if(want==='perfect'&&wrote==='imperfect'){met=true;add(15,tr(`Almost perfect! For a perfect cadence both chords go in root position and the soprano lands on the tonic (${pcName(K.tl,K.ta)}).`,`Quasi perfetta! Nella cadenza perfetta tutti e due gli accordi sono allo stato fondamentale e il soprano arriva sulla tonica (${pcName(K.tl,K.ta)}).`),[{c:ib,v:'S'}])}
+  else add(40,tr(`This is a ${cadName(wrote,K)} (${A.label} → ${B.label}); the task was a ${cadName(want,K)} (${cadHint(want,K)}).`,`Questa è ${una(wrote)}${cadName(wrote,K)} (${A.label} → ${B.label}); il compito chiedeva ${una(want)}${cadName(want,K)} (${cadHint(want,K)}).`));
+  if(met&&want!=='perfect'&&B.inv!==0)add(8,tr(`The ${cadName(want,K)} sounds stronger with the last chord in root position.`,`La ${cadName(want,K)} suona più forte con l’ultimo accordo allo stato fondamentale.`),[{c:ib,v:'B'}]);
+  if(met&&(want==='deceptive'||want==='mod')&&A.inv!==0)add(6,tr(`Put the ${A.label} in root position for a clearer ${cadName(want,K)}.`,`Metti il ${A.label} allo stato fondamentale per una ${cadName(want,K)} più chiara.`),[{c:ia,v:'B'}]);
  }
- R.met=met;if(met&&want==='half'&&wrote==='mod')items.push({pen:0,info:1,msg:'Accepted: V/V → V is a half cadence that tonicizes the dominant (cadenza sospesa preceded by a secondary dominant). Without the raised fourth degree (ii6, IV or I → V) it is a plain half cadence.',marks:VO.map(v=>({c:ia,v})).filter(m=>{const x=C[ia][m.v];return x&&x.a!==K.sig[L(x)]}),lines:[]});
+ R.met=met;if(met&&want==='half'&&wrote==='mod')items.push({pen:0,info:1,msg:tr('Accepted: V/V → V is a half cadence that tonicizes the dominant (cadenza sospesa preceded by a secondary dominant). Without the raised fourth degree (ii6, IV or I → V) it is a plain half cadence.','Accettata: V/V → V è una cadenza sospesa che tonicizza la dominante (preceduta da una dominante secondaria). Senza il quarto grado alzato (ii6, IV o I → V) è una cadenza sospesa semplice.'),marks:VO.map(v=>({c:ia,v})).filter(m=>{const x=C[ia][m.v];return x&&x.a!==K.sig[L(x)]}),lines:[]});
  if(R.feat){const F=FEATS[R.feat];const fi=SC.findIndex(c=>ids[c]&&F.has(ids[c],c,ids));R.featOK=fi>=0;
-  if(fi<0)add(30,`I asked for ${F.name} somewhere in your chords, and I couldn’t find it.`);
-  else{const c=SC[fi],id=ids[c];items.push({pen:0,good:1,msg:`Nice ${id.label}! That’s the ${F.name.replace(/^an? /,'')} I asked for.`,marks:VO.map(v=>({c,v})),lines:[]});
-   if(R.feat==='N6'&&id.inv!==1)add(5,`The Neapolitan usually sits in first inversion (N6), with the fourth degree in the bass.`,[{c,v:'B'}]);
-   if(R.feat==='aug6'&&id.roles.B!==0)add(6,`Augmented sixth chords put ♭6 in the bass, so the augmented sixth opens out to the octave on V.`,[{c,v:'B'}])}}
+  if(fi<0)add(30,tr(`I asked for ${F.name} somewhere in your chords, and I couldn’t find it.`,`Ti avevo chiesto ${F.name} da qualche parte nei tuoi accordi, ma non c’è.`));
+  else{const c=SC[fi],id=ids[c];items.push({pen:0,good:1,msg:tr(`Nice ${id.label}! That’s the ${F.name.replace(/^an? /,'')} I asked for.`,`Bello, ${id.label}! È proprio ${F.def} che ti avevo chiesto.`),marks:VO.map(v=>({c,v})),lines:[]});
+   if(R.feat==='N6'&&id.inv!==1)add(5,tr(`The Neapolitan usually sits in first inversion (N6), with the fourth degree in the bass.`,`La napoletana di solito sta in primo rivolto (N6), con il quarto grado al basso.`),[{c,v:'B'}]);
+   if(R.feat==='aug6'&&id.roles.B!==0)add(6,tr(`Augmented sixth chords put ♭6 in the bass, so the augmented sixth opens out to the octave on V.`,`Gli accordi di sesta eccedente mettono il ♭6 al basso, così la sesta eccedente si apre sull’ottava della V.`),[{c,v:'B'}])}}
  for(const c of SC){const ch=C[c],m=v=>M(ch[v]);
-  for(const v of VO){const[a,b]=RANGE[v];if(m(v)<a||m(v)>b)add(5,`The ${VN[v]} is out of its range in chord ${c+1} (${nName(ch[v])}).`,[{c,v}])}
-  for(const[u,l]of[['S','A'],['A','T'],['T','B']])if(m(u)<m(l))add(10,`The ${VN[u]} and the ${VN[l]} cross in chord ${c+1}.`,[{c,v:u},{c,v:l}]);
-  for(const[u,l,mx]of[['S','A',12],['A','T',12],['T','B',19]])if(m(u)-m(l)>mx)add(u==='T'?4:6,`Too much space between ${VN[u]} and ${VN[l]} in chord ${c+1} (more than ${mx===12?'an octave':'a twelfth'}).`,[{c,v:u},{c,v:l}]);
+  for(const v of VO){const[a,b]=RANGE[v];if(m(v)<a||m(v)>b)add(5,tr(`The ${VN[v]} is out of its range in chord ${c+1} (${nName(ch[v])}).`,`Il ${VN[v]} esce dalla sua estensione nell’accordo ${c+1} (${nName(ch[v])}).`),[{c,v}])}
+  for(const[u,l]of[['S','A'],['A','T'],['T','B']])if(m(u)<m(l))add(10,tr(`The ${VN[u]} and the ${VN[l]} cross in chord ${c+1}.`,`Il ${VN[u]} e il ${VN[l]} si incrociano nell’accordo ${c+1}.`),[{c,v:u},{c,v:l}]);
+  for(const[u,l,mx]of[['S','A',12],['A','T',12],['T','B',19]])if(m(u)-m(l)>mx)add(u==='T'?4:6,tr(`Too much space between ${VN[u]} and ${VN[l]} in chord ${c+1} (more than ${mx===12?'an octave':'a twelfth'}).`,`Troppo spazio tra ${VN[u]} e ${VN[l]} nell’accordo ${c+1} (più di ${mx===12?'un’ottava':'una dodicesima'}).`),[{c,v:u},{c,v:l}]);
  }
  for(let p=ng-1;p<n-1;p++){const q=p+1,P=C[p],Q=C[q];
   for(let i=0;i<4;i++)for(let j=i+1;j<4;j++){const a=VO[i],b=VO[j];
    const mvA=M(Q[a])-M(P[a]),mvB=M(Q[b])-M(P[b]),c1=mod(Math.abs(M(P[a])-M(P[b])),12),c2=mod(Math.abs(M(Q[a])-M(Q[b])),12);
    const ln=[[{c:p,v:a},{c:q,v:a}],[{c:p,v:b},{c:q,v:b}]];
-   if(mvA&&mvB&&c1===7&&c2===7){add(20,`Parallel fifths between ${VN[a]} and ${VN[b]} (chord ${p+1} → ${q+1}).`,[],ln);continue}
-   if(mvA&&mvB&&c1===0&&c2===0){add(20,`Parallel ${M(Q[a])===M(Q[b])?'unisons':'octaves'} between ${VN[a]} and ${VN[b]} (chord ${p+1} → ${q+1}).`,[],ln);continue}
+   if(mvA&&mvB&&c1===7&&c2===7){add(20,tr(`Parallel fifths between ${VN[a]} and ${VN[b]} (chord ${p+1} → ${q+1}).`,`Quinte parallele tra ${VN[a]} e ${VN[b]} (accordo ${p+1} → ${q+1}).`),[],ln);continue}
+   if(mvA&&mvB&&c1===0&&c2===0){add(20,tr(`Parallel ${M(Q[a])===M(Q[b])?'unisons':'octaves'} between ${VN[a]} and ${VN[b]} (chord ${p+1} → ${q+1}).`,`${M(Q[a])===M(Q[b])?'Unisoni paralleli':'Ottave parallele'} tra ${VN[a]} e ${VN[b]} (accordo ${p+1} → ${q+1}).`),[],ln);continue}
    if(a==='S'&&b==='B'&&mvA&&mvB&&Math.sign(mvA)===Math.sign(mvB)&&(c2===0||c2===7)&&c1!==c2&&Math.abs(mvA)>2)
-    add(8,`Hidden ${c2===7?'fifths':'octaves'} between soprano and bass (chord ${p+1} → ${q+1}): the soprano leaps in the same direction.`,[],ln)}
-  for(const[u,l]of[['S','A'],['A','T'],['T','B']])if(M(Q[l])>M(P[u])||M(Q[u])<M(P[l]))add(5,`Voice overlap between ${VN[u]} and ${VN[l]} (chord ${p+1} → ${q+1}).`,[{c:q,v:u},{c:q,v:l}]);
+    add(8,tr(`Hidden ${c2===7?'fifths':'octaves'} between soprano and bass (chord ${p+1} → ${q+1}): the soprano leaps in the same direction.`,`${c2===7?'Quinte nascoste':'Ottave nascoste'} tra soprano e basso (accordo ${p+1} → ${q+1}): il soprano salta nella stessa direzione.`),[],ln)}
+  for(const[u,l]of[['S','A'],['A','T'],['T','B']])if(M(Q[l])>M(P[u])||M(Q[u])<M(P[l]))add(5,tr(`Voice overlap between ${VN[u]} and ${VN[l]} (chord ${p+1} → ${q+1}).`,`Sovrapposizione tra ${VN[u]} e ${VN[l]} (accordo ${p+1} → ${q+1}).`),[{c:q,v:u},{c:q,v:l}]);
   for(const v of VO){const dm=M(Q[v])-M(P[v]),dl=Q[v].d-P[v].d,mk=[[{c:p,v},{c:q,v}]];
-   if(Math.abs(dl)===1&&Math.abs(dm)===3)add(10,`Augmented second in the ${VN[v]} (${nName(P[v])} → ${nName(Q[v])}).`,[],mk);
-   else if(Math.abs(dm)===6)add(8,`Tritone leap in the ${VN[v]} (${nName(P[v])} → ${nName(Q[v])}).`,[],mk);
-   else if(Math.abs(dm)>12)add(6,`The ${VN[v]} leaps more than an octave (chord ${p+1} → ${q+1}).`,[],mk);
-   else if(Math.abs(dl)===6)add(6,`Seventh leap in the ${VN[v]} (${nName(P[v])} → ${nName(Q[v])}).`,[],mk);
-   else if(v!=='B'&&Math.abs(dm)>7)add(3,`Big leap in the ${VN[v]}: inner and upper voices prefer steps.`,[],mk)}
+   if(Math.abs(dl)===1&&Math.abs(dm)===3)add(10,tr(`Augmented second in the ${VN[v]} (${nName(P[v])} → ${nName(Q[v])}).`,`Seconda eccedente nel ${VN[v]} (${nName(P[v])} → ${nName(Q[v])}).`),[],mk);
+   else if(Math.abs(dm)===6)add(8,tr(`Tritone leap in the ${VN[v]} (${nName(P[v])} → ${nName(Q[v])}).`,`Salto di tritono nel ${VN[v]} (${nName(P[v])} → ${nName(Q[v])}).`),[],mk);
+   else if(Math.abs(dm)>12)add(6,tr(`The ${VN[v]} leaps more than an octave (chord ${p+1} → ${q+1}).`,`Il ${VN[v]} salta più di un’ottava (accordo ${p+1} → ${q+1}).`),[],mk);
+   else if(Math.abs(dl)===6)add(6,tr(`Seventh leap in the ${VN[v]} (${nName(P[v])} → ${nName(Q[v])}).`,`Salto di settima nel ${VN[v]} (${nName(P[v])} → ${nName(Q[v])}).`),[],mk);
+   else if(v!=='B'&&Math.abs(dm)>7)add(3,tr(`Big leap in the ${VN[v]}: inner and upper voices prefer steps.`,`Salto ampio nel ${VN[v]}: le voci interne e superiori preferiscono i gradi congiunti.`),[],mk)}
  }
  for(const c of SC){const id=ids[c];if(!id)continue;const cnt=r=>VO.filter(v=>id.roles[v]===r);
-  if(id.kind==='aug6'){for(const r of[0,2])if(cnt(r).length>1)add(12,`Doubled ${r?'♯4':'♭6'} in chord ${c+1}: both notes of the augmented sixth must resolve, so never double them.`,cnt(r).map(v=>({c,v})));continue}
-  if(id.kind==='N'){if(cnt(0).length>1)add(8,`In the Neapolitan double the fourth degree (the bass of N6), not the ♭2.`,cnt(0).map(v=>({c,v})));continue}
-  if(id.lt>=0&&id.dom||id.sec)if(cnt(id.lt).length>1)add(12,`Doubled leading tone in chord ${c+1}: the leading tone wants to resolve, so it is never doubled.`,cnt(id.lt).map(v=>({c,v})));
-  if(id.tones.length>=4&&cnt(3).length>1)add(12,`Doubled seventh in chord ${c+1}.`,cnt(3).map(v=>({c,v})));
-  if(id.kind==='V9'&&cnt(4).length>1)add(12,`Doubled ninth in chord ${c+1}.`,cnt(4).map(v=>({c,v})));
+  if(id.kind==='aug6'){for(const r of[0,2])if(cnt(r).length>1)add(12,tr(`Doubled ${r?'♯4':'♭6'} in chord ${c+1}: both notes of the augmented sixth must resolve, so never double them.`,`${r?'♯4':'♭6'} raddoppiato nell’accordo ${c+1}: le due note della sesta eccedente devono risolvere, quindi non si raddoppiano mai.`),cnt(r).map(v=>({c,v})));continue}
+  if(id.kind==='N'){if(cnt(0).length>1)add(8,tr(`In the Neapolitan double the fourth degree (the bass of N6), not the ♭2.`,`Nella napoletana raddoppia il quarto grado (il basso di N6), non il ♭2.`),cnt(0).map(v=>({c,v})));continue}
+  if(id.lt>=0&&id.dom||id.sec)if(cnt(id.lt).length>1)add(12,tr(`Doubled leading tone in chord ${c+1}: the leading tone wants to resolve, so it is never doubled.`,`Sensibile raddoppiata nell’accordo ${c+1}: la sensibile vuole risolvere, quindi non si raddoppia mai.`),cnt(id.lt).map(v=>({c,v})));
+  if(id.tones.length>=4&&cnt(3).length>1)add(12,tr(`Doubled seventh in chord ${c+1}.`,`Settima raddoppiata nell’accordo ${c+1}.`),cnt(3).map(v=>({c,v})));
+  if(id.kind==='V9'&&cnt(4).length>1)add(12,tr(`Doubled ninth in chord ${c+1}.`,`Nona raddoppiata nell’accordo ${c+1}.`),cnt(4).map(v=>({c,v})));
   if(id.kind==='triad'){
-   if(id.noThird)add(15,`Chord ${c+1} has no third: it sounds empty.`,VO.map(v=>({c,v})));
-   else if(!cnt(2).length&&cnt(0).length<3)add(4,`Chord ${c+1} leaves out the fifth: then triple the root.`);
-   else if(id.inv===0&&cnt(1).length>1&&!(c===n-1&&id.root===5&&R.wrote==='deceptive'))add(3,`In root position double the root, not the third (chord ${c+1}).`,cnt(1).map(v=>({c,v})))}}
+   if(id.noThird)add(15,tr(`Chord ${c+1} has no third: it sounds empty.`,`L’accordo ${c+1} non ha la terza: suona vuoto.`),VO.map(v=>({c,v})));
+   else if(!cnt(2).length&&cnt(0).length<3)add(4,tr(`Chord ${c+1} leaves out the fifth: then triple the root.`,`L’accordo ${c+1} non ha la quinta: allora triplica la fondamentale.`));
+   else if(id.inv===0&&cnt(1).length>1&&!(c===n-1&&id.root===5&&R.wrote==='deceptive'))add(3,tr(`In root position double the root, not the third (chord ${c+1}).`,`Allo stato fondamentale raddoppia la fondamentale, non la terza (accordo ${c+1}).`),cnt(1).map(v=>({c,v})))}}
  for(let p=ng;p<n-1;p++){const q=p+1,a=ids[p],b=ids[q];if(!a||!b)continue;const P=C[p],Q=C[q],same=a.root===b.root&&a.root>=0&&a.sec===b.sec;
   for(const v of VO){const r=a.roles[v],dm=M(Q[v])-M(P[v]),dl=Q[v].d-P[v].d,mk=[[{c:p,v},{c:q,v}]];
    if((a.dom||a.sec)&&r===a.lt&&!same&&!b.cad64&&dm!==1){const free=(v==='A'||v==='T')&&b.root===0&&b.kind==='triad'&&!a.sec&&!(b.root===5)&&dl===-2;
-    if(!free&&(b.root===0||b.root===5||a.sec))add(v==='S'||b.root===5?10:6,`The leading tone (${nName(P[v])}) in the ${VN[v]} should rise a semitone${b.root===5?', even in a deceptive cadence':''}.`,[],mk)}
-   if(a.kind!=='aug6'&&a.tones.length>=4&&r===3&&!same&&!(dl===-1||(dl===0&&b.cad64)))add(12,`The seventh (${nName(P[v])}) in the ${VN[v]} should resolve down by step.`,[],mk);
-   if(a.kind==='V9'&&r===4&&dl!==-1)add(10,`The ninth (${nName(P[v])}) in the ${VN[v]} should resolve down by step.`,[],mk);
-   if(a.kind==='N'&&r===0&&dm>=0)add(8,`The ♭2 of the Neapolitan (${nName(P[v])}) should move down, toward the leading tone or the tonic.`,[],mk);
-   if(a.kind==='aug6'&&(b.root===4||b.cad64)){if(r===0&&dm!==-1)add(10,`♭6 (${nName(P[v])}) should fall a semitone to the dominant.`,[],mk);if(r===2&&dm!==1)add(10,`♯4 (${nName(P[v])}) should rise a semitone to the dominant.`,[],mk)}
-   if(a.cad64&&b.root===4&&!b.sec&&b.dom&&v!=='B'&&(r===0||r===1)&&dl!==-1)add(6,`In the cadential six-four, the ${r===0?'fourth':'sixth'} above the bass (${nName(P[v])}) should step down.`,[],mk)}
-  if(a.cad64&&b.root===4&&!b.sec&&mod(M(P.B),12)!==mod(M(Q.B),12))add(6,`After a cadential six-four the bass stays on the dominant.`,[{c:q,v:'B'}])}
+    if(!free&&(b.root===0||b.root===5||a.sec))add(v==='S'||b.root===5?10:6,tr(`The leading tone (${nName(P[v])}) in the ${VN[v]} should rise a semitone${b.root===5?', even in a deceptive cadence':''}.`,`La sensibile (${nName(P[v])}) nel ${VN[v]} dovrebbe salire di un semitono${b.root===5?', anche nella cadenza d’inganno':''}.`),[],mk)}
+   if(a.kind!=='aug6'&&a.tones.length>=4&&r===3&&!same&&!(dl===-1||(dl===0&&b.cad64)))add(12,tr(`The seventh (${nName(P[v])}) in the ${VN[v]} should resolve down by step.`,`La settima (${nName(P[v])}) nel ${VN[v]} dovrebbe risolvere scendendo di grado.`),[],mk);
+   if(a.kind==='V9'&&r===4&&dl!==-1)add(10,tr(`The ninth (${nName(P[v])}) in the ${VN[v]} should resolve down by step.`,`La nona (${nName(P[v])}) nel ${VN[v]} dovrebbe risolvere scendendo di grado.`),[],mk);
+   if(a.kind==='N'&&r===0&&dm>=0)add(8,tr(`The ♭2 of the Neapolitan (${nName(P[v])}) should move down, toward the leading tone or the tonic.`,`Il ♭2 della napoletana (${nName(P[v])}) dovrebbe scendere, verso la sensibile o la tonica.`),[],mk);
+   if(a.kind==='aug6'&&(b.root===4||b.cad64)){if(r===0&&dm!==-1)add(10,tr(`♭6 (${nName(P[v])}) should fall a semitone to the dominant.`,`Il ♭6 (${nName(P[v])}) dovrebbe scendere di un semitono sulla dominante.`),[],mk);if(r===2&&dm!==1)add(10,tr(`♯4 (${nName(P[v])}) should rise a semitone to the dominant.`,`Il ♯4 (${nName(P[v])}) dovrebbe salire di un semitono sulla dominante.`),[],mk)}
+   if(a.cad64&&b.root===4&&!b.sec&&b.dom&&v!=='B'&&(r===0||r===1)&&dl!==-1)add(6,tr(`In the cadential six-four, the ${r===0?'fourth':'sixth'} above the bass (${nName(P[v])}) should step down.`,`Nella quarta e sesta cadenzale, la ${r===0?'quarta':'sesta'} sopra il basso (${nName(P[v])}) dovrebbe scendere di grado.`),[],mk)}
+  if(a.cad64&&b.root===4&&!b.sec&&mod(M(P.B),12)!==mod(M(Q.B),12))add(6,tr(`After a cadential six-four the bass stays on the dominant.`,`Dopo la quarta e sesta cadenzale il basso resta sulla dominante.`),[{c:q,v:'B'}])}
  const pen=items.reduce((s,x)=>s+x.pen,0),score=Math.max(0,100-pen);
- if(!items.some(x=>x.pen>0&&!/cadence|task|chord \d isn’t|I asked/.test(x.msg)))items.push({pen:0,good:1,msg:'Clean voice leading: no parallels, no crossings, good doublings.',marks:[],lines:[]});
+ if(!items.some(x=>x.pen>0&&!/cadence|task|chord \d isn’t|I asked|cadenza|compito|non è ancora un accordo|Ti avevo chiesto/.test(x.msg)))items.push({pen:0,good:1,msg:tr('Clean voice leading: no parallels, no crossings, good doublings.','Condotta pulita: niente parallele, niente incroci, buoni raddoppi.'),marks:[],lines:[]});
  return{score,items}}
 
 /* ---------- Igor sprite ---------- */
@@ -495,7 +500,7 @@ function drawStaff(t){layout();const{W,H,h}=G,dpr=Math.min(2,devicePixelRatio||1
   g.beginPath();g.ellipse(noteX(m.c,m.v),yOf(n.d,staffOf(m.v)),h*1.2,h*.9,0,0,TAU);g.stroke()}
  if(phase==='write'&&R.chords.slice(R.ng).every(ch=>VO.every(v=>!ch[v]))&&(t%3)<2){
   g.fillStyle='rgba(127,227,239,.6)';g.font=`500 ${Math.round(h*.95)}px "IBM Plex Mono",monospace`;g.textAlign='center';
-  g.fillText('tap here',cx(R.ng),yOf(36,0));g.fillText('↓',cx(R.ng),yOf(33,0))}}
+  g.fillText(tr('tap here','tocca qui'),cx(R.ng),yOf(36,0));g.fillText('↓',cx(R.ng),yOf(33,0))}}
 
 /* ---------- game state ---------- */
 let phase='menu',round=0,total=0,R=null;
@@ -505,10 +510,10 @@ function newRound(){round++;const pool=[];LV.maj.forEach(k=>pool.push([k,'major'
  const K=makeKey(KEYS[kk][0],KEYS[kk][1],key);const given=transposeTpl(LV.feats?TPL2[key]:TPL[key][task],K),ng=given.length,n=LV.feats?6:5;
  R={key:K,kname:kk+key,task,feat,ng,n,chords:[...given,...Array.from({length:n-ng},()=>({}))],ids:[],sel:{c:ng,v:'B'},res:null,wrote:null,met:false,okX:{}};
  for(let c=0;c<ng;c++)R.ids[c]=identify(R.chords[c],K);
- phase='write';$('report').hidden=true;$('report').innerHTML='';$('check').textContent='Check';updateUI();
+ phase='write';$('report').hidden=true;$('report').innerHTML='';$('check').textContent=tr('Check','Controlla');updateUI();
  const N=AV[avKey].name,hint=LV.hint?` <b>${cadHint(task,K)}</b>`:'';
- const ask={perfect:'with a perfect cadence',plagal:'with a plagal cadence',half:'with a half cadence',deceptive:'with a deceptive cadence',mod:'by modulating to the dominant'}[task];
- sayHTML(feat?`Finish the phrase in <b>${K.name}</b> ${ask}, and use ${FEATS[feat].name} on the way!`:`Finish the phrase in <b>${K.name}</b> ${ask}!${hint}`);
+ const ask=(IT_?{perfect:'con una cadenza perfetta',plagal:'con una cadenza plagale',half:'con una cadenza sospesa',deceptive:'con una cadenza d’inganno',mod:'modulando alla dominante'}:{perfect:'with a perfect cadence',plagal:'with a plagal cadence',half:'with a half cadence',deceptive:'with a deceptive cadence',mod:'by modulating to the dominant'})[task];
+ sayHTML(feat?tr(`Finish the phrase in <b>${K.name}</b> ${ask}, and use ${FEATS[feat].name} on the way!`,`Chiudi la frase in <b>${K.name}</b> ${ask}, e lungo la strada usa ${FEATS[feat].name}!`):tr(`Finish the phrase in <b>${K.name}</b> ${ask}!${hint}`,`Chiudi la frase in <b>${K.name}</b> ${ask}!${hint}`));
  $('rd').textContent=round+'/'+ROUNDS;setTimeout(playAll,350)}
 function sayHTML(h){$('bubble').innerHTML=h}
 function updateUI(){document.querySelectorAll('.v').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===R.sel.v));
@@ -546,7 +551,7 @@ const ASK={open:false};
 function checkCross(c){if(phase!=='write'||ASK.open)return;const ch=R.chords[c];R.okX=R.okX||{};
  for(const[u,l]of[['S','A'],['A','T'],['T','B']]){if(!ch[u]||!ch[l])continue;const k=c+u+l+M(ch[u])+'_'+M(ch[l]);
   if(M(ch[u])<M(ch[l])&&!R.okX[k]){ASK.open=true;ASK.c=c;ASK.u=u;ASK.l=l;ASK.k=k;
-   $('askq').textContent=`Sure you want the ${VN[u]} below the ${VN[l]}?`;$('ask').hidden=false;$('askno').focus();return}}}
+   $('askq').textContent=tr(`Sure you want the ${VN[u]} below the ${VN[l]}?`,`Sicuro di volere il ${VN[u]} sotto il ${VN[l]}?`);$('ask').hidden=false;$('askno').focus();return}}}
 function answerCross(keep){const{c,u,l,k}=ASK;const ch=R.chords[c];$('ask').hidden=true;ASK.open=false;
  if(keep){R.okX[k]=1}else{const t=ch[u];ch[u]=ch[l];ch[l]=t;if(R.sel.c===c&&(R.sel.v===u||R.sel.v===l))R.sel.v=R.sel.v===u?l:u}
  updateUI();checkCross(c)}
@@ -559,7 +564,7 @@ document.querySelectorAll('.acc').forEach(b=>b.onclick=()=>setAcc(+b.dataset.acc
 $('up').onclick=()=>moveSel(1);$('dn').onclick=()=>moveSel(-1);
 $('del').onclick=()=>{if(cur()){delete R.chords[R.sel.c][R.sel.v];updateUI()}};
 $('play').onclick=playAll;$('askyes').onclick=()=>answerCross(true);$('askno').onclick=()=>answerCross(false);
-$('check').onclick=()=>{if(phase==='write'){if(!complete()){sayHTML('Write all four voices in all your chords first!');return}doCheck()}else if(phase==='result'){if(round>=ROUNDS)finish();else newRound()}};
+$('check').onclick=()=>{if(phase==='write'){if(!complete()){sayHTML(tr('Write all four voices in all your chords first!','Prima scrivi tutte e quattro le voci in tutti i tuoi accordi!'));return}doCheck()}else if(phase==='result'){if(round>=ROUNDS)finish();else newRound()}};
 addEventListener('keydown',e=>{if(phase==='menu'||phase==='end'||!R||ASK.open)return;const k=e.key;
  if(phase==='write'){
   if('satbSATB'.includes(k)&&k.length===1){R.sel.v=k.toUpperCase();lockV(R.sel.v);updateUI();e.preventDefault();return}
@@ -570,30 +575,30 @@ addEventListener('keydown',e=>{if(phase==='menu'||phase==='end'||!R||ASK.open)re
  if(k===' '){playAll();e.preventDefault()}else if(k==='Enter'){$('check').click();e.preventDefault()}});
 function doCheck(){phase='result';const res=analyze();R.res=res;total+=res.score;$('sc').textContent=total;
  const K=R.key,N=AV[avKey].name,wn=R.wrote?cadName(R.met?R.task:R.wrote,K):null,tn=cadName(R.task,K);let msg;
- if(R.chords.slice(R.ng).some((_,i)=>!R.ids[R.ng+i]))msg=pick(['Interesting sounds! A few notes don’t belong to the chords yet. My notes are below.','Curious harmony! Some notes wander outside the chords. Have a look below.']);
- else if(R.met&&res.score>=90)msg=pick([`Bravissimo! A textbook ${wn}.`,`Beautiful! That ${wn} really sings.`,`Gnam! A delicious ${wn}.`]);
- else if(R.met)msg=pick([`Yes, a ${wn}! Just a few details to polish.`,`Lovely ${wn}! Check my notes below.`]);
- else msg=`Nice idea! That’s a ${wn}. Next time let’s aim for a ${tn}.`;
+ if(R.chords.slice(R.ng).some((_,i)=>!R.ids[R.ng+i]))msg=pick(tr(['Interesting sounds! A few notes don’t belong to the chords yet. My notes are below.','Curious harmony! Some notes wander outside the chords. Have a look below.'],['Suoni interessanti! Alcune note non appartengono ancora agli accordi. Le mie note sono qui sotto.','Armonia curiosa! Alcune note vagano fuori dagli accordi. Guarda qui sotto.']));
+ else if(R.met&&res.score>=90)msg=pick(tr([`Bravissimo! A textbook ${wn}.`,`Beautiful! That ${wn} really sings.`,`Gnam! A delicious ${wn}.`],[`Bravissimo! Una ${wn} da manuale.`,`Bellissimo! Questa ${wn} canta davvero.`,`Gnam! Una ${wn} deliziosa.`]));
+ else if(R.met)msg=pick(tr([`Yes, a ${wn}! Just a few details to polish.`,`Lovely ${wn}! Check my notes below.`],[`Sì, una ${wn}! Solo qualche dettaglio da rifinire.`,`Bella ${wn}! Guarda le mie note qui sotto.`]));
+ else msg=tr(`Nice idea! That’s a ${wn}. Next time let’s aim for a ${tn}.`,`Bell’idea! Questa è ${una(R.wrote)}${wn}. La prossima volta puntiamo a ${una(R.task)}${tn}.`);
  sayHTML(`${msg} <b>+${res.score}</b>`);
  const ants=res.score>=90?4:res.score>=70?3:res.score>=45?2:res.score>0?1:0;if(ants)setTimeout(()=>feed(ants),300);
  const items=res.items.slice().sort((a,b)=>b.pen-a.pen);
- $('report').innerHTML=`<h3>${res.score}<small>points this round · ${R.chords.slice(R.ng).map((_,i)=>R.ids[R.ng+i]?R.ids[R.ng+i].label:'?').join(' → ')}</small></h3><ul>${items.map(it=>`<li class="${it.good?'good':it.pen<8?'tip':''}"><span class="p">${it.good?'✓':it.info?'i':'−'+it.pen}</span><span>${it.msg}</span></li>`).join('')}</ul>`;
- $('report').hidden=false;$('check').textContent=round>=ROUNDS?'Results':'Next';updateUI();$('check').disabled=false;setTimeout(playAll,200)}
+ $('report').innerHTML=`<h3>${res.score}<small>${tr('points this round','punti in questo round')} · ${R.chords.slice(R.ng).map((_,i)=>R.ids[R.ng+i]?R.ids[R.ng+i].label:'?').join(' → ')}</small></h3><ul>${items.map(it=>`<li class="${it.good?'good':it.pen<8?'tip':''}"><span class="p">${it.good?'✓':it.info?'i':'−'+it.pen}</span><span>${it.msg}</span></li>`).join('')}</ul>`;
+ $('report').hidden=false;$('check').textContent=round>=ROUNDS?tr('Results','Risultati'):tr('Next','Avanti');updateUI();$('check').disabled=false;setTimeout(playAll,200)}
 function finish(){phase='end';let best=0;const k='cadencesBest_'+lvKey;try{best=+localStorage.getItem(k)||0;if(total>best){localStorage.setItem(k,total);best=total}}catch(e){}
- const N=AV[avKey].name;$('endlv').textContent=LV.name+' · '+ROUNDS+' rounds';$('endsc').textContent=total+' / '+ROUNDS*100;
- $('endmsg').textContent=total>=450?'Magnificent part-writing. '+N+' is full and very proud of you.':total>=350?'Great harmony! '+N+' had a lovely meal.':total>=200?'Nice work! '+N+' enjoyed a tasty snack and wants another round.':N+' loved your chords! One more round and the cadences will flow.';
+ const N=AV[avKey].name;$('endlv').textContent=LV.name+' · '+ROUNDS+tr(' rounds',' round');$('endsc').textContent=total+' / '+ROUNDS*100;
+ $('endmsg').textContent=IT_?(total>=450?'Condotta delle parti magnifica. '+N+' è sazio e fiero di te.':total>=350?'Che armonia! '+N+' ha fatto un bel pranzetto.':total>=200?'Bel lavoro! '+N+' ha fatto uno spuntino e vuole un altro giro.':'A '+N+' sono piaciuti i tuoi accordi! Un altro giro e le cadenze scorreranno.'):(total>=450?'Magnificent part-writing. '+N+' is full and very proud of you.':total>=350?'Great harmony! '+N+' had a lovely meal.':total>=200?'Nice work! '+N+' enjoyed a tasty snack and wants another round.':N+' loved your chords! One more round and the cadences will flow.');
  const won=(()=>{const n=Math.round(total/100*MULT[lvKey]);let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.cadences=p.scores.cadences||{};if(!(g[lvKey]>=total))g[lvKey]=total;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n})();
- if(won)$('endmsg').textContent+=' +'+won+' tofu seed'+(won>1?'s':'')+' for '+N+'’s field: collect them back on the island.';
- $('endbest').textContent='best on '+LV.name.toLowerCase()+': '+best;$('end').hidden=false}
+ if(won)$('endmsg').textContent+=IT_?' +'+won+(won>1?' semi':' seme')+' di tofu per il campo di '+N+': raccoglili sull’isola.':' +'+won+' tofu seed'+(won>1?'s':'')+' for '+N+'’s field: collect them back on the island.';
+ $('endbest').textContent=tr('best on ','record a livello ')+LV.name.toLowerCase()+': '+best;$('end').hidden=false}
 function begin(){audio();if(AC.state==='suspended')AC.resume();$('start').hidden=true;$('end').hidden=true;round=0;total=0;$('sc').textContent=0;R=null;newRound()}
 function setLevel(k){lvKey=k;LV=LEVELS[k];document.querySelectorAll('.lv button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lv===k));$('lvinfo').textContent=LV.info;try{localStorage.setItem('cadencesLevel',k)}catch(e){}}
 document.querySelectorAll('.lv button').forEach(b=>b.onclick=()=>setLevel(b.dataset.lv));setLevel(lvKey);
 function setAv(k){avKey=k;spr.key='';document.querySelectorAll('.av button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.av===k));document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[k].name);try{localStorage.setItem('igorAvatar',k);localStorage.setItem('pitchStairsAvatar',k)}catch(e){}}
 document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset.av));
-if(ACCT){avKey=AV[avKey]?avKey:'igor';spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent='Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · tofu seeds: easy ×1, medium ×2, extreme ×3'}
-else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent='Tofu seeds won: easy ×1, medium ×2, extreme ×3'}
+if(ACCT){avKey=AV[avKey]?avKey:'igor';spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent=tr('Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · tofu seeds: easy ×1, medium ×2, extreme ×3','Giochi come '+(ACCT.name||'te')+' con '+AV[avKey].name+' · semi di tofu: facile ×1, medio ×2, estremo ×3')}
+else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent=tr('Tofu seeds won: easy ×1, medium ×2, extreme ×3','Semi di tofu vinti: facile ×1, medio ×2, estremo ×3')}
 $('go').onclick=begin;$('again').onclick=begin;$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;phase='menu'};
-sayHTML('Hi! Ready to write some cadences?');
+sayHTML(tr('Hi! Ready to write some cadences?','Ciao! Pronto a scrivere qualche cadenza?'));
 /* demo phrase behind the menu */
 {const K=makeKey(0,0,'major');R={key:K,kname:'Cmajor',task:'perfect',chords:[...transposeTpl(TPL.major.perfect,K),{S:parseN('B4'),A:parseN('G4'),T:parseN('D4'),B:parseN('G2')},{S:parseN('C5'),A:parseN('G4'),T:parseN('E4'),B:parseN('C3')}],ids:[],sel:{c:3,v:'S'},res:null,ng:3,n:5};for(let c=0;c<5;c++)R.ids[c]=identify(R.chords[c],K)}
 if(document.fonts&&document.fonts.load)Promise.all([document.fonts.load('40px "Noto Music"','𝄞𝄢♯♭♮'),document.fonts.load('italic 20px "Instrument Serif"')]).then(()=>FONT_OK=true).catch(()=>{});
