@@ -801,7 +801,7 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  if(shoot.t>=0){shoot.t+=dt;shoot.m.position.x+=dt*55;shoot.m.position.y-=dt*18;shoot.m.material.opacity=Math.sin(Math.min(shoot.t/1.1,1)*Math.PI)*.8;if(shoot.t>1.1){shoot.t=-1;shoot.m.material.opacity=0}}
  if(camSnap){camera.position.copy(camTarget());lookS.copy(lookTarget());camSnap=false}else{const f=1-Math.exp(-dt*3);camera.position.lerp(camTarget(),f);lookS.lerp(lookTarget(),f)}camera.lookAt(lookS.x,where==='out'?.9:1.1,lookS.z);
  // labels
- for(const L of labels){projC(pv.copy(L.pos));const vis=!L.hidden&&(L.room||'out')===where&&(!L.near||Math.hypot(L.pos.x-igor.position.x,L.pos.z-igor.position.z)<L.near*(portrait()?.8:1))&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis){L.el.style.transform=`translate(-50%,-100%) translate(${(pv.x*.5+.5)*innerWidth}px,${(-pv.y*.5+.5)*innerHeight}px)`}}
+ for(const L of labels){projC(pv.copy(L.pos));const vis=started&&!L.hidden&&(L.room||'out')===where&&(!L.near||Math.hypot(L.pos.x-igor.position.x,L.pos.z-igor.position.z)<L.near*(portrait()?.8:1))&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis){L.el.style.transform=`translate(-50%,-100%) translate(${(pv.x*.5+.5)*innerWidth}px,${(-pv.y*.5+.5)*innerHeight}px)`}}
  if(bubbleT>0)bubbleT-=dt;placeBubble();chatter();
  renderer.render(scene,camera);requestAnimationFrame(frame)}
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.fov=fovFor();camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);hh()});
