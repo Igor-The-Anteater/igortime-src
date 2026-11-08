@@ -155,7 +155,7 @@ let ACCT=null,HOME=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'
 if(ACCT&&HOME&&AV[HOME.avatar]){avKey=HOME.avatar;if(HOME.rim)AV[avKey]={...AV[avKey],rim:HOME.rim}}
 const MULT={easy:1,medium:2,extreme:3};
 function reward(total){const n=Math.round(total/100*MULT[lvKey]);let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
- p.ants=(p.ants|0)+n;p.scores=p.scores||{};const g=p.scores.pitchStairs=p.scores.pitchStairs||{};if(!(g[lvKey]>=total))g[lvKey]=total;
+ p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.pitchStairs=p.scores.pitchStairs||{};if(!(g[lvKey]>=total))g[lvKey]=total;
  try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n}
 const EYES=[{x:306,y:194,rx:19,ry:21},{x:341,y:190.5,rx:16,ry:19.5}];
 const spr=document.createElement('canvas');spr.width=spr.height=512;const sx=spr.getContext('2d');spr.key='';
@@ -242,7 +242,7 @@ function finish(){phase='end';let best=0;try{best=+localStorage.getItem('pitchSt
  $('endlv').textContent=LV.name+' · your score';$('endsc').textContent=total;
  const N=AV[avKey].name;$('endmsg').textContent=total>=450?'Golden ears. '+N+' is full and very grateful.':total>=350?'Great ears! '+N+' had a lovely meal.':total>=200?'Nice ears! '+N+' had a tasty snack and is ready for a second course.':N+' loved the concert! One more round and lunch is yours.';
  $('endbest').textContent=total>best?'New personal best on '+LV.name+'!':'Your best on '+LV.name+': '+best;
- const won=reward(total);$('endants').textContent=won?'+'+won+' tofu ants for '+N+'’s farm'+(MULT[lvKey]>1?' (×'+MULT[lvKey]+' on '+LV.name+')':'')+'. Collect them back home.':'';$('end').hidden=false;updateButtons()}
+ const won=reward(total);$('endants').textContent=won?'+'+won+' tofu seed'+(won>1?'s':'')+' for '+N+'’s field'+(MULT[lvKey]>1?' (×'+MULT[lvKey]+' on '+LV.name+')':'')+'. Collect them back home.':'';$('end').hidden=false;updateButtons()}
 function updateButtons(){const gu=phase==='guess';$('ok').disabled=!gu;$('mine').disabled=!gu;
  const L=$('listen');L.disabled=!gu||(R&&R.played&&R.left<=0);L.textContent=R&&R.played&&isFinite(R.left)?`▶ Listen (${R.left})`:'▶ Listen'}
 
@@ -272,8 +272,8 @@ function setLevel(k){lvKey=k;LV=LEVELS[k];document.querySelectorAll('.lv button'
 document.querySelectorAll('.lv button').forEach(b=>b.onclick=()=>setLevel(b.dataset.lv));setLevel(lvKey);
 function setAv(k){avKey=k;spr.key='';document.querySelectorAll('.av button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.av===k));document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[k].name);try{localStorage.setItem('pitchStairsAvatar',k)}catch(e){}}
 document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset.av));
-if(ACCT){spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent='Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · easy ×1, medium ×2, extreme ×3 tofu ants'}
-else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent='Tofu ants won: easy ×1, medium ×2, extreme ×3'}
+if(ACCT){spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent='Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · easy ×1, medium ×2, extreme ×3 tofu seeds'}
+else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent='Tofu seeds won: easy ×1, medium ×2, extreme ×3'}
 function begin(){audio();if(AC.state==='suspended')AC.resume();if(!antVoice){antVoice=voice();myVoice=voice()}
  round=0;total=0;$('sc').textContent=0;$('start').hidden=true;$('end').hidden=true;newRound()}
 $('go').onclick=begin;$('again').onclick=begin;$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;phase='menu'};
@@ -324,4 +324,5 @@ function frame(now){now/=1000;const dt=Math.min(.05,now-last);last=now;T+=dt;con
 addEventListener('resize',resize);resize();requestAnimationFrame(frame);
 })();
 </script>
+<script>try{const h=localStorage.getItem('igortime_home');if(h)document.querySelectorAll('a[href="/"]').forEach(a=>a.href=h)}catch(e){}</script>
 </body></html>
