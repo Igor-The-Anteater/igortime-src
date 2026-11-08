@@ -3,7 +3,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Igor time</title>
-<script>try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1)document.documentElement.classList.add('seen')}catch(e){}</script>
+<script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
+try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -86,7 +87,16 @@ button.link{border:0;padding:9px 4px;color:var(--dim);text-transform:none;letter
 #intro{position:fixed;inset:0;z-index:8;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 60%,rgba(5,8,13,.55),var(--abyss) 75%);padding:16px;transition:opacity 1s;overflow:auto}
 #intro.gone{opacity:0;pointer-events:none}
 .seen #intro{display:none}
-#intro .in{max-width:31rem}
+#intro .in{max-width:40rem}
+#intro .pick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:2px 0 10px}
+#intro .big{display:flex;flex-direction:column;align-items:center;gap:6px;text-transform:none;letter-spacing:0;background:#f7ecd4;color:#2b2018;border:3px solid #2b2018;border-radius:20px;box-shadow:0 5px 0 #2b2018,0 12px 26px rgba(0,0,0,.4);padding:10px 10px 13px;font-family:var(--toon);transition:transform .15s}
+#intro .big:hover,#intro .big:focus-visible{background:#fff5df;color:#2b2018;border-color:#2b2018;transform:translateY(-3px)}#intro .big:active{transform:translateY(2px);box-shadow:0 2px 0 #2b2018}
+#intro .big svg{width:100%;max-width:190px;height:auto;border-radius:12px}
+#intro .big b{font:700 21px/1.1 var(--toon)}
+#intro .big small{display:block;margin:0;font:500 13.5px/1.3 var(--toon);color:#7a5230;letter-spacing:0}
+#intro p.note{font:500 13.5px/1.45 var(--toon);color:var(--bone);margin:4px 0 14px;max-width:none}
+#intro .back{border:0;padding:8px 0;margin-top:12px;color:var(--dim)}
+@media (max-width:480px){#intro .pick{gap:9px}#intro .big{padding:8px 7px 10px;border-radius:16px}#intro .big b{font-size:17px}#intro .big small{font-size:12px}#intro canvas{width:84px}}
 #intro canvas{width:clamp(90px,16vw,128px);height:auto;margin:0 0 6px -4px}
 #intro h2{margin:0;font:400 clamp(44px,8vw,80px)/.95 var(--display);letter-spacing:-.02em}
 #intro h2 em{color:var(--glow)}
@@ -125,6 +135,7 @@ button.link{border:0;padding:9px 4px;color:var(--dim);text-transform:none;letter
 #helpC[hidden]{display:none}
 @media (max-width:420px){#who{font-size:0!important;max-width:none!important;overflow:visible!important}#who::before{content:'';display:inline-block;width:16px;height:16px;vertical-align:-3px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='8' r='4.2' fill='%23f3ead2'/><path d='M3.5 21c.8-4.6 4.2-7 8.5-7s7.7 2.4 8.5 7z' fill='%23f3ead2'/></svg>") center/contain no-repeat}#me{max-width:none!important;padding:5px 7px!important}}
 #orb{position:fixed;z-index:4;left:max(12px,env(safe-area-inset-left,0px));top:calc(var(--hh,62px) + var(--evh,0px) + 40px);display:flex;align-items:center;gap:8px;padding:0;background:none;border:0;text-transform:none;letter-spacing:0;cursor:pointer;max-width:60vw}#orb .ball{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 34% 30%,#fff9e0 0%,#ffd76a 30%,#e59a2a 70%,#8a4f12 100%);box-shadow:0 0 0 2px #2b2018,0 3px 0 #2b2018,0 0 14px rgba(255,210,100,.45);animation:orbB 4s ease-in-out infinite}#orb i{font-style:normal;font-size:21px;line-height:1}#orb .tx{display:flex;flex-direction:column;align-items:flex-start;background:rgba(247,236,212,.92);border:2px solid #2b2018;border-radius:12px;padding:4px 9px;color:#2b2018;text-align:left}#orb small{font:500 10.5px/1.1 var(--toon);color:#7a5230}#orb b{font:700 14px/1.15 var(--toon);white-space:nowrap}#orb.flash .ball{animation:orbF 1.1s ease-out,orbB 4s ease-in-out 1.1s infinite}#orb.flash .tx{animation:orbT .9s ease-out}@keyframes orbB{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}@keyframes orbF{0%{transform:scale(1) rotate(0);box-shadow:0 0 0 2px #2b2018,0 3px 0 #2b2018,0 0 0 rgba(255,210,100,.9)}35%{transform:scale(1.18) rotate(-25deg);box-shadow:0 0 0 2px #2b2018,0 3px 0 #2b2018,0 0 26px 10px rgba(255,210,100,.9)}100%{transform:scale(1) rotate(0)}}@keyframes orbT{0%{opacity:.2;transform:translateX(-6px)}100%{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){#orb .ball,#orb.flash .ball,#orb.flash .tx{animation:none}}
+#gamesB{position:fixed;z-index:4;left:max(12px,env(safe-area-inset-left,0px));top:calc(var(--hh,62px) + var(--evh,0px) + 96px);display:flex;align-items:center;gap:8px;padding:0;background:none;border:0;text-transform:none;letter-spacing:0;cursor:pointer;max-width:60vw}#gamesB .gi{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#2d3561;box-shadow:0 0 0 2px #2b2018,0 3px 0 #2b2018}#gamesB .gi svg{width:32px;height:32px}#gamesB .tx{display:flex;flex-direction:column;align-items:flex-start;background:rgba(247,236,212,.92);border:2px solid #2b2018;border-radius:12px;padding:4px 9px;color:#2b2018;text-align:left}#gamesB small{font:500 10.5px/1.1 var(--toon);color:#7a5230}#gamesB b{font:700 14px/1.15 var(--toon);white-space:nowrap}#gamesB:hover .tx,#gamesB:focus-visible .tx{background:#fff5df}#gamesB:active{transform:translateY(2px)}
 #lvB{position:fixed;z-index:4;left:max(12px,env(safe-area-inset-left,0px));top:calc(var(--hh,62px) + var(--evh,0px) + 6px);display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:999px;background:rgba(247,236,212,.92);border:2px solid #2b2018;color:#2b2018;font:600 13px/1 var(--toon);text-transform:none;letter-spacing:0}#lvB i{display:block;width:56px;height:7px;border-radius:4px;background:rgba(43,32,24,.18);overflow:hidden}#lvB u{display:block;height:100%;background:#8cc63f;border-radius:4px}#lvB small{font:500 11px/1 var(--toon);color:#7a5230}
 .seedFly{position:fixed;left:0;top:0;z-index:8;font-size:22px;pointer-events:none;transition:transform 1s cubic-bezier(.5,-.3,.7,1),opacity 1s}#seeds.pop{animation:spop .35s}@keyframes spop{50%{transform:scale(1.35)}}
 html.touch #zoomB{top:calc(var(--hh,62px) + var(--evh,0px) + 14px)!important;transform:none!important}html.touch #zoomB button{width:38px;height:38px;font-size:20px}html.touch #bar{bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}html.touch.baropen #joy{display:none}
@@ -159,12 +170,21 @@ html.touch #zoomB{top:calc(var(--hh,62px) + var(--evh,0px) + 14px)!important;tra
 
 <div id="intro"><div class="in">
  <canvas id="introIg" width="420" height="462" role="img" aria-label="Igor, a green anteater"></canvas>
- <h2>Welcome to <em>Igor</em>’s island.</h2>
- <p class="who">I live here, I grow tofu ants, and I love music.</p>
- <p>My games are in my house: walk into the door. Games give tofu seeds: with my Igorlets we sow them, harvest the ants and build the island. Composers can visit the old music school, and the deep pool leads to the abyss.</p>
- <div class="row" id="langIntro" style="margin:-6px 0 14px"></div>
- <div class="row"><button class="main" id="goGuest" type="button">Explore as a guest</button><button id="goSign" type="button">Sign in / register</button></div>
- <small>As a guest your farm and scores stay on this device. With an account you can dress up your Igor and keep everything everywhere.</small>
+ <div id="introA">
+  <h2 id="iH">Hi, I’m <em>Igor</em>.</h2>
+  <p class="who" id="iAsk">Where shall we go? Straight to my games, or to my island?</p>
+  <div class="pick"><button class="big" id="pickIsland" type="button"><svg viewBox="0 0 190 120" aria-hidden="true"><rect width="190" height="120" fill="#8fd3e8"/><circle cx="160" cy="24" r="12" fill="#fff3b0"/><path d="M0 84c30-6 60 4 95 0s65-6 95 0v36H0z" fill="#3aa7c9"/><ellipse cx="95" cy="86" rx="70" ry="20" fill="#f1d9a0" stroke="#2b2018" stroke-width="3"/><path d="M40 82c10-16 40-26 60-26s44 8 52 24c-30 10-80 10-112 2z" fill="#8cc63f" stroke="#2b2018" stroke-width="3" stroke-linejoin="round"/><rect x="82" y="44" width="30" height="24" fill="#f3ead2" stroke="#2b2018" stroke-width="3"/><path d="M78 46l19-16 19 16z" fill="#e0463c" stroke="#2b2018" stroke-width="3" stroke-linejoin="round"/><rect x="92" y="54" width="9" height="14" fill="#8a5a2b" stroke="#2b2018" stroke-width="2"/><path d="M58 70V44" stroke="#8a5a2b" stroke-width="5"/><circle cx="58" cy="38" r="14" fill="#5aa64a" stroke="#2b2018" stroke-width="3"/><circle cx="136" cy="56" r="11" fill="#5aa64a" stroke="#2b2018" stroke-width="3"/><path d="M136 67v10" stroke="#8a5a2b" stroke-width="4"/><g fill="#f8f5ec" stroke="#2b2018" stroke-width="1.6"><rect x="116" y="74" width="7" height="6" rx="1.4"/><rect x="124" y="75.5" width="4" height="4" rx="1"/><rect x="129" y="74.5" width="5" height="5" rx="1.2"/></g></svg><b id="pIb">← My island</b><small id="pIs"></small></button><button class="big" id="pickGames" type="button"><svg viewBox="0 0 190 120" aria-hidden="true"><rect width="190" height="120" fill="#2d3561"/><g stroke="#2b2018" stroke-width="3"><rect x="18" y="14" width="46" height="42" rx="8" fill="#b27a45"/><rect x="72" y="14" width="46" height="42" rx="8" fill="#f08a2c"/><rect x="126" y="14" width="46" height="42" rx="8" fill="#e0463c"/><rect x="18" y="64" width="46" height="42" rx="8" fill="#9ed8f0"/><rect x="72" y="64" width="46" height="42" rx="8" fill="#1f6f8b"/><rect x="126" y="64" width="46" height="42" rx="8" fill="#efe4cf"/></g><path d="M27 48h9v-8h9v-8h9v-8" fill="none" stroke="#f3ead2" stroke-width="3.5" stroke-linejoin="round"/><path d="M95 22c6 6 9 12 7 18-1 4-4 6-7 6s-6-2-7-6c-2-6 2-10 4-12 0 3 1 5 2 6-1-5 0-8 1-12z" fill="#ffd76a" stroke="#2b2018" stroke-width="2.4"/><path d="M134 44h30v6h-30zM136 38h10v6h-10z" fill="#f3ead2" stroke="#2b2018" stroke-width="2"/><path d="M41 72v26M29 85h24" stroke="#2b2018" stroke-width="3"/><circle cx="88" cy="90" r="6" fill="#e8f3f4" stroke="#2b2018" stroke-width="2"/><circle cx="104" cy="80" r="3.5" fill="none" stroke="#bdf3fb" stroke-width="2"/><g stroke="#2b2018" stroke-width="2"><path d="M138 72v28M149 72v28M160 72v28"/></g><g fill="#2b2018"><rect x="134" y="72" width="7" height="16"/><rect x="145" y="72" width="7" height="16"/><rect x="156" y="72" width="7" height="16"/></g></svg><b id="pGb">All the games →</b><small id="pGs"></small></button></div>
+  <p class="note" id="iNote"></p>
+  <div class="row" id="langIntro"></div>
+ </div>
+ <div id="introB" hidden>
+  <h2 id="iH2"></h2>
+  <p class="who" id="iAsk2"></p>
+  <p id="iDesc"></p>
+  <div class="row"><button class="main" id="goGuest" type="button">Explore as a guest</button><button id="goSign" type="button">Sign in / register</button></div>
+  <small id="iSmall"></small>
+  <button type="button" class="back" id="introBack">← Back</button>
+ </div>
 </div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -189,6 +209,12 @@ if(!S.plots)S=fresh();if(S.seeds===undefined){S.seeds=1;S.v=2}
 try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.IgorCloud)window.IgorCloud.push(S)}
 const PEND='igortime_pending';
+/* the two ways in: the island or the games page (igortime_view remembers the last choice) */
+let DEST=(()=>{try{return localStorage.getItem('igortime_view')==='games'?'games':'island'}catch(e){return'island'}})();
+const setView=v=>{try{localStorage.setItem('igortime_view',v)}catch(e){}};
+/* onboarding after "Sign in / register": account, nickname, then dress up Igor right away; dest = where to go after */
+let ONB=(()=>{try{return JSON.parse(sessionStorage.getItem('igortime_onb'))}catch(e){return null}})(),DRESS_ONB=false;
+const setOnb=o=>{ONB=o;try{if(o)sessionStorage.setItem('igortime_onb',JSON.stringify(o));else sessionStorage.removeItem('igortime_onb')}catch(e){}};
 function applyPending(){let p=null;try{p=JSON.parse(localStorage.getItem(PEND))}catch(e){}if(!p)return 0;
  const g0=Math.max(0,(p.seeds|0)+(p.ants|0));S.seeds=(S.seeds|0)+g0;S.scores=S.scores||{};for(const[g,o]of Object.entries(p.scores||{})){S.scores[g]=S.scores[g]||{};for(const[l,v]of Object.entries(o))if(!(S.scores[g][l]>=v))S.scores[g][l]=v}
  window._fromGame=Object.keys(p.scores||{})[0]||'';try{localStorage.removeItem(PEND)}catch(e){}return g0}
@@ -1508,7 +1534,9 @@ function hideHint(){if(hintOn){hintOn=false;$('hint').style.opacity=0}}
 /* ================= UI: sheets ================= */
 const sheet=$('sheet'),sb=$('sheetBody');let sheetKind=null,farmFocus=null;
 function openSheet(kind,html){sheetKind=kind;sb.innerHTML=html;sheet.hidden=false;poke()}
-function closeSheet(){sheet.hidden=true;sheetKind=null;farmFocus=null}
+function closeSheet(){const was=sheetKind;sheet.hidden=true;sheetKind=null;farmFocus=null;DRESS_ONB=false;if(ONB&&(was==='acct'||was==='dress'))onbDone()}
+/* end of the onboarding: back to where the player chose to go */
+function onbDone(){const o=ONB;setOnb(null);if(!o)return;if(o.dest==='games'){setView('games');launch('/games/',tt('To the games page!','Alla pagina dei giochi!'));return}if(window.IgorCloud&&window.IgorCloud.user)say(pick(tt(['What a look!','Let’s explore the island!'],['Che bel look!','Andiamo a esplorare l’isola!'])),2.4)}
 sheet.querySelector('.x').onclick=closeSheet;
 addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();$('index').hidden=true}});
 sb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
@@ -1552,7 +1580,7 @@ const AUTHERR=new Proxy({},{get:(_,k)=>AUTHERR_[k]?N(AUTHERR_[k]):undefined});
 sb.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='nickF')saveNick()});
 function nickBad(n){n=(n||'').trim();if(n.length<2)return tt('Choose a nickname (at least 2 characters).','Scegli un nickname (almeno 2 caratteri).');if(n.length>16)return tt('Nicknames can be up to 16 characters.','Il nickname può avere al massimo 16 caratteri.');if(!/^[\p{L}\p{N} ._\-']+$/u.test(n))return tt('Use letters, numbers, spaces, dots, dashes.','Usa lettere, numeri, spazi, punti, trattini.');return''}
 async function saveNick(){const C=window.IgorCloud,el=$('aNick');if(!C||!C.user||!el)return;const n=el.value.trim().replace(/\s+/g,' '),bad=nickBad(n);if(bad)return authMsg(bad);
- const first=!C.user.nick;authMsg(tt('Saving…','Salvo…'),true);try{await C.setNick(n);refresh();if(first){openAccount();say(tt('Nice to meet you, ','Piacere, ')+n+'!')}else authMsg(tt('Nickname saved.','Nickname salvato.'),true)}catch(err){authMsg(tt('Couldn’t save it (','Non riesco a salvarlo (')+(err.code||err.message)+').')}}
+ const first=!C.user.nick;authMsg(tt('Saving…','Salvo…'),true);try{await C.setNick(n);refresh();if(first){renderDress(true);say(tt('Nice to meet you, ','Piacere, ')+n+'! '+tt('How shall I dress?','Come mi vesto?'),3)}else authMsg(tt('Nickname saved.','Nickname salvato.'),true)}catch(err){authMsg(tt('Couldn’t save it (','Non riesco a salvarlo (')+(err.code||err.message)+').')}}
 sb.addEventListener('click',async e=>{const b=e.target.closest('button[data-auth]');if(!b)return;e.preventDefault();const C=window.IgorCloud;if(!C){authMsg(tt('Accounts are still loading, try again in a moment.','Gli account si stanno ancora caricando, riprova tra un attimo.'));return}
  const k=b.dataset.auth,mail=($('aMail')||{}).value?.trim(),pw=($('aPw')||{}).value||'',nm=($('aName')||{}).value?.trim();
  try{if(k==='google'){authMsg(tt('Opening Google…','Apro Google…'),true);await C.google()}
@@ -1560,14 +1588,18 @@ sb.addEventListener('click',async e=>{const b=e.target.closest('button[data-auth
   else if(k==='register'){if(!mail||!pw)return authMsg(tt('Type an email and a password to create your account.','Scrivi email e password per creare l’account.'));const bad=nickBad(nm);if(bad)return authMsg(bad);authMsg(tt('Creating your account…','Creo il tuo account…'),true);await C.register(mail,pw,nm)}
   else if(k==='reset'){if(!mail)return authMsg(tt('Type your email first, then tap “Forgot password?”.','Scrivi prima l’email, poi tocca “Password dimenticata?”.'));await C.reset(mail);authMsg(tt('Check your inbox: we sent you a link to reset the password.','Guarda la posta: ti abbiamo mandato un link per cambiare la password.'),true)}}
  catch(err){const t=AUTHERR[err.code];authMsg(t===undefined?tt('Something went wrong (','Qualcosa è andato storto (')+(err.code||err.message)+').':t)}});
-sb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.nick){e.preventDefault();saveNick();return}if(b.dataset.dress)renderDress();if(b.dataset.out&&window.IgorCloud){window.IgorCloud.signOut();closeSheet();say(tt('See you soon!','A presto!'))}});
-function onAuth(on,first){refresh();if(on){if(sheetKind==='acct'||!window.IgorCloud.user.nick)openAccount();if(!first)say(pick(tt(['Welcome to the island!','Now I can dress up!'],['Benvenuto sull’isola!','Ora posso vestirmi!'])))}}
-function renderDress(){const can=window.IgorCloud&&window.IgorCloud.user;if(!can)return openAccount();
- openSheet('dress',`<div class="k">${tt('Your Igor','Il tuo Igor')}</div><h3>${tt('Dress up','Vestiti')}</h3><div class="avs">${Object.entries(AV).map(([k,n])=>`<button data-av="${k}" aria-pressed="${S.avatar===k}"><canvas width="${SW}" height="${SH}" data-prev="${k}"></canvas>${n}</button>`).join('')}</div>
+sb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.nick){e.preventDefault();saveNick();return}if(b.dataset.dress)renderDress();if(b.dataset.dressdone){closeSheet();if(!ONB)say(pick(tt(['What a look!','I love it!'],['Che bel look!','Mi piace tantissimo!'])),2.4)}if(b.dataset.out&&window.IgorCloud){window.IgorCloud.signOut();closeSheet();say(tt('See you soon!','A presto!'))}});
+function onAuth(on,first){refresh();if(!on)return;const C=window.IgorCloud,fresh=C.fresh;C.fresh=false;
+ if(fresh&&C.user.nick){renderDress(true);say(tt('Welcome, ','Benvenuto, ')+C.user.nick+'! '+tt('How shall I dress?','Come mi vesto?'),3);return}
+ if(!C.user.nick){openAccount();return}
+ if(ONB&&!first&&sheetKind==='acct'){say(pick(tt(['Welcome back!','So good to see you!'],['Bentornato!','Che bello rivederti!'])),2);closeSheet();return}
+ if(sheetKind==='acct')openAccount();if(!first)say(pick(tt(['Welcome to the island!','Now I can dress up!'],['Benvenuto sull’isola!','Ora posso vestirmi!'])))}
+function renderDress(onb){const can=window.IgorCloud&&window.IgorCloud.user;if(!can)return openAccount();const keep=onb===true||DRESS_ONB;
+ openSheet('dress',`<div class="k">${tt('Your Igor','Il tuo Igor')}</div><h3>${keep?tt('Dress up your Igor','Vesti il tuo Igor'):tt('Dress up','Vestiti')}</h3>${keep?`<p>${tt('Choose who I am and what I wear. You can change it any time by tapping your name at the top.','Scegli chi sono e cosa indosso. Puoi cambiarlo quando vuoi toccando il tuo nome in alto.')}</p>`:''}<div class="avs">${Object.entries(AV).map(([k,n])=>`<button data-av="${k}" aria-pressed="${S.avatar===k}"><canvas width="${SW}" height="${SH}" data-prev="${k}"></canvas>${n}</button>`).join('')}</div>
  ${(()=>{const A=accOf(S),sw=(key,list,cur)=>`<div class="sw">${list.map((c,i)=>`<button data-${key}="${i}" aria-pressed="${cur===c}" style="background:${c==='nb'?'linear-gradient(#fcf434 25%,#fff 25% 50%,#9c59d1 50% 75%,#2c2c2c 75%)':c}" aria-label="${c==='nb'?'non-binary flag':c}"></button>`).join('')}</div>`,opt=(key,list,cur)=>`<div class="row gl">${list.map(([k,n])=>`<button data-${key}="${k}" aria-pressed="${(cur||'')===k}">${N(n)}</button>`).join('')}</div>`;
   return `<div class="k">${tt('On the head','In testa')}</div>${opt('head',ACC_HEADS,A.head)}${A.head?sw('hcol',A.head==='star'?['nb',...ACC_HCOL]:ACC_HCOL,A.hcol):''}
  <div class="k">${tt('Glasses','Occhiali')}</div>${opt('gl',[['',['None','Niente']],['eye',['Glasses','Da vista']],['sun',['Sunglasses','Da sole']]],A.glasses)}${A.glasses?sw('gcol',ACC_GLASS,A.gcol):''}
- <div class="k">${tt('Earrings','Orecchini')}</div>${opt('ears',ACC_EARS,A.ears)}${A.ears?sw('ecol',ACC_ECOL,A.ecol):''}`})()}`);
+ <div class="k">${tt('Earrings','Orecchini')}</div>${opt('ears',ACC_EARS,A.ears)}${A.ears?sw('ecol',ACC_ECOL,A.ecol):''}`})()}${keep?`<div class="row" style="margin-top:16px"><button class="main" data-dressdone="1">✓ ${ONB&&ONB.dest==='games'?tt('Done · to the games','Fatto · ai giochi'):tt('Done · to the island','Fatto · sull’isola')}</button></div>`:''}`);if(keep)DRESS_ONB=true;
  sb.querySelectorAll('canvas[data-prev]').forEach(cv=>paintAvatar(cv.getContext('2d'),{...S,avatar:cv.dataset.prev}))}
 /* ================= UI: the farm, without windows =================
  Igor explains in short balloons; actions are little pills floating over the thing you tapped. */
@@ -1636,7 +1668,7 @@ function fieldPick(cx,cy){if(where!=='out'||PL)return false;const F=FM();let bes
 /* Igor's balloon steps aside from the chips, the zoom buttons and the bottom buttons */
 function bubbleAvoid(L,T2,w,h){const ov=(r)=>r&&r.width&&L<r.right+6&&L+w>r.left-6&&T2<r.bottom+6&&T2+h>r.top-6;
  const ch=$('chips');if(ch&&!ch.hidden){const r=ch.getBoundingClientRect();if(ov(r)){const up=r.top-h-10;T2=up>(window._hh||60)+6?up:Math.min(innerHeight-h-12,r.bottom+10)}}
- for(const id of['zoomB','fab','orb','lvB']){const el=$(id);if(!el||el.style.display==='none')continue;const r=el.getBoundingClientRect();if(ov(r))L=r.left>innerWidth/2?Math.max(12,r.left-w-10):Math.min(innerWidth-w-12,r.right+10)}
+ for(const id of['zoomB','fab','orb','gamesB','lvB']){const el=$(id);if(!el||el.style.display==='none')continue;const r=el.getBoundingClientRect();if(ov(r))L=r.left>innerWidth/2?Math.max(12,r.left-w-10):Math.min(innerWidth-w-12,r.right+10)}
  return[L,T2]}
 updaters.push(()=>{const hn=$('hint');if(hn)hn.style.visibility=started?'':'hidden'});
 function igPick(cx,cy){if(where!=='out')return false;let best=null,bd=46;for(const[id,o]of igObjs){if(!o.grp.visible)continue;const v=projC(o.grp.position.clone().add(new V3(0,.42,0)));if(v.z>1)continue;const d=Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy);if(d<bd){bd=d;best=id}}if(best==null)return false;igTap(best);return true}
@@ -1750,8 +1782,14 @@ let orbI=Math.floor(Math.random()*6),orbNext=Date.now()+12000;
 function renderOrb(flash){const D=ORB[orbI];orb.querySelector('i').textContent=D.ic;orb.querySelector('small').textContent=tt('Jump to','Vai a');orb.querySelector('b').textContent=N(D.n);orb.setAttribute('aria-label',tt('Jump to ','Vai a ')+N(D.n));
  if(flash){orb.classList.remove('flash');void orb.offsetWidth;orb.classList.add('flash')}}
 renderOrb(false);
+/* under the orb: straight to the games page (it becomes the favourite view) */
+const gmB=document.createElement('button');gmB.id='gamesB';gmB.type='button';gmB.innerHTML='<span class="gi"><svg viewBox="0 0 32 32" aria-hidden="true"><g stroke="#2b2018" stroke-width="1.6"><rect x="2" y="5" width="8.5" height="10" rx="2" fill="#b27a45"/><rect x="11.8" y="5" width="8.5" height="10" rx="2" fill="#f08a2c"/><rect x="21.5" y="5" width="8.5" height="10" rx="2" fill="#e0463c"/><rect x="2" y="17" width="8.5" height="10" rx="2" fill="#9ed8f0"/><rect x="11.8" y="17" width="8.5" height="10" rx="2" fill="#1f6f8b"/><rect x="21.5" y="17" width="8.5" height="10" rx="2" fill="#efe4cf"/></g></svg></span><span class="tx"><small></small><b></b></span>';document.body.appendChild(gmB);
+function renderGmB(){gmB.querySelector('small').textContent=tt('Take me to','Portami alla');gmB.querySelector('b').textContent=tt('the games page','pagina dei giochi');gmB.setAttribute('aria-label',tt('Take me straight to the games page','Portami direttamente alla pagina dei giochi'))}
+renderGmB();
+function toGames(){if(PL)return;setView('games');DEST='games';hideChips();closeBar();bubbleQ.length=0;bubbleT=0;launch('/games/',tt('To the games page!','Alla pagina dei giochi!'))}
+gmB.onclick=toGames;
 orb.onclick=()=>{if(PL)return;const D=ORB[orbI];hideChips();closeBar();bubbleQ.length=0;bubbleT=0;say(tt(`Let’s go: ${N(D.n)}!`,`Andiamo: ${N(D.n)}!`),2);D.go()};
-updaters.push(()=>{orb.style.display=started&&!leaving?'':'none';if(Date.now()>orbNext){orbNext=Date.now()+12000;orbI=(orbI+1)%ORB.length;renderOrb(true)}});
+updaters.push(()=>{orb.style.display=started&&!leaving?'':'none';gmB.style.display=orb.style.display;if(Date.now()>orbNext){orbNext=Date.now()+12000;orbI=(orbI+1)%ORB.length;renderOrb(true)}});
 /* the Igorlet counter opens a list of the Igorlets: tap one and Igor walks to it, wherever it is */
 const igM=document.createElement('div');igM.id='igM';igM.hidden=true;document.body.appendChild(igM);
 function igStatus(g){if(g.rest)return'💤 '+tt('napping','pisolino');const q=g.task&&FM().tasks.find(o=>o.id===g.task);if(q)return'🛠 '+N(TNAME[q.k]||['working','lavora']);const o=igObjs.get(g.id);if(o&&o.ride)return'🚲 '+tt('out for a ride','a fare un giro');return'🙂 '+tt('free','libero')}
@@ -1797,20 +1835,24 @@ window.IgorUI={openAccount,renderDress,refresh:()=>refresh(),toast:t=>toast(t),o
 /* ================= index ================= */
 const idx=$('index');
 function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igor')}</h2><ul><li><button data-i="house">${tt('Igor’s house','La casa di Igor')}<small>${tt('games','giochi')}</small></button></li><li><button data-i="field">${tt('The fields','I campi')}</button></li><li><button data-i="pen">${tt('Igorlet village','Villaggio degli Igorlets')}</button></li><li><button data-i="prizes">${tt('Prize shop','Negozietto dei premi')}</button></li><li><button data-i="school">${tt('Music school','Scuola di musica')}<small>${tt('composers','compositori')}</small></button></li><li><button data-i="abyss">${tt('The abyss','L’abisso')}<small>${tt('game','gioco')}</small></button></li><li><button data-i="jetty">${tt('Other places','Altri posti')}<small>${tt('soon','presto')}</small></button></li></ul>
- <h2>${tt('Games','Giochi')}</h2><ul><li><button data-i="stairs">Pitch Stairs<small>${tt('house','casa')}</small></button></li><li><button data-i="cad">${tt('Cadences','Cadenze')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="w">${tt('The window','La finestra')}<small>${tt('house','casa')}</small></button></li><li><button data-i="k">${tt('The kitchen','La cucina')}<small>${tt('house','casa')}</small></button></li><li><button data-i="b">${tt('The bedroom','La camera')}<small>${tt('house','casa')}</small></button></li></ul>
+ <h2>${tt('Games','Giochi')}</h2><ul><li><button data-i="gamesPage">${tt('The games page','La pagina dei giochi')}<small>${tt('all six','tutti e sei')}</small></button></li><li><button data-i="stairs">Pitch Stairs<small>${tt('house','casa')}</small></button></li><li><button data-i="cad">${tt('Cadences','Cadenze')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="w">${tt('The window','La finestra')}<small>${tt('house','casa')}</small></button></li><li><button data-i="k">${tt('The kitchen','La cucina')}<small>${tt('house','casa')}</small></button></li><li><button data-i="b">${tt('The bedroom','La camera')}<small>${tt('house','casa')}</small></button></li></ul>
  <h2>${tt('Language','Lingua')}</h2><ul><li><button data-lang="en" aria-pressed="${LANG==='en'}">English</button></li><li><button data-lang="it" aria-pressed="${LANG==='it'}">Italiano</button></li></ul>
  <h2>${tt('Sky','Cielo')}</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">${tt('Igor’s weather','Il meteo di Igor')}<small>${tt('same for everyone','uguale per tutti')}</small></button></li><li><button data-sky="real">${tt('The sky where I am','Il cielo dove sono')}<small>${tt('uses your location','usa la tua posizione')}</small></button></li></ul>`}
 renderIdx();
 function setLang(l){if(l===LANG)return;LANG=l;bubbleQ.length=0;bubbleT=0;try{localStorage.setItem('igortime_lang',l)}catch(e){}document.documentElement.lang=l;applyLang();say(tt('Hello! I speak English now.','Ciao! Adesso parlo italiano.'),2.6)}
-function applyLang(){renderIdx();skyStatus();relabel();staticTexts();refresh();if(typeof farmRelabel==='function')farmRelabel();if(!sheet.hidden&&sheetKind==='acct')openAccount();if(!sheet.hidden&&sheetKind==='dress')renderDress()}
+function applyLang(){if(typeof renderGmB==='function')renderGmB();renderIdx();skyStatus();relabel();staticTexts();refresh();if(typeof farmRelabel==='function')farmRelabel();if(!sheet.hidden&&sheetKind==='acct')openAccount();if(!sheet.hidden&&sheetKind==='dress')renderDress()}
 function staticTexts(){$('hint').textContent=document.documentElement.classList.contains('touch')?tt('Walk with the joystick · double-tap it to jump · tap a place · drag to turn','Cammina col joystick · doppio tocco per saltare · tocca un posto · trascina per girare'):tt('Walk with the arrows · space to jump · click a place · drag to turn','Cammina con le frecce · spazio per saltare · clicca un posto · trascina per girare');
  $('indexBtn').textContent=tt('Index','Indice');$('seeds').title=tt('Seeds: win them in the games','Semi: si vincono nei giochi');$('ants').title=tt('Ants in your pocket / how many you can keep','Formiche in tasca / quante ne puoi tenere');
- const I=$('intro');if(I){I.querySelector('h2').innerHTML=tt('Welcome to <em>Igor</em>’s island.','Benvenuto sull’isola di <em>Igor</em>.');I.querySelector('.who').textContent=tt('I live here, I grow tofu ants, and I love music.','Vivo qui, coltivo formiche di tofu e amo la musica.');
-  I.querySelector('p:not(.who)').textContent=tt('My games are in my house: walk into the door. Games give tofu seeds: with the Igorlets we sow them, harvest the ants and build the island. Composers can visit the old music school, and the deep pool leads to the abyss.','I miei giochi sono in casa: entra dalla porta. I giochi danno semi di tofu: insieme agli Igorlets li seminiamo, raccogliamo le formiche e costruiamo l’isola. I compositori possono visitare la vecchia scuola di musica, e il pozzo porta all’abisso.');
-  $('goGuest').textContent=tt('Explore as a guest','Esplora come ospite');$('goSign').textContent=tt('Sign in / register','Accedi / registrati');I.querySelector('small').textContent=tt('As a guest your farm and scores stay on this device. With an account you can dress up your Igor and keep everything everywhere.','Come ospite fattoria e punteggi restano su questo dispositivo. Con un account puoi vestire il tuo Igor e ritrovare tutto ovunque.');
+ const I=$('intro');if(I){$('iH').innerHTML=tt('Hi, I’m <em>Igor</em>.','Ciao, sono <em>Igor</em>.');$('iAsk').textContent=tt('Where shall we go? Straight to my games, or to my island?','Dove andiamo? Direttamente ai miei giochi, o sulla mia isola?');
+  $('pIb').textContent=tt('← My island','← La mia isola');$('pIs').textContent=tt('Walk around and grow tofu ants with the Igorlets. The games are in my house.','Cammina e coltiva formiche di tofu con gli Igorlets. I giochi sono in casa mia.');
+  $('pGb').textContent=tt('All the games →','Tutti i giochi →');$('pGs').textContent=tt('The six games on one page, ready to play.','I sei giochi in una pagina, pronti da giocare.');
+  $('iNote').textContent=tt('All the games are on the island too. You can switch whenever you like: I’ll remember your choice.','Tutti i giochi si trovano anche sull’isola. Puoi cambiare quando vuoi: mi ricordo la tua scelta.');
+  const gm=DEST==='games';$('iH2').innerHTML=gm?tt('Off to the <em>games</em>!','Si va ai <em>giochi</em>!'):tt('Welcome to <em>Igor</em>’s island.','Benvenuto sull’isola di <em>Igor</em>.');$('iAsk2').textContent=tt('How do you want to come in?','Come vuoi entrare?');
+  $('iDesc').textContent=gm?tt('Every game gives tofu seeds: you can plant them on my island whenever you like, with my Igorlets.','Ogni gioco dà semi di tofu: puoi piantarli sulla mia isola quando vuoi, insieme ai miei Igorlets.'):tt('My games are in my house: walk into the door. Games give tofu seeds: with the Igorlets we sow them, harvest the ants and build the island. Composers can visit the old music school, and the deep pool leads to the abyss.','I miei giochi sono in casa: entra dalla porta. I giochi danno semi di tofu: insieme agli Igorlets li seminiamo, raccogliamo le formiche e costruiamo l’isola. I compositori possono visitare la vecchia scuola di musica, e il pozzo porta all’abisso.');
+  $('goGuest').textContent=gm?tt('Play as a guest','Gioca come ospite'):tt('Explore as a guest','Esplora come ospite');$('goSign').textContent=tt('Sign in / register','Accedi / registrati');$('iSmall').textContent=tt('As a guest your farm and scores stay on this device. With an account you dress up your Igor right away and keep everything everywhere.','Come ospite fattoria e punteggi restano su questo dispositivo. Con un account vesti subito il tuo Igor e ritrovi tutto ovunque.');$('introBack').textContent=tt('← Back','← Indietro');
   const L=$('langIntro');if(L)L.innerHTML=`<button type="button" data-l="en" aria-pressed="${LANG==='en'}">English</button><button type="button" data-l="it" aria-pressed="${LANG==='it'}">Italiano</button>`}}
 idx.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.lang){setLang(b.dataset.lang);return}if(b.dataset.sky){skyMode(b.dataset.sky);return}const k=b.dataset.i;idx.hidden=true;$('indexBtn').setAttribute('aria-expanded','false');
- if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/',tt('Cadences!','Cadenze!'),['school',0,-0.85]);return}if(k==='w'){launch('/window/',tt('The window!','La finestra!'),['house',-4.2,1.2]);return}if(k==='k'){launch('/kitchen/',tt('The kitchen!','La cucina!'),['house',3.7,-2.2]);return}if(k==='b'){launch('/bedroom/',tt('The bedroom!','La camera!'),['house',2.5,1.4]);return}if(where!=='out')exitRoom(true);goTo(k)});
+ if(k==='gamesPage'){toGames();return}if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/',tt('Cadences!','Cadenze!'),['school',0,-0.85]);return}if(k==='w'){launch('/window/',tt('The window!','La finestra!'),['house',-4.2,1.2]);return}if(k==='k'){launch('/kitchen/',tt('The kitchen!','La cucina!'),['house',3.7,-2.2]);return}if(k==='b'){launch('/bedroom/',tt('The bedroom!','La camera!'),['house',2.5,1.4]);return}if(where!=='out')exitRoom(true);goTo(k)});
 function toggleIndex(){idx.hidden=!idx.hidden;skyStatus();$('indexBtn').setAttribute('aria-expanded',String(!idx.hidden));if(!idx.hidden)say(pick(tt(['Where to?','Pick a place, I’ll take you.'],['Dove andiamo?','Scegli un posto, ti ci porto.'])),2)}
 $('indexBtn').onclick=toggleIndex;
 $('me').onclick=()=>openAccount();
@@ -1846,10 +1888,19 @@ const joyEnd=e=>{if(e.pointerId!==JOY.id)return;JOY.id=null;JOY.x=JOY.z=0;knob.s
 
 /* ================= intro ================= */
 function start(){$('intro').classList.add('gone');started=true;poke();setTimeout(awaySummary,2600);const first=!S.seen;setTimeout(()=>say(first?tt('Hi! My games are in my house.','Ciao! I miei giochi sono in casa.'):pick(tt(['Welcome back!','So good to see you!'],['Bentornato!','Che bello rivederti!'])),4),900);S.seen=(S.seen||0)+1;save()}
-$('goGuest').onclick=start;$('langIntro').addEventListener('click',e=>{const b=e.target.closest('button[data-l]');if(b)setLang(b.dataset.l)});staticTexts();$('goSign').onclick=()=>{start();openAccount()};
+function introStep(k){$('introA').hidden=k!=='a';$('introB').hidden=k!=='b';staticTexts();const f=$(k==='a'?'pickIsland':'goGuest');if(f)try{f.focus({preventScroll:true})}catch(e){}}
+$('pickIsland').onclick=()=>{DEST='island';introStep('b')};$('pickGames').onclick=()=>{DEST='games';introStep('b')};$('introBack').onclick=()=>introStep('a');
+function toGamesPage(){setView('games');S.seen=Math.max(1,S.seen|0);save();setTimeout(()=>{location.href='/games/'},250)}
+$('goGuest').onclick=()=>{setView(DEST);if(DEST==='games'){$('intro').classList.add('gone');toGamesPage();return}start()};
+$('langIntro').addEventListener('click',e=>{const b=e.target.closest('button[data-l]');if(b)setLang(b.dataset.l)});staticTexts();
+$('goSign').onclick=()=>{setView(DEST);setOnb({dest:DEST});start();openAccount()};
+/* someone new who came from the games page skips the question: they asked for the island */
+try{if(!(S.seen>=1)&&localStorage.getItem('igortime_view'))introStep('b')}catch(e){}
 let cameBack=false;if(S.seen>=1){$('intro').classList.add('gone');started=true;setTimeout(awaySummary,1800);setTimeout(()=>{if(!cameBack)say(pick(tt(['Welcome back!','So good to see you!'],['Bentornato!','Che bello rivederti!'])))},1200);hintOn=true}
 if(gotAnts)setTimeout(()=>seedParty(gotAnts),1600);
 refresh();
+if(/[?&]signin\b/.test(location.search)){try{history.replaceState(null,'','/')}catch(e){}if(!ONB)setOnb({dest:DEST});if(!started){$('intro').classList.add('gone');start()}setTimeout(openAccount,400)}
+else if(ONB&&started){setTimeout(()=>{if(sheet.hidden)openAccount()},700)}
 
 /* ================= loop ================= */
 const clock=new THREE.Clock(),camGoal=new V3(),lp=new V3();
@@ -1900,7 +1951,7 @@ const C={user:null,
  push(S){if(!C.user||!ready)return;clearTimeout(timer);const uid=C.user.uid;timer=setTimeout(()=>setDoc(doc(db,'users',uid),{...clean(S),name:C.user.nick||'',nick:C.user.nick||'',updated:serverTimestamp()}).catch(e=>console.warn('save',e)),1500)},
  async google(){const p=new GoogleAuthProvider();try{await signInWithPopup(auth,p)}catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')return signInWithRedirect(auth,p);throw e}},
  login:(m,p)=>signInWithEmailAndPassword(auth,m,p),
- async register(m,p,n){pendingNick=n||'';const r=await createUserWithEmailAndPassword(auth,m,p);if(n){await updateProfile(r.user,{displayName:n});if(C.user){C.user.nick=C.user.name=n;acct();C.push(window.IgorSave.get())}window.IgorUI.refresh()}},
+ async register(m,p,n){pendingNick=n||'';C.fresh=true;let r;try{r=await createUserWithEmailAndPassword(auth,m,p)}catch(e){C.fresh=false;throw e}if(n){await updateProfile(r.user,{displayName:n});if(C.user){C.user.nick=C.user.name=n;acct();C.push(window.IgorSave.get())}window.IgorUI.refresh()}},
  async setNick(n){if(!C.user)return;const uid=C.user.uid;C.user.nick=C.user.name=n;acct();
   await setDoc(doc(db,'users',uid),{...clean(window.IgorSave.get()),name:n,nick:n,updated:serverTimestamp()});
   try{if(auth.currentUser)await updateProfile(auth.currentUser,{displayName:n})}catch(e){}
