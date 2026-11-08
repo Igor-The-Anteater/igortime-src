@@ -1,7 +1,8 @@
 /* Igor Time — Italian for the games.
    The island already speaks Italian and English; the games are written in English.
-   This file translates what the player reads at the start, during the rounds and at the end,
-   when the language chosen on the island is Italian (localStorage igortime_lang). */
+   This file translates everything the player reads (page, buttons, Igor's bubbles, the words drawn on the canvas)
+   when the language chosen on the island is Italian (localStorage igortime_lang),
+   and adds a little flag next to the back link to switch language from inside every game. */
 /* When the player comes from the games page (/games/), the "back to the island" links of the games go back there. */
 (()=>{
 let H='/';try{H=localStorage.getItem('igortime_home')||'/'}catch(e){}
@@ -13,7 +14,29 @@ if(document.readyState!=='loading')go();else document.addEventListener('DOMConte
 })();
 (()=>{
 let L='en';try{L=localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en')}catch(e){}
-if(L!=='it')return;
+const IT=L==='it';
+/* the flag: shows the language in use, a tap switches to the other one (the page reloads) */
+const FLAG={it:'<svg viewBox="0 0 30 20" width="21" height="14" aria-hidden="true" style="display:block;border-radius:3px"><rect width="10" height="20" fill="#2f9e4f"/><rect x="10" width="10" height="20" fill="#f4f1ea"/><rect x="20" width="10" height="20" fill="#d23b33"/></svg>',
+ en:'<svg viewBox="0 0 60 40" width="21" height="14" aria-hidden="true" style="display:block;border-radius:3px"><rect width="60" height="40" fill="#22408c"/><path d="M0 0L60 40M60 0L0 40" stroke="#fff" stroke-width="8"/><path d="M0 0L60 40M60 0L0 40" stroke="#c8102e" stroke-width="3"/><path d="M30 0V40M0 20H60" stroke="#fff" stroke-width="12"/><path d="M30 0V40M0 20H60" stroke="#c8102e" stroke-width="7"/></svg>'};
+function langButton(){if(document.getElementById('igLangB'))return;const back=document.querySelector('a.igback,#top>a#back');if(!back)return;
+ const b=document.createElement('button');b.id='igLangB';b.type='button';b.className=back.className;b.innerHTML=FLAG[L];
+ b.title=IT?'Lingua: italiano · tocca per l’inglese':'Language: English · tap for Italian';b.setAttribute('aria-label',IT?'Lingua: italiano. Passa all’inglese':'Language: English. Switch to Italian');
+ b.style.cssText='display:inline-flex;align-items:center;gap:6px;cursor:pointer;margin-left:8px;font:inherit;flex:0 0 auto';
+ const cs=getComputedStyle(back);for(const k of['font','letterSpacing','textTransform','color','border','borderRadius','padding','background','alignSelf','pointerEvents'])b.style[k]=cs[k];b.style.marginLeft='6px';b.style.display='inline-flex';b.style.padding=innerWidth<560?'6px 8px':'8px 10px';
+ b.onclick=()=>{try{localStorage.setItem('igortime_lang',IT?'en':'it')}catch(e){}location.reload()};
+ back.after(b)}
+/* and a row "Italiano · English" at the top of the start menu (the menu covers the header) */
+const setL=l=>{if(l===L)return;try{localStorage.setItem('igortime_lang',l)}catch(e){}location.reload()};
+function langRow(card){if(!card||card.querySelector('.iglang'))return;const r=document.createElement('div');r.className='iglang';r.setAttribute('role','group');r.setAttribute('aria-label',IT?'Lingua':'Language');
+ r.style.cssText='display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 0 12px';
+ for(const[l,n]of[['it','Italiano'],['en','English']]){const b=document.createElement('button');b.type='button';b.innerHTML=FLAG[l]+'<span>'+n+'</span>';b.setAttribute('aria-pressed',l===L);
+  b.style.cssText='display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:12px;line-height:1;color:inherit;cursor:pointer;border-radius:999px;padding:6px 12px;border:1px solid '+(l===L?'currentColor':'rgba(127,127,127,.35)')+';background:'+(l===L?'rgba(255,255,255,.12)':'transparent')+';opacity:'+(l===L?1:.75);
+  b.onclick=()=>setL(l);r.appendChild(b)}
+ card.prepend(r)}
+function rows(){langRow(document.querySelector('#start .card'));const mc=document.getElementById('ab-mc');if(mc&&mc.querySelector('#ab-go')&&mc.querySelector('.eye'))langRow(mc)}
+const btnGo=()=>{langButton();rows();setTimeout(()=>{langButton();rows()},400);const mc=document.getElementById('ab-mc');if(mc)new MutationObserver(rows).observe(mc,{childList:true})};
+if(document.readyState!=='loading')btnGo();else document.addEventListener('DOMContentLoaded',btnGo);
+if(!IT){window.IgorLang={lang:'en',t:s=>s};return}
 document.documentElement.lang='it';
 
 const LV={Easy:'Facile',Medium:'Medio',Extreme:'Estremo',easy:'facile',medium:'medio',extreme:'estremo'};
@@ -102,6 +125,23 @@ const D={
  '(hold, max 2s) duck under the':'(tieni premuto, max 2 s) abbassati sotto le','jellyfish':'meduse','golden lure: 4s to eat the red ones too':'esca dorata: 4 s per mangiare anche le rosse',
  'Now and then a heart gives back a life (max 5). At 700 points, then every 1500, a':'Ogni tanto un cuore ridà una vita (max 5). A 700 punti, poi ogni 1500, sale un','leviathan':'leviatano','rises: when its shield drops,':': quando abbassa lo scudo,','shoot':'spara','your prey with':'le prede con',
  'depth':'profondità','prey':'prede','tongue':'lingua','jump':'salto','duck':'giù','Every 150 points = 1 tofu seed':'Ogni 150 punti = 1 seme di tofu','for the field.':'per il campo.','Diving as':'Ti immergi come','with your':'con il tuo',
+ // descriptions for screen readers
+ 'Two stoves: on the left a gas flame burns behind a curtain; on the right you hold the gas to cook the tofu ants for the same time':'Due fornelli: a sinistra una fiamma del gas brucia dietro una tenda; a destra tieni premuto il gas per cuocere le formiche di tofu per lo stesso tempo',
+ 'Two windows: behind the curtain the wind blows in through a window opened a certain amount; you open your window to let in the same amount of wind':'Due finestre: dietro la tenda il vento entra da una finestra aperta un po’; tu apri la tua finestra per far entrare lo stesso vento',
+ 'Two bedrooms: behind the curtain the lights glow with the colour of a sound; on the right you move the cursor on a triangular remote to find the same sound':'Due camere: dietro la tenda le luci hanno il colore di un suono; a destra muovi il cursore su un telecomando triangolare per trovare lo stesso suono',
+ 'Two spiral staircases: on the left a tofu ant hides behind a curtain and sings; on the right you move Igor up and down':'Due scale a chiocciola: a sinistra una formica di tofu si nasconde dietro una tenda e canta; a destra muovi Igor su e giù',
+ // words drawn on the canvas
+ 'hold the gas as long as the flame':'tieni il gas quanto la fiamma','golden':'dorate','lentils':'lenticchie','pasta':'pasta','rice':'riso','beans':'fagioli',
+ 'just right':'giusto così','↕ drag the window':'↕ trascina la finestra','tap or drag on the remote':'tocca o trascina sul telecomando',
+ 'sine':'sinusoide','buzz':'ronzio','noise':'rumore','tap here':'tocca qui','hit it!':'colpiscilo!',
+ // more bubbles
+ 'A storm outside! Listen…':'Temporale fuori! Ascolta…',
+ 'Listen. Where is the ant singing?':'Ascolta. Dove canta la formica?','Shh. It’s singing.':'Shh. Sta cantando.','Bullseye! What ears!':'Centro! Che orecchio!',
+ // cadences: buttons and hints
+ 'Voice':'Voce','flat':'bemolle','natural':'bequadro','sharp':'diesis','note up':'nota su','note down':'nota giù','delete note':'cancella nota',
+ 'Choose S, A, T or B: a tap writes that voice (or moves it there) · the treble staff keeps its own voice (S or A), the bass staff its own (T or B) · drag to move the note':'Scegli S, A, T o B: un tocco scrive quella voce (o la sposta lì) · il pentagramma di violino tiene la sua voce (S o A), quello di basso la sua (T o B) · trascina per spostare la nota',
+ // abyss
+ 'you':'tu','carving your depth into the annals…':'incido la tua profondità negli annali…',
  '· The kitchen':'· La cucina','· The window':'· La finestra','· The bedroom':'· La camera','· Cadences':'· Cadenze','· Pitch Stairs':'· Pitch Stairs'
 };
 /* whole elements whose words are split by tags */
@@ -115,7 +155,7 @@ const R=[
  [/^New personal best on (Easy|Medium|Extreme)!$/,(m,a)=>`Nuovo record a livello ${lv(a).toLowerCase()}!`],
  [/^Your best on (Easy|Medium|Extreme): (\d+)$/,(m,a,b)=>`Il tuo record a livello ${lv(a).toLowerCase()}: ${b}`],
  [/^best on (easy|medium|extreme): (\d+)$/,(m,a,b)=>`record a livello ${lv(a)}: ${b}`],
- [/^\+(\d+) tofu seeds? for (.+?)’s field(?: \(×(\d) on (Easy|Medium|Extreme)\))?\. Collect them back on the island\.$/,(m,n,who,x,l)=>`+${n} ${n==1?'seme':'semi'} di tofu per il campo di ${who}${x?` (×${x} a livello ${lv(l).toLowerCase()})`:''}. Raccoglili sull’isola.`],
+ [/^\+(\d+) tofu seeds? for (.+?)’s field(?: \(×(\d) on (Easy|Medium|Extreme)\))?\. Collect them back (?:on the island|home)\.$/,(m,n,who,x,l)=>`+${n} ${n==1?'seme':'semi'} di tofu per il campo di ${who}${x?` (×${x} a livello ${lv(l).toLowerCase()})`:''}. Raccoglili sull’isola.`],
  [/^\+(\d+) tofu seeds? for Igor’s field\. Collect them back on the island\.$/,(m,n)=>`+${n} ${n==1?'seme':'semi'} di tofu per il campo di Igor. Raccoglili sull’isola.`],
  [/^Playing as (.+?) with your (.+?) · (?:tofu seeds: )?easy ×1, medium ×2, extreme ×3(?: tofu seeds)?$/,'Giochi come $1 con $2 · semi di tofu: facile ×1, medio ×2, estremo ×3'],
  [/^Playing as (.+)$/,'Giochi come $1'],
@@ -135,12 +175,25 @@ const R=[
  [/^ ?\+(\d+) tofu seeds? for (.+?)’s field: collect them back on the island\.$/,(m,n,who)=>` +${n} ${n==1?'seme':'semi'} di tofu per il campo di ${who}: raccoglili sull’isola.`],
  [/^Only (\d+) ms off\. Delicious!$/,'Solo $1 ms di differenza. Buonissime!'],[/^Just (\d+) ms\. Yummy!$/,'Solo $1 ms. Gnam!'],
  [/^Only ([\d.]+) dB off\. A tofu ant came in!$/,'Solo $1 dB di differenza. È entrata una formica di tofu!'],[/^Just ([\d.]+) dB\. Lovely!$/,'Solo $1 dB. Bellissimo!'],
+ [/^↕ drag (.+)$/,'↕ trascina $1'],
+ [/^LEVIATHAN (\d+)  ·  (\d+\/\d+)  ·  (shield|open)$/,(m,n,h,x)=>`LEVIATANO ${n}  ·  ${h}  ·  ${x==='shield'?'scudo':'aperto'}`],
+ [/^Wow, only (\d+) cents away\. Brilliant!$/,'Wow, solo $1 cent di differenza. Bravissimo!'],[/^Just (\d+) cents\. Super ears!$/,'Solo $1 cent. Che orecchio!'],
+ [/^Only (\d+) cents away\. Lunch is served!$/,'Solo $1 cent di differenza. Il pranzo è servito!'],[/^Nice catch, just (\d+) cents!$/,'Presa! Solo $1 cent!'],
+ [/^Really close! Next time try a little (lower|higher)\.$/,(m,d)=>`Vicinissimo! La prossima volta prova un po’ più ${d==='lower'?'giù':'su'}.`],
+ [/^Nearly there! The ant was a little (lower|higher)\.$/,(m,d)=>`Ci sei quasi! La formica era un po’ più ${d==='lower'?'in basso':'in alto'}.`],
+ [/^Good try! The ant was singing (lower down|higher up)\. The next one’s yours\.$/,(m,d)=>`Bel tentativo! La formica cantava più ${d==='lower down'?'in basso':'in alto'}. La prossima è tua.`],
+ [/^Nice effort! Listen again: the ant was (lower down|higher up)\.$/,(m,d)=>`Ottimo impegno! Riascolta: la formica era più ${d==='lower down'?'in basso':'in alto'}.`],
  [/^Nearly! A little more (.+) next time\.$/,(m,x)=>`Quasi! La prossima volta un po’ più di ${POLE[x]||x}.`],
  [/^Good try! There was more (.+) in it\. The next one’s yours\.$/,(m,x)=>`Bel tentativo! C’era più ${POLE[x]||x}. La prossima è tua.`]
 ];
-function t1(s){const k=s.trim();if(D[k]!=null){let r=s.replace(k,D[k]);if(/^[:,.;]/.test(D[k]))r=r.replace(/^\s+/,'');if(/’$/.test(D[k]))r=r.replace(/’\s+$/,'’');return r}for(const[re,rp]of R){if(re.test(k))return s.replace(k,k.replace(re,rp))}return null}
+const DBG=(()=>{try{return!!localStorage.getItem('igortime_langdebug')}catch(e){return false}})();if(DBG)window.__langMiss=new Set();
+function t1(s){const k=s.trim();if(D[k]!=null){let r=s.replace(k,D[k]);if(/^[:,.;]/.test(D[k]))r=r.replace(/^\s+/,'');if(/’$/.test(D[k]))r=r.replace(/’\s+$/,'’');return r}for(const[re,rp]of R){if(re.test(k))return s.replace(k,k.replace(re,rp))}if(DBG&&/[A-Za-z]{2}/.test(k))window.__langMiss.add(k);return null}
+/* the words drawn on the canvas (and their width, so bubbles fit) */
+const CV=new Map();const cvT=t=>{if(typeof t!=='string'||!/[A-Za-z]/.test(t))return t;let r=CV.get(t);if(r===undefined){r=t1(t);if(r==null)r=t;CV.set(t,r)}return r};
+for(const P of[window.CanvasRenderingContext2D&&CanvasRenderingContext2D.prototype,window.OffscreenCanvasRenderingContext2D&&OffscreenCanvasRenderingContext2D.prototype])if(P)for(const f of['fillText','strokeText','measureText']){const o=P[f];if(o)P[f]=function(t,...a){return o.call(this,cvT(t),...a)}}
+window.IgorLang={lang:'it',t:s=>{const r=t1(String(s));return r==null?s:r}};
 const done=new WeakMap();
-function tNode(n){const v=n.nodeValue;if(!v||!/[A-Za-z]/.test(v)||done.get(n)===v)return;const r=t1(v);if(r!=null&&r!==v)n.nodeValue=r;done.set(n,n.nodeValue)}
+function tNode(n){const pe=n.parentNode;if(pe&&/^(SCRIPT|STYLE)$/.test(pe.nodeName))return;const v=n.nodeValue;if(!v||!/[A-Za-z]/.test(v)||done.get(n)===v)return;const r=t1(v);if(r!=null&&r!==v)n.nodeValue=r;done.set(n,n.nodeValue)}
 function tAttr(el){for(const a of['aria-label','title','placeholder']){const v=el.getAttribute&&el.getAttribute(a);if(v){const r=t1(v);if(r!=null&&r!==v)el.setAttribute(a,r)}}}
 function walk(root){if(root.nodeType===3){tNode(root);return}if(root.nodeType!==1)return;if(/^(SCRIPT|STYLE)$/.test(root.tagName))return;tAttr(root);if(/^(H1|H2|P)$/.test(root.tagName)&&root.children.length&&root.children.length<3){const w=ELD[root.textContent.trim()];if(w){root.innerHTML=w;return}}for(let c=root.firstChild;c;c=c.nextSibling)walk(c)}
 const fixTitle=()=>{const r=t1(document.title);if(r&&r!==document.title)document.title=r};
