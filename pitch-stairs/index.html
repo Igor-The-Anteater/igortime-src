@@ -13,6 +13,8 @@ html,body{height:100%;margin:0;background:var(--abyss);color:var(--ink);overflow
 #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
 header{position:fixed;top:0;left:0;right:0;display:flex;align-items:baseline;justify-content:space-between;gap:12px;pointer-events:none;
  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
+.igback{pointer-events:auto;align-self:center;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none;border:1px solid rgba(219,231,234,.35);border-radius:999px;padding:9px 13px;white-space:nowrap;background:rgba(5,8,13,.6)}.igback:hover{border-color:var(--glow);color:var(--glow)}
+@media (max-width:520px){.igback{padding:8px 10px;font-size:10px}}
 h1{margin:0;font:400 clamp(24px,3.6vw,36px)/1 var(--display);letter-spacing:-.01em}
 h1 em{color:var(--glow)}
 h1 a{color:inherit;text-decoration:none;pointer-events:auto}
@@ -46,7 +48,7 @@ button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
 </style>
 </head><body>
 <canvas id="c" aria-label="Two spiral staircases: on the left a tofu ant hides behind a curtain and sings; on the right you move Igor up and down"></canvas>
-<header><h1><a href="/"><em>Igor</em> time</a> · Pitch Stairs</h1><div id="stat">round <b id="rd">1/5</b><br>score <b id="sc">0</b></div></header>
+<header><a class="igback" href="/">← Island</a><h1><a href="/"><em>Igor</em> time</a> · Pitch Stairs</h1><div id="stat">round <b id="rd">1/5</b><br>score <b id="sc">0</b></div></header>
 <div id="bubble"></div>
 <div id="bar">
  <button id="listen" type="button">▶ Listen</button>
