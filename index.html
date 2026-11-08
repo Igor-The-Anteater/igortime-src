@@ -20,12 +20,13 @@ button.main:hover{background:#fff6e3;color:var(--abyss)}
 button:disabled{opacity:.35;cursor:default;border-color:rgba(219,231,234,.3);color:var(--ink)}
 .lbl{position:fixed;left:0;top:0;white-space:nowrap;font:600 23px/1 var(--toon);color:#2b2018;background:#f7ecd4;border:3px solid #2b2018;border-radius:16px;padding:7px 14px 8px;box-shadow:0 4px 0 #2b2018,0 10px 22px rgba(0,0,0,.35);will-change:transform;text-align:center;cursor:pointer;letter-spacing:.01em}
 .lbl::after{content:'';position:absolute;left:50%;bottom:-11px;width:14px;height:14px;background:#f7ecd4;border:3px solid #2b2018;border-top:0;border-left:0;transform:translateX(-50%) rotate(45deg);border-radius:0 0 4px 0}
-.lbl:hover{background:#fff5df}
+.lbl:hover{background:#fff5df;opacity:1}
+#labels .lbl{opacity:.8}
 .lbl small{display:block;font:500 13px/1 var(--toon);color:#9a5d2c;margin-top:4px;letter-spacing:.02em}
 .lbl.plot{font-size:17px;padding:5px 11px 6px;border-width:2.5px;border-radius:13px;background:#e9f6d8}
 .lbl.plot small{font-size:11.5px}
 @media (max-width:560px){.lbl{font-size:18px;padding:5px 11px 6px;border-width:2.5px}.lbl small{font-size:11px}.lbl.plot{font-size:14px}}
-header{position:fixed;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 22px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(rgba(5,8,13,.9) 40%,rgba(5,8,13,0));pointer-events:none}
+header{position:fixed;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 22px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(rgba(5,8,13,var(--hd,.9)) 40%,rgba(5,8,13,0));pointer-events:none}
 header>*{pointer-events:auto}
 header h1{margin:0;font:400 26px/1 var(--display);white-space:nowrap;flex:1}
 header h1 em{color:var(--glow)}
@@ -69,11 +70,13 @@ button.link{border:0;padding:9px 4px;color:var(--dim);text-transform:none;letter
 .avs button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 10px 8px;border-radius:16px;text-transform:none;letter-spacing:.04em}
 .avs canvas{width:56px;height:62px}
 .avs button[aria-pressed="true"]{border-color:var(--glow);color:var(--glow)}
+.gl{margin:6px 0 8px!important}.gl button{padding:8px 10px;font-size:10px}.gl button[aria-pressed="true"]{border-color:var(--glow);color:var(--glow)}
 #index{position:fixed;z-index:6;top:calc(var(--hh,62px) - 6px);right:max(16px,env(safe-area-inset-right,0px));width:min(300px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:var(--veil);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(219,231,234,.15);padding:14px 16px}
 #index h2{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0 0 8px}
 #index ul{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:8px}
 #index li button{all:unset;cursor:pointer;font:400 13px/1.35 var(--mono);color:var(--ink)}
 #index li button:hover,#index li button:focus-visible{color:var(--warm)}
+#index li button[aria-pressed="true"]{color:var(--warm)}
 #index li small{color:var(--warm);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;margin-left:6px}
 #bubble{position:fixed;left:0;top:0;z-index:3;pointer-events:none;font:400 italic 18px/1.2 var(--display);color:var(--abyss);background:var(--bone);padding:9px 16px 10px;border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.35);white-space:nowrap;opacity:0;transition:opacity .4s}
 #bubble::after{content:'';position:absolute;left:var(--tx,20px);bottom:-13px;width:20px;height:15px;background:var(--bone);clip-path:polygon(0 0,100% 0,8% 100%)}
@@ -116,7 +119,7 @@ button.link{border:0;padding:9px 4px;color:var(--dim);text-transform:none;letter
 <div id="intro"><div class="in">
  <canvas id="introIg" width="420" height="462" role="img" aria-label="Igor, a green anteater"></canvas>
  <h2>Welcome to <em>Igor</em>’s island.</h2>
- <p class="who">I live here at night, I grow tofu ants, and I love music.</p>
+ <p class="who">I live here, I grow tofu ants, and I love music.</p>
  <p>My games are in my house: walk into the door. Games give tofu seeds; plant them in the field and eat the ants that grow. Composers can visit the old music school, and the deep pool leads to the abyss.</p>
  <div class="row"><button class="main" id="goGuest" type="button">Explore as a guest</button><button id="goSign" type="button">Sign in / register</button></div>
  <small>As a guest your field and scores stay on this device. With an account you can dress up your Igor and keep everything everywhere.</small>
@@ -136,7 +139,7 @@ const IGOR_SRC='/igor.webp';
 const KEY='igortime_v1';
 const CROP={cost:1,min:2,gain:3};
 const MAXPLOTS=8,UNLOCK=[15,35,60,90,130];const plotsFor=a=>3+UNLOCK.filter(u=>a>=u).length;
-function fresh(){return{v:2,ants:0,seeds:1,plots:[{c:null},{c:null},{c:null}],scores:{},avatar:'igor',rim:null,ball:null,seen:0}}
+function fresh(){return{v:2,ants:0,seeds:1,plots:[{c:null},{c:null},{c:null}],scores:{},avatar:'igor',rim:null,ball:null,glasses:null,gcol:'#141414',seen:0}}
 let S;try{S=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){S=fresh()}
 if(!S.plots)S=fresh();if(S.seeds===undefined){S.seeds=1;S.v=2}
 try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}
@@ -176,17 +179,46 @@ function starAt(c,x,y,r,cols){c.save();c.beginPath();for(let i=0;i<10;i++){const
  c.save();c.clip();const h=2*r/cols.length;cols.forEach((col,i)=>{c.fillStyle=col;c.fillRect(x-r,y-r+i*h,2*r,h+.6)});c.restore();c.strokeStyle='#141414';c.lineWidth=4;c.lineJoin='round';c.stroke();c.restore()}
 function flowerAt(c,x,y,r,col){c.save();c.fillStyle=col;c.strokeStyle='#141414';c.lineWidth=3.5;for(let i=0;i<5;i++){const a=i/5*TAU-Math.PI/2;c.beginPath();c.arc(x+Math.cos(a)*r*.62,y+Math.sin(a)*r*.62,r*.48,0,TAU);c.fill();c.stroke()}
  c.fillStyle='#f6d34a';c.beginPath();c.arc(x,y,r*.38,0,TAU);c.fill();c.stroke();c.restore()}
+/* Igor's accessories: a cap (Igor only) and glasses (everyone).
+   Drawn in the coordinates of the island picture (663×730) and mapped onto any
+   other copy of the same drawing through the positions of its two eyes. */
+const ACC_REF=[{x:465,y:233,rx:41,ry:45},{x:538.5,y:225,rx:34.5,ry:41}];
+const ACC_GLASS=['#141414','#8a5a2b','#e0463c','#2f6fd6','#f1b46e','#ff8ab6','#ffffff'];
+const ACC_CAP=[null,'#e0463c','#2f6fd6','#f1b46e','#7fe3ef','#b48ce6','#ffffff','#2b2b2b'];
+function accShade(col,k){const n=parseInt(col.slice(1),16),f=v=>Math.max(0,Math.min(255,Math.round(v*k)));return`rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`}
+function accMap(c,eyes){const a=ACC_REF,b=eyes,dxa=a[1].x-a[0].x,dya=a[1].y-a[0].y,dxb=b[1].x-b[0].x,dyb=b[1].y-b[0].y;
+ const s=Math.hypot(dxb,dyb)/Math.hypot(dxa,dya),r=Math.atan2(dyb,dxb)-Math.atan2(dya,dxa),cs=s*Math.cos(r),sn=s*Math.sin(r);
+ c.transform(cs,sn,-sn,cs,b[0].x-(cs*a[0].x-sn*a[0].y),b[0].y-(sn*a[0].x+cs*a[0].y))}
+function accCap(c,col){const w=86,h=72;c.save();c.translate(384,128);c.rotate(.42);c.lineJoin='round';c.lineCap='round';c.strokeStyle='#141414';c.lineWidth=6;
+ c.fillStyle=accShade(col,.78);c.beginPath();c.moveTo(w*.35,-4);c.quadraticCurveTo(w*1.55,-14,w*2.05,10);c.quadraticCurveTo(w*1.45,22,w*.3,12);c.closePath();c.fill();c.stroke();
+ c.fillStyle=col;c.beginPath();c.moveTo(-w,4);c.bezierCurveTo(-w,-h*1.25,w,-h*1.25,w,4);c.quadraticCurveTo(0,14,-w,4);c.closePath();c.fill();c.stroke();
+ c.lineWidth=3.5;c.globalAlpha=.55;c.beginPath();c.moveTo(-6,-h*.93);c.quadraticCurveTo(14,-h*.4,8,9);c.stroke();
+ c.beginPath();c.moveTo(-w*.92,-12);c.quadraticCurveTo(0,-2,w*.92,-12);c.stroke();c.globalAlpha=1;
+ c.fillStyle=accShade(col,.8);c.lineWidth=4.5;c.beginPath();c.arc(-6,-h*.93-3,9,0,Math.PI*2);c.fill();c.stroke();
+ c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(-w*.42,-h*.55,13,22,-.6,0,Math.PI*2);c.fill();c.restore()}
+function accGlasses(c,kind,col){const E=ACC_REF,sun=kind==='sun';c.save();c.lineJoin='round';c.lineCap='round';
+ const L=E.map(e=>({x:e.x+(sun?2:0),y:e.y+(sun?6:2),rx:e.rx*(sun?1.3:1.2),ry:e.ry*(sun?1.08:1.16)}));
+ c.strokeStyle=col==='#ffffff'?'#d9d9d9':col;c.lineWidth=sun?9:7;c.beginPath();c.moveTo(L[0].x-L[0].rx+4,L[0].y-L[0].ry*.35);c.quadraticCurveTo(L[0].x-L[0].rx-60,L[0].y-L[0].ry*.75,L[0].x-L[0].rx-118,L[0].y-L[0].ry*.2);c.stroke();
+ c.strokeStyle='#141414';c.lineWidth=2.5;c.stroke();
+ for(const i of[1,0]){const l=L[i];c.beginPath();if(sun){c.moveTo(l.x-l.rx,l.y-l.ry*.55);c.quadraticCurveTo(l.x,l.y-l.ry*1.05,l.x+l.rx,l.y-l.ry*.55);c.bezierCurveTo(l.x+l.rx*1.05,l.y+l.ry*.9,l.x-l.rx*1.05,l.y+l.ry*1.05,l.x-l.rx,l.y-l.ry*.55)}else c.ellipse(l.x,l.y,l.rx,l.ry,0,0,Math.PI*2);c.closePath();
+  c.fillStyle=sun?'rgba(16,20,30,.9)':'rgba(205,232,255,.2)';c.fill();
+  c.strokeStyle='#141414';c.lineWidth=sun?13:11;c.stroke();c.strokeStyle=col;c.lineWidth=sun?8:6;c.stroke();
+  c.save();c.clip();c.strokeStyle='rgba(255,255,255,'+(sun?.55:.6)+')';c.lineWidth=5;c.beginPath();c.arc(l.x-l.rx*.2,l.y-l.ry*.1,l.rx*.62,Math.PI*1.08,Math.PI*1.42);c.stroke();c.restore()}
+ c.restore()}
+/* o: {avatar, ball, glasses:'eye'|'sun'|null, gcol} */
+function igorAcc(c,eyes,o){if(!o)return;const cap=o.avatar==='igor'&&o.ball,gl=o.glasses==='eye'||o.glasses==='sun';if(!cap&&!gl)return;
+ c.save();accMap(c,eyes);if(cap)accCap(c,o.ball);if(gl)accGlasses(c,o.glasses,o.gcol||'#141414');c.restore()}
 function paintAvatar(c,o,k0=0,k1=0){c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,SW,SH);if(!igorOK)return;c.setTransform(SC,0,0,SC,0,0);c.drawImage(igorImg,0,0,663,730);
  const d0=lid(c,EYES[0],k0),d1=lid(c,EYES[1],k1);
  if(o.avatar==='she'){lashes(c,EYES[0],d0,2);lashes(c,EYES[1],d1,2);bowAt(c,262,92,30,o.ball||'#ff8ab6')}
  else if(o.avatar==='queer'){lashes(c,EYES[0],d0,1);lashes(c,EYES[1],d1,1);starAt(c,262,90,30,['#fcf434','#ffffff','#9c59d1','#2c2c2c'])}
- else if(o.ball)flowerAt(c,262,92,26,o.ball);
+ igorAcc(c,EYES,o);
  c.setTransform(1,0,0,1,0,0)}
 const spr=document.createElement('canvas');spr.width=SW;spr.height=SH;const sx=spr.getContext('2d');let sprKey='',sprTex=null;
 const BL={next:2,start:-9,lag:[0,.08]};
 function blink(t){if(t>BL.next){BL.start=t;const lag=.06+Math.random()*.05;BL.lag=Math.random()<.5?[0,lag]:[lag,0];BL.next=t+(Math.random()<.2?.45:2.5+Math.random()*4)}
  const cc=BL.lag.map(l=>{const u=t-BL.start-l;if(u<0||u>.26)return 0;return u<.07?u/.07:u<.12?1:1-(u-.12)/.14});
- const k=[S.avatar,S.ball,cc[0].toFixed(2),cc[1].toFixed(2),igorOK].join('|');if(k===sprKey)return;sprKey=k;paintAvatar(sx,S,cc[0],cc[1]);if(sprTex)sprTex.needsUpdate=true;
+ const k=[S.avatar,S.ball,S.glasses,S.gcol,cc[0].toFixed(2),cc[1].toFixed(2),igorOK].join('|');if(k===sprKey)return;sprKey=k;paintAvatar(sx,S,cc[0],cc[1]);if(sprTex)sprTex.needsUpdate=true;
  const ii=$('introIg');if(ii){const g=ii.getContext('2d');g.clearRect(0,0,SW,SH);g.drawImage(spr,0,0)}}
 
 /* ================= three ================= */
@@ -253,11 +285,12 @@ const updaters=[];
 const trunkM=lam('#6b4f3a'),leafMs=[lam('#2f5a3f'),lam('#3a6646'),lam('#2c5242'),lam('#355e4c')];
 const trees=[];function treeMats(t){const ms=new Map();t.traverse(o=>{if(o.isMesh&&o.material!==shadowMat){if(!ms.has(o.material)){const c=curve(o.material.clone());c.transparent=true;ms.set(o.material,c)}o.material=ms.get(o.material)}});trees.push({t,ms:[...ms.values()],o:1})}
 function pine(x,z,s){const t=new THREE.Group();const tr=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,1,7),trunkM);tr.position.y=.5;t.add(tr);
- const m=leafMs[Math.floor(rnd()*4)];for(let i=0;i<3;i++){const c=new THREE.Mesh(new THREE.ConeGeometry(1.25-i*.3,1.3,12),m);c.position.y=1.5+i*.75;t.add(c)}
+ const m=leafMs[Math.floor(rnd()*4)];for(let i=0;i<3;i++){const c=new THREE.Mesh(new THREE.ConeGeometry(1.25-i*.3,1.3,12),m);c.position.y=1.5+i*.75;c.userData.leaf=1;t.add(c)}t.userData.pine=1;
  blob(t,1.1);t.scale.setScalar(s);t.position.set(x,0,z);t.rotation.y=rnd()*6;scene.add(t);block(x,z,.55*s);treeMats(t)}
 function roundTree(x,z,s){const t=new THREE.Group();const tr=new THREE.Mesh(new THREE.CylinderGeometry(.13,.22,1.4,7),trunkM);tr.position.y=.7;t.add(tr);
- const m=leafMs[Math.floor(rnd()*4)];const c=new THREE.Mesh(new THREE.SphereGeometry(1.15,18,14),m);c.position.y=2.05;c.scale.set(1.1,1,1.1);t.add(c);
- for(const[a2,b2,d2]of[[.7,1.7,.55],[-.7,1.8,.5],[0,2.7,.55],[.2,1.9,-.7]]){const q=new THREE.Mesh(new THREE.SphereGeometry(.55,14,10),m);q.position.set(a2,b2+.1,d2);t.add(q)}
+ const m=leafMs[Math.floor(rnd()*4)];const c=new THREE.Mesh(new THREE.SphereGeometry(1.15,18,14),m);c.position.y=2.05;c.scale.set(1.1,1,1.1);c.userData.leaf=1;t.add(c);
+ for(const[bx,bz,bl]of[[.5,.1,.9],[-.45,.3,.8],[0,-.5,.85],[.1,.4,.7]]){const b=new THREE.Mesh(new THREE.CylinderGeometry(.03,.07,bl,5),trunkM);b.position.set(bx*.55,1.35+bl*.42,bz*.55);b.rotation.set(bz*1.1,0,-bx*1.3);t.add(b)}
+ for(const[a2,b2,d2]of[[.7,1.7,.55],[-.7,1.8,.5],[0,2.7,.55],[.2,1.9,-.7]]){const q=new THREE.Mesh(new THREE.SphereGeometry(.55,14,10),m);q.position.set(a2,b2+.1,d2);q.userData.leaf=1;t.add(q)}
  blob(t,1.3);t.scale.setScalar(s);t.position.set(x,0,z);t.rotation.y=rnd()*6;scene.add(t);block(x,z,.6*s);treeMats(t)}
 function rock(x,z,s){const r=new THREE.Mesh(new THREE.DodecahedronGeometry(.5,0),lam('#8a877f',{flatShading:true}));r.position.set(x,.2*s,z);r.scale.set(s*1.2,s*.7,s);r.rotation.y=rnd()*6;scene.add(r);block(x,z,.45*s)}
 function grass(x,z){const g=new THREE.Group();const m=lam('#55804f');for(let i=0;i<5;i++){const b=new THREE.Mesh(new THREE.ConeGeometry(.04,.45+rnd()*.3,4),m);b.position.set((rnd()-.5)*.3,.22,(rnd()-.5)*.3);b.rotation.z=(rnd()-.5)*.5;g.add(b)}g.position.set(x,0,z);scene.add(g)}
@@ -267,9 +300,24 @@ const PLACES={};const clickables=[];const hitMat=new THREE.MeshBasicMaterial({co
 let BUILD='out';
 function hit(obj,r,act,name,y=1){const m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),hitMat);m.position.y=y;m.userData={act,name,room:BUILD};obj.add(m);clickables.push(m);return m}
 const labels=[];function label(text,sub,pos,onclick,near){const el=document.createElement('div');el.className='lbl';el.innerHTML=text+(sub?`<small>${sub}</small>`:'');el.onclick=onclick;$('labels').appendChild(el);const L={el,pos,room:BUILD,near:near||0};labels.push(L);return L}
+/* things you can use glow: softly all the time, with a pulse when you arrive (then again every few seconds) */
+const GLOW={list:[],col:new THREE.Color('#ffc978')};
+function glowObj(obj,room,x,z,amp=1,reach=0,ringR=0,parent=null){const ms=new Map();
+ obj.traverse(o=>{if(!o.isMesh||o.material===hitMat||o.material===shadowMat)return;const arr=Array.isArray(o.material),L=arr?o.material:[o.material];
+  const out=L.map(m=>{if(!m||!m.emissive)return m;if(!ms.has(m))ms.set(m,curve(m.clone()));return ms.get(m)});o.material=arr?out:out[0]});
+ const G={room,x,z,amp,reach,t:0,near:false,seen:false,ring:null,mats:[...ms.values()].map(m=>({m,e:m.emissive.clone().multiplyScalar(m.emissiveIntensity)}))};
+ if(ringR){const r=new THREE.Mesh(new THREE.RingGeometry(ringR*.78,ringR,56).rotateX(-Math.PI/2),curve(new THREE.MeshBasicMaterial({color:GLOW.col,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending})));
+  r.position.set(x,room==='out'?.09:.025,z);(parent||scene).add(r);G.ring=r;G.rr=ringR}
+ GLOW.list.push(G);return G}
+const glowLevel=t=>{const u=t%6.5;return .16+.84*(u<3.2?(.5-.5*Math.cos(u*TAU*.95))*Math.pow(1-u/3.2,.8):0)};
+updaters.push((t,dt)=>{for(const G of GLOW.list){if(G.room!==where){G.seen=false;continue}if(!G.seen){G.seen=true;G.t=0}G.t+=dt;let p=1;
+  if(G.reach){const d=Math.hypot(igor.position.x-G.x,igor.position.z-G.z),nr=d<G.reach;if(nr&&!G.near)G.t=0;G.near=nr;p=clamp((G.reach+4-d)/4,0,1)}
+  const k=started?glowLevel(G.t)*p:0,a=k*G.amp*.55;
+  for(const q of G.mats){q.m.emissiveIntensity=1;q.m.emissive.setRGB(q.e.r+GLOW.col.r*a,q.e.g+GLOW.col.g*a,q.e.b+GLOW.col.b*a)}
+  if(G.ring){G.ring.material.opacity=k*.6;const s=1+.06*Math.sin(G.t*3);G.ring.scale.set(s,1,s)}}});
 function lantern(x,z){const t=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,1.5,6),lam('#2a2a2c'));pole.position.y=.75;t.add(pole);
  const lamp=new THREE.Mesh(new THREE.BoxGeometry(.22,.28,.22),glowM('#f6c27a',1.1));lamp.position.y=1.6;t.add(lamp);const h=halo('#f1b46e',2.2,.45);h.position.y=1.6;t.add(h);
- t.position.set(x,0,z);scene.add(t);block(x,z,.2);updaters.push(tt=>{h.material.opacity=.38+.07*Math.sin(tt*2.3+x)})}
+ t.position.set(x,0,z);scene.add(t);block(x,z,.2);updaters.push(tt=>{h.material.opacity=(.38+.07*Math.sin(tt*2.3+x))*(.25+.75*SKY.nk)})}
 
 /* --- Igor's house: a cottage, the games are inside --- */
 const zones=[];function zone(room,x,z,r,act,name){const Z={room,x,z,r,act,name,in:false};zones.push(Z);return Z}
@@ -346,7 +394,7 @@ const texM=(t,o={})=>curve(new THREE.MeshLambertMaterial({map:t,...o}));
  for(const[bx,bz,bs]of[[-2.75,1.95,.55],[2.75,1.95,.6],[-2.8,-.4,.5],[2.85,-.6,.55],[-1.9,2.3,.38],[1.95,2.3,.4]]){const b=new THREE.Mesh(new THREE.SphereGeometry(bs,14,10),bushM[Math.floor(rnd()*3)]);b.scale.y=.8;b.position.set(bx,bs*.6,bz);t.add(b);block(bx,-7.1+bz,bs*.9);
   for(let k=0;k<3;k++){const f=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),lam(flowerCols[Math.floor(rnd()*5)]));f.position.set(bx+(rnd()-.5)*bs,bs*.9+rnd()*.2,bz+bs*.6);t.add(f)}}
  for(let k=0;k<4;k++){const ps=new THREE.Mesh(new THREE.CylinderGeometry(.28,.3,.06,10),stone);ps.position.set((k%2?.12:-.12),.03,D/2+.95+k*.62);ps.scale.z=.8;t.add(ps)}
- blob(t,3,.9);scene.add(t);block(0,-7.1,2.38);hit(t,2.4,()=>goTo('house'),'house',1.3);
+ blob(t,3,.9);scene.add(t);block(0,-7.1,2.38);hit(t,2.4,()=>goTo('house'),'house',1.3);glowObj(t,'out',0,-4.5,.35,9,.8);
  label('Igor’s house','walk in the door',new V3(0,5.3,-7.1),()=>goTo('house'));
  zone('out',0,-4.5,.75,()=>enterRoom('house'),'house door')}
 lantern(-1.55,-4.75);lantern(1.75,-4.6);
@@ -418,7 +466,7 @@ updaters.push((t,dt)=>{eatCD-=dt;while(S.plots.length<Math.min(MAXPLOTS,plotsFor
  const noteC=document.createElement('canvas');noteC.width=noteC.height=64;{const g=noteC.getContext('2d');g.fillStyle='#efe4cf';g.font='46px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('♪',32,34)}
  const nt=new THREE.CanvasTexture(noteC),notes=[];for(let k=0;k<3;k++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:nt,transparent:true,depthWrite:false,opacity:0}));sp.scale.set(.45,.45,1);t.add(sp);notes.push(sp)}
  updaters.push(tt=>{notes.forEach((sp,k)=>{const u=(tt*.1+k/3)%1;sp.position.set(-1.1+Math.sin(tt*.8+k)*.4,3.8+u*1.8,-.5);sp.material.opacity=Math.sin(u*Math.PI)*.6})});
- blob(t,2.6,.9);scene.add(t);block(-10,-9.5,2.4);hit(t,2.3,()=>goTo('school'),'school',1);
+ blob(t,2.6,.9);scene.add(t);block(-10,-9.5,2.4);hit(t,2.3,()=>goTo('school'),'school',1);glowObj(t,'out',-8.7,-7.1,.35,9,.8);
  label('Music school','walk in the door',new V3(-10,4.6,-9.5),()=>goTo('school'),15);zone('out',-8.7,-7.1,.75,()=>enterRoom('school'),'school door')}
 
 /* --- the deep pool: dive into the abyss --- */
@@ -436,7 +484,7 @@ const POOL=new V3(7.6,0,6.6);
  const leg=new THREE.Mesh(new THREE.BoxGeometry(.4,.36,.2),stoneD);leg.position.set(0,.18,2.0);t.add(leg);
  updaters.push((tt,dt)=>{for(const o of rings){o.u=(o.u+dt*.25)%1;const s=.4+o.u*2.1;o.r.scale.set(s,1,s);o.r.material.opacity=.5*(1-o.u)}
   for(const o of bub){o.u=(o.u+dt*.35)%1;o.b.position.set(o.x*.7,.1+o.u*1.2,o.z*.7);o.b.material.opacity=.7*Math.sin(o.u*Math.PI)}glow.material.opacity=.38+.08*Math.sin(tt*1.6)});
- blob(t,2,.95);scene.add(t);block(POOL.x,POOL.z,1.75);hit(t,1.8,()=>goTo('abyss'),'abyss',.4);
+ blob(t,2,.95);scene.add(t);block(POOL.x,POOL.z,1.75);hit(t,1.8,()=>goTo('abyss'),'abyss',.4);glowObj(t,'out',POOL.x,POOL.z,.8,8,2.3);
  label('The abyss','walk into the pool',new V3(POOL.x,3,POOL.z),()=>goTo('abyss'),13);
  zone('out',POOL.x,POOL.z,2.15,()=>dive(),'pool')}
 let diving=0;function dive(){if(diving)return;diving=.001;closeSheet();IG.target=null;IG.arrive=null;say('Hold your breath!',1.4);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}rememberSpot('out',POOL.x,POOL.z+2.6)}
@@ -451,7 +499,7 @@ addEventListener('pageshow',e=>{if(e.persisted){diving=0;igor.position.y=0;igor.
  const boat=new THREE.Group();const hull=new THREE.Mesh(new THREE.CylinderGeometry(.5,.35,2.2,8,1,false,0,Math.PI),lam('#3a2a20',{side:THREE.DoubleSide}));hull.rotation.z=Math.PI/2;hull.rotation.y=Math.PI/2;boat.add(hull);boat.position.set(-2.2,-.45,1.1);t.add(boat);
  const lamp=halo('#f1b46e',1.4,.5);lamp.position.set(-3.2,.4,0);t.add(lamp);
  updaters.push(tt=>{boat.position.y=-.45+Math.sin(tt*1.2)*.05;boat.rotation.x=Math.sin(tt*.9)*.05});
- scene.add(t);hit(t,1.6,()=>goTo('jetty'),'jetty',.8);
+ scene.add(t);hit(t,1.6,()=>goTo('jetty'),'jetty',.8);glowObj(t,'out',-9.4,4.6,1,8,.9);
  label('Other places','coming soon',new V3(-11.5,2.2,5.5),()=>goTo('jetty'),13)}
 
 /* vegetation, kept away from the places */
@@ -516,6 +564,138 @@ function igorUpdate(t,dt){blink(t);let moving=false;
 
 /* ================= inside: Igor's house and the music school ================= */
 const world=new THREE.Group();scene.children.filter(o=>!o.isLight&&o!==igor&&o!==mark).forEach(o=>world.add(o));scene.add(world);
+const WINS=[];function winTex(c){const t=new THREE.CanvasTexture(c);WINS.push({c,t});return t}
+
+/* ================= sky: the hour, the season and the weather ================= */
+// The island follows the visitor's clock (and, if they share it, where they are).
+// Test with ?hour=19.2&day=312&weather=rain (weather: clear, cloudy, fog, rain, storm, snow, hail).
+const SKYQ=new URLSearchParams(location.search),GEO_KEY='igortime_geo';
+let GEO=null;try{GEO=JSON.parse(localStorage.getItem(GEO_KEY))}catch(e){}
+const SKY={lat:GEO&&isFinite(GEO.lat)?GEO.lat:44,lon:GEO&&isFinite(GEO.lon)?GEO.lon:null,mode:GEO&&GEO.on?'real':'island',real:null,realAt:0,
+ over:{hour:SKYQ.has('hour')?+SKYQ.get('hour'):null,doy:SKYQ.has('day')?+SKYQ.get('day'):null,weather:SKYQ.get('weather')},
+ nk:1,el:-30,P:null,W:{cloud:0,fog:0,rain:0,snow:0,hail:0,storm:0},wName:'clear',season:'',lines:null,cover:0,coverInit:false,flash:0,flashNext:6,acc:9};
+const sstep=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+function dayOfYear(d){return Math.floor((d-new Date(d.getFullYear(),0,0))/864e5)}
+function skyClock(){const d=new Date();let doy=SKY.over.doy??dayOfYear(d);if(SKY.lat<0)doy=(doy+182)%365;
+ let solar;if(SKY.over.hour!=null)solar=SKY.over.hour;else{const jan=new Date(d.getFullYear(),0,1).getTimezoneOffset(),jul=new Date(d.getFullYear(),6,1).getTimezoneOffset(),dst=(Math.max(jan,jul)-d.getTimezoneOffset())/60;
+  solar=d.getHours()+d.getMinutes()/60+d.getSeconds()/3600-dst;if(SKY.lon!=null){const zone=-d.getTimezoneOffset()/60-dst;solar+=(SKY.lon-zone*15)/15}}
+ const dec=-23.44*Math.cos(TAU*(doy+10)/365)*Math.PI/180,phi=Math.abs(SKY.lat)*Math.PI/180,ha=(solar-12)*15*Math.PI/180;
+ const el=Math.asin(Math.sin(phi)*Math.sin(dec)+Math.cos(phi)*Math.cos(dec)*Math.cos(ha))*180/Math.PI;return{doy,el,ha,d}}
+// colours of the sky by the height of the sun (degrees)
+const SKF=[[-14,'#0b1424','#15233a','#15233a','#a9b8de','#26332a',.9,'#dfe6ff',.8,1,'#1f4561'],
+ [-6,'#121a38','#33345e','#2c3154','#9fa8d8','#2a2e30',.85,'#c8d0ff',.62,.75,'#22405c'],
+ [-1.5,'#2a3466','#d9694a','#7d5265','#e2a6b2','#3a3028',.88,'#ff8a5a',.75,.18,'#5c4a62'],
+ [4,'#5579b5','#f2ad6c','#d2a38a','#ffd8b0','#4a4430',1,'#ffbe80',1,0,'#3a6a8a'],
+ [16,'#4f93d8','#c3e2f1','#b9d8e8','#eaf4ff','#5a6a44',1.12,'#fff3dc',1.15,0,'#2f78a0']];
+const _c=[new THREE.Color(),new THREE.Color(),new THREE.Color()];
+function skyPalette(el,W){let i=0;while(i<SKF.length-2&&el>SKF[i+1][0])i++;const a=SKF[i],b=SKF[i+1],k=sstep(a[0],b[0],el);
+ const col=j=>new THREE.Color(a[j]).lerp(new THREE.Color(b[j]),k),num=j=>a[j]+(b[j]-a[j])*k;
+ const P={top:col(1),hor:col(2),fog:col(3),hs:col(4),hg:col(5),hi:num(6),dc:col(7),di:num(8),stars:num(9),sea:col(10)};
+ // clouds: greyer, flatter, dimmer
+ const gr=Math.max(W.cloud,W.fog*.8);for(const key of['top','hor','fog','hs','sea']){const c=P[key],l=c.r*.3+c.g*.59+c.b*.11;c.lerp(_c[0].setRGB(l,l,l*1.05),gr*.7).multiplyScalar(1-gr*.22)}
+ if(W.fog>0){P.hor.lerp(P.fog,W.fog*.6);P.top.lerp(P.fog,W.fog*.35)}
+ P.di*=1-.75*gr;P.hi*=1-.12*gr;P.stars*=1-gr*.95;return P}
+const skyBg=document.createElement('canvas');skyBg.width=4;skyBg.height=256;const skyBgT=new THREE.CanvasTexture(skyBg);
+const skyFog=new THREE.Fog('#15233a',28,66);
+function drawSky(P){const g=skyBg.getContext('2d'),gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#'+P.top.getHexString());gr.addColorStop(.5,'#'+P.top.clone().lerp(P.hor,.45).getHexString());gr.addColorStop(.7,'#'+P.hor.getHexString());gr.addColorStop(1,'#'+P.hor.getHexString());g.fillStyle=gr;g.fillRect(0,0,4,256);skyBgT.needsUpdate=true}
+
+/* seasons: leaves change colour, fall, come back */
+const AUT=['#c8442a','#d9822b','#e3b236','#8e4b2b','#b5532c','#d06a2e'];
+const tlist=trees.map(tr=>{const L=[];tr.t.traverse(o=>{if(o.userData.leaf)L.push(o)});const m=L.length?L[0].material:null;return{tr,L,m,base:m?m.color.clone():null,pine:!!tr.t.userData.pine,aut:new THREE.Color(AUT[Math.floor(rnd()*AUT.length)]),blossom:rnd()<.35,sc:L.map(o=>o.scale.clone()),r:rnd()}});
+function seasonAt(doy){const loss=doy<75?1:doy<112?1-sstep(75,112,doy):doy<292?0:doy<338?sstep(292,338,doy):1;
+ return{loss,aut:sstep(252,300,doy),spring:sstep(72,120,doy)*(1-sstep(165,200,doy)),bloom:sstep(84,100,doy)*(1-sstep(118,132,doy)),cold:doy<58||doy>346?1:0,
+  name:doy<79||doy>=355?'Winter':doy<172?'Spring':doy<265?'Summer':'Autumn'}}
+const SPRING=new THREE.Color('#79b35a'),BLOOM=new THREE.Color('#f2b6c6'),SNOWC=new THREE.Color('#e9eef3');let seasonKey='';
+function applySeason(Z){const key=[Z.loss.toFixed(2),Z.aut.toFixed(2),Z.spring.toFixed(2),Z.bloom.toFixed(2),SKY.cover.toFixed(2)].join();if(key===seasonKey)return;seasonKey=key;
+ for(const q of tlist){if(!q.m)continue;if(q.pine){q.m.color.copy(q.base).lerp(SNOWC,SKY.cover*.55);continue}
+  const c=q.m.color.copy(q.base).lerp(SPRING,Z.spring*.8).lerp(q.aut,Z.aut*(.75+.25*q.r));if(q.blossom)c.lerp(BLOOM,Z.bloom);c.lerp(SNOWC,SKY.cover*.25);
+  const loss=clamp(Z.loss*(.85+.3*q.r),0,1);q.L.forEach((o,i)=>{if(i===0){o.visible=loss<.94;o.scale.copy(q.sc[0]).multiplyScalar(1-.5*loss)}else o.visible=loss<.18+.17*i})}
+ ground.material.color.set('#ffffff').lerp(_c[1].set('#efdcb5'),Z.aut*(1-Z.loss*.3)*.5)}
+
+/* snow lying on the island */
+const snowCv=document.createElement('canvas');snowCv.width=snowCv.height=256;{const g=snowCv.getContext('2d'),im=g.createImageData(256,256);
+ for(let py=0;py<256;py++)for(let px=0;px<256;px++){const x=px/256*80-40,z=py/256*80-40,r=Math.hypot(x,z*1.12),n=.78+.22*Math.sin(x*1.3+Math.cos(z*1.1)*2)*Math.cos(z*.9-x*.4),a=sstep(R+.8,R-.6,r)*n*(Math.abs(x-FIELD.x)<4.6&&Math.abs(z-FIELD.z)<2.7?0:1)*sstep(1.7,2.1,Math.hypot(x-POOL.x,z-POOL.z));const o=(py*256+px)*4;im.data[o]=im.data[o+1]=im.data[o+2]=255;im.data[o+3]=a*255}
+ g.putImageData(im,0,0)}
+const snowM=curve(new THREE.MeshLambertMaterial({color:'#f4f7fb',alphaMap:new THREE.CanvasTexture(snowCv),transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));
+const snowGround=new THREE.Mesh(gg,snowM);snowGround.position.y=.015;snowGround.visible=false;world.add(snowGround);
+
+/* the sun, clouds, weather particles */
+const sun=halo('#ffd9a0',30,.0,true),sunCore=halo('#fff6e0',8,0,true);world.add(sun,sunCore);
+const clouds=new THREE.Group();world.add(clouds);const puffs=[];
+for(let i=0;i<16;i++){const a=-Math.PI*.95+rnd()*Math.PI*1.9,r=95+rnd()*55,cx=Math.sin(a)*r,cz=-Math.cos(a)*r,cy=24+rnd()*30;
+ for(let k=0;k<5;k++){const s=halo('#ffffff',16+rnd()*16,0,true);s.material.blending=THREE.NormalBlending;s.position.set(cx+(k-2)*7+rnd()*4,cy+rnd()*4-(k%2)*2,cz+rnd()*6);s.scale.y*=.55;clouds.add(s);puffs.push({s,f:.6+rnd()*.4})}}
+const reduceK=reduce?.4:1;
+function fallers(n,mk){const p=new Float32Array(n*mk.verts*3),d=[];for(let i=0;i<n;i++)d.push({x:(Math.random()-.5)*34,y:Math.random()*16,z:(Math.random()-.5)*34,ph:Math.random()*6});const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));const o=mk.obj(g);o.frustumCulled=false;world.add(o);return{o,g,p,d,n,verts:mk.verts}}
+const rainF=fallers(Math.round(1100*reduceK),{verts:2,obj:g=>new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:'#b9cfe3',transparent:true,opacity:0,depthWrite:false}))});
+const snowF=fallers(Math.round(1000*reduceK),{verts:1,obj:g=>new THREE.Points(g,new THREE.PointsMaterial({size:.2,map:dot,color:'#ffffff',transparent:true,opacity:0,depthWrite:false}))});
+const hailF=fallers(Math.round(600*reduceK),{verts:1,obj:g=>new THREE.Points(g,new THREE.PointsMaterial({size:.11,color:'#eef4f8',transparent:true,opacity:0,depthWrite:false}))});
+const leafF=fallers(70,{verts:1,obj:g=>{const c=new Float32Array(70*3);for(let i=0;i<70;i++){_c[2].set(AUT[i%AUT.length]);c.set([_c[2].r,_c[2].g,_c[2].b],i*3)}g.setAttribute('color',new THREE.BufferAttribute(c,3));return new THREE.Points(g,new THREE.PointsMaterial({size:.2,vertexColors:true,transparent:true,opacity:0,depthWrite:false}))}});
+for(const F of[rainF,snowF,hailF,leafF])F.o.visible=false;
+function stepFall(F,amt,dt,vy,sway,len){const n=Math.round(F.n*clamp(amt,0,1));F.o.visible=n>0;F.g.setDrawRange(0,n*F.verts);if(!n)return;const cx=lookS.x,cz=lookS.z;
+ for(let i=0;i<n;i++){const q=F.d[i];q.y-=vy*dt;q.ph+=dt;if(q.y<0){q.y+=16;q.x=(Math.random()-.5)*34;q.z=(Math.random()-.5)*34}
+  const x=cx+q.x+(sway?Math.sin(q.ph*1.3)*sway:0),z=cz+q.z+(sway?Math.cos(q.ph*.9)*sway*.6:0),o=i*F.verts*3;F.p[o]=x;F.p[o+1]=q.y;F.p[o+2]=z;if(F.verts===2){F.p[o+3]=x-.06;F.p[o+4]=q.y+len;F.p[o+5]=z}}
+ F.g.attributes.position.needsUpdate=true}
+const flashEl=document.createElement('div');flashEl.style.cssText='position:fixed;inset:0;z-index:2;pointer-events:none;background:#eef2ff;opacity:0';document.body.appendChild(flashEl);
+
+/* weather: Igor's own (the same for everyone at the same hour) or the real one */
+const WX={clear:{cloud:.06},cloudy:{cloud:.78},fog:{cloud:.45,fog:1},rain:{cloud:.85,rain:.75},storm:{cloud:1,rain:1,storm:1},snow:{cloud:.75,snow:1},hail:{cloud:.9,hail:1,rain:.25}};
+const WCHANCE={Winter:[['clear',.3],['cloudy',.22],['fog',.1],['rain',.12],['snow',.23],['hail',.03]],Spring:[['clear',.42],['cloudy',.24],['rain',.21],['storm',.06],['hail',.05],['fog',.02]],
+ Summer:[['clear',.6],['cloudy',.14],['rain',.1],['storm',.12],['hail',.04]],Autumn:[['clear',.32],['cloudy',.26],['fog',.1],['rain',.24],['storm',.05],['hail',.03]]};
+function islandWeather(d,season){const blk=Math.floor((d.getHours()+d.getDate()*24+d.getMonth()*744)/3)+d.getFullYear()*9973;let h=Math.sin(blk*12.9898)*43758.5453;h-=Math.floor(h);
+ let acc=0;for(const[k,p]of WCHANCE[season]){acc+=p;if(h<acc)return k}return'clear'}
+function wmo(c){return c<=1?'clear':c<=3?'cloudy':c<=48?'fog':c<=67||(c>=80&&c<=82)?'rain':c<=77||c===85||c===86?'snow':c===95?'storm':c>=96?'hail':'cloudy'}
+async function fetchReal(){if(SKY.lon==null)return;SKY.realAt=Date.now();try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${SKY.lat.toFixed(2)}&longitude=${SKY.lon.toFixed(2)}&current=weather_code`);const j=await r.json();SKY.real=wmo(j.current.weather_code);SKY.acc=9}catch(e){SKY.real=null}}
+if(SKY.mode==='real')fetchReal();
+function skyMode(m){if(m==='island'){SKY.mode='island';try{localStorage.setItem(GEO_KEY,JSON.stringify({...(GEO||{}),on:false}))}catch(e){}SKY.acc=9;toast('Igor’s own weather');skyStatus();return}
+ if(!navigator.geolocation){toast('Location isn’t available here');return}
+ toast('Asking where you are…');navigator.geolocation.getCurrentPosition(p=>{GEO={lat:+p.coords.latitude.toFixed(2),lon:+p.coords.longitude.toFixed(2),on:true};try{localStorage.setItem(GEO_KEY,JSON.stringify(GEO))}catch(e){}
+  SKY.lat=GEO.lat;SKY.lon=GEO.lon;SKY.mode='real';fetchReal().then(()=>{toast(SKY.real?'The sky where you are':'No weather right now, Igor keeps his own');skyStatus()})},()=>toast('No location: Igor keeps his own weather'),{timeout:12000,maximumAge:36e5})}
+const WNAME={clear:'clear',cloudy:'cloudy',fog:'fog',rain:'rain',storm:'thunderstorm',snow:'snow',hail:'hail'};
+function skyStatus(){const el=$('skyNow');if(!el)return;const e=SKY.el,part=e<-6?'night':e<1?(SKY.ha<0?'dawn':'sunset'):e<8?(SKY.ha<0?'morning':'evening'):'day';
+ el.textContent=`${SKY.season} · ${part} · ${WNAME[SKY.wName]}`;document.querySelectorAll('#index [data-sky]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sky===SKY.mode)))}
+const SAYW={rain:['Rain! Good for the tofu.','I like the sound of the rain.'],storm:['Thunder… I’m not scared. Much.','What a storm!'],snow:['Snow! My nose is cold.','Everything is white…'],hail:['Ouch! Hail!','Hail on my head. Rude.'],fog:['I can’t even see the sea.'],cloudy:['Grey sky today.']};
+
+let skyT=9;
+function skyTick(dt){skyT+=dt;SKY.acc+=dt;
+ if(SKY.acc>=1){SKY.acc=0;const C=skyClock(),Z=seasonAt(C.doy);SKY.el=C.el;SKY.ha=C.ha;SKY.season=Z.name;
+  if(SKY.mode==='real'&&Date.now()-SKY.realAt>20*60e3)fetchReal();
+  const wn=SKY.over.weather&&WX[SKY.over.weather]?SKY.over.weather:SKY.mode==='real'&&SKY.real?SKY.real:islandWeather(C.d,Z.name);
+  if(wn!==SKY.wName){SKY.wName=wn}SKY.target=WX[wn];SKY.Z=Z;
+  const L=[...(SAYW[wn]||[])];if(Z.aut>.5&&Z.loss>.1&&Z.loss<.95)L.push('The leaves are falling.','Autumn. Everything is orange.');if(C.el>-2&&C.el<6&&wn==='clear')L.push('Look at the sky!','What a sunset.');if(C.el>15&&wn==='clear')L.push('What a sunny day.');SKY.lines=L.length?L:null;
+  if(!idx.hidden)skyStatus();if(where!=='out'&&SKY.P)skyRoom()}
+ const tg=SKY.target||WX.clear,W=SKY.W,f=SKY.first?Math.min(1,dt*.35):1;SKY.first=true;for(const k in W)W[k]+=((tg[k]||0)-W[k])*f;
+ // snow builds up while it snows, melts slowly otherwise
+ const Z=SKY.Z,cov=Math.max(W.snow>.3?1:0,Z&&Z.cold?.45:0);SKY.cover+=(cov-SKY.cover)*(SKY.coverInit?Math.min(1,dt*(cov>SKY.cover?.05:.02)):1);SKY.coverInit=true;
+ if(skyT>.5||!SKY.P){skyT=0;SKY.P=skyPalette(SKY.el,W);SKY.nk=1-sstep(-8,2,SKY.el);if(Z)applySeason(Z);if(where==='out')drawSky(SKY.P)}
+ const P=SKY.P,nk=SKY.nk;
+ if(where==='out'){scene.background=skyBgT;scene.fog=skyFog;skyFog.color.copy(P.fog);const fg=Math.max(W.fog,W.rain*.45,W.snow*.55,W.hail*.35);skyFog.near=28-18*fg;skyFog.far=66-30*fg;
+  hemi.color.copy(P.hs);hemi.groundColor.copy(P.hg);hemi.intensity=P.hi;moonL.color.copy(P.dc);moonL.intensity=P.di;
+  const sx=-Math.sin(SKY.ha*.32),up=Math.sin(SKY.el*Math.PI/180);sun.position.set(sx*130,up*120+13,-125);document.documentElement.style.setProperty('--hd',(.45+.45*nk).toFixed(2));sunCore.position.copy(sun.position);
+  const sv=sstep(-3,1,SKY.el)*(1-W.cloud*.9);sun.material.opacity=.55*sv;sunCore.material.opacity=.95*sv;sun.material.color.copy(P.dc);
+  if(SKY.el>-4)moonL.position.set(sx*10,Math.max(2,up*14),-3);else moonL.position.set(-8,12,5);
+  moon.material.opacity=.5*nk*(1-W.cloud*.85);moonCore.material.opacity=.95*nk*(1-W.cloud*.85);
+  for(const o of sky.children)if(o.material)o.material.opacity=.9*P.stars;
+  sea.material.color.copy(P.sea);sea.material.emissive.setRGB(.04*nk+.01,.1*nk+.03,.16*nk+.05);
+  ffM.visible=nk>.05;ff.visible=nk>.05&&W.rain<.3&&W.snow<.3;ffM.size=.22;
+  for(const q of puffs){q.s.material.opacity=(.1+.62*W.cloud)*q.f;q.s.material.color.copy(P.hor).lerp(_c[0].set('#ffffff'),.5-.35*nk).multiplyScalar(1-.45*W.cloud*(W.rain+W.storm>.5?1:.5))}
+  clouds.rotation.y+=dt*.004;
+  snowGround.visible=SKY.cover>.01;snowM.opacity=SKY.cover*.92;
+  stepFall(rainF,W.rain,dt,24,0,.55);rainF.o.material.opacity=.45*Math.min(1,W.rain*1.6);
+  stepFall(snowF,W.snow,dt,1.3,.5);snowF.o.material.opacity=.9*Math.min(1,W.snow*1.5);
+  stepFall(hailF,W.hail,dt,15,0);hailF.o.material.opacity=Math.min(1,W.hail*1.5);
+  const lf=Z?Z.aut*sstep(.05,.2,Z.loss)*(1-sstep(.85,.97,Z.loss))*(1-W.snow):0;stepFall(leafF,lf*.5,dt*.6,1.1,1.2);leafF.o.material.opacity=.9;
+  // lightning
+  if(W.storm>.5){SKY.flashNext-=dt;if(SKY.flashNext<=0){SKY.flash=1;SKY.flashNext=5+Math.random()*12}}
+  if(SKY.flash>0){SKY.flash-=dt*3.2;const k=Math.max(0,SKY.flash)*(Math.sin(SKY.flash*40)>-.3?1:.3);flashEl.style.opacity=(k*.35).toFixed(3);hemi.intensity+=k*1.4}else flashEl.style.opacity=0}
+ else{flashEl.style.opacity=0;document.documentElement.style.setProperty('--hd','.9');hemi.color.set('#a9b8de');hemi.groundColor.set('#26332a')}}
+function skyRoom(){for(const w of WINS)paintWin(w)}
+function paintWin(w){const P=SKY.P||skyPalette(-20,SKY.W),g2=w.c.getContext('2d'),gr=g2.createLinearGradient(0,0,0,110);gr.addColorStop(0,'#'+P.top.getHexString());gr.addColorStop(1,'#'+P.hor.getHexString());g2.fillStyle=gr;g2.fillRect(0,0,128,110);
+ const nk=SKY.nk,W=SKY.W;if(P.stars>.05){for(let k=0;k<26;k++){g2.fillStyle='rgba(255,255,255,'+((.4+((k*37)%10)/16)*P.stars)+')';g2.fillRect((k*53)%128,(k*29)%80,1.5,1.5)}}
+ if(W.cloud<.7){g2.fillStyle=nk>.5?'#f3ecd8':'#fff2c8';g2.globalAlpha=1-W.cloud;g2.beginPath();g2.arc(92,nk>.5?28:20+60*(1-Math.sin(Math.max(0,SKY.el)*Math.PI/180)),nk>.5?11:13,0,TAU);g2.fill();g2.globalAlpha=1}
+ g2.fillStyle=SKY.cover>.3?'#dfe6ec':nk>.5?'#1f3a2c':'#4f7a45';g2.beginPath();g2.moveTo(0,110);for(let q=0;q<=128;q+=8)g2.lineTo(q,88+Math.sin(q*.09)*8);g2.lineTo(128,110);g2.fill();
+ if(W.rain>.2||W.hail>.2){g2.strokeStyle='rgba(220,232,245,.5)';g2.lineWidth=1;for(let k=0;k<40;k++){const x=(k*47)%128,y=(k*31)%110;g2.beginPath();g2.moveTo(x,y);g2.lineTo(x-2,y+7);g2.stroke()}}
+ if(W.snow>.2){g2.fillStyle='rgba(255,255,255,.85)';for(let k=0;k<40;k++)g2.fillRect((k*47)%128,(k*31)%110,2,2)}
+ w.t.needsUpdate=true}
 function wallpaper(base,stripe,motif){const c=document.createElement('canvas');c.width=256;c.height=256;const g=c.getContext('2d');g.fillStyle=base;g.fillRect(0,0,256,256);
  for(let k=0;k<8;k++){g.fillStyle=k%2?stripe:base;g.fillRect(k*32,0,32,256)}
  if(motif){g.fillStyle=motif;for(let y=0;y<4;y++)for(let x=0;x<4;x++){const cx=x*64+(y%2?48:16),cy=y*64+32;g.beginPath();for(let q=0;q<4;q++){const a=q/4*TAU;g.ellipse(cx+Math.cos(a)*5,cy+Math.sin(a)*5,4,4,0,0,TAU)}g.fill()}}
@@ -552,14 +732,14 @@ function room(key,o){BUILD=key;const g=new THREE.Group();g.visible=false;scene.a
  const mat2=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.3,.055,.55,2,.03),lam('#c07a4e'));mat2.position.set(0,.035,o.d/2-.5);g.add(mat2);
  hit(mat,.9,()=>walkIn(new V3(0,0,o.d/2-.55),()=>exitRoom()),'exit',.3);
  const out=label('Back outside','',new V3(0,.7,o.d/2-.5),()=>walkIn(new V3(0,0,o.d/2-.55),()=>exitRoom()));out.el.classList.add('plot');
- zone(key,0,o.d/2-.55,.62,()=>exitRoom(),'mat');
+ zone(key,0,o.d/2-.55,.62,()=>exitRoom(),'mat');glowObj({traverse:f=>{f(mat);f(mat2)}},key,0,o.d/2-.5,.8,0,1.05,g);
  BUILD='out';return Rm}
 function station(Rm,key,{name,sub,pos,stand,obj,act,r=1.3,y=1,zr}){BUILD=key;obj.position.copy(pos);Rm.g.add(obj);Rm.blocks.push({x:pos.x,z:pos.z,r:r*.75});
- const go=()=>walkIn(stand,act);hit(obj,r,go,name,y);label(name,sub||'',pos.clone().add(new V3(0,y+1.75,0)),go);zone(key,pos.x,pos.z,zr||(r*.75+.55),act,name);BUILD='out'}
+ const go=()=>walkIn(stand,act);hit(obj,r,go,name,y);glowObj(obj,key,pos.x,pos.z,1,0,zr||(r*.75+.55),Rm.g);label(name,sub||'',pos.clone().add(new V3(0,y+1.75,0)),go);zone(key,pos.x,pos.z,zr||(r*.75+.55),act,name);BUILD='out'}
 function walkIn(P,then){closeSheet();$('index').hidden=true;IG.target=P.clone();IG.arrive=then;IG.manual=true;mark.position.set(P.x,.04,P.z);mark.material.opacity=.8;poke();if(igor.position.distanceTo(P)<.3){IG.target=null;IG.arrive=null;then&&then()}}
 function syncZones(){for(const Z of zones)Z.in=Math.hypot(igor.position.x-Z.x,igor.position.z-Z.z)<Z.r}
 function enterRoom(k){const Rm=ROOMS[k];if(!Rm||where===k)return;closeSheet();where=k;world.visible=false;Rm.g.visible=true;igor.position.copy(Rm.entry);IG.target=null;IG.arrive=null;CURV.value=0;
- scene.background=BG_IN;scene.fog=null;hemi.intensity=.55;moonL.intensity=.25;camSnap=true;syncZones();say(k==='house'?pick(['Welcome to my house!','Make yourself at home.']):'Shh… the old school. Walk to the piano.',3)}
+ scene.background=BG_IN;scene.fog=null;hemi.intensity=.55;moonL.intensity=.25;moonL.color.set('#dfe6ff');skyRoom();camSnap=true;syncZones();say(k==='house'?pick(['Welcome to my house!','Make yourself at home.']):'Shh… the old school. Walk to the piano.',3)}
 function exitRoom(quiet){const k=where;if(k==='out')return;ROOMS[k].g.visible=false;world.visible=true;where='out';CURV.value=K;hemi.intensity=.9;moonL.intensity=.8;scene.background=BG_OUT;scene.fog=new THREE.Fog(NIGHT,28,66);
  const P=PLACES[k];igor.position.copy(P.pos).add(k==='school'?new V3(.5,0,.9):new V3(0,0,.95));IG.target=null;IG.arrive=null;camSnap=true;syncZones();if(!quiet)say(pick(['Fresh air!','Back outside.']),1.8)}
 let camSnap=false;
@@ -573,7 +753,7 @@ function plant(Rm,x,z,s=1){const G=new THREE.Group();const pot=new THREE.Mesh(ne
 function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.position.set(x,y,z);G.rotation.y=ry;Rm.g.add(G);
  const c=document.createElement('canvas');c.width=128;c.height=110;const g2=c.getContext('2d');const gr=g2.createLinearGradient(0,0,0,110);gr.addColorStop(0,'#0d1b33');gr.addColorStop(1,'#2b4a78');g2.fillStyle=gr;g2.fillRect(0,0,128,110);
  for(let k=0;k<26;k++){g2.fillStyle='rgba(255,255,255,'+(.4+Math.random()*.6)+')';g2.fillRect(Math.random()*128,Math.random()*80,1.5,1.5)}g2.fillStyle='#f3ecd8';g2.beginPath();g2.arc(92,28,11,0,TAU);g2.fill();g2.fillStyle='#1f3a2c';g2.beginPath();g2.moveTo(0,110);for(let q=0;q<=128;q+=8)g2.lineTo(q,88+Math.sin(q*.09)*8);g2.lineTo(128,110);g2.fill();
- const pane=new THREE.Mesh(new THREE.PlaneGeometry(w,h),curve(new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)})));pane.position.z=.02;G.add(pane);
+ const pane=new THREE.Mesh(new THREE.PlaneGeometry(w,h),curve(new THREE.MeshBasicMaterial({map:winTex(c)})));pane.position.z=.02;G.add(pane);
  const fm=lam('#f2e8d6');for(const[sx,sy,ww,hh]of[[0,h/2+.06,w+.2,.12],[0,-h/2-.06,w+.2,.12],[-w/2-.05,0,.1,h+.2],[w/2+.05,0,.1,h+.2],[0,0,.06,h],[0,0,w,.06]]){const b=new THREE.Mesh(new THREE.BoxGeometry(ww,hh,.08),fm);b.position.set(sx,sy,.04);G.add(b)}
  const sill=new THREE.Mesh(new THREE.BoxGeometry(w+.4,.08,.3),fm);sill.position.set(0,-h/2-.14,.14);G.add(sill);
  const cm=lam('#a8463c',{side:THREE.DoubleSide});for(const sx of[-1,1]){const cu=new THREE.Mesh(new THREE.BoxGeometry(.34,h+.5,.06),cm);cu.position.set(sx*(w/2+.18),.05,.12);G.add(cu)}
@@ -678,9 +858,10 @@ const LINES={
  go_school:['The old school… careful, the roof is gone.','Composers this way.','Bring a pencil.'],
  go_jetty:['The boat isn’t ready yet.','One day we’ll sail.'],
  ready:['Harvest time! Gnam.','Some tofu ants are ready!','The field is ready, come and pick.']};
-const bubble=$('bubble');let bubbleT=0;function say(t,sec=3){bubble.textContent=t;bubbleT=sec}
+const bubble=$('bubble');let bubbleT=0,bubbleS=0;const bubbleQ=[];
+function say(t,sec=3){if(bubbleT>0&&bubble.textContent===t)return;if(bubbleT>0&&bubbleS<Math.min(1.8,bubbleT+bubbleS)){if(!bubbleQ.some(q=>q[0]===t)){bubbleQ.push([t,sec]);if(bubbleQ.length>3)bubbleQ.shift()}return}bubble.textContent=t;bubbleT=sec;bubbleS=0}
 let T=0,lastAct=0,started=false;const poke=()=>{lastAct=T};
-function chatter(){if(!started||bubbleT>0||T-lastAct<12)return;lastAct=T+Math.random()*6;if(S.plots.some(p=>plotState(p)==='ready')&&Math.random()<.6)say(pick(LINES.ready));else say(pick(LINES.idle),3.4)}
+function chatter(){if(!started||bubbleT>0||T-lastAct<12)return;lastAct=T+Math.random()*6;if(S.plots.some(p=>plotState(p)==='ready')&&Math.random()<.6)say(pick(LINES.ready));else say(pick(SKY.lines&&Math.random()<.35?SKY.lines:LINES.idle),3.4)}
 const pv=new V3();
 function placeBubble(){projC(pv.set(igor.position.x,IH+.75,igor.position.z));const vis=pv.z<1&&bubbleT>0;bubble.style.opacity=vis?1:0;if(!vis)return;
  const sx=(pv.x*.5+.5)*innerWidth,sy=(-pv.y*.5+.5)*innerHeight,w=bubble.offsetWidth,h=bubble.offsetHeight;
@@ -697,7 +878,9 @@ sheet.querySelector('.x').onclick=closeSheet;
 addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();$('index').hidden=true}});
 sb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
  if(b.dataset.av){S.avatar=b.dataset.av;save();renderDress()}
- if(b.dataset.ball!==undefined){S.ball=BALLS[+b.dataset.ball];save();renderDress()}
+ if(b.dataset.ball!==undefined){const v=b.dataset.ball;S.ball=(v[0]==='b'?BALLS:ACC_CAP)[+v.slice(1)]||null;save();renderDress()}
+ if(b.dataset.gl!==undefined){S.glasses=b.dataset.gl||null;if(!S.gcol)S.gcol='#141414';save();renderDress()}
+ if(b.dataset.gcol!==undefined){S.gcol=ACC_GLASS[+b.dataset.gcol];save();renderDress()}
  if(b.dataset.go){location.href=b.dataset.go}
  if(b.dataset.wip){openWip(b.dataset.wip)}
  if(b.dataset.sign){openAccount()}});
@@ -709,46 +892,55 @@ function openSchool(){openSheet('school',`<div class="k">Music school · only fo
 function openPlaces(){openSheet('places',`<div class="k">The jetty</div><h3>Other places</h3><span class="wip">coming soon</span><p>One day this boat will take Igor to other islands and places. For now it just rocks on the water.</p>`)}
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
 function openAccount(){const C=window.IgorCloud,u=C&&C.user;
- if(u)openSheet('acct',`<div class="k">Your account</div><h3>${esc(u.name||'Hello!')}</h3><p>${esc(u.email||'')}<br>Your field, tofu ants and scores are saved in your account, on every device.</p><div class="row"><button data-dress="1" class="main">Dress up your Igor</button><button data-out="1">Sign out</button></div>`);
+ if(u)openSheet('acct',u.nick?`<div class="k">Your account</div><h3>${esc(u.nick)}</h3><p>${esc(u.email||'')}<br>Your field, tofu ants and scores are saved in your account, on every device.</p><div class="row"><button data-dress="1" class="main">Dress up your Igor</button><button data-out="1">Sign out</button></div>
+ <form class="auth" id="nickF" novalidate><div class="k" style="margin-top:10px">Nickname · shown in the rankings</div><input id="aNick" maxlength="16" value="${esc(u.nick)}" autocomplete="nickname"><div class="row"><button type="submit" data-nick="1">Change nickname</button></div><p class="msg" id="aMsg" role="status"></p></form>`
+  :`<div class="k">Your account</div><h3>Choose a nickname</h3><p>It’s the name everyone sees in the rankings (not your real name, if you prefer).</p>
+ <form class="auth" id="nickF" novalidate><input id="aNick" maxlength="16" placeholder="Nickname" autocomplete="nickname"><div class="row"><button type="submit" class="main" data-nick="1">Save</button><button type="button" data-out="1">Sign out</button></div><p class="msg" id="aMsg" role="status"></p></form>`);
  else openSheet('acct',`<div class="k">Account</div><h3>Sign in or register</h3><p>With an account you can dress up your Igor (Igor, Shigor or Queegor) and keep your field and scores on every device.</p>
  ${C?'':'<p class="msg">Accounts are loading… if this stays, check your connection.</p>'}
  <div class="row"><button class="main" data-auth="google">Continue with Google</button></div>
  <form class="auth" id="authF" novalidate><div class="k" style="margin-top:10px">or with email</div>
- <input id="aName" placeholder="Your name (only to register)" autocomplete="nickname" maxlength="24">
+ <input id="aName" placeholder="Nickname (only to register, shown in rankings)" autocomplete="nickname" maxlength="16">
  <input id="aMail" type="email" placeholder="Email" autocomplete="email">
  <input id="aPw" type="password" placeholder="Password (at least 6 characters)" autocomplete="current-password">
  <div class="row"><button type="submit" data-auth="login">Sign in</button><button type="button" data-auth="register">Create account</button><button type="button" class="link" data-auth="reset">Forgot password?</button></div>
  <p class="msg" id="aMsg" role="status"></p></form>`)}
 function authMsg(t,ok){const m=$('aMsg');if(m){m.textContent=t;m.classList.toggle('ok',!!ok)}}
 const AUTHERR={'auth/email-already-in-use':'This email already has an account: sign in instead.','auth/invalid-credential':'Wrong email or password.','auth/wrong-password':'Wrong email or password.','auth/user-not-found':'No account with this email yet: create one.','auth/weak-password':'The password needs at least 6 characters.','auth/invalid-email':'That email doesn’t look right.','auth/missing-password':'Type a password.','auth/too-many-requests':'Too many tries. Wait a minute and try again.','auth/network-request-failed':'No connection. Try again.','auth/popup-closed-by-user':'Google window closed. Try again when you’re ready.','auth/cancelled-popup-request':''};
-sb.addEventListener('submit',e=>e.preventDefault());
+sb.addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='nickF')saveNick()});
+function nickBad(n){n=(n||'').trim();if(n.length<2)return'Choose a nickname (at least 2 characters).';if(n.length>16)return'Nicknames can be up to 16 characters.';if(!/^[\p{L}\p{N} ._\-']+$/u.test(n))return'Use letters, numbers, spaces, dots, dashes.';return''}
+async function saveNick(){const C=window.IgorCloud,el=$('aNick');if(!C||!C.user||!el)return;const n=el.value.trim().replace(/\s+/g,' '),bad=nickBad(n);if(bad)return authMsg(bad);
+ const first=!C.user.nick;authMsg('Saving…',true);try{await C.setNick(n);refresh();if(first){openAccount();say('Nice to meet you, '+n+'!')}else authMsg('Nickname saved.',true)}catch(err){authMsg('Couldn’t save it ('+(err.code||err.message)+').')}}
 sb.addEventListener('click',async e=>{const b=e.target.closest('button[data-auth]');if(!b)return;e.preventDefault();const C=window.IgorCloud;if(!C){authMsg('Accounts are still loading, try again in a moment.');return}
  const k=b.dataset.auth,mail=($('aMail')||{}).value?.trim(),pw=($('aPw')||{}).value||'',nm=($('aName')||{}).value?.trim();
  try{if(k==='google'){authMsg('Opening Google…',true);await C.google()}
   else if(k==='login'){if(!mail||!pw)return authMsg('Type your email and password.');authMsg('Signing in…',true);await C.login(mail,pw)}
-  else if(k==='register'){if(!mail||!pw)return authMsg('Type an email and a password to create your account.');authMsg('Creating your account…',true);await C.register(mail,pw,nm)}
+  else if(k==='register'){if(!mail||!pw)return authMsg('Type an email and a password to create your account.');const bad=nickBad(nm);if(bad)return authMsg(bad);authMsg('Creating your account…',true);await C.register(mail,pw,nm)}
   else if(k==='reset'){if(!mail)return authMsg('Type your email first, then tap “Forgot password?”.');await C.reset(mail);authMsg('Check your inbox: we sent you a link to reset the password.',true)}}
  catch(err){const t=AUTHERR[err.code];authMsg(t===undefined?'Something went wrong ('+(err.code||err.message)+').':t)}});
-sb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.dress)renderDress();if(b.dataset.out&&window.IgorCloud){window.IgorCloud.signOut();closeSheet();say('See you soon!')}});
-function onAuth(on,first){refresh();if(on){if(sheetKind==='acct')openAccount();if(!first)say(pick(['Welcome to the island!','Now I can dress up!','Ooh, an account. Fancy.']))}}
+sb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.nick){e.preventDefault();saveNick();return}if(b.dataset.dress)renderDress();if(b.dataset.out&&window.IgorCloud){window.IgorCloud.signOut();closeSheet();say('See you soon!')}});
+function onAuth(on,first){refresh();if(on){if(sheetKind==='acct'||!window.IgorCloud.user.nick)openAccount();if(!first)say(pick(['Welcome to the island!','Now I can dress up!','Ooh, an account. Fancy.']))}}
 function renderDress(){const can=window.IgorCloud&&window.IgorCloud.user;if(!can)return openAccount();
  openSheet('dress',`<div class="k">Your Igor</div><h3>Dress up</h3><div class="avs">${Object.entries(AV).map(([k,n])=>`<button data-av="${k}" aria-pressed="${S.avatar===k}"><canvas width="${SW}" height="${SH}" data-prev="${k}"></canvas>${n}</button>`).join('')}</div>
- <div class="k">${S.avatar==='she'?'Bow':S.avatar==='queer'?'Accent':'Flower'}</div><div class="sw">${BALLS.map((c,i)=>`<button data-ball="${i}" aria-pressed="${S.ball===c}" style="background:${c||'transparent'};${c?'':'border:1px dashed var(--dim)'}" aria-label="${c||'none'}"></button>`).join('')}</div>`);
+ ${S.avatar==='queer'?'':`<div class="k">${S.avatar==='she'?'Bow':'Cap'}</div><div class="sw">${(S.avatar==='she'?BALLS:ACC_CAP).map((c,i)=>`<button data-ball="${S.avatar==='she'?'b':'c'}${i}" aria-pressed="${S.ball===c||(!S.ball&&!c)}" style="background:${c||'transparent'};${c?'':'border:1px dashed var(--dim)'}" aria-label="${c||'none'}"></button>`).join('')}</div>`}
+ <div class="k">Glasses</div><div class="row gl">${[['','None'],['eye','Glasses'],['sun','Sunglasses']].map(([k,n])=>`<button data-gl="${k}" aria-pressed="${(S.glasses||'')===k}">${n}</button>`).join('')}</div>
+ ${S.glasses?`<div class="sw">${ACC_GLASS.map((c,i)=>`<button data-gcol="${i}" aria-pressed="${(S.gcol||'#141414')===c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div>`:''}`);
  sb.querySelectorAll('canvas[data-prev]').forEach(cv=>paintAvatar(cv.getContext('2d'),{...S,avatar:cv.dataset.prev}))}
 window.IgorUI={openAccount,renderDress,refresh:()=>refresh(),toast:t=>toast(t),onAuth};
 
 /* ================= index ================= */
 const idx=$('index');
 idx.innerHTML=`<h2>Igor’s island</h2><ul><li><button data-i="house">Igor’s house<small>games</small></button></li><li><button data-i="field">Tofu ant field</button></li><li><button data-i="school">Music school<small>composers</small></button></li><li><button data-i="abyss">The abyss<small>game</small></button></li><li><button data-i="jetty">Other places<small>soon</small></button></li></ul>
- <h2>Games</h2><ul><li><button data-i="stairs">Pitch Stairs<small>house</small></button></li><li><button data-i="cad">Cadences<small>school</small></button></li><li><button data-i="w">The window<small>soon</small></button></li><li><button data-i="k">The kitchen<small>soon</small></button></li><li><button data-i="b">The bedroom<small>soon</small></button></li></ul>`;
-idx.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.i;idx.hidden=true;$('indexBtn').setAttribute('aria-expanded','false');
+ <h2>Games</h2><ul><li><button data-i="stairs">Pitch Stairs<small>house</small></button></li><li><button data-i="cad">Cadences<small>school</small></button></li><li><button data-i="w">The window<small>soon</small></button></li><li><button data-i="k">The kitchen<small>soon</small></button></li><li><button data-i="b">The bedroom<small>soon</small></button></li></ul>
+ <h2>Sky</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">Igor’s weather<small>same for everyone</small></button></li><li><button data-sky="real">The sky where I am<small>uses your location</small></button></li></ul>`;
+idx.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.sky){skyMode(b.dataset.sky);return}const k=b.dataset.i;idx.hidden=true;$('indexBtn').setAttribute('aria-expanded','false');
  if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/','Cadences!',['school',0,-0.85]);return}if(k==='w'||k==='k'||k==='b'){openWip({w:'The window',k:'The kitchen',b:'The bedroom'}[k]);return}if(where!=='out')exitRoom(true);goTo(k)});
-function toggleIndex(){idx.hidden=!idx.hidden;$('indexBtn').setAttribute('aria-expanded',String(!idx.hidden));if(!idx.hidden)say(pick(['Where to?','Pick a place, I’ll take you.']),2)}
+function toggleIndex(){idx.hidden=!idx.hidden;skyStatus();$('indexBtn').setAttribute('aria-expanded',String(!idx.hidden));if(!idx.hidden)say(pick(['Where to?','Pick a place, I’ll take you.']),2)}
 $('indexBtn').onclick=toggleIndex;
 $('ants').onclick=()=>{toast(S.ants+' tofu ants eaten');goTo('field')};$('seeds').onclick=()=>{toast(S.seeds+' tofu seeds · win more in the games');goTo('field')};$('me').onclick=()=>openAccount();
 
 /* ================= HUD ================= */
-function refresh(){$('antN').textContent=S.ants;$('seedN').textContent=S.seeds|0;const u=window.IgorCloud&&window.IgorCloud.user;$('who').textContent=u?(u.name||'Me'):'Guest';$('me').title=u?'Your account':'Sign in';sprKey=''}
+function refresh(){$('antN').textContent=S.ants;$('seedN').textContent=S.seeds|0;const u=window.IgorCloud&&window.IgorCloud.user;$('who').textContent=u?(u.nick||'Me'):'Guest';$('me').title=u?'Your account':'Sign in';sprKey=''}
 let toastT=0;function toast(t){const el=$('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>el.style.opacity=0,2400)}
 let wasReady=new Set();
 setInterval(()=>{S.plots.forEach((p,i)=>{if(plotState(p)==='ready'&&!wasReady.has(i)){wasReady.add(i);if(started){toast('Tofu ants are ready in the field!');say(pick(LINES.ready))}}else if(plotState(p)!=='ready')wasReady.delete(i)})},1000);
@@ -777,8 +969,8 @@ const joyEnd=e=>{if(e.pointerId!==JOY.id)return;JOY.id=null;JOY.x=JOY.z=0;knob.s
 /* ================= intro ================= */
 function start(){$('intro').classList.add('gone');started=true;poke();const first=!S.seen;setTimeout(()=>say(first?'Hi! Walk into my house to play.':pick(['Welcome back!','Oh, you’re back. Gnam.']),4),900);S.seen=(S.seen||0)+1;save()}
 $('goGuest').onclick=start;$('goSign').onclick=()=>{start();openAccount()};
-if(S.seen>=1){$('intro').classList.add('gone');started=true;setTimeout(()=>say(pick(['Welcome back!','Oh, you’re back.'])),1200);hintOn=true}
-if(gotAnts)setTimeout(()=>{toast(`+${gotAnts} tofu seeds from your games`);say('Seeds! Let’s plant them in the field.')},1600);
+let cameBack=false;if(S.seen>=1){$('intro').classList.add('gone');started=true;setTimeout(()=>{if(!cameBack)say(pick(['Welcome back!','Oh, you’re back.']))},1200);hintOn=true}
+if(gotAnts)setTimeout(()=>{toast(`+${gotAnts} tofu seeds from your games`);say('Seeds! Let’s plant them in the field.',3.6)},1600);
 refresh();
 
 /* ================= loop ================= */
@@ -798,20 +990,20 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  // walk into doors, the mat, patches and games
  if(started&&!diving)for(const Z of zones){if(Z.room!==where){continue}const inside=Math.hypot(igor.position.x-Z.x,igor.position.z-Z.z)<Z.r;if(inside&&!Z.in&&IG.manual){Z.in=true;Z.act();break}Z.in=inside}
  joy.classList.toggle('off',!sheet.hidden||!started);
- for(const u of updaters)u(t,dt);
- sky.rotation.y+=dt*.006;if(sky.userData.big)sky.userData.big.opacity=.62+.18*Math.sin(t*1.3);
- shoot.next-=dt;if(shoot.next<=0&&shoot.t<0&&!reduce){shoot.t=0;shoot.next=9+Math.random()*12;shoot.m.position.set(camera.position.x+(Math.random()-.5)*60,42+Math.random()*12,camera.position.z-80);shoot.m.rotation.set(0,0,-.32)}
+ for(const u of updaters)u(t,dt);skyTick(dt);
+ sky.rotation.y+=dt*.006;if(sky.userData.big)sky.userData.big.opacity=(.62+.18*Math.sin(t*1.3))*(SKY.P?SKY.P.stars:1);
+ shoot.next-=dt;if(shoot.next<=0&&shoot.t<0&&!reduce&&SKY.nk>.8&&SKY.W.cloud<.5){shoot.t=0;shoot.next=9+Math.random()*12;shoot.m.position.set(camera.position.x+(Math.random()-.5)*60,42+Math.random()*12,camera.position.z-80);shoot.m.rotation.set(0,0,-.32)}
  if(shoot.t>=0){shoot.t+=dt;shoot.m.position.x+=dt*55;shoot.m.position.y-=dt*18;shoot.m.material.opacity=Math.sin(Math.min(shoot.t/1.1,1)*Math.PI)*.8;if(shoot.t>1.1){shoot.t=-1;shoot.m.material.opacity=0}}
  if(camSnap){camera.position.copy(camTarget());lookS.copy(lookTarget());camSnap=false}else{const f=1-Math.exp(-dt*3);camera.position.lerp(camTarget(),f);lookS.lerp(lookTarget(),f)}camera.lookAt(lookS.x,where==='out'?.9:1.1,lookS.z);
  // labels
  for(const L of labels){projC(pv.copy(L.pos));const vis=started&&!L.hidden&&(L.room||'out')===where&&(!L.near||Math.hypot(L.pos.x-igor.position.x,L.pos.z-igor.position.z)<L.near*(portrait()?.8:1))&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis){L.el.style.transform=`translate(-50%,-100%) translate(${(pv.x*.5+.5)*innerWidth}px,${(-pv.y*.5+.5)*innerHeight}px)`}}
- if(bubbleT>0)bubbleT-=dt;placeBubble();chatter();
+ if(bubbleT>0){bubbleT-=dt;bubbleS+=dt}else if(bubbleQ.length){const[q,s2]=bubbleQ.shift();bubble.textContent=q;bubbleT=s2;bubbleS=0}placeBubble();chatter();
  renderer.render(scene,camera);requestAnimationFrame(frame)}
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.fov=fovFor();camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);hh()});
 // back from a game: Igor is where you left him
 function comeBack(){let r=null;try{r=JSON.parse(localStorage.getItem('igortime_return'));localStorage.removeItem('igortime_return')}catch(e){}
  if(!r||!(Date.now()-r.t<12*3600e3))return false;if(r.where!=='out'&&ROOMS[r.where])enterRoom(r.where);else if(where!=='out')exitRoom(true);
- igor.position.set(r.x,0,r.z);IG.target=null;IG.arrive=null;camSnap=true;syncZones();setTimeout(()=>say(pick(['Welcome back!','How did it go?','Back home. Gnam.'])),700);return true}
+ igor.position.set(r.x,0,r.z);IG.target=null;IG.arrive=null;camSnap=true;syncZones();cameBack=true;setTimeout(()=>say(pick(['Welcome back!','How did it go?','Back home. Gnam.'])),700);return true}
 comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
@@ -823,21 +1015,26 @@ import{getAuth,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signInWithR
 import{getFirestore,doc,getDoc,setDoc,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 const app=initializeApp({apiKey:"AIzaSyBcUoKJT0s_kHpydzjr5qIsxh5AXTurw-0",authDomain:"igortime-f69b3.firebaseapp.com",projectId:"igortime-f69b3",storageBucket:"igortime-f69b3.firebasestorage.app",messagingSenderId:"191774217559",appId:"1:191774217559:web:1604f911cbb70652321a12"});
 const auth=getAuth(app),db=getFirestore(app);auth.useDeviceLanguage();
-let ready=false,timer=0,first=true;
+let ready=false,timer=0,first=true,pendingNick='';
+const acct=()=>{try{localStorage.setItem('igortime_acct',JSON.stringify({name:C.user.nick||'',uid:C.user.uid}))}catch(e){}};
 const clean=S=>JSON.parse(JSON.stringify(S));
 const C={user:null,
- push(S){if(!C.user||!ready)return;clearTimeout(timer);const uid=C.user.uid;timer=setTimeout(()=>setDoc(doc(db,'users',uid),{...clean(S),name:C.user.name||'',updated:serverTimestamp()}).catch(e=>console.warn('save',e)),1500)},
+ push(S){if(!C.user||!ready)return;clearTimeout(timer);const uid=C.user.uid;timer=setTimeout(()=>setDoc(doc(db,'users',uid),{...clean(S),name:C.user.nick||'',nick:C.user.nick||'',updated:serverTimestamp()}).catch(e=>console.warn('save',e)),1500)},
  async google(){const p=new GoogleAuthProvider();try{await signInWithPopup(auth,p)}catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')return signInWithRedirect(auth,p);throw e}},
  login:(m,p)=>signInWithEmailAndPassword(auth,m,p),
- async register(m,p,n){const r=await createUserWithEmailAndPassword(auth,m,p);if(n){await updateProfile(r.user,{displayName:n});C.user&&(C.user.name=n);window.IgorUI.refresh()}},
+ async register(m,p,n){pendingNick=n||'';const r=await createUserWithEmailAndPassword(auth,m,p);if(n){await updateProfile(r.user,{displayName:n});if(C.user){C.user.nick=C.user.name=n;acct();C.push(window.IgorSave.get())}window.IgorUI.refresh()}},
+ async setNick(n){if(!C.user)return;const uid=C.user.uid;C.user.nick=C.user.name=n;acct();
+  await setDoc(doc(db,'users',uid),{...clean(window.IgorSave.get()),name:n,nick:n,updated:serverTimestamp()});
+  try{if(auth.currentUser)await updateProfile(auth.currentUser,{displayName:n})}catch(e){}
+  try{const a=await getDoc(doc(db,'abyss',uid));if(a.exists())await setDoc(doc(db,'abyss',uid),{nick:n},{merge:true})}catch(e){console.warn('abyss nick',e)}},
  reset:m=>sendPasswordResetEmail(auth,m),
  async signOut(){clearTimeout(timer);ready=false;await signOut(auth);window.IgorSave.reset()}};
 window.IgorCloud=C;
 onAuthStateChanged(auth,async u=>{
- if(u){C.user={uid:u.uid,name:u.displayName||(u.email||'').split('@')[0],email:u.email||''};ready=false;
-  try{const s=await getDoc(doc(db,'users',u.uid));if(s.exists()){const d=s.data();delete d.updated;delete d.name;window.IgorSave.load(d)}}catch(e){console.warn('load',e)}
-  ready=true;C.push(window.IgorSave.get());
-  try{localStorage.setItem('igortime_acct',JSON.stringify({name:C.user.name}))}catch(e){}}
+ if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
+  try{const s=await getDoc(doc(db,'users',u.uid));if(s.exists()){const d=s.data();if(d.nick)C.user.nick=d.nick;else if(d.name&&!google)C.user.nick=d.name;delete d.updated;delete d.name;delete d.nick;window.IgorSave.load(d)}}catch(e){console.warn('load',e)}
+  C.user.nick=String(C.user.nick||'').slice(0,16);C.user.name=C.user.nick;pendingNick='';
+  ready=true;C.push(window.IgorSave.get());acct()}
  else{C.user=null;try{localStorage.removeItem('igortime_acct')}catch(e){}}
  window.IgorUI&&window.IgorUI.onAuth(!!u,first);first=false});
 </script>
