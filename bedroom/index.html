@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The bedroom · Igor time</title>
+<meta name="description" content="A timbre ear-training game: a mix of a sine, a square wave and a band of noise plays behind the curtain. Find the same mix on Igor's triangular remote and match the colour of the lights.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+</head><body>
+<script src="/house/kit.js"></script>
+<script>
+(()=>{
+const {TAU,clamp,lerp,ease,rr,drawCurtain,drawRoom,panels}=IgorHouse;
+const LEVELS={
+ easy:   {name:'Easy',   dur:2.5,replays:Infinity,zero:.5, info:'Long sound · listen as often as you like'},
+ medium: {name:'Medium', dur:1.6,replays:1,       zero:.42,info:'Shorter sound · you hear it twice'},
+ extreme:{name:'Extreme',dur:1.0,replays:0,       zero:.36,info:'Short sound · you hear it only once'}};
+/* the three poles of the remote: top, bottom left, bottom right */
+const POLES=[{name:'sine',nice:'pure sine',col:[80,230,120]},{name:'buzz',nice:'buzz',col:[255,80,70]},{name:'noise',nice:'noise',col:[80,140,255]}];
+const TRI=[[0,-1/Math.sqrt(3)],[-.5,.5/Math.sqrt(3)],[.5,.5/Math.sqrt(3)]]; // equilateral, side 1, centred
+const toXY=w=>[w[0]*TRI[0][0]+w[1]*TRI[1][0]+w[2]*TRI[2][0],w[0]*TRI[0][1]+w[1]*TRI[1][1]+w[2]*TRI[2][1]];
+function toW(x,y){const[a,b,c]=TRI,d=(b[1]-c[1])*(a[0]-c[0])+(c[0]-b[0])*(a[1]-c[1]);let w0=((b[1]-c[1])*(x-c[0])+(c[0]-b[0])*(y-c[1]))/d,w1=((c[1]-a[1])*(x-c[0])+(a[0]-c[0])*(y-c[1]))/d,w2=1-w0-w1;
+ let w=[w0,w1,w2].map(v=>Math.max(0,v));const s=w[0]+w[1]+w[2];return w.map(v=>v/s)}
+const dist=(a,b)=>{const p=toXY(a),q=toXY(b);return Math.hypot(p[0]-q[0],p[1]-q[1])};
+function colOf(w){const m=Math.max(...w);let c=[0,1,2].map(k=>w.reduce((s,v,i)=>s+v/m*POLES[i].col[k],0));const mx=Math.max(...c);c=c.map(v=>Math.round(v/mx*255));return c}
+const rgb=(c,a=1)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+
+/* ---------- sound: sine, square and a narrow band of noise on the same pitch ---------- */
+/* rough loudness weighting (a softened A-weighting), so the three poles sound equally loud */
+function aw(f){const f2=f*f,ra=12194**2*f2*f2/((f2+20.6**2)*Math.sqrt((f2+107.7**2)*(f2+737.9**2))*(f2+12194**2));return Math.pow(ra*1.2589,.7)}
+function voice(K,f0,spec){const AC=K.AC,out=AC.createGain();out.gain.value=0;out.connect(K.OUT);const nyq=AC.sampleRate/2;
+ // 1 · pure sine: soft and round
+ const sine=AC.createOscillator();sine.frequency.value=f0;const sineW=.7071*aw(f0);
+ // 2 · narrow pulse (12%) without its fundamental, low harmonics faded in by a curve: very buzzy, up to 14 kHz
+ const N=Math.max(2,Math.floor(14000/f0)),re=new Float32Array(N+1),im=new Float32Array(N+1);let pw2=0;
+ for(let n=1;n<=N;n++){const tilt=n===1?0:Math.min(1,Math.pow((n-1)/5,1.5)),a=2/(n*Math.PI)*Math.sin(n*Math.PI*.12)*tilt;re[n]=a;pw2+=a*a/2*aw(n*f0)**2}
+ const sq=AC.createOscillator();sq.setPeriodicWave(AC.createPeriodicWave(re,im,{disableNormalization:true}));sq.frequency.value=f0;const sqW=Math.sqrt(pw2);
+ // 3 · noise filtered steeply around the fundamental (a third to a seventh wide, three band-passes in a row),
+ //     with 0 to 3 more bands on random harmonics, at random weights — the same for the reference and for you
+ const nz=AC.createBufferSource();nz.buffer=K.NOISE;nz.loop=true;const ns=spec||{bw:4,harm:[]},BWQ=1/(Math.pow(2,ns.bw/24)-Math.pow(2,-ns.bw/24));
+ const n=4096,fr=new Float32Array(n),m=new Float32Array(n),ph=new Float32Array(n);for(let k=0;k<n;k++)fr[k]=(k+.5)/n*nyq;
+ const nzOut=AC.createGain();let pn=0,pr=0;
+ for(const b of[{n:1,w:1},...ns.harm]){if(b.n*f0>nyq*.9)continue;const fl=[0,1,2].map(()=>{const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=b.n*f0;f.Q.value=BWQ;return f});
+  const bg=AC.createGain();bg.gain.value=b.w;nz.connect(fl[0]);fl[0].connect(fl[1]);fl[1].connect(fl[2]);fl[2].connect(bg);bg.connect(nzOut);
+  fl[0].getFrequencyResponse(fr,m,ph);for(let k=0;k<n;k++){const q=b.w*b.w*m[k]**6;pn+=q*aw(fr[k])**2;pr+=q}}
+ const nzW=Math.sqrt(pn/n/3),nzRaw=Math.sqrt(pr/n/3);
+ // the same perceived level for all three; then keep the loudest peak safe
+ const T=.09;let NORM=[T/sineW,T/sqW,T/nzW];const peak=Math.max(NORM[0]*1,NORM[1]*re.reduce((s,v)=>s+Math.abs(v),0)*.6,NORM[2]*nzRaw*4);if(peak>.7)NORM=NORM.map(v=>v*.7/peak);
+ const gs=[0,1,2].map(()=>{const g=AC.createGain();g.gain.value=0;g.connect(out);return g});
+ sine.connect(gs[0]);sq.connect(gs[1]);nzOut.connect(gs[2]);
+ sine.start();sq.start();nz.start(0,Math.random()*3);
+ /* linear weights with constant power: near a corner you hear (almost) only that sound, the real blend is in the middle */
+ const amps=w=>{const q=w.map(v=>Math.pow(v,1.4)),nn=Math.sqrt(q.reduce((s,v)=>s+v*v,0))||1;return q.map(v=>v/nn)};
+ return{mix(w,now){amps(w).forEach((v,i)=>{const a=v*NORM[i];if(now)gs[i].gain.setValueAtTime(a,AC.currentTime);else gs[i].gain.setTargetAtTime(a,AC.currentTime,.02)})},
+  on(){const t=AC.currentTime;out.gain.cancelScheduledValues(t);out.gain.setValueAtTime(out.gain.value,t);out.gain.linearRampToValueAtTime(1,t+.04)},
+  off(){const t=AC.currentTime;out.gain.cancelScheduledValues(t);out.gain.setValueAtTime(out.gain.value,t);out.gain.linearRampToValueAtTime(0,t+.08)},
+  onFor(d){const t=AC.currentTime+.02;out.gain.cancelScheduledValues(t);out.gain.setValueAtTime(0,t);out.gain.linearRampToValueAtTime(1,t+.04);out.gain.setValueAtTime(1,t+d-.08);out.gain.linearRampToValueAtTime(0,t+d)},
+  stop(){out.gain.setTargetAtTime(0,AC.currentTime,.03);setTimeout(()=>{[sine,sq,nz].forEach(x=>{try{x.stop()}catch(e){}});out.disconnect()},400)}}}
+let vRef=null,vMe=null,myOn=false;
+const IG={w:[1/3,1/3,1/3],drag:false};
+function myStart(K){if(K.phase!=='guess'||K.refOn||myOn||!vMe)return;myOn=true;vMe.mix(IG.w,1);vMe.on()}
+function myStop(){if(!myOn)return;myOn=false;vMe&&vMe.off()}
+function randW(){const r1=Math.sqrt(Math.random()),r2=Math.random();return[1-r1,r1*(1-r2),r1*r2]}
+
+const K=IgorGame({key:'bedroom',name:'The bedroom',rounds:5,maxRound:100,levels:LEVELS,phones:true,
+ aria:'Two bedrooms: behind the curtain the lights glow with the colour of a sound; on the right you move the cursor on a triangular remote to find the same sound',
+ title:'The <em>bedroom</em>',
+ intro:`<p>Behind the curtain, a sound sets the colour of the bedroom lights. It’s a mix of three very different sounds on the same note: a <b style="color:#5ee67a">pure sine</b>, a <b style="color:#ff6a5e">very buzzy wave</b> and a <b style="color:#6f9bff">narrow band of noise</b>.</p>
+ <p>Move the cursor on <span class="nm">Igor</span>’s <b>triangular remote</b> to find the same mix, then press <b>That’s it</b>: the lights will show how close you got.</p>`,
+ keys:'keys: arrows move the cursor, space = my sound, L = listen, enter = that’s it',
+ bar:`<button id="listen" type="button">▶ Listen</button><button id="mine" type="button">♪ My sound</button><button id="ok" class="main" type="button">That’s it!</button>`,
+ lines:{first:'Listen. What colour is it?',again:['Again! Listen…','Shh. New colour.','Another one. Listen closely.'],last:'Last one. Find the colour.'},
+ revealMs:4400,
+ newRound(R,LV,K){R.w=randW();R.f0=Math.exp(lerp(Math.log(150),Math.log(400),Math.random()));R.err=null;
+  /* the noise pole changes every round: the band on the fundamental is a third to a seventh wide,
+     and 0, 1, 2 or 3 more bands sit on random harmonics (2nd to 10th), each with its own level */
+  {const hs=[2,3,4,5,6,7,8,9,10].sort(()=>Math.random()-.5),k=Math.floor(Math.random()*4);R.nspec={bw:lerp(4,11,Math.random()),harm:hs.slice(0,k).map(h=>({n:h,w:lerp(.25,1,Math.random())}))}}
+  let s;do{s=randW()}while(dist(s,R.w)<.3);IG.w=s;
+  if(vRef)vRef.stop();if(vMe)vMe.stop();myOn=false;vRef=voice(K,R.f0,R.nspec);vMe=voice(K,R.f0,R.nspec);vRef.mix(R.w,1);vMe.mix(IG.w,1)},
+ playRef(R,LV,K){myStop();vRef.onFor(LV.dur);return LV.dur},
+ stopRef(K){vRef&&vRef.off()},
+ judge(R,LV,K){myStop();const d=dist(IG.w,R.w);R.err=d;const pts=d<.05?125:125*(1-d/LV.zero),good=d<.12;
+  const diff=R.w.map((v,i)=>v-IG.w[i]),more=diff.indexOf(Math.max(...diff)),X=POLES[more].nice;
+  let msg;if(d<.05)msg=['Spot on! Same colour, same sound.','Perfect! What ears!'][K.round%2];
+  else if(d<.12)msg=['So close! The lights match.','Lovely! Nearly the same colour.'][K.round%2];
+  else if(d<.3)msg='Nearly! A little more '+X+' next time.';
+  else msg='Good try! There was more '+X+' in it. The next one’s yours.';
+  return{pts,good,msg}},
+ update(K){const m=document.getElementById('mine');if(m)m.disabled=K.phase!=='guess'||K.refOn},
+ key_down(e,K){const st=e.shiftKey?.01:.04;let dx=0,dy=0;if(e.key==='ArrowLeft')dx=-st;else if(e.key==='ArrowRight')dx=st;else if(e.key==='ArrowUp')dy=-st;else if(e.key==='ArrowDown')dy=st;
+  if(dx||dy){e.preventDefault();const[x,y]=toXY(IG.w);IG.w=toW(x+dx,y+dy);K.moved();if(myOn)vMe.mix(IG.w);else{myStart(K);clearTimeout(window.__kt);window.__kt=setTimeout(myStop,450)}}
+  else if(e.key===' '){e.preventDefault();if(!e.repeat)myStart(K)}},
+ key_up(e,K){if(e.key===' ')myStop()},
+ draw});
+const mine=document.getElementById('mine');
+mine.addEventListener('pointerdown',e=>{e.preventDefault();myStart(K)});['pointerup','pointerleave','pointercancel'].forEach(k=>mine.addEventListener(k,myStop));
+/* the remote: tap or drag anywhere on it */
+let REM=null;
+const pick=e=>{const x=(e.clientX-REM.cx)/REM.s,y=(e.clientY-REM.cy)/REM.s;IG.w=toW(x,y);if(myOn)vMe.mix(IG.w)};
+K.cv.addEventListener('pointerdown',e=>{if(K.phase!=='guess'||!REM||K.refOn)return;const x=(e.clientX-REM.cx)/REM.s,y=(e.clientY-REM.cy)/REM.s;if(Math.hypot(x,y)>.75)return;
+ IG.drag=true;try{K.cv.setPointerCapture(e.pointerId)}catch(_){}pick(e);K.moved();myStart(K)});
+K.cv.addEventListener('pointermove',e=>{if(IG.drag)pick(e)});
+const up=()=>{if(!IG.drag)return;IG.drag=false;myStop()};K.cv.addEventListener('pointerup',up);K.cv.addEventListener('pointercancel',up);
+
+/* ---------- Igor the plush: made once from Igor's drawing, then fluffed up ---------- */
+let PLUSH=null;
+function makePlush(){const H=IgorHouse;if(PLUSH||!H.igorReady())return PLUSH;const PW=240,PH=Math.round(PW*730/663),k=PW/663,pad=10;
+ const c=document.createElement('canvas');c.width=PW+pad*2;c.height=PH+pad*2;const x=c.getContext('2d');x.drawImage(H.igorImg,pad,pad,PW,PH);
+ const im=x.getImageData(0,0,c.width,c.height),d=im.data,W=c.width,Hh=c.height,A=i=>d[i*4+3];
+ // soft fabric colours: no black lines, paler felt, a grainy texture
+ for(let i=0;i<W*Hh;i++){const o=i*4;if(d[o+3]<10)continue;let r=d[o],g=d[o+1],b=d[o+2];const dark=r+g+b<180;
+  if(dark){r=70;g=96;b=40}else{r=r*.78+70;g=g*.82+40;b=b*.75+60}const n=(Math.random()-.5)*26;d[o]=Math.min(255,r+n);d[o+1]=Math.min(255,g+n);d[o+2]=Math.min(255,b+n)}
+ x.putImageData(im,0,0);
+ // fur: little tufts all round the edge
+ const edge=[];for(let y=1;y<Hh-1;y+=2)for(let xx=1;xx<W-1;xx+=2){const i=y*W+xx;if(A(i)>100&&(A(i-1)<40||A(i+1)<40||A(i-W)<40||A(i+W)<40))edge.push([xx,y,i])}
+ x.lineCap='round';const FUR=['#b7d677','#a9cc66','#c5e08c','#9fc25e'];for(const[ex,ey,i]of edge)for(let q=0;q<4;q++){const a=Math.random()*TAU,L=2.5+Math.random()*5;x.strokeStyle=FUR[(Math.random()*4)|0];x.lineWidth=1.6+Math.random()*1.4;
+  x.beginPath();x.moveTo(ex,ey);x.lineTo(ex+Math.cos(a)*L,ey+Math.sin(a)*L);x.stroke()}
+ // short fuzz all over
+ for(let q=0;q<2600;q++){const xx=Math.floor(Math.random()*W),y=Math.floor(Math.random()*Hh),i=y*W+xx;if(A(i)<200)continue;const o=i*4,a=Math.random()*TAU;
+  x.strokeStyle=`rgba(${Math.min(255,d[o]+30)},${Math.min(255,d[o+1]+30)},${Math.min(255,d[o+2]+20)},.35)`;x.lineWidth=1;x.beginPath();x.moveTo(xx,y);x.lineTo(xx+Math.cos(a)*2.5,y+Math.sin(a)*2.5);x.stroke()}
+ // button eyes sewn on
+ for(const[ex,ey,er]of[[465,236,30],[538.5,228,26]]){const bx=pad+ex*k,by=pad+ey*k,r=er*k;x.fillStyle='#f4eedc';x.beginPath();x.arc(bx,by,r*1.15,0,TAU);x.fill();
+  x.fillStyle='#1d1a1a';x.beginPath();x.arc(bx,by,r*.75,0,TAU);x.fill();x.strokeStyle='#e8e0cc';x.lineWidth=1.2;x.beginPath();x.moveTo(bx-r*.3,by-r*.3);x.lineTo(bx+r*.3,by+r*.3);x.moveTo(bx+r*.3,by-r*.3);x.lineTo(bx-r*.3,by+r*.3);x.stroke();
+  x.fillStyle='rgba(255,255,255,.7)';x.beginPath();x.arc(bx-r*.3,by-r*.35,r*.16,0,TAU);x.fill()}
+ // a seam down the head and a little label
+ x.strokeStyle='rgba(60,45,25,.6)';x.setLineDash([3,3]);x.lineWidth=1.4;x.beginPath();x.moveTo(pad+300*k,pad+60*k);x.quadraticCurveTo(pad+250*k,pad+250*k,pad+330*k,pad+420*k);x.stroke();x.setLineDash([]);
+ x.fillStyle='#fff';x.strokeStyle='#c9b9a0';x.lineWidth=1;x.beginPath();x.rect(pad+120*k,pad+300*k,46*k*1.6,30*k*1.6);x.fill();x.stroke();x.fillStyle='#e0463c';x.font='600 '+Math.round(16*k*1.6)+'px Fredoka,sans-serif';x.fillText('IGOR',pad+126*k,pad+300*k+22*k*1.6);
+ PLUSH=c;return c}
+
+/* ---------- drawing ---------- */
+function bedroom(g,p,floorY,col,on,t,tall){
+ drawRoom(g,p.x,p.w,p.h,{y0:p.y,floorY,wall:['#2c2742','#221d35'],stripe:'rgba(255,255,255,.025)',wains:'#3a2c3c',floor:['#5a3d2a','#3a2619']});
+ // glow of the lights on the wall
+ if(on>0){const cx=p.x+p.w*.5,cy=p.y+p.h*.42,gr=g.createRadialGradient(cx,cy,10,cx,cy,Math.max(p.w,p.h)*.65);gr.addColorStop(0,rgb(col,.55*on));gr.addColorStop(1,rgb(col,0));g.fillStyle=gr;g.fillRect(p.x,p.y,p.w,p.h)}
+ // fairy lights along the top
+ const y0=p.y+p.h*(tall?.1:.14),n=Math.max(6,Math.round(p.w/46));g.strokeStyle='#14111c';g.lineWidth=2;g.beginPath();
+ for(let i=0;i<=n;i++){const x=p.x+p.w*(.06+.88*i/n),y=y0+Math.sin(i/n*Math.PI)*p.h*.06;i?g.lineTo(x,y):g.moveTo(x,y)}g.stroke();
+ for(let i=0;i<=n;i++){const x=p.x+p.w*(.06+.88*i/n),y=y0+Math.sin(i/n*Math.PI)*p.h*.06+7,tw=.75+.25*Math.sin(t*3+i*1.3);
+  if(on>0){g.fillStyle=rgb(col,.35*on*tw);g.beginPath();g.arc(x,y,12,0,TAU);g.fill()}g.fillStyle=on>0?rgb(col.map(v=>Math.round(lerp(60,v,on))),1):'#4a4458';g.beginPath();g.ellipse(x,y,4,6,0,0,TAU);g.fill()}
+ // the bed
+ const bw=Math.min(p.w*.62,p.h*(tall?1.1:.55)),bx=p.x+p.w*.5-bw/2,by=floorY-bw*.2;
+ g.fillStyle='#6b4a34';rr(g,bx-bw*.04,by-bw*.22,bw*.1,bw*.42,6);g.fill(); // headboard
+ g.fillStyle='#e9e2d4';rr(g,bx,by,bw,bw*.12,10);g.fill();
+ g.fillStyle=on>0?`rgb(${Math.round(lerp(90,col[0]*.55+60,on))},${Math.round(lerp(110,col[1]*.55+60,on))},${Math.round(lerp(170,col[2]*.55+60,on))})`:'#5a6aa8';rr(g,bx+bw*.28,by-bw*.02,bw*.74,bw*.16,12);g.fill(); // blanket
+ g.fillStyle='#fff8ea';rr(g,bx+bw*.04,by-bw*.06,bw*.2,bw*.09,bw*.04);g.fill(); // pillow
+ g.fillStyle='#4e3626';g.fillRect(bx,by+bw*.12,bw*.05,floorY-by-bw*.12+bw*.03);g.fillRect(bx+bw*.95,by+bw*.12,bw*.05,floorY-by-bw*.12+bw*.03);
+
+ // rug and slippers
+ const fy=floorY;g.save();g.beginPath();g.ellipse(bx+bw*.55,fy+(p.y+p.h-fy)*.45,bw*.5,(p.y+p.h-fy)*.3,0,0,TAU);g.clip();g.fillStyle='#4a3f6b';g.fillRect(p.x,fy,p.w,p.h);
+ g.strokeStyle='#8f7fc0';g.lineWidth=3;for(let i=1;i<4;i++){g.beginPath();g.ellipse(bx+bw*.55,fy+(p.y+p.h-fy)*.45,bw*.5*(1-i*.22),(p.y+p.h-fy)*.3*(1-i*.22),0,0,TAU);g.stroke()}g.restore();
+ for(const dx of[0,.07]){g.fillStyle='#e98fb0';g.beginPath();g.ellipse(bx+bw*(.82+dx),fy+(p.y+p.h-fy)*.3,bw*.03,bw*.014,0,0,TAU);g.fill();g.fillStyle='#fff';g.beginPath();g.arc(bx+bw*(.84+dx),fy+(p.y+p.h-fy)*.3-bw*.008,bw*.008,0,TAU);g.fill()}
+ // bedside table with a little lamp, tinted by the lights
+ const nx=bx-bw*.2,nw=bw*.15,nh=bw*.17;if(nx>p.x+4){g.fillStyle='#6b4a34';rr(g,nx,fy-nh,nw,nh,4);g.fill();g.fillStyle='#55392a';g.fillRect(nx+nw*.12,fy-nh*.6,nw*.76,2);g.fillStyle='#c9a46a';g.beginPath();g.arc(nx+nw/2,fy-nh*.4,2.5,0,TAU);g.fill();
+  const lc=on>0?col:[255,214,150],lx=nx+nw/2,ly=fy-nh;g.fillStyle='#3b2c22';g.fillRect(lx-1.5,ly-nh*.5,3,nh*.5);
+  const gr=g.createRadialGradient(lx,ly-nh*.6,2,lx,ly-nh*.6,bw*.25);gr.addColorStop(0,rgb(lc,.45));gr.addColorStop(1,rgb(lc,0));g.fillStyle=gr;g.fillRect(lx-bw*.25,ly-nh*.6-bw*.25,bw*.5,bw*.5);
+  g.fillStyle=rgb(lc.map(v=>Math.round(lerp(v,255,.5))));g.beginPath();g.moveTo(lx-nw*.25,ly-nh*.75);g.lineTo(lx+nw*.25,ly-nh*.75);g.lineTo(lx+nw*.38,ly-nh*.45);g.lineTo(lx-nw*.38,ly-nh*.45);g.closePath();g.fill()}
+ // a little picture of the moon above the bed
+ const fw=bw*.2,fh=bw*.15,fx=bx+bw*.5-fw/2,fyy=by-bw*.5;if(fyy>p.y+p.h*(tall?.2:.24)){g.fillStyle='#8a5a33';g.fillRect(fx-4,fyy-4,fw+8,fh+8);g.fillStyle='#1b2450';g.fillRect(fx,fyy,fw,fh);
+  g.fillStyle='#fff3c4';g.beginPath();g.arc(fx+fw*.35,fyy+fh*.45,fh*.26,0,TAU);g.fill();g.fillStyle='#1b2450';g.beginPath();g.arc(fx+fw*.42,fyy+fh*.38,fh*.24,0,TAU);g.fill();
+  g.fillStyle='#fff3c4';for(const[sx,sy]of[[.7,.25],[.82,.6],[.58,.72],[.9,.3]])g.fillRect(fx+fw*sx,fyy+fh*sy,2,2)}
+ // Igor the plush, sitting against the pillow
+ const PL=makePlush();if(PL){const ps=bw*.29,ph=ps*PL.height/PL.width,px=bx+bw*.15,py=by-ph*.28;g.save();g.translate(px,py);g.rotate(-.14+Math.sin(t*.6)*.015);
+  g.fillStyle='rgba(20,10,20,.25)';g.beginPath();g.ellipse(0,ph*.36,ps*.3,ph*.06,0,0,TAU);g.fill();g.drawImage(PL,-ps/2,-ph/2,ps,ph);
+  g.fillStyle='#ff8ab6';const hx=-ps*.2,hy=ph*.02,hs=ps*.055;g.beginPath();g.moveTo(hx,hy+hs);g.bezierCurveTo(hx-hs*1.6,hy-hs*.2,hx-hs*.6,hy-hs*1.4,hx,hy-hs*.4);g.bezierCurveTo(hx+hs*.6,hy-hs*1.4,hx+hs*1.6,hy-hs*.2,hx,hy+hs);g.fill();
+  g.restore()}
+ return{bx,by,bw}}
+function remote(g,cx,cy,s,t,live,mark,ghost){const P=TRI.map(([x,y])=>[cx+x*s,cy+y*s]),pad=s*.1;
+ // body: a rounded triangle
+ g.save();g.lineJoin='round';g.strokeStyle='#1a1622';g.lineWidth=pad*2;g.fillStyle='#1a1622';g.beginPath();P.forEach((q,i)=>i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));g.closePath();g.stroke();g.fill();
+ g.strokeStyle='rgba(255,255,255,.12)';g.lineWidth=2;g.stroke();
+ // the colour field inside: each corner glows with its pole's colour
+ g.save();g.beginPath();P.forEach((q,i)=>i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]));g.closePath();g.clip();g.fillStyle='#e8e4f0';g.fillRect(cx-s,cy-s,2*s,2*s);
+ g.globalCompositeOperation='multiply';P.forEach((q,i)=>{const o=P[(i+1)%3],o2=P[(i+2)%3],mx=(o[0]+o2[0])/2,my=(o[1]+o2[1])/2,gr=g.createLinearGradient(q[0],q[1],mx,my);
+  const c=POLES[i].col,inv=[0,1,2].map(k=>Math.round(255-(255-c[k])*.9));gr.addColorStop(0,rgb(inv.map((v,k)=>Math.round(c[k]*.9+25))));gr.addColorStop(1,'rgb(255,255,255)');g.fillStyle=gr;g.fillRect(cx-s,cy-s,2*s,2*s)});
+ g.restore();g.globalAlpha=live?1:.9;
+ // pole buttons and names
+ const fs=clamp(s*.075,11,17);g.font='600 '+fs+'px Fredoka,sans-serif';g.textAlign='center';
+ P.forEach((q,i)=>{const c=POLES[i].col,dx=q[0]-cx,dy=q[1]-cy,L=Math.hypot(dx,dy),ox=q[0]+dx/L*pad*1.25,oy=q[1]+dy/L*pad*1.25;
+  g.fillStyle=rgb(c);g.beginPath();g.arc(ox,oy,pad*.42,0,TAU);g.fill();g.strokeStyle='#0d0b12';g.lineWidth=2;g.stroke();
+  g.fillStyle='#f3e7d3';const lx=q[0]+dx/L*pad*2.6,ly=q[1]+dy/L*pad*2.6+(i?fs*.4:fs*.2);g.fillText(POLES[i].name,lx,ly)});
+ if(ghost){const[gx,gy]=toXY(ghost).map(v=>v*s),[mx,my]=toXY(mark).map(v=>v*s);g.strokeStyle='rgba(20,16,28,.9)';g.setLineDash([5,4]);g.lineWidth=2.5;g.beginPath();g.moveTo(cx+gx,cy+gy);g.lineTo(cx+mx,cy+my);g.stroke();g.setLineDash([]);
+  g.fillStyle=rgb(colOf(ghost));g.strokeStyle='#14101c';g.lineWidth=3;g.beginPath();g.arc(cx+gx,cy+gy,Math.max(7,s*.045),0,TAU);g.fill();g.stroke();
+  g.strokeStyle='#fff';g.lineWidth=1.5;g.beginPath();g.arc(cx+gx,cy+gy,Math.max(7,s*.045)+4,0,TAU);g.stroke()}
+ if(mark){const[mx,my]=toXY(mark).map(v=>v*s),r=Math.max(9,s*.055);g.fillStyle=rgb(colOf(mark));g.shadowColor=rgb(colOf(mark));g.shadowBlur=live?18:6;g.beginPath();g.arc(cx+mx,cy+my,r,0,TAU);g.fill();g.shadowBlur=0;
+  g.strokeStyle='#14101c';g.lineWidth=3;g.stroke();g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.arc(cx+mx,cy+my,r*.45,0,TAU);g.stroke();
+  if(live){g.strokeStyle=`rgba(255,255,255,${.35+.35*Math.sin(t*5)})`;g.lineWidth=2;g.beginPath();g.arc(cx+mx,cy+my,r+6,0,TAU);g.stroke()}}
+ g.restore()}
+function label(g,x,y,txt,col,size=16){g.save();g.font='600 '+size+'px Fredoka,sans-serif';g.textAlign='center';const w=g.measureText(txt).width+22;
+ g.fillStyle='#f7ecd4';g.strokeStyle='#2b2018';g.lineWidth=2.5;rr(g,x-w/2,y-15,w,28,12);g.fill();g.stroke();g.fillStyle=col||'#2b2018';g.fillText(txt,x,y+5);g.restore()}
+
+function draw(K,dt){const g=K.g,W=K.W,H=K.H,t=K.T,R=K.R,{tall,P}=panels(W,H);
+ const open=K.phase==='reveal'||K.phase==='end'?clamp(K.revT/.9,0,1):0,rev=R&&(K.phase==='reveal'||K.phase==='end')&&R.err!=null;
+ g.fillStyle='#140d09';g.fillRect(0,0,W,H);
+ const refK=K.refOn?clamp(Math.min((K.now()-K.refT0)/.08,(K.refT0+K.refDur-K.now())/.08),0,1):0;
+ // ---- left: the reference room behind the curtain ----
+ {const p=P[0],floorY=p.y+p.h*(tall?.88:.82);g.save();g.beginPath();g.rect(p.x,p.y,p.w,p.h);g.clip();
+  const on=R?Math.max(refK,rev?ease(clamp(K.revT/.8,0,1)):0):0;bedroom(g,p,floorY,R?colOf(R.w):[255,255,255],on,t,tall);
+  drawCurtain(g,p.x+p.w*.04,p.x+p.w*.96,p.y+p.h*(tall?.06:.12),floorY-p.h*.02,open,refK,t,R?colOf(R.w).join(','):'241,180,110');
+  g.restore()}
+ // ---- right: Igor's room and the remote ----
+ {const p=P[1],floorY=p.y+p.h*(tall?.88:.82);g.save();g.beginPath();g.rect(p.x,p.y,p.w,p.h);g.clip();
+  const myCol=colOf(IG.w),on=rev?ease(clamp((K.revT-.5)/.8,0,1)):0;const B=bedroom(g,p,floorY,myCol,on,t,tall);
+  const ih=tall?clamp(p.h*.42,70,160):clamp(Math.min(p.w*.36,p.h*.26),80,200),ix=Math.min(p.x+p.w-ih*.46,B.bx+B.bw*.78),iy=B.by-ih*.32;
+  K.drawIgor(ix,iy,ih,-1);
+  // the remote: big while you play, then it shrinks into Igor's paws
+  const big=tall?Math.min(p.w*.5,p.h*.66):Math.min(p.w*.5,p.h*.48),small=Math.max(80,big*.5);
+  const k=rev?ease(clamp((K.revT-.1)/.6,0,1)):0,s=lerp(big,small,k);
+  const cxB=tall?p.x+p.w*.45:p.x+p.w*.44,cyB=p.y+p.h*(tall?.5:.5)+big*.12,cxS=ix-ih*.62,cyS=Math.min(floorY-small*.25,iy+ih*.28);
+  const cx=lerp(cxB,cxS,k),cy=lerp(cyB,cyS,k);
+  if(!rev||k<1){g.fillStyle=`rgba(10,8,16,${.55*(1-k)})`;g.fillRect(p.x,p.y,p.w,p.h)}
+  REM={cx,cy,s};remote(g,cx,cy,s,t,K.phase==='guess'&&!K.refOn,IG.w,rev&&K.revT>.9?R.w:null);
+  if(rev){const k2=ease(clamp((K.revT-.9)/.4,0,1));if(k2>0){g.globalAlpha=k2;label(g,cx,cy-s*.58-26,'+'+R.pts,R.good?'#2a8a3a':'#9a5d2c');g.globalAlpha=1}
+   if(R.good&&!R.ate&&K.revT>1.4){R.ate=1;K.eat(B.bx+B.bw*.4,B.by,Math.max(1.4,ih/60),'#f8f5ec')}}
+  if(K.phase==='guess'&&K.round===1&&!IG.drag&&!K.refOn&&K.T%4<2.4){g.fillStyle='rgba(243,231,211,.8)';g.font='600 13px Fredoka,sans-serif';g.textAlign='center';g.fillText('tap or drag on the remote',cx,cy+s*.29+s*.1+34)}
+  g.restore()}
+ if(!tall){g.strokeStyle='rgba(243,231,211,.15)';g.setLineDash([4,7]);g.beginPath();g.moveTo(W/2,H*.2);g.lineTo(W/2,H-80);g.stroke();g.setLineDash([])}
+ else{g.fillStyle='#0d0a14';g.fillRect(0,P[1].y-2,W,4)}}
+})();
+</script>
+</body></html>
