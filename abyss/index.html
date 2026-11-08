@@ -81,18 +81,47 @@ const imgT=new Image();imgT.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA
 const okN=()=>imgN.complete&&imgN.naturalWidth>0,okT=()=>imgT.complete&&imgT.naturalWidth>0;imgN.onerror=()=>{};imgT.onerror=()=>{};
 // ---- your anteater: Igor, Shigor or Queegor (from the account, or chosen here)
 const AVN={igor:'Igor',she:'Shigor',queer:'Queegor'};
-let AVK='igor',AVBALL=null;
+let AVK='igor',AVBALL=null,AVG=null,AVGC=null;
 try{const acct=JSON.parse(localStorage.getItem('igortime_acct')),home=JSON.parse(localStorage.getItem('igortime_v1'));
- if(acct&&home&&AVN[home.avatar]){AVK=home.avatar;AVBALL=home.ball||null}else{const v=localStorage.getItem('igorAvatar');if(AVN[v])AVK=v}}catch(e){}
+ if(acct&&home&&AVN[home.avatar]){AVK=home.avatar;AVBALL=home.ball||null;AVG=home.glasses||null;AVGC=home.gcol||null}else{const v=localStorage.getItem('igorAvatar');if(AVN[v])AVK=v}}catch(e){}
 const DECO={N:{img:imgN,eyes:[{x:151,y:63.5,rx:12,ry:13},{x:171.5,y:61,rx:10.5,ry:12}],acc:[104,22]},T:{img:imgT,eyes:[{x:150,y:84.5,rx:13.5,ry:13.5},{x:175,y:91.5,rx:13.5,ry:13.5}],acc:[110,26]}};
 function lashesAt(g,e,n){g.save();g.strokeStyle='#111';g.lineCap='round';g.lineWidth=3.2;for(let i=0;i<n;i++){const a=(-120+i*(60/(Math.max(n,2)-1)))*Math.PI/180;g.beginPath();g.moveTo(e.x+e.rx*Math.cos(a),e.y+e.ry*Math.sin(a));g.lineTo(e.x+(e.rx+10)*Math.cos(a-.12),e.y+(e.ry+10)*Math.sin(a-.12));g.stroke()}g.restore()}
 function bowAt(g,x,y,s,col){g.save();g.fillStyle=col;g.strokeStyle='#141414';g.lineWidth=1.8;g.lineJoin='round';for(const d of[-1,1]){g.beginPath();g.moveTo(x,y);g.lineTo(x+d*s,y-s*.7);g.lineTo(x+d*s,y+s*.7);g.closePath();g.fill();g.stroke()}g.beginPath();g.arc(x,y,s*.3,0,7);g.fill();g.stroke();g.restore()}
 function starAt(g,x,y,r){const cols=['#fcf434','#ffffff','#9c59d1','#2c2c2c'];g.save();g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?r*.45:r;g.lineTo(x+q*Math.cos(a),y+q*Math.sin(a))}g.closePath();g.save();g.clip();const h=2*r/cols.length;cols.forEach((c,i)=>{g.fillStyle=c;g.fillRect(x-r,y-r+i*h,2*r,h+.6)});g.restore();g.strokeStyle='#141414';g.lineWidth=1.8;g.lineJoin='round';g.stroke();g.restore()}
 function flowerAt(g,x,y,r,col){g.save();g.fillStyle=col;g.strokeStyle='#141414';g.lineWidth=1.6;for(let i=0;i<5;i++){const a=i/5*Math.PI*2-Math.PI/2;g.beginPath();g.arc(x+Math.cos(a)*r*.62,y+Math.sin(a)*r*.62,r*.48,0,7);g.fill();g.stroke()}g.fillStyle='#f6d34a';g.beginPath();g.arc(x,y,r*.38,0,7);g.fill();g.stroke();g.restore()}
+/* Igor's accessories: a cap (Igor only) and glasses (everyone).
+   Drawn in the coordinates of the island picture (663×730) and mapped onto any
+   other copy of the same drawing through the positions of its two eyes. */
+const ACC_REF=[{x:465,y:233,rx:41,ry:45},{x:538.5,y:225,rx:34.5,ry:41}];
+const ACC_GLASS=['#141414','#8a5a2b','#e0463c','#2f6fd6','#f1b46e','#ff8ab6','#ffffff'];
+const ACC_CAP=[null,'#e0463c','#2f6fd6','#f1b46e','#7fe3ef','#b48ce6','#ffffff','#2b2b2b'];
+function accShade(col,k){const n=parseInt(col.slice(1),16),f=v=>Math.max(0,Math.min(255,Math.round(v*k)));return`rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`}
+function accMap(c,eyes){const a=ACC_REF,b=eyes,dxa=a[1].x-a[0].x,dya=a[1].y-a[0].y,dxb=b[1].x-b[0].x,dyb=b[1].y-b[0].y;
+ const s=Math.hypot(dxb,dyb)/Math.hypot(dxa,dya),r=Math.atan2(dyb,dxb)-Math.atan2(dya,dxa),cs=s*Math.cos(r),sn=s*Math.sin(r);
+ c.transform(cs,sn,-sn,cs,b[0].x-(cs*a[0].x-sn*a[0].y),b[0].y-(sn*a[0].x+cs*a[0].y))}
+function accCap(c,col){const w=86,h=72;c.save();c.translate(384,128);c.rotate(.42);c.lineJoin='round';c.lineCap='round';c.strokeStyle='#141414';c.lineWidth=6;
+ c.fillStyle=accShade(col,.78);c.beginPath();c.moveTo(w*.35,-4);c.quadraticCurveTo(w*1.55,-14,w*2.05,10);c.quadraticCurveTo(w*1.45,22,w*.3,12);c.closePath();c.fill();c.stroke();
+ c.fillStyle=col;c.beginPath();c.moveTo(-w,4);c.bezierCurveTo(-w,-h*1.25,w,-h*1.25,w,4);c.quadraticCurveTo(0,14,-w,4);c.closePath();c.fill();c.stroke();
+ c.lineWidth=3.5;c.globalAlpha=.55;c.beginPath();c.moveTo(-6,-h*.93);c.quadraticCurveTo(14,-h*.4,8,9);c.stroke();
+ c.beginPath();c.moveTo(-w*.92,-12);c.quadraticCurveTo(0,-2,w*.92,-12);c.stroke();c.globalAlpha=1;
+ c.fillStyle=accShade(col,.8);c.lineWidth=4.5;c.beginPath();c.arc(-6,-h*.93-3,9,0,Math.PI*2);c.fill();c.stroke();
+ c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(-w*.42,-h*.55,13,22,-.6,0,Math.PI*2);c.fill();c.restore()}
+function accGlasses(c,kind,col){const E=ACC_REF,sun=kind==='sun';c.save();c.lineJoin='round';c.lineCap='round';
+ const L=E.map(e=>({x:e.x+(sun?2:0),y:e.y+(sun?6:2),rx:e.rx*(sun?1.3:1.2),ry:e.ry*(sun?1.08:1.16)}));
+ c.strokeStyle=col==='#ffffff'?'#d9d9d9':col;c.lineWidth=sun?9:7;c.beginPath();c.moveTo(L[0].x-L[0].rx+4,L[0].y-L[0].ry*.35);c.quadraticCurveTo(L[0].x-L[0].rx-60,L[0].y-L[0].ry*.75,L[0].x-L[0].rx-118,L[0].y-L[0].ry*.2);c.stroke();
+ c.strokeStyle='#141414';c.lineWidth=2.5;c.stroke();
+ for(const i of[1,0]){const l=L[i];c.beginPath();if(sun){c.moveTo(l.x-l.rx,l.y-l.ry*.55);c.quadraticCurveTo(l.x,l.y-l.ry*1.05,l.x+l.rx,l.y-l.ry*.55);c.bezierCurveTo(l.x+l.rx*1.05,l.y+l.ry*.9,l.x-l.rx*1.05,l.y+l.ry*1.05,l.x-l.rx,l.y-l.ry*.55)}else c.ellipse(l.x,l.y,l.rx,l.ry,0,0,Math.PI*2);c.closePath();
+  c.fillStyle=sun?'rgba(16,20,30,.9)':'rgba(205,232,255,.2)';c.fill();
+  c.strokeStyle='#141414';c.lineWidth=sun?13:11;c.stroke();c.strokeStyle=col;c.lineWidth=sun?8:6;c.stroke();
+  c.save();c.clip();c.strokeStyle='rgba(255,255,255,'+(sun?.55:.6)+')';c.lineWidth=5;c.beginPath();c.arc(l.x-l.rx*.2,l.y-l.ry*.1,l.rx*.62,Math.PI*1.08,Math.PI*1.42);c.stroke();c.restore()}
+ c.restore()}
+/* o: {avatar, ball, glasses:'eye'|'sun'|null, gcol} */
+function igorAcc(c,eyes,o){if(!o)return;const cap=o.avatar==='igor'&&o.ball,gl=o.glasses==='eye'||o.glasses==='sun';if(!cap&&!gl)return;
+ c.save();accMap(c,eyes);if(cap)accCap(c,o.ball);if(gl)accGlasses(c,o.glasses,o.gcol||'#141414');c.restore()}
 function decorate(k){const D=DECO[k],c=document.createElement('canvas');c.width=300;c.height=207;const g=c.getContext('2d');g.drawImage(D.img,0,0,300,207);const[ax,ay]=D.acc;
  if(AVK==='she'){lashesAt(g,D.eyes[0],2);lashesAt(g,D.eyes[1],2);bowAt(g,ax,ay,17,AVBALL||'#ff8ab6')}
  else if(AVK==='queer'){lashesAt(g,D.eyes[0],1);lashesAt(g,D.eyes[1],1);starAt(g,ax,ay,17)}
- else if(AVBALL)flowerAt(g,ax,ay,14,AVBALL);
+ igorAcc(g,D.eyes,{avatar:AVK,ball:AVK==='igor'?AVBALL:null,glasses:AVG,gcol:AVGC});
  return c}
 let heroN=null,heroT=null;function rebuildHero(){if(okN())heroN=decorate('N');if(okT())heroT=decorate('T')}
 imgN.addEventListener('load',rebuildHero);imgT.addEventListener('load',rebuildHero);rebuildHero();
@@ -371,10 +400,22 @@ function startIdle(){const my=++idleTok;(function f(){if(playing||my!=idleTok)re
 
 // ---------- menus ----------
 function esc(s){return(''+s).replace(/[<>&]/g,m=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]))}
-function lbHTML(hl){let h='<ol>';for(let i=0;i<7;i++){const e=lb[i];h+='<li class="'+(e&&hl!=null&&hl===i?'me':'')+'"><span><i class="rk">'+(i+1)+'</i>'+(e?esc(e.n):'—')+'</span><span>'+(e?e.s:'')+'</span></li>'}return h+'</ol>'}
+let glb=null,glbState='loading',myUid=null,diveMsg='';
+function lbList(arr,isMe){let h='<ol>';for(let i=0;i<8;i++){const e=arr[i];h+='<li class="'+(e&&isMe(e)?'me':'')+'"><span><i class="rk">'+(i+1)+'</i>'+(e?esc(e.n):'—')+'</span><span>'+(e?e.s:'')+'</span></li>'}return h+'</ol>'}
+function boardInner(){if(glbState==='ok')return lbList(glb,e=>myUid&&e.uid===myUid);
+ if(glbState==='err')return '<p class="sub" style="opacity:.7">The ranking is out of reach right now: these are the dives on this device.</p>'+lbList(lb,e=>e._me);
+ return '<p class="sub" style="opacity:.6">Reading the annals…</p>'}
+function lbHTML(){return '<div id="ab-lb">'+boardInner()+'</div>'}
+function paintBoard(){const el=$('ab-lb');if(el)el.innerHTML=boardInner();const st=$('ab-st');if(st&&diveMsg)st.innerHTML=diveMsg}
+function loadBoard(){const A=window.AbyssCloud;if(!A)return;A.me().then(u=>{myUid=u;paintBoard()});A.top().then(r=>{glb=r;glbState='ok';paintBoard()}).catch(e=>{console.warn('ranking',e);glbState='err';paintBoard()})}
+addEventListener('abysscloud',loadBoard);if(window.AbyssCloud)loadBoard();
+setTimeout(()=>{if(!window.AbyssCloud&&diveMsg.startsWith('carving'))diveMsg='Couldn’t reach the annals this time. Your seeds are safe.';if(glbState==='loading'){glbState='err';paintBoard()}},9000);
+function submitDive(sc){const A=window.AbyssCloud;if(!A){addEventListener('abysscloud',()=>submitDive(sc),{once:true});return}
+ A.submit(sc,AVK).then(r=>{diveMsg=r==='ok'?'depth carved into the annals ✓':r==='lower'?'carved in the annals: your deepest dive still counts ✓':r==='nonick'?'Choose a nickname on the island (tap your name at the top) to appear in the annals.':'Sign in on the island to carve your name in the annals.';paintBoard();loadBoard()})
+  .catch(e=>{console.warn('submit',e);diveMsg='Couldn’t reach the annals this time. Your seeds are safe.';paintBoard()})}
 let ACCT=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'))}catch(e){}
 const HOME=(()=>{try{return localStorage.getItem('igortime_home')||'/'}catch(e){return '/'}})();$('back').href=HOME;
-if(ACCT&&ACCT.name)$('acct').textContent='Playing as '+ACCT.name;
+if(ACCT&&ACCT.name)$('acct').textContent='Playing as '+ACCT.name;else if(ACCT)$('acct').textContent='Playing with your account';
 function reward(sc){const n=Math.min(12,Math.floor(sc/150));if(!n)return 0;let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
  p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.abyss=p.scores.abyss||{};if(!(g.best>=sc))g.best=sc;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n}
 let won=0;
@@ -387,20 +428,17 @@ function showStart(){mode='ready';playing=false;M.style.display='flex';
    '<span class="g">D</span> (hold, max 2s) duck under the <span class="r">jellyfish</span> &nbsp;·&nbsp; <span class="y">★</span> golden lure: 4s to eat the red ones too<br>'+
    'Now and then a heart gives back a life (max 5). At 700 points, then every 1500, a <b>leviathan</b> rises: when its shield drops, <span class="g">shoot</span> your prey with <span class="g">␣</span>.<br>'+
    '<span class="y">Every 150 points = 1 tofu seed</span> for the field.</p>'+
-   avHTML()+'<p class="lb">Deepest dives</p>'+lbHTML()+
+   avHTML()+'<p class="lb">Deepest dives · everyone</p>'+lbHTML()+
    '<button class="btn" id="ab-go">Dive in</button> <a class="btn ghost" style="text-decoration:none;display:inline-block" href="'+HOME+'">Back to the island</a>';
   $('ab-go').onclick=()=>{won=0;reset()};MC.querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>{setAvatar(b.dataset.av);showStart()});avPreviews();startIdle()}
-function showOver(){mode='dead';M.style.display='flex';const sc=score();let myRank=null;
+function showOver(){mode='dead';M.style.display='flex';const sc=score();
   if(!savedThis&&won===0)won=reward(sc)||-1;
   const seeds=won>0?'<p class="seeds">+'+won+' tofu seed'+(won>1?'s':'')+' for Igor’s field. Collect them back on the island.</p>':'<p class="seeds" style="color:#7f949b">150 points give a tofu seed: dive deeper next time.</p>';
-  const entry=savedThis?'<p class="saved">depth carved into the annals ✓</p>'
-    :'<p class="sub">Carve your name into the annals of the abyss:</p><input id="ab-nm" maxlength="12" placeholder="name"> <button class="btn" id="ab-sv">Carve</button>';
-  if(savedThis)myRank=lb.findIndex(e=>e._me);
-  MC.innerHTML='<p class="eye">End of the dive</p><p class="sub">Depth reached: <span class="g" style="font-size:18px">'+sc+'</span></p>'+seeds+entry+
-    '<p class="lb">Deepest dives</p>'+lbHTML(myRank)+'<div><button class="btn ghost" id="ab-go">Again</button> <a class="btn" style="text-decoration:none;display:inline-block" href="'+HOME+'">Back to the island</a></div>';
-  if(!savedThis){const nm=$('ab-nm');if(ACCT&&ACCT.name)nm.value=String(ACCT.name).slice(0,12);if(matchMedia('(hover:hover)').matches)nm.focus();
-    const save=()=>{const v=nm.value.trim()||'???';lb.forEach(e=>delete e._me);const o={n:v.slice(0,12),s:sc,_me:1};lb.push(o);lb.sort((a,b)=>b.s-a.s);lb=lb.slice(0,20);saveLB();savedThis=true;showOver()};
-    $('ab-sv').onclick=save;nm.addEventListener('keydown',e=>{if(e.key=='Enter')save()})}
+  if(!savedThis){savedThis=true;lb.forEach(e=>delete e._me);if(sc>0){lb.push({n:(ACCT&&ACCT.name)||'you',s:sc,_me:1});lb.sort((a,b)=>b.s-a.s);lb=lb.slice(0,20);saveLB()}
+   if(ACCT){diveMsg='carving your depth into the annals…';if(sc>0)submitDive(sc);else diveMsg='No depth to carve this time.'}
+   else{const best=Math.max(0,...lb.map(e=>e.s));diveMsg='Your best on this device: <span class="g">'+best+'</span>. <a href="'+HOME+'" style="color:inherit">Sign in on the island</a> to carve your name in the annals.'}}
+  MC.innerHTML='<p class="eye">End of the dive</p><p class="sub">Depth reached: <span class="g" style="font-size:18px">'+sc+'</span></p>'+seeds+'<p class="saved" id="ab-st">'+diveMsg+'</p>'+
+    '<p class="lb">Deepest dives · everyone</p>'+lbHTML()+'<div><button class="btn ghost" id="ab-go">Again</button> <a class="btn" style="text-decoration:none;display:inline-block" href="'+HOME+'">Back to the island</a></div>';
   $('ab-go').onclick=()=>{won=0;reset()};startIdle()}
 
 // ---------- input bind ----------
@@ -415,4 +453,19 @@ showStart();
 })();
 </script>
 
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import{getAuth,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import{getFirestore,collection,query,orderBy,limit,getDocs,doc,getDoc,setDoc,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const app=initializeApp({apiKey:"AIzaSyBcUoKJT0s_kHpydzjr5qIsxh5AXTurw-0",authDomain:"igortime-f69b3.firebaseapp.com",projectId:"igortime-f69b3",storageBucket:"igortime-f69b3.firebasestorage.app",messagingSenderId:"191774217559",appId:"1:191774217559:web:1604f911cbb70652321a12"});
+const auth=getAuth(app),db=getFirestore(app);let user=null,authed;const authReady=new Promise(r=>authed=r);onAuthStateChanged(auth,u=>{user=u;authed()});
+window.AbyssCloud={
+ async top(){const q=await getDocs(query(collection(db,'abyss'),orderBy('score','desc'),limit(8)));return q.docs.map(d=>({uid:d.id,n:d.data().nick,s:d.data().score}))},
+ async me(){await authReady;return user?user.uid:null},
+ async submit(score,avatar){await authReady;if(!user)return'guest';let nick='';try{const u=await getDoc(doc(db,'users',user.uid));nick=u.exists()&&u.data().nick||''}catch(e){}
+  if(!nick)return'nonick';const ref=doc(db,'abyss',user.uid),cur=await getDoc(ref);score=Math.floor(score);
+  if(cur.exists()&&cur.data().score>=score){if(cur.data().nick!==nick)await setDoc(ref,{nick},{merge:true});return'lower'}
+  await setDoc(ref,{nick,score,avatar:String(avatar||'igor'),at:serverTimestamp()});return'ok'}};
+dispatchEvent(new Event('abysscloud'));
+</script>
 </body></html>
