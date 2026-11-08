@@ -173,6 +173,18 @@ const SFX={
  plow:()=>{tone(95,60,.18,{g:.6});nz(.16,{f0:500,Q:1,g:.3})},
  tarp:()=>{for(let i=0;i<3;i++)nz(.12,{f0:R(700,1300),Q:.9,g:.25,delay:i*.09})},
  scare:()=>{whoosh(.5,.35,false);for(let i=0;i<6;i++)nz(.04,{f0:R(1800,2800),Q:2,g:.15,delay:i*.05,pan:R(-.7,.7)})},
+ // little things to do on the island
+ pop:k=>{const f=st(784,PENTA[(k||0)%8]);tone(f*.7,f,.1,{g:.5,type:'triangle',glide:.35});nz(.03,{f0:2600,Q:1.5,g:.12})},
+ bell:f=>{f=f||880;tone(f,f,1.5,{g:.5,at:.003});tone(f*2,f*2,.9,{g:.12,at:.003});tone(f*2.76,f*2.76,.5,{g:.1,at:.002});tone(f*5.4,f*5.4,.25,{g:.04,at:.002})},
+ whistle:o=>{const f=(o&&o.f)||880;tone(f*.93,f,.44,{g:.55,at:.05,glide:.25,vib:f*.012,vibF:6});nz(.4,{f0:f*2,Q:6,g:.04,at:.05})},
+ shake:k=>{for(let i=0;i<6;i++)nz(.13,{f0:R(1800,3400),Q:.8,g:.2,delay:i*.07,pan:R(-.5,.5)});const f=170+((k||0)%5)*22;tone(f,f*.8,.12,{type:'triangle',g:.45});tone(f*1.5,f*1.2,.1,{type:'triangle',g:.3,delay:.12})},
+ thud:()=>{tone(R(140,190),90,.09,{g:.3});nz(.05,{f0:600,Q:1,g:.12})},
+ shell:()=>{tone(1568,1568,.6,{g:.3,at:.003});tone(2349,2349,.45,{g:.2,delay:.08,at:.003});tone(3136,3136,.3,{g:.1,delay:.16,at:.003})},
+ bottle:()=>{tone(300,1100,.1,{g:.45,type:'triangle'});nz(.07,{f0:3000,Q:2,g:.2});arp(784,[0,7,12],.1,{g:.3,d:.5,type:'triangle'})},
+ munch:()=>{for(let i=0;i<3;i++){nz(.06,{f0:R(700,1100),Q:1.2,g:.3,delay:i*.15});tone(300,220,.07,{g:.25,delay:i*.15,type:'triangle'})}},
+ star:()=>{tone(2637,2093,1.2,{g:.1,type:'triangle',at:.25});tone(3136,3136,.8,{g:.05,delay:.3,at:.2})},
+ sing:()=>{const m=[0,4,7,9,12,9,7,12,16,14,12];m.forEach((n,i)=>{const f=st(784,n);tone(f*.97,f,.42,{g:.4,delay:i*.2,at:.04,glide:.2,vib:f*.01,vibF:5.5,type:'sine'})});for(let i=0;i<10;i++){const f=st(2093,PENTA[i%8]);tone(f,f,.4,{g:.08,delay:2.3+i*.05,at:.003,pan:R(-.6,.6)})}},
+ wish:()=>{for(let i=0;i<8;i++){const f=st(1047,PENTA[i]);tone(f,f,.6,{g:.22,delay:i*.06,at:.003,pan:R(-.6,.6)})}tone(523,523,1.8,{g:.18,at:.3,type:'triangle'})},
 };
 SFX.clear=SFX.weed;
 
