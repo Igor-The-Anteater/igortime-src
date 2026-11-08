@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=2"></script>
+<script src="/sound.js?v=3"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -921,7 +921,7 @@ const ballO=(()=>{const b=new THREE.Mesh(new THREE.SphereGeometry(.12,12,8),lam(
 const snowman=(()=>{const g=new THREE.Group();const m=lam('#f4f7fb');[[.32,.32],[.22,.78],[.16,1.1]].forEach(([r,y])=>{const s=new THREE.Mesh(new THREE.SphereGeometry(r,14,10),m);s.position.y=y;g.add(s)});
  const nose=new THREE.Mesh(new THREE.ConeGeometry(.04,.3,6),lam('#9be38a'));nose.rotation.x=Math.PI/2;nose.position.set(0,1.08,.3);g.add(nose);g.position.copy(SPOT.pen).add(new V3(2.6,0,1.6));g.visible=false;scene.add(g);return g})();
 let idleT=0;
-function idleDirector(list){const F=FM();idleT=8+Math.random()*6;ballO.a=ballO.c=null;const L=list.filter(o=>!(o.act&&(o.act.k==='ride'||o.act.k==='wh')));for(const o of L)o.act=null;
+function idleDirector(list){const F=FM();idleT=8+Math.random()*6;ballO.a=ballO.c=null;const L=list.filter(o=>!(o.act&&(o.act.k==='ride'||o.act.k==='wh'||o.act.k==='lead')));for(const o of L)o.act=null;
  const P=penFront();
  if(L.length>=3&&Math.random()<.35){L.forEach((o,k)=>o.act={k:'ring',i:k,n:L.length,c:P.clone().add(new V3(0,0,.4))});return}
  if(L.length>=2&&F.toys.ball&&Math.random()<.55){const[a,b]=L.splice(0,2);a.act={k:'ball',goal:P.clone().add(new V3(-1.3,0,0))};b.act={k:'ball',goal:P.clone().add(new V3(1.3,0,0))};ballO.a=a;ballO.c=b;ballO.u=0}
@@ -1811,8 +1811,8 @@ updaters.push(()=>{if(!FOLLOW)return;if(IG.target!==FOLLOW.v||where!=='out'){FOL
  const dx=P.x-igor.position.x,dz=P.z-igor.position.z,d=Math.hypot(dx,dz);
  if(d<1.3){const id=FOLLOW.id;FOLLOW=null;IG.target=null;IG.arrive=null;igTap(id);return}
  const k=Math.max(0,d-.9)/d;FOLLOW.v.set(igor.position.x+dx*k,0,igor.position.z+dz*k);mark.position.set(P.x,.04,P.z);if(!igM.hidden)renderIgM()});
-const HELP=()=>tt([['🏠','Play the games in my house and in the music school. You win seeds.'],['🌱','Tap a field. Plow it and sow it.'],['⏳','Wait. The field grows by itself.'],[ICT,'A ready field has tofu ants hopping on it (pieces of tofu!): tap it to pick them. While you are away, the Igorlets pick them.'],['🔔','An Igorlet with a “?” wants to sing: tap it, listen, ring the same bells. +1 seed.'],['🐚','The sea brings 50 kinds of shells and bottles to the beach. Trees sometimes have fruit: tap to shake them.'],['🍎','A hungry Igorlet: give it fruit or a tofu ant. +1 leaf of energy.'],['★','At night, tap a wish star before it goes.'],['🔨','With the tofu ants you build: tap the hammer.'],['🧰','The tool shed: tools make everyone faster.'],['🏡','The greenhouse keeps a field safe.'],['💤','Tired Igorlets nap in their little house.'],['⚠️','Igor warns you before the weather: get ready and win a bonus. See the table below.'],['🏆','Lots of tofu ants? The prize shop has a bike, a car, a plane…']],
- [['🏠','Gioca ai giochi in casa mia e nella scuola di musica. Vinci semi.'],['🌱','Tocca un campo. Aralo e seminalo.'],['⏳','Aspetta. Il campo cresce da solo.'],[ICT,'Su un campo pronto saltellano le formiche di tofu (pezzi di tofu!): toccalo per raccoglierle. Quando non ci sei, le raccolgono gli Igorlets.'],['🔔','Un Igorlet col “?” vuole cantare: toccalo, ascolta, suona le stesse campanelle. +1 seme.'],['🐚','Il mare porta 50 tipi di conchiglie e bottiglie sulla spiaggia. Gli alberi a volte hanno la frutta: toccali per scuoterli.'],['🍎','Un Igorlet affamato: dagli frutta o una formica di tofu. +1 fogliolina di energia.'],['★','Di notte tocca una stella dei desideri prima che sparisca.'],['🔨','Con le formiche di tofu costruisci: tocca il martello.'],['🧰','Il capanno: gli attrezzi fanno lavorare tutti più in fretta.'],['🏡','La serra protegge un campo.'],['💤','Gli Igorlets stanchi dormono nella loro casetta.'],['⚠️','Igor ti avvisa prima del meteo: preparati e vinci un bonus. Guarda la tabella qui sotto.'],['🏆','Tante formiche di tofu? Al negozietto dei premi: bici, auto, aereo…']]);
+const HELP=()=>tt([['🏠','Play the games in my house and in the music school. You win seeds.'],['🌱','Tap a field. Plow it and sow it.'],['⏳','Wait. The field grows by itself.'],[ICT,'A ready field has tofu ants hopping on it (pieces of tofu!): tap it to pick them. While you are away, the Igorlets pick them.'],['🔔','An Igorlet with a “?” wants to sing: tap it, listen, ring the same bells. +1 seed.'],['🐚','The sea brings 50 kinds of shells and bottles to the beach. Trees sometimes have fruit: tap to shake them.'],['🍎','Each Igorlet has a little wish about once an hour (fruit, a snack, a spare shell, a walk to the sea, jumping together). Make it come true: +1 leaf, and a present every 4 wishes.'],['🎵','The marimba on the beach goes out of tune: one note every hour. Tune it back with the slider. +1 seed per note.'],['★','At night, tap a wish star before it goes.'],['🔨','With the tofu ants you build: tap the hammer.'],['🧰','The tool shed: tools make everyone faster.'],['🏡','The greenhouse keeps a field safe.'],['💤','Tired Igorlets nap in their little house.'],['⚠️','Igor warns you before the weather: get ready and win a bonus. See the table below.'],['🏆','Lots of tofu ants? The prize shop has a bike, a car, a plane…']],
+ [['🏠','Gioca ai giochi in casa mia e nella scuola di musica. Vinci semi.'],['🌱','Tocca un campo. Aralo e seminalo.'],['⏳','Aspetta. Il campo cresce da solo.'],[ICT,'Su un campo pronto saltellano le formiche di tofu (pezzi di tofu!): toccalo per raccoglierle. Quando non ci sei, le raccolgono gli Igorlets.'],['🔔','Un Igorlet col “?” vuole cantare: toccalo, ascolta, suona le stesse campanelle. +1 seme.'],['🐚','Il mare porta 50 tipi di conchiglie e bottiglie sulla spiaggia. Gli alberi a volte hanno la frutta: toccali per scuoterli.'],['🍎','Ogni Igorlet ha un piccolo desiderio circa ogni ora (frutta, una merenda, una conchiglia doppia, una passeggiata al mare, saltare insieme). Esaudiscilo: +1 fogliolina, e ogni 4 desideri un regalo.'],['🎵','La marimba sulla spiaggia si scorda: una nota ogni ora. Riaccordala con lo slider. +1 seme per nota.'],['★','Di notte tocca una stella dei desideri prima che sparisca.'],['🔨','Con le formiche di tofu costruisci: tocca il martello.'],['🧰','Il capanno: gli attrezzi fanno lavorare tutti più in fretta.'],['🏡','La serra protegge un campo.'],['💤','Gli Igorlets stanchi dormono nella loro casetta.'],['⚠️','Igor ti avvisa prima del meteo: preparati e vinci un bonus. Guarda la tabella qui sotto.'],['🏆','Tante formiche di tofu? Al negozietto dei premi: bici, auto, aereo…']]);
 const EVT=()=>tt([['⛈','Storm','grows a bit slower','Tarp: +¼ harvest. All covered: a rainbow, +3 seeds'],['🧊','Hail','grows a bit slower','Strong tarp: +¼ harvest'],['❄','Frost','grows slower','Thermal tarp: +⅓ harvest'],['☀','Heatwave','grows slower','Water: +¼ harvest'],['🐦','Sparrows','grows a bit slower','Scarecrow, or 2 seeds to eat far away: +¼ harvest'],['🌦','Drizzle','grows faster','enjoy!'],['👋','Stray Igorlet','a new Igorlet comes to the village','A snack (10 ants): it stays, with a new little house']],
  [['⛈','Temporale','cresce un po’ più piano','Telo: +¼ raccolto. Tutti coperti: arcobaleno, +3 semi'],['🧊','Grandine','cresce un po’ più piano','Telo forte: +¼ raccolto'],['❄','Gelata','cresce più piano','Telo termico: +⅓ raccolto'],['☀','Caldo','cresce più piano','Annaffia: +¼ raccolto'],['🐦','Passeri','cresce un po’ più piano','Spaventapasseri, o 2 semi da mangiare lontano: +¼ raccolto'],['🌦','Pioggerella','cresce più in fretta','goditela!'],['👋','Igorlet randagio','un nuovo Igorlet arriva al villaggio','Una merenda (10 formiche): resta, con una casetta nuova']]);
 function renderHelp(){helpC.innerHTML=`<div class="hh">${tt('How to play','Come si gioca')}</div>${HELP().map(([i,t])=>`<p><span>${i}</span>${t}</p>`).join('')}<div class="hh hs">${tt('Weather and visitors','Meteo e visite')}</div><table class="evt"><tr><th></th><th>${tt('What','Cosa')}</th><th>${tt('If you do nothing','Se non fai niente')}</th><th>${tt('If you get ready','Se ti prepari')}</th></tr>${EVT().map(([i,n,c,d])=>`<tr><td>${i}</td><td><b>${n}</b></td><td>${c}</td><td>${d}</td></tr>`).join('')}</table><p class="nt"><span>🐚</span>${tt('Shells','Conchiglie')}: ${shellN()}/${SHELLS.length}. ${tt('Commons, then rarer and rarer: 5 very rare ones and one legendary. Keep them in the display case (🔨).','Prima le comuni, poi sempre più rare: 5 rarissime e una leggendaria. Si tengono nell’espositore (🔨).')}</p><p class="nt"><span>🏡</span>${tt('Nothing is ever lost. If you weren’t on the island, nothing changes. Greenhouse fields always get the bonus.','Non si perde mai niente. Se non eri sull’isola, non cambia niente. I campi in serra hanno sempre il bonus.')}</p><button type="button" class="x" aria-label="${tt('Close','Chiudi')}">✕</button>`}
@@ -1913,7 +1913,8 @@ else if(ONB&&started){setTimeout(()=>{if(sheet.hidden)openAccount()},700)}
    - the sea brings shells, sea glass and bottles with a message to the beach
    - a tree has fruit now and then: tap it, Igor shakes it
    - wish stars at night: tap one before it goes
-   - hungry Igorlets: give them fruit or a tofu ant */
+   - every Igorlet has a little wish now and then (fruit, a snack, a spare shell, a walk to the sea, jumping together)
+   - the marimba on the beach goes out of tune, one bar an hour: tune it back by ear with a slider */
 const FUNQ=new URLSearchParams(location.search),FUNFAST=FUNQ.has('funfast')?20:1;
 function FUN(){const F=FM();if(F.b&&F.b.case==null)F.b.case=0;if(!F.fun)F.fun={};const d={col:{},colT:{},fruit:0,fk:'',beach:[],ft:[],hun:{},wh:0,whTry:0,bottles:0,wishD:'',wishN:0};for(const k in d)if(F.fun[k]===undefined)F.fun[k]=d[k];return F.fun}
 const funCss=document.createElement('style');funCss.textContent=`
@@ -1996,7 +1997,8 @@ function beachAdd(){const B=FUN().beach;if(B.length>=4)return;const p=beachSpot(
  const it=r<.25?{k:'bottle',...p}:{k:'shell',v:shellRoll(),...p};B.push(it);fmDirty=true;beachSync()}
 function beachTake(j){const B=FUN().beach,it=B[j];if(!it)return;B.splice(j,1);fmDirty=true;beachSync();const U=FUN();poke();bubbleQ.length=0;bubbleT=0;
  if(it.k==='bottle'){U.bottles++;snd('bottle');const m=BOTTLE_MSG[(U.bottles*7+Math.floor(Math.random()*3))%BOTTLE_MSG.length];say(tt('A bottle with a message!','Una bottiglia con un messaggio!'),2);say(`“${N(m)}”`,5);return}
- const S0=SHELL[it.v];if(!S0)return;const had=U.col[it.v]|0;U.col[it.v]=had+1;if(!had){U.colT=U.colT||{};U.colT[it.v]=Date.now()}snd(S0.ti===4?'sing':'shell',S0.ti);caseDirty=true;const n=shellN(),T0=TIERS[S0.ti],stars='★'.repeat(T0.st);
+ gotShell(it.v)}
+function gotShell(v,gift){const U=FUN(),it={v};const S0=SHELL[it.v];if(!S0)return;const had=U.col[it.v]|0;U.col[it.v]=had+1;if(!had){U.colT=U.colT||{};U.colT[it.v]=Date.now()}snd(S0.ti===4?'sing':'shell',S0.ti);caseDirty=true;const n=shellN(),T0=TIERS[S0.ti],stars='★'.repeat(T0.st);
  if(!had){toast(`${stars} ${N(S0.N)} · ${n}/${SHELLS.length}`);
   say(S0.ti===4?tt('…it’s singing! THE SINGING SHELL! The rarest thing on the whole island!','…canta! LA CONCHIGLIA CHE CANTA! La cosa più rara di tutta l’isola!'):S0.ti===3?tt(`A ${N(S0.N).toLowerCase()}! Very rare: hardly anyone finds one.`,`${N(S0.N)}! Rarissima: quasi nessuno la trova.`):S0.ti===2?tt(`${N(S0.N)}! A rare one.`,`${N(S0.N)}! È rara.`):tt(`${N(S0.N)}! I didn’t have one.`,`${N(S0.N)}! Non ce l’avevo.`),S0.ti>=3?4.5:3)}
  else say(tt(`${N(S0.N)} again: that makes ${had+1}. Good for swapping, one day!`,`Ancora: ${N(S0.N).toLowerCase()}. Fanno ${had+1}. Un giorno si potranno scambiare!`),2.8);
@@ -2032,7 +2034,7 @@ function ftPick(cx,cy){let best=-1,bd=9;for(const i of ftObjs.keys()){const tr=t
 /* ---------- 4. hungry Igorlets and their snack ---------- */
 const FOODICO=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='rgba(247,236,212,.95)';g.beginPath();g.arc(32,32,28,0,TAU);g.fill();g.strokeStyle='#2b2018';g.lineWidth=3;g.stroke();
  g.fillStyle='#d8402f';g.beginPath();g.arc(32,36,13,0,TAU);g.fill();g.fillStyle='#3f8f3a';g.beginPath();g.ellipse(38,20,7,3.5,-.6,0,TAU);g.fill();g.strokeStyle='#5a3d24';g.beginPath();g.moveTo(32,24);g.lineTo(33,17);g.stroke();return new THREE.CanvasTexture(c)})();
-const hungry=id=>{const n=FUN().hun[id];return n!=null&&Date.now()>=n};
+const hungry=id=>!!wishOf(id);
 function hungerTick(){const U=FUN(),F=FM(),tn=Date.now();if(Object.keys(U.hun).some(id=>hungry(+id)&&igById(+id)))return;const C=F.igs.filter(g=>!g.rest&&!g.task&&!(U.hun[g.id]>tn));if(!C.length)return;
  const g=C.find(x=>x.trait==='foodie'&&Math.random()<.6)||pick(C);U.hun[g.id]=tn;fmDirty=true}
 function feed(id,what){const U=FUN(),g=igById(id),o=igObjs.get(id);if(!g)return;if(what==='fruit'){if(U.fruit<1)return;U.fruit--}else{if(pocket()<1)return;FM().ants.t--;hudFarm()}
@@ -2075,7 +2077,7 @@ bells.addEventListener('pointerdown',e=>e.stopPropagation());
 bells.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();if(b.dataset.b!=null){whBell(+b.dataset.b);return}if(b.dataset.w==='x'){whEnd();return}if(b.dataset.w==='again'&&WH.st==='play')whPlay()});
 let whNext=fT(75),whCall=null;
 function whTick(t){if(WH.st)return;if(whCall){const o=igObjs.get(whCall.id);if(!o||o.mode!=='idle'||T-whCall.t>fT(80)||!o.act||o.act.k!=='wh'){if(o&&o.act&&o.act.k==='wh')o.act=null;whCall=null;whNext=T+fT(60)}return}
- if(T<whNext||!funOK()||SKY.nk>.85)return;const cand=[...igObjs.values()].filter(o=>o.mode==='idle'&&o.grp.visible&&!(o.act&&o.act.k==='ride')&&!hungry(o.id));
+ if(T<whNext||!funOK()||SKY.nk>.85)return;const cand=[...igObjs.values()].filter(o=>o.mode==='idle'&&o.grp.visible&&!(o.act&&o.act.k==='ride'));
  if(!cand.length){whNext=T+fT(20);return}const o=pick(cand);o.act={k:'wh',goal:o.grp.position.clone()};whCall={id:o.id,t:T};
  const g=igById(o.id);setTimeout(()=>{if(whCall&&whCall.id===o.id)say(tt(`${g.name} wants to sing with you: tap it!`,`${g.name} vuole cantare con te: toccalo!`),3)},2500)}
 
@@ -2103,19 +2105,19 @@ wishB.onclick=e=>{e.stopPropagation();if(!wishS)return;const r=wishB.getBounding
 function funPick(cx,cy){if(where!=='out')return false;return beachPick(cx,cy)||ftPick(cx,cy)}
 {const _it=igTap;igTap=function(id){if(PL)return;const o=igObjs.get(id);
   if(whCall&&whCall.id===id&&!WH.st){whCall=null;const go=()=>whStart(id);if(o&&igor.position.distanceTo(o.grp.position)>3.2)walkNear(o.grp.position.clone(),1.4,go);else go();return}
-  if(hungry(id)&&o&&o.mode==='idle'){const go=()=>feedChips(id);if(igor.position.distanceTo(o.grp.position)>4)walkNear(o.grp.position.clone(),1.3,go);else go();return}_it(id)}}
+  if(hungry(id)&&o&&o.mode==='idle'){const go=()=>wishChips(id);if(igor.position.distanceTo(o.grp.position)>4)walkNear(o.grp.position.clone(),1.3,go);else go();return}_it(id)}}
 let beachNext=fT(90),ftNext=fT(100),hunNext=fT(150);
 updaters.push((t,dt)=>{if(!S.farm)return;const U=FUN();if(!funT){funT=1;beachSync();ftSync();if(!U.beach.length)beachAdd()}
  for(const o of beachObjs){o.g.userData.h.material.opacity=.25+.15*Math.sin(t*2.6+o.it.x);o.g.position.y=Math.sin(t*1.7+o.it.z)*.015}
  const live=started&&where==='out';
  if(live&&T>beachNext){beachNext=T+fT(90+Math.random()*90);beachAdd()}
  if(live&&T>ftNext){ftNext=T+fT(170+Math.random()*130);ftAdd()}
- if(live&&T>hunNext){hunNext=T+fT(200+Math.random()*200);if(SKY.nk<.85)hungerTick()}
+ wishTick();marTick(t,dt);
  whTick(t);wishTick(dt);
  for(const[id,o]of igObjs){if(o.act&&o.act.k==='wh'){const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0).multiplyScalar(1.4);o.act.goal.copy(igor.position).add(cr).add(new V3(0,0,.4));if(!walkable(o.act.goal.x,o.act.goal.z))o.act.goal.copy(igor.position).sub(cr)}
   const near=o.grp.position.distanceTo(igor.position)<9;
   if(o.mode==='idle'&&(whCall&&whCall.id===id||WH.st&&WH.id===id)){o.ic.visible=true;o.ic.material.map=WH.st?iconTex.note:iconTex.q;o.ic.position.y=IGH+.28+Math.abs(Math.sin(t*3))*.1}
-  else if(o.mode==='idle'&&hungry(id)&&near){o.ic.visible=true;o.ic.material.map=FOODICO;o.ic.position.y=IGH+.25+Math.sin(t*2.4)*.05}}
+  else if(o.mode==='idle'&&hungry(id)&&near){o.ic.visible=true;o.ic.material.map=WISHICO[wishOf(id).k]||FOODICO;o.ic.position.y=IGH+.25+Math.sin(t*2.4)*.05}}
  if(WH.st){const o=igObjs.get(WH.id);if(!o||where!=='out')whEnd()}joy.style.visibility=WH.st?'hidden':'';fab.style.visibility=WH.st?'hidden':''});
 if(TESTING)window.__ev=s=>eval(s);
 
@@ -2161,6 +2163,87 @@ sb.addEventListener('click',e=>{const b=e.target.closest('button[data-shell]');i
  if(igor.position.distanceTo(spotOf('case'))>5){IG.target=spotOf('case').add(new V3(0,0,SPOTR.case+1));IG.arrive=null;IG.manual=true}
  const n=shellN();say(n?tt(`${n} shells out of 50.`,`${n} conchiglie su 50.`):tt('Empty for now: look on the beach!','Per ora è vuoto: cerca sulla spiaggia!'),2.4);
  chips(spotOf('case').add(new V3(0,2.4,0)),()=>[{t:'🐚 '+tt('Collection','Collezione'),main:1,fn:()=>{caseSheet();return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'case'});return false}}],'bcase')}}
+
+/* ---------- the Igorlets' wishes: one at a time each, a new one about an hour after the last ---------- */
+const WISHES={fruit:['Could I have some fruit?','Mi daresti un po’ di frutta?'],ant:['A little tofu snack, please?','Una merendina di tofu, per favore?'],shell:['I’d love a shell! A spare one is fine.','Mi regali una conchiglia? Va bene anche una doppia.'],sea:['Will you walk me to the sea?','Mi accompagni al mare?'],jump:['Let’s jump together! Three jumps!','Saltiamo insieme! Tre salti!']};
+const WISHICO=(()=>{const mk=draw=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='rgba(247,236,212,.95)';g.beginPath();g.arc(32,32,28,0,TAU);g.fill();g.strokeStyle='#2b2018';g.lineWidth=3;g.stroke();draw(g);return new THREE.CanvasTexture(c)};
+ return{fruit:FOODICO,ant:iconTex.ant,shell:mk(g=>{g.fillStyle='#f4a57a';g.beginPath();g.moveTo(32,48);for(let k=0;k<=6;k++){const a=Math.PI*(1.1+k*.8/6);g.lineTo(32+Math.cos(a)*20,44+Math.sin(a)*22)}g.closePath();g.fill();g.strokeStyle='#b4553f';g.lineWidth=2;for(let k=1;k<6;k++){const a=Math.PI*(1.1+k*.8/6);g.beginPath();g.moveTo(32,48);g.lineTo(32+Math.cos(a)*19,44+Math.sin(a)*21);g.stroke()}}),
+  sea:mk(g=>{g.strokeStyle='#2f6fd6';g.lineWidth=5;g.lineCap='round';for(const y of[26,38]){g.beginPath();for(let x=14;x<=50;x+=2)g.lineTo(x,y+Math.sin(x/5)*4);g.stroke()}}),
+  jump:mk(g=>{g.fillStyle='#7fae45';g.beginPath();g.moveTo(32,12);g.lineTo(48,32);g.lineTo(38,32);g.lineTo(38,50);g.lineTo(26,50);g.lineTo(26,32);g.lineTo(16,32);g.closePath();g.fill()})}})();
+function wishOf(id){const U=FUN();return U.wish&&U.wish[id]||null}
+let wishT=0;
+function wishTick(){if((wishT-=1/60)>0)return;wishT=1;const U=FUN(),F=FM(),tn=Date.now();U.wish=U.wish||{};U.wnext=U.wnext||{};U.fr=U.fr||{};
+ for(const g of F.igs){if(U.wish[g.id])continue;if(U.wnext[g.id]==null){U.wnext[g.id]=tn+(1+Math.random()*3)*60e3/FUNFAST;fmDirty=true;continue}
+  if(tn<U.wnext[g.id]||SKY.nk>.85)continue;const dup=Object.values(U.col).some(n=>n>1);
+  const K=['fruit','ant','sea','jump',...(dup?['shell','shell']:[]),...(g.trait==='foodie'?['fruit','ant']:[]),...(g.trait==='sporty'?['jump']:[]),...(g.trait==='explorer'?['sea']:[])];
+  U.wish[g.id]={k:pick(K),t0:tn};fmDirty=true;if(started&&where==='out'&&igObjs.get(g.id)&&igObjs.get(g.id).grp.position.distanceTo(igor.position)<10)setTimeout(()=>{const o=igObjs.get(g.id);if(o)o.jump=.4},200)}
+ for(const id of Object.keys(U.wish))if(!igById(+id))delete U.wish[id]}
+const hearts=n=>'❤'.repeat(Math.min(5,1+Math.floor((n||0)/4)));
+function wishDone(id,line){const U=FUN(),g=igById(id),o=igObjs.get(id);if(!g)return;delete U.wish[id];U.wnext[id]=Date.now()+(45+Math.random()*30)*60e3/FUNFAST;const fr=U.fr[id]=(U.fr[id]|0)+1;g.en=Math.min(5,g.en+1);fmDirty=true;hudFarm();
+ if(o){o.jump=.55;o.showT=T+4;if(o.act&&(o.act.k==='lead'))o.act=null}setTimeout(()=>{if(window.IgorSound&&started)IgorSound.ig('happy',{id,trait:g.trait,pan:0,g:1})},300);
+ const L={music:['Thank you! A song for you: la la la.','Grazie! Una canzone per te: la la la.'],sporty:['Yes! Best day ever!','Sì! Giornata perfetta!'],sleepy:['Mmm… lovely. Now a little nap?','Mmm… che bello. E adesso un pisolino?'],foodie:['GNAM! You’re the best.','GNAM! Sei il migliore.'],explorer:['What a discovery!','Che scoperta!'],shy:['…thank you.','…grazie.']}[g.trait]||['Thank you!','Grazie!'];
+ bubbleQ.length=0;bubbleT=0;if(line)say(line,2.4);say(`${g.name}: “${N(L)}” ${hearts(fr)}`,3);
+ if(fr%4===0){let v;do{v=shellRoll()}while(SHELL[v].ti<1);setTimeout(()=>{say(tt(`${g.name} has a present for you: a shell!`,`${g.name} ha un regalo per te: una conchiglia!`),2.6);setTimeout(()=>gotShell(v,1),1500)},3200)}}
+let JW=null,LEAD=null;
+function wishChips(id){const g=igById(id),o=igObjs.get(id),w=wishOf(id);if(!g||!o||!w)return;bubbleQ.length=0;bubbleT=0;say(`${g.name}: “${N(WISHES[w.k])}”`,3);
+ chips(o.grp.position.clone().add(new V3(0,1.1,0)),()=>{const U=FUN(),w=wishOf(id),L=[];if(!w)return L;const F0=FRUIT[U.fk]||fruitOf();
+  if(w.k==='fruit')L.push(U.fruit>0?{t:`🍎 ${cap1(N(F0.N))} <small>×${U.fruit}</small>`,main:1,fn:()=>{U.fruit--;snd('munch');wishDone(id);return false}}:{t:'🍎 '+tt('Fruit','Frutta'),off:1,why:tt('No fruit: find a tree with fruit and shake it!','Niente frutta: cerca un albero con la frutta e scuotilo!')});
+  if(w.k==='ant')L.push(pocket()>0?{t:`${tt('A tofu ant','Una formica di tofu')} <small>−1</small>`,main:1,fn:()=>{FM().ants.t--;snd('munch');wishDone(id);return false}}:{t:tt('A tofu ant','Una formica di tofu'),off:1,why:tt('No tofu ants in your pocket: pick a field!','Niente formiche di tofu in tasca: raccogli un campo!')});
+  if(w.k==='shell'){const d=Object.entries(U.col).filter(([v,n])=>n>1&&SHELL[v]).sort((a,b)=>SHELL[a[0]].ti-SHELL[b[0]].ti||b[1]-a[1])[0];L.push(d?{t:`🐚 ${N(SHELL[d[0]].N)} <small>×${d[1]}</small>`,main:1,fn:()=>{U.col[d[0]]--;snd('shell');caseDirty=true;wishDone(id);return false}}:{t:'🐚 '+tt('A spare shell','Una conchiglia doppia'),off:1,why:tt('You need a spare shell: look on the beach!','Ti serve una conchiglia doppia: cercala sulla spiaggia!')})}
+  if(w.k==='sea')L.push({t:'🌊 '+tt('Let’s go!','Andiamo!'),main:1,fn:()=>{wishSea(id);return false}});
+  if(w.k==='jump')L.push({t:'⤴ '+tt('Let’s jump!','Saltiamo!'),main:1,fn:()=>{JW={id,n:0,t:T};say(matchMedia('(pointer:coarse)').matches?tt('Double-tap the joystick: three jumps!','Doppio tocco sul joystick: tre salti!'):tt('Press space: three jumps!','Premi spazio: tre salti!'),3);return false}});
+  L.push({t:tt('Later','Dopo'),fn:()=>false});return L},'wish'+id)}
+function wishSea(id){const o=igObjs.get(id);if(!o)return;const p=o.grp.position,a=Math.atan2(p.z*1.12,p.x),r=R-1.3;let P=null;for(let k=0;k<16&&!P;k++){const b=a+(k%2?1:-1)*Math.ceil(k/2)*.18,x=Math.cos(b)*r,z=Math.sin(b)*r/1.12;if(!blocked.some(q=>Math.hypot(q.x-x,q.z-z)<q.r+.6))P=new V3(x,0,z)}
+ if(!P)return wishDone(id);o.act={k:'lead',goal:P.clone().add(new V3(.5,0,0))};LEAD={id,P,t:T};say(tt('Follow me!','Seguimi!'),1.8);walkNear(P,.6,null)}
+{const _j=jump;jump=function(){const was=IG.jy;_j();if(!JW||was>.05||IG.jy<=0)return;const o=igObjs.get(JW.id);if(!o||o.grp.position.distanceTo(igor.position)>4.5)return;JW.n++;setTimeout(()=>{if(o)o.jump=.5},120);if(JW.n>=3){const id=JW.id;JW=null;setTimeout(()=>wishDone(id,tt('Boing boing boing!','Boing boing boing!')),600)}}}
+updaters.push(()=>{if(JW&&T-JW.t>90)JW=null;if(LEAD){const o=igObjs.get(LEAD.id);if(!o||T-LEAD.t>60){if(o&&o.act&&o.act.k==='lead')o.act=null;LEAD=null;return}if(o.grp.position.distanceTo(o.act&&o.act.goal||LEAD.P)<.4&&igor.position.distanceTo(LEAD.P)<1.6){const id=LEAD.id;LEAD=null;wishDone(id,tt('Look how beautiful the sea is!','Guarda che bello il mare!'))}}});
+
+/* ---------- the marimba on the beach: one bar goes out of tune every hour; tune it back with a slider ---------- */
+const MARS=[0,2,4,7,9,12,14,16],MARB=523.25,MARN=['C','D','E','G','A','C','D','E'],MARNI=['Do','Re','Mi','Sol','La','Do','Re','Mi'];
+const marF=(k,c)=>MARB*Math.pow(2,(MARS[k]+(c||0)/100)/12);
+function MAR(){const U=FUN();if(!U.mar){U.mar={off:[0,0,0,0,0,0,0,0],sl:[0,0,0,0,0,0,0,0],next:Date.now()+60*60e3/FUNFAST,pos:null};U.mar.off[2+Math.floor(Math.random()*4)]=(Math.random()<.5?-1:1)*(35+Math.random()*30);fmDirty=true}return U.mar}
+function marSpot(){const F=FM();for(let k=0;k<40;k++){const a=1.25+(k%2?1:-1)*Math.ceil(k/2)*.16,r=R-3.6,x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;
+  if(blocked.some(q=>Math.hypot(q.x-x,q.z-z)<q.r+1.3))continue;if(FIXB.some(([a2,b2,c2])=>Math.hypot(x-a2,z-b2)<c2+1.5))continue;if(F.fields.some(f=>Math.hypot(f.x-x,f.z-z)<2.1))continue;
+  if(BKEYS.some(b=>F.pos[b]&&Math.hypot(spotOf(b).x-x,spotOf(b).z-z)<SPOTR[b]+1.5))continue;if(Math.hypot(x-SHOPV.x,z-SHOPV.z)<3)continue;return{x,z}}return{x:-12,z:9}}
+const marO={g:new THREE.Group(),bars:[]};let marBuilt=false;
+function marBuild(){if(marBuilt)return;marBuilt=true;const M=MAR();if(!M.pos){M.pos=marSpot();fmDirty=true}const{x,z}=M.pos;const g=marO.g;g.position.set(x,0,z);g.scale.setScalar(1.35);scene.add(g);FIXB.push([x,z,1.4]);block(x,z,1.05);
+ const wd=lam('#6b4a2e'),rail=lam('#4e3626'),tube=lam('#c9ccd0');for(const sx of[-1,1])for(const sz of[-1,1]){const l=new THREE.Mesh(new THREE.BoxGeometry(.08,.6,.08),wd);l.position.set(sx*.95,.3,sz*.32);g.add(l)}
+ for(const sz of[-1,1]){const r=new THREE.Mesh(new THREE.BoxGeometry(2.05,.07,.07),rail);r.position.set(0,.6,sz*.3);g.add(r)}
+ MARS.forEach((s,k)=>{const len=.82-k*.055,m=lam(['#a0603c','#9a5a38','#a46640','#965636','#a8683f','#985838','#a2623e','#9c5c3a'][k],{emissive:'#ff5a3a',emissiveIntensity:0}),b=new THREE.Mesh(new THREE.BoxGeometry(.18,.06,len),m);b.position.set(-.84+k*.24,.66,0);g.add(b);marO.bars.push(b);
+  const tb=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.5-k*.035,8),tube);tb.position.set(-.84+k*.24,.6-(.5-k*.035)/2,0);g.add(tb)});
+ for(const sx of[-1,1]){const st=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.45,5),wd);st.rotation.z=Math.PI/2;st.rotation.y=sx*.4;st.position.set(sx*.35,.72,.36);g.add(st);const hd=new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),lam('#f2d34a'));hd.position.set(sx*.35+.2,.72,.36+sx*.09);g.add(hd)}
+ marO.h=halo('#ffb27a',2.4,0);marO.h.position.y=.9;g.add(marO.h);blob(g,1.2);
+ marO.lbl=label('Marimba','',new V3(x,1.9,z),()=>marTap(),6);marO.lbl.el.classList.add('plot');hit(g,1.1,()=>marTap(),'marimba',.6)}
+const marOut=()=>MAR().off.filter(c=>c).length;
+let marAcc=0;
+function marTick(t,dt){if(!S.farm)return;marBuild();const M=MAR();marO.bars.forEach((b,k)=>{const off=!!M.off[k];b.material.emissiveIntensity=off?.25+.2*Math.sin(t*4+k):0;b.position.y=.66+(off?Math.sin(t*9+k)*.008:0)});const n=marOut();marO.h.material.opacity=n?.25+.15*Math.sin(t*3):0;
+ const lt=n?`Marimba<small>${n} ${tt(n>1?'notes out of tune':'note out of tune',n>1?'note stonate':'nota stonata')}</small>`:`Marimba<small>${tt('in tune','intonata')} ♪</small>`;if(marO.lbl&&marO.lbl.el.innerHTML!==lt)marO.lbl.el.innerHTML=lt;
+ if((marAcc+=dt)<1)return;marAcc=0;const tn=Date.now();let k=0,added=0;while(tn>=M.next&&k++<6){const ok=M.off.map((c,i)=>c?-1:i).filter(i=>i>=0);if(marOut()<3&&ok.length){const i=pick(ok);M.off[i]=(Math.random()<.5?-1:1)*(25+Math.random()*50);M.sl[i]=0;added++}M.next+=60*60e3/FUNFAST}
+ if(M.next<tn)M.next=tn+60*60e3/FUNFAST;if(added){fmDirty=true;if(started&&where==='out'&&T>5){snd('marimba',marF(0,0)*.94);setTimeout(()=>say(tt('Listen… the marimba is out of tune! One note sounds wrong.','Senti… la marimba si è scordata! Una nota stona.'),3.4),400)}}}
+function marPlay(k){const M=MAR();snd('marimba',marF(k,(M.off[k]||0)+(M.off[k]?M.sl[k]:0)))}
+let marSel=-1,marTry=0,marLast=0;
+function marTap(){if(PL)return;marBuild();const M=MAR();const P=marO.g.position.clone();const go=()=>{marSel=M.off.findIndex(c=>c);marTry=0;marSheet();if(marOut())say(tt('Find the wrong note and slide it back in tune.','Trova la nota stonata e falla tornare intonata con lo slider.'),3.2);else say(tt('All in tune! Play it.','Tutto intonato! Suonala.'),2.4)};
+ if(igor.position.distanceTo(P)>2.8)walkNear(P,1.7,go);else go()}
+function marSheet(){const M=MAR(),n=marOut(),k=marSel;
+ const bars=MARS.map((s,i)=>`<button type="button" data-mb="${i}" class="${M.off[i]?'off':''}${i===k?' on':''}" style="height:${84-i*5}px">${tt(MARN[i],MARNI[i])}${M.off[i]?'<i>?</i>':''}</button>`).join('');
+ const ctl=k>=0&&M.off[k]?`<div class="mctl"><p>${tt('Bar','Barretta')} <b>${tt(MARN[k],MARNI[k])}</b>: ${tt('slide until it sounds right with the others.','sposta lo slider finché suona giusta con le altre.')}</p>
+ <div class="msl"><span>${tt('lower','più giù')}</span><input type="range" min="-100" max="100" step="1" value="${M.sl[k]}" data-ms="${k}" aria-label="${tt('Tune','Intona')}"><span>${tt('higher','più su')}</span></div>
+ <div class="mbt"><button type="button" data-mp="one">▶ ${tt('The note','La nota')}</button><button type="button" data-mp="nb">▶ ${tt('With its neighbours','Con le vicine')}</button><button type="button" data-mp="ok" class="m">✓ ${tt('In tune!','Intonata!')}</button></div></div>`
+ :`<div class="mctl"><p>${n?tt('Tap a bar marked “?”.','Tocca una barretta con il “?”.'):tt('Every bar is in tune. Tap them to play! Every hour one goes out of tune again.','Tutte le barrette sono intonate. Toccale per suonare! Ogni ora una si scorda di nuovo.')}</p></div>`;
+ openSheet('mar',`<h2>Marimba</h2><p class="shn">${n?`${n} ${tt(n>1?'notes out of tune':'note out of tune',n>1?'note stonate':'nota stonata')}`:tt('In tune ♪','Intonata ♪')}</p><div class="mbars">${bars}</div>${ctl}`)}
+sb.addEventListener('click',e=>{const b=e.target.closest('button[data-mb],button[data-mp]');if(!b)return;e.stopPropagation();const M=MAR();
+ if(b.dataset.mb!=null){const i=+b.dataset.mb;marPlay(i);if(M.off[i]&&i!==marSel){marSel=i;marTry=0;marSheet()}return}
+ const k=marSel;if(k<0||!M.off[k])return;const p=b.dataset.mp;
+ if(p==='one')marPlay(k);
+ else if(p==='nb'){const a=Math.max(0,k-1),c=Math.min(7,k+1),seq=k===0?[0,1,2,1,0]:k===7?[7,6,5,6,7]:[a,k,c,k];seq.forEach((i,j)=>setTimeout(()=>marPlay(i),j*330))}
+ else if(p==='ok'){const err=M.off[k]+M.sl[k];if(Math.abs(err)<=15){M.off[k]=0;M.sl[k]=0;S.seeds=(S.seeds|0)+1;fmDirty=true;hudFarm();snd('seeds',3);const sd=$('seeds');sd.classList.remove('pop');void sd.offsetWidth;sd.classList.add('pop');bubbleQ.length=0;bubbleT=0;
+   if(!marOut()){say(tt('The marimba is in tune again! Listen… (+1 seed)','La marimba è di nuovo intonata! Ascolta… (+1 seme)'),3.4);marSel=-1;marSheet();setTimeout(()=>{closeSheet();marTune()},700)}
+   else{say(tt('In tune! +1 seed. Another one is still out.','Intonata! +1 seme. Ce n’è ancora una stonata.'),3);marSel=M.off.findIndex(c=>c);marTry=0;marSheet()}}
+  else{marTry++;bubbleQ.length=0;bubbleT=0;say(marTry>=2?(err>0?tt('Almost: still a little high.','Quasi: è ancora un po’ alta.'):tt('Almost: still a little low.','Quasi: è ancora un po’ bassa.')):tt('Not yet… listen with its neighbours.','Non ancora… ascoltala con le vicine.'),2.6)}}});
+sb.addEventListener('input',e=>{const r=e.target.closest('input[data-ms]');if(!r)return;const M=MAR(),k=+r.dataset.ms;M.sl[k]=+r.value;fmDirty=true;const n=performance.now();if(n-marLast>170){marLast=n;marPlay(k)}});
+sb.addEventListener('change',e=>{const r=e.target.closest('input[data-ms]');if(r)marPlay(+r.dataset.ms)});
+function marTune(){const seq=[0,2,4,5,4,2,3,1,0,2,4,7,6,5],P=marO.g.position;seq.forEach((i,j)=>setTimeout(()=>marPlay(i),j*240));for(const[,o]of igObjs)if(o.grp.position.distanceTo(P)<9){[0,1,2].forEach(q=>setTimeout(()=>{o.jump=.45},q*900+Math.random()*300))}}
+{const st=document.createElement('style');st.textContent=`.mbars{display:flex;gap:6px;align-items:flex-end;justify-content:center;margin:12px 0}.mbars button{position:relative;width:11%;border:2px solid #2b2018;border-radius:8px;background:linear-gradient(#b8764a,#8a5432);color:#f7ecd4;font:600 13px Fredoka,sans-serif;cursor:pointer;touch-action:manipulation}.mbars button.off{border-color:#ff7a5a;box-shadow:0 0 0 3px #ff7a5a55}.mbars button.on{outline:3px solid #fff3b0}.mbars i{position:absolute;top:-10px;right:-6px;font-style:normal;background:#ff7a5a;color:#fff;border-radius:50%;width:20px;height:20px;line-height:20px;font-size:13px}.mctl p{font-size:14px;line-height:1.4}.msl{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:13px}.msl input{flex:1;height:34px;accent-color:#f6d34a}.mbt{display:flex;gap:8px;flex-wrap:wrap}.mbt button{flex:1;min-width:110px;font:500 14px Fredoka,sans-serif;border:2px solid #2b2018;border-radius:12px;padding:8px;background:#fff7e6;color:#2b2018;cursor:pointer}.mbt button.m{background:#9be38a}`;document.head.appendChild(st)}
 
 /* ================= sound (sound.js): nature around Igor, footsteps, the Igorlets ================= */
 function snd(n,a){if(window.IgorSound&&started)IgorSound.sfx(n,a)}
