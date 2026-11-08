@@ -26,6 +26,8 @@ button{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;p
  background:transparent;color:var(--ink);border:1px solid rgba(219,231,234,.35);-webkit-tap-highlight-color:transparent}
 button.main{background:var(--glow);color:var(--abyss);border-color:var(--glow)}
 button:disabled{opacity:.35;cursor:default}
+@keyframes okglow{0%{box-shadow:0 0 0 0 rgba(127,227,239,0);transform:scale(1)}14%{box-shadow:0 0 26px 8px rgba(127,227,239,.9),0 0 0 3px rgba(239,228,207,.85);transform:scale(1.07)}30%{box-shadow:0 0 8px 2px rgba(127,227,239,.35);transform:scale(1)}46%{box-shadow:0 0 22px 6px rgba(127,227,239,.7),0 0 0 3px rgba(239,228,207,.6);transform:scale(1.05)}62%{box-shadow:0 0 6px 1px rgba(127,227,239,.25);transform:scale(1)}78%{box-shadow:0 0 16px 4px rgba(127,227,239,.45);transform:scale(1.03)}100%{box-shadow:0 0 0 0 rgba(127,227,239,0);transform:scale(1)}}
+#ok.nudge{animation:okglow 3s ease-in-out 1}
 button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
 #bubble{position:fixed;left:0;top:0;z-index:3;pointer-events:none;font:400 italic 19px/1.2 var(--display);color:var(--abyss);background:var(--bone);
  padding:9px 15px 10px;border-radius:20px;box-shadow:0 0 0 1px rgba(4,7,12,.35),0 6px 22px rgba(127,227,239,.18);max-width:min(260px,44vw);opacity:0;transition:opacity .3s;will-change:transform}
@@ -153,8 +155,8 @@ const igorImg=new Image();let igorOK=false;igorImg.onload=()=>{igorOK=true;spr.k
 const AV={igor:{name:'Igor',rim:null},she:{name:'Shigor',rim:'#ffa0c8'},queer:{name:'Queegor',rim:'#b48ce6'}};
 let avKey='igor';try{const v=localStorage.getItem('pitchStairsAvatar');if(AV[v])avKey=v}catch(e){}
 /* account (set by the home): registered players use their own Igor */
-let ACCT=null,HOME=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'));HOME=JSON.parse(localStorage.getItem('igortime_v1'))}catch(e){}
-if(ACCT&&HOME&&AV[HOME.avatar]){avKey=HOME.avatar;if(HOME.rim)AV[avKey]={...AV[avKey],rim:HOME.rim}}
+let ACCT=null,HOME=null,AVO=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'));HOME=JSON.parse(localStorage.getItem('igortime_v1'))}catch(e){}
+if(ACCT&&HOME&&AV[HOME.avatar]){avKey=HOME.avatar;AVO={ball:HOME.ball||null,glasses:HOME.glasses||null,gcol:HOME.gcol||null};if(HOME.rim)AV[avKey]={...AV[avKey],rim:HOME.rim}}
 const MULT={easy:1,medium:2,extreme:3};
 function reward(total){const n=Math.round(total/100*MULT[lvKey]);let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
  p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.pitchStairs=p.scores.pitchStairs||{};if(!(g[lvKey]>=total))g[lvKey]=total;
@@ -175,11 +177,41 @@ function bowAt(c,x,y,s,col){c.save();c.fillStyle=col;c.strokeStyle='#141414';c.l
  c.beginPath();c.arc(x,y,s*.3,0,TAU);c.fill();c.stroke();c.restore()}
 function starAt(c,x,y,r,cols){c.save();c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?r*.45:r;c.lineTo(x+q*Math.cos(a),y+q*Math.sin(a))}c.closePath();
  c.save();c.clip();const h=2*r/cols.length;cols.forEach((col,i)=>{c.fillStyle=col;c.fillRect(x-r,y-r+i*h,2*r,h+.6)});c.restore();c.strokeStyle='#141414';c.lineWidth=3;c.lineJoin='round';c.stroke();c.restore()}
+/* Igor's accessories: a cap (Igor only) and glasses (everyone).
+   Drawn in the coordinates of the island picture (663×730) and mapped onto any
+   other copy of the same drawing through the positions of its two eyes. */
+const ACC_REF=[{x:465,y:233,rx:41,ry:45},{x:538.5,y:225,rx:34.5,ry:41}];
+const ACC_GLASS=['#141414','#8a5a2b','#e0463c','#2f6fd6','#f1b46e','#ff8ab6','#ffffff'];
+const ACC_CAP=[null,'#e0463c','#2f6fd6','#f1b46e','#7fe3ef','#b48ce6','#ffffff','#2b2b2b'];
+function accShade(col,k){const n=parseInt(col.slice(1),16),f=v=>Math.max(0,Math.min(255,Math.round(v*k)));return`rgb(${f(n>>16)},${f(n>>8&255)},${f(n&255)})`}
+function accMap(c,eyes){const a=ACC_REF,b=eyes,dxa=a[1].x-a[0].x,dya=a[1].y-a[0].y,dxb=b[1].x-b[0].x,dyb=b[1].y-b[0].y;
+ const s=Math.hypot(dxb,dyb)/Math.hypot(dxa,dya),r=Math.atan2(dyb,dxb)-Math.atan2(dya,dxa),cs=s*Math.cos(r),sn=s*Math.sin(r);
+ c.transform(cs,sn,-sn,cs,b[0].x-(cs*a[0].x-sn*a[0].y),b[0].y-(sn*a[0].x+cs*a[0].y))}
+function accCap(c,col){const w=86,h=72;c.save();c.translate(384,128);c.rotate(.42);c.lineJoin='round';c.lineCap='round';c.strokeStyle='#141414';c.lineWidth=6;
+ c.fillStyle=accShade(col,.78);c.beginPath();c.moveTo(w*.35,-4);c.quadraticCurveTo(w*1.55,-14,w*2.05,10);c.quadraticCurveTo(w*1.45,22,w*.3,12);c.closePath();c.fill();c.stroke();
+ c.fillStyle=col;c.beginPath();c.moveTo(-w,4);c.bezierCurveTo(-w,-h*1.25,w,-h*1.25,w,4);c.quadraticCurveTo(0,14,-w,4);c.closePath();c.fill();c.stroke();
+ c.lineWidth=3.5;c.globalAlpha=.55;c.beginPath();c.moveTo(-6,-h*.93);c.quadraticCurveTo(14,-h*.4,8,9);c.stroke();
+ c.beginPath();c.moveTo(-w*.92,-12);c.quadraticCurveTo(0,-2,w*.92,-12);c.stroke();c.globalAlpha=1;
+ c.fillStyle=accShade(col,.8);c.lineWidth=4.5;c.beginPath();c.arc(-6,-h*.93-3,9,0,Math.PI*2);c.fill();c.stroke();
+ c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(-w*.42,-h*.55,13,22,-.6,0,Math.PI*2);c.fill();c.restore()}
+function accGlasses(c,kind,col){const E=ACC_REF,sun=kind==='sun';c.save();c.lineJoin='round';c.lineCap='round';
+ const L=E.map(e=>({x:e.x+(sun?2:0),y:e.y+(sun?6:2),rx:e.rx*(sun?1.3:1.2),ry:e.ry*(sun?1.08:1.16)}));
+ c.strokeStyle=col==='#ffffff'?'#d9d9d9':col;c.lineWidth=sun?9:7;c.beginPath();c.moveTo(L[0].x-L[0].rx+4,L[0].y-L[0].ry*.35);c.quadraticCurveTo(L[0].x-L[0].rx-60,L[0].y-L[0].ry*.75,L[0].x-L[0].rx-118,L[0].y-L[0].ry*.2);c.stroke();
+ c.strokeStyle='#141414';c.lineWidth=2.5;c.stroke();
+ for(const i of[1,0]){const l=L[i];c.beginPath();if(sun){c.moveTo(l.x-l.rx,l.y-l.ry*.55);c.quadraticCurveTo(l.x,l.y-l.ry*1.05,l.x+l.rx,l.y-l.ry*.55);c.bezierCurveTo(l.x+l.rx*1.05,l.y+l.ry*.9,l.x-l.rx*1.05,l.y+l.ry*1.05,l.x-l.rx,l.y-l.ry*.55)}else c.ellipse(l.x,l.y,l.rx,l.ry,0,0,Math.PI*2);c.closePath();
+  c.fillStyle=sun?'rgba(16,20,30,.9)':'rgba(205,232,255,.2)';c.fill();
+  c.strokeStyle='#141414';c.lineWidth=sun?13:11;c.stroke();c.strokeStyle=col;c.lineWidth=sun?8:6;c.stroke();
+  c.save();c.clip();c.strokeStyle='rgba(255,255,255,'+(sun?.55:.6)+')';c.lineWidth=5;c.beginPath();c.arc(l.x-l.rx*.2,l.y-l.ry*.1,l.rx*.62,Math.PI*1.08,Math.PI*1.42);c.stroke();c.restore()}
+ c.restore()}
+/* o: {avatar, ball, glasses:'eye'|'sun'|null, gcol} */
+function igorAcc(c,eyes,o){if(!o)return;const cap=o.avatar==='igor'&&o.ball,gl=o.glasses==='eye'||o.glasses==='sun';if(!cap&&!gl)return;
+ c.save();accMap(c,eyes);if(cap)accCap(c,o.ball);if(gl)accGlasses(c,o.glasses,o.gcol||'#141414');c.restore()}
 function paintAvatar(c,key,k0,k1){c.clearRect(0,0,512,512);c.drawImage(igorImg,0,0,512,512);const A=AV[key];
  if(A.rim){c.save();c.strokeStyle=A.rim;c.lineWidth=5;c.beginPath();c.arc(251,251,216,Math.PI/2+.47,Math.PI/2-.47+TAU);c.stroke();c.restore()}
  const d0=lid(c,EYES[0],k0),d1=lid(c,EYES[1],k1);
- if(key==='she'){lashes(c,EYES[0],d0,2);lashes(c,EYES[1],d1,2);bowAt(c,352,32,22,'#ff8ab6')}
- else if(key==='queer'){lashes(c,EYES[0],d0,1);lashes(c,EYES[1],d1,1);starAt(c,352,30,22,['#fcf434','#ffffff','#9c59d1','#2c2c2c'])}}
+ if(key==='she'){lashes(c,EYES[0],d0,2);lashes(c,EYES[1],d1,2);bowAt(c,352,32,22,(AVO&&AVO.ball)||'#ff8ab6')}
+ else if(key==='queer'){lashes(c,EYES[0],d0,1);lashes(c,EYES[1],d1,1);starAt(c,352,30,22,['#fcf434','#ffffff','#9c59d1','#2c2c2c'])}
+ if(AVO)igorAcc(c,EYES,{...AVO,avatar:key})}
 function drawSprite(k0,k1){if(!igorOK)return;const key=avKey+'|'+k0.toFixed(2)+'|'+k1.toFixed(2);if(key===spr.key)return;spr.key=key;paintAvatar(sx,avKey,k0,k1)}
 const BL={next:2,start:-9,lag:[0,.08]};
 function blink(t){if(t>BL.next){BL.start=t;const lag=.06+Math.random()*.05;BL.lag=Math.random()<.5?[0,lag]:[lag,0];BL.next=t+(Math.random()<.2?.45:2.5+Math.random()*4)}
@@ -225,12 +257,14 @@ function drawCurtain(S,open,light,t){const x0=S.x0+S.pw*.03,x1=S.x0+S.pw*.97,y0=
 /* ---------- game state ---------- */
 let phase='menu',round=0,total=0,R=null,REV=0,revT=0;
 const IG={u:.3,face:1,drag:false};
-function newRound(){round++;R={u:.08+Math.random()*.84,left:LV.replays,played:false,err:0,pts:0,eat:false};
+let nudgeIv=0;function nudge(){const b=$('ok');b.classList.remove('nudge');void b.offsetWidth;if(phase==='guess')b.classList.add('nudge')}
+function moved(){if(phase!=='guess'||!R||R.moved)return;R.moved=true;nudge();clearInterval(nudgeIv);nudgeIv=setInterval(nudge,6500)}
+function newRound(){round++;clearInterval(nudgeIv);R={u:.08+Math.random()*.84,left:LV.replays,played:false,err:0,pts:0,eat:false,moved:false};
  let s;do{s=.05+Math.random()*.9}while(Math.abs(s-R.u)<.18);IG.u=s;REV=0;phase='guess';
  $('rd').textContent=round+'/'+ROUNDS;updateButtons();
  say(round===1?'Listen. Where is the ant singing?':['Again! Listen…','Shh. It’s singing.','Another one. Up or down?','Last one. Concentrate.'][Math.min(3,round-2)],2.4);
  setTimeout(playAnt,700)}
-function confirm(){if(phase!=='guess')return;myStop();if(antVoice)antVoice.off();antPlaying=0;phase='reveal';revT=0;
+function confirm(){if(phase!=='guess')return;clearInterval(nudgeIv);$('ok').classList.remove('nudge');myStop();if(antVoice)antVoice.off();antPlaying=0;phase='reveal';revT=0;
  const e=cents(IG.u,R.u),ae=Math.abs(e);R.err=e;R.pts=Math.max(0,Math.round(100*(1-ae/LV.zero)));R.eat=ae<=25;total+=R.pts;$('sc').textContent=total;updateButtons();
  const n=Math.round(ae),dir=e>0?'a little lower':'a little higher',dir2=e>0?'lower down':'higher up';let msg;
  if(ae<3)msg=['Perfect pitch! Spot on.','Bullseye! What ears!'][round%2];
@@ -249,8 +283,8 @@ function updateButtons(){const gu=phase==='guess';$('ok').disabled=!gu;$('mine')
  const L=$('listen');L.disabled=!gu||(R&&R.played&&R.left<=0);L.textContent=R&&R.played&&isFinite(R.left)?`▶ Listen (${R.left})`:'▶ Listen'}
 
 /* ---------- bubble (tail always points at Igor) ---------- */
-const bubble=$('bubble');let bubT=0;function say(t,s=2.4){bubble.textContent=t;bubT=s}
-function placeBubble(dt,ix,iy,isz){if(bubT<=0){bubble.style.opacity=0;return}bubT-=dt;bubble.style.opacity=bubT>0?1:0;
+const bubble=$('bubble');let bubT=0,bubS=0;const bubQ=[];function say(t,s=2.4){if(bubT>0&&bubble.textContent===t)return;if(bubT>0&&bubS<1.8){if(!bubQ.some(q=>q[0]===t)){bubQ.push([t,s]);if(bubQ.length>3)bubQ.shift()}return}bubble.textContent=t;bubT=s;bubS=0}
+function placeBubble(dt,ix,iy,isz){if(bubT<=0&&bubQ.length){const[q,s]=bubQ.shift();bubble.textContent=q;bubT=s;bubS=0}if(bubT<=0){bubble.style.opacity=0;return}bubT-=dt;bubS+=dt;bubble.style.opacity=bubT>0?1:0;
  const bw=bubble.offsetWidth,bh=bubble.offsetHeight,r=isz*.46;let x=clamp(ix-bw*.55,10,Math.max(10,W-bw-10)),y=iy-r-bh-14,below=false;if(y<62){y=iy+r+16;below=true}
  bubble.classList.toggle('below',below);bubble.style.setProperty('--tx',clamp(ix-x,24,bw-24)+'px');bubble.style.transform=`translate(${x}px,${y}px)`}
 
@@ -258,14 +292,14 @@ function placeBubble(dt,ix,iy,isz){if(bubT<=0){bubble.style.opacity=0;return}bub
 let dragY0=0,dragU0=0;
 cv.addEventListener('pointerdown',e=>{if(phase!=='guess'||e.clientX<W/2)return;const S=stair(1);IG.drag=true;dragY0=e.clientY;dragU0=IG.u;
  // tap on the staircase jumps there, then drag fine-tunes
- const uTap=clamp((S.bot-e.clientY)/(S.bot-S.top),0,1);const p=stairPt(S,IG.u);if(Math.abs(e.clientY-p.y)>H*.08){IG.u=uTap;dragU0=uTap}
+ const uTap=clamp((S.bot-e.clientY)/(S.bot-S.top),0,1);const p=stairPt(S,IG.u);if(Math.abs(e.clientY-p.y)>H*.08){IG.u=uTap;dragU0=uTap;moved()}
  try{cv.setPointerCapture(e.pointerId)}catch(_){}myStart()});
-cv.addEventListener('pointermove',e=>{if(!IG.drag)return;const S=stair(1);IG.u=clamp(dragU0+(dragY0-e.clientY)/(S.bot-S.top),0,1);if(myOn)myVoice.set(fOf(IG.u))});
+cv.addEventListener('pointermove',e=>{if(!IG.drag)return;const S=stair(1);IG.u=clamp(dragU0+(dragY0-e.clientY)/(S.bot-S.top),0,1);if(Math.abs(IG.u-dragU0)>.01)moved();if(myOn)myVoice.set(fOf(IG.u))});
 const up=()=>{if(!IG.drag)return;IG.drag=false;myStop()};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 $('listen').onclick=playAnt;$('ok').onclick=confirm;
 const mine=$('mine');mine.addEventListener('pointerdown',e=>{e.preventDefault();myStart()});['pointerup','pointerleave','pointercancel'].forEach(k=>mine.addEventListener(k,myStop));
 addEventListener('keydown',e=>{if(phase!=='guess')return;const st=(e.shiftKey?1:5)/(LV.oct*1200);
- if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();IG.u=clamp(IG.u+(e.key==='ArrowUp'?st:-st),0,1);if(myOn)myVoice.set(fOf(IG.u));else{myStart();clearTimeout(window.__kt);window.__kt=setTimeout(myStop,350)}}
+ if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();IG.u=clamp(IG.u+(e.key==='ArrowUp'?st:-st),0,1);moved();if(myOn)myVoice.set(fOf(IG.u));else{myStart();clearTimeout(window.__kt);window.__kt=setTimeout(myStop,350)}}
  else if(e.key===' '){e.preventDefault();myStart()}else if(e.key==='l'||e.key==='L')playAnt();else if(e.key==='Enter'){e.preventDefault();confirm()}});
 addEventListener('keyup',e=>{if(e.key===' ')myStop()});
 
