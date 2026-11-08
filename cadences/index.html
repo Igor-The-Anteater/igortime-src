@@ -115,6 +115,7 @@ button.acc{font:400 20px/1 'Noto Music',var(--display);padding:4px 12px 10px;let
   <button type="button" data-lv="extreme" aria-pressed="false">Extreme</button>
  </div>
  <p class="small" id="lvinfo"></p>
+ <p class="small" id="acctline" hidden></p>
  <div class="row"><button class="main" id="go" type="button">Start</button></div>
 </div></div>
 
@@ -289,6 +290,10 @@ function analyze(){const K=R.key,C=R.chords,items=[],ng=R.ng,n=R.n,SC=[];for(let
 const igorImg=new Image();let igorOK=false;igorImg.onload=()=>{igorOK=true;spr.key='';drawAvButtons()};igorImg.src=IGOR_SRC;
 const AV={igor:{name:'Igor',rim:null},she:{name:'Shigor',rim:'#ffa0c8'},queer:{name:'Queegor',rim:'#b48ce6'}};
 let avKey='igor';try{const v=localStorage.getItem('igorAvatar')||localStorage.getItem('pitchStairsAvatar');if(AV[v])avKey=v}catch(e){}
+/* account (set by the island): registered players use their own Igor */
+let ACCT=null,HOME=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'));HOME=JSON.parse(localStorage.getItem('igortime_v1'))}catch(e){}
+if(ACCT&&HOME&&AV[HOME.avatar]){avKey=HOME.avatar;if(HOME.rim)AV[avKey]={...AV[avKey],rim:HOME.rim}}
+const MULT={easy:1,medium:2,extreme:3};
 const EYES=[{x:306,y:194,rx:19,ry:21},{x:341,y:190.5,rx:16,ry:19.5}];
 const spr=document.createElement('canvas');spr.width=spr.height=512;const sx=spr.getContext('2d');spr.key='';
 function lid(c,e,k){k=k*k*(3-2*k);const top=e.y-e.ry-2,bot=e.y+e.ry+2,m=e.y+e.ry*.35,Lu=top+(m-top)*k,Ll=bot-(bot-m)*k,bend=6*k,Lx=e.x-e.rx-3,Rx=e.x+e.rx+3;
@@ -510,12 +515,16 @@ function doCheck(){phase='result';const res=analyze();R.res=res;total+=res.score
 function finish(){phase='end';let best=0;const k='cadencesBest_'+lvKey;try{best=+localStorage.getItem(k)||0;if(total>best){localStorage.setItem(k,total);best=total}}catch(e){}
  const N=AV[avKey].name;$('endlv').textContent=LV.name+' · '+ROUNDS+' rounds';$('endsc').textContent=total+' / '+ROUNDS*100;
  $('endmsg').textContent=total>=450?'Magnificent part-writing. '+N+' is full and very proud of you.':total>=350?'Great harmony! '+N+' had a lovely meal.':total>=200?'Nice work! '+N+' enjoyed a tasty snack and wants another round.':N+' loved your chords! One more round and the cadences will flow.';
+ const won=(()=>{const n=Math.round(total/100*MULT[lvKey]);let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.cadences=p.scores.cadences||{};if(!(g[lvKey]>=total))g[lvKey]=total;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n})();
+ if(won)$('endmsg').textContent+=' +'+won+' tofu seed'+(won>1?'s':'')+' for '+N+'’s field: collect them back on the island.';
  $('endbest').textContent='best on '+LV.name.toLowerCase()+': '+best;$('end').hidden=false}
 function begin(){audio();if(AC.state==='suspended')AC.resume();$('start').hidden=true;$('end').hidden=true;round=0;total=0;$('sc').textContent=0;R=null;newRound()}
 function setLevel(k){lvKey=k;LV=LEVELS[k];document.querySelectorAll('.lv button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lv===k));$('lvinfo').textContent=LV.info;try{localStorage.setItem('cadencesLevel',k)}catch(e){}}
 document.querySelectorAll('.lv button').forEach(b=>b.onclick=()=>setLevel(b.dataset.lv));setLevel(lvKey);
 function setAv(k){avKey=k;spr.key='';document.querySelectorAll('.av button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.av===k));document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[k].name);try{localStorage.setItem('igorAvatar',k);localStorage.setItem('pitchStairsAvatar',k)}catch(e){}}
-document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset.av));setAv(avKey);
+document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset.av));
+if(ACCT){avKey=AV[avKey]?avKey:'igor';spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent='Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · tofu seeds: easy ×1, medium ×2, extreme ×3'}
+else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent='Tofu seeds won: easy ×1, medium ×2, extreme ×3'}
 $('go').onclick=begin;$('again').onclick=begin;$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;phase='menu'};
 sayHTML('Hi! Ready to write some cadences?');
 /* demo phrase behind the menu */
@@ -525,4 +534,5 @@ let last=performance.now()/1000,T=0;
 function frame(){const now=performance.now()/1000,dt=Math.min(.05,now-last);last=now;T+=dt;stage(T,dt);if(R)drawStaff(T);requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 </script>
+<script>try{const h=localStorage.getItem('igortime_home');if(h)document.querySelectorAll('a[href="/"]').forEach(a=>a.href=h)}catch(e){}</script>
 </body></html>
