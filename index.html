@@ -3,6 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Igor time</title>
+<script>try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1)document.documentElement.classList.add('seen')}catch(e){}</script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant field, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -81,6 +82,7 @@ button.link{border:0;padding:9px 4px;color:var(--dim);text-transform:none;letter
 .touch #hint{bottom:calc(172px + env(safe-area-inset-bottom,0px))}
 #intro{position:fixed;inset:0;z-index:8;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 60%,rgba(5,8,13,.55),var(--abyss) 75%);padding:16px;transition:opacity 1s;overflow:auto}
 #intro.gone{opacity:0;pointer-events:none}
+.seen #intro{display:none}
 #intro .in{max-width:31rem}
 #intro canvas{width:clamp(90px,16vw,128px);height:auto;margin:0 0 6px -4px}
 #intro h2{margin:0;font:400 clamp(44px,8vw,80px)/.95 var(--display);letter-spacing:-.02em}
