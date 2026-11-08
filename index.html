@@ -823,14 +823,14 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   for(let k=0;k<5;k++){const jar=new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,.26,12),lam(['#e9c48a','#a8463c','#f3ead2','#7aa08a','#c9a24a'][k]));jar.position.set(-.8+k*.4,2.36,-.3);o.add(jar)}
   const steam=[];for(let k=0;k<6;k++){const h=halo('#e9eef5',.35,.0);h.material.blending=THREE.NormalBlending;o.add(h);steam.push({h,u:k/6})}
   updaters.push((t,dt)=>{for(const q of steam){q.u=(q.u+dt*.25)%1;q.h.position.set(.5+Math.sin(q.u*6+t)*.1,1.55+q.u*1.1,0);q.h.material.opacity=.25*(1-q.u)}});
-  station(Rm,'house',{name:'The kitchen',sub:'coming soon',pos:new V3(3.7,0,-3.85),stand:new V3(3.7,0,-2.4),obj:o,act:()=>wipSay('The kitchen'),r:1.5})}
+  station(Rm,'house',{name:'The kitchen',sub:'walk to the stove to play',pos:new V3(3.7,0,-3.85),stand:new V3(3.7,0,-2.4),obj:o,act:()=>launch('/kitchen/','To the stove: the kitchen!',['house',3.7,-2.2]),r:1.5})}
  // the window seat
  {const o=new THREE.Group();const win=nightWindow({g:o},0,1.9,0,Math.PI/2,1.6,1.3);win.position.set(-.1,1.9,0);
   const seat=new THREE.Mesh(new THREE.RoundedBoxGeometry(.9,.5,2,2,.06),lam('#6a4630'));seat.position.set(.4,.25,0);o.add(seat);
   const cush=new THREE.Mesh(new THREE.RoundedBoxGeometry(.8,.18,1.9,2,.08),lam('#4f6f8a'));cush.position.set(.42,.58,0);o.add(cush);
   for(const zz of[-.6,.6]){const pw=new THREE.Mesh(new THREE.RoundedBoxGeometry(.18,.4,.45,2,.08),lam(zz<0?'#c9894f':'#e9d6b0'));pw.position.set(.15,.85,zz);pw.rotation.z=.2;o.add(pw)}
   const tel=new THREE.Group();const tb=new THREE.Mesh(new THREE.CylinderGeometry(.06,.1,.8,10),lam('#c9a24a'));tb.rotation.z=Math.PI/2.6;tel.add(tb);tel.position.set(.6,1.15,.75);o.add(tel);
-  station(Rm,'house',{name:'The window',sub:'coming soon',pos:new V3(-5.85,0,1.2),stand:new V3(-4.4,0,1.2),obj:o,act:()=>wipSay('The window'),r:1.1,y:1.4,zr:1.5})}
+  station(Rm,'house',{name:'The window',sub:'walk to the window to play',pos:new V3(-5.85,0,1.2),stand:new V3(-4.4,0,1.2),obj:o,act:()=>launch('/window/','To the window!',['house',-4.2,1.2]),r:1.1,y:1.4,zr:1.5})}
  // the bedroom corner
  {const o=new THREE.Group();const frame=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.9,.45,2.8,2,.08),lam('#7b5638'));frame.position.y=.23;o.add(frame);
   const mattress=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.75,.25,2.6,2,.1),lam('#f4efe6'));mattress.position.y=.55;o.add(mattress);
@@ -844,7 +844,7 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   const sleepZ=document.createElement('canvas');sleepZ.width=sleepZ.height=64;{const q=sleepZ.getContext('2d');q.fillStyle='#f7ecd4';q.font='600 44px Fredoka, sans-serif';q.textAlign='center';q.fillText('z',32,46)}
   const zz=[];for(let k=0;k<3;k++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(sleepZ),transparent:true,opacity:0,depthWrite:false}));sp.scale.set(.3,.3,1);o.add(sp);zz.push(sp)}
   updaters.push(t=>{zz.forEach((sp,k)=>{const u=(t*.25+k/3)%1;sp.position.set(.2+u*.5,1.1+u*1.2,-.9);sp.material.opacity=Math.sin(u*Math.PI)*.8})});
-  station(Rm,'house',{name:'The bedroom',sub:'coming soon',pos:new V3(4.5,0,.8),stand:new V3(2.7,0,1.4),obj:o,act:()=>wipSay('The bedroom'),r:1.6})}
+  station(Rm,'house',{name:'The bedroom',sub:'walk to the bed to play',pos:new V3(4.5,0,.8),stand:new V3(2.7,0,1.4),obj:o,act:()=>launch('/bedroom/','To the bedroom!',['house',2.5,1.4]),r:1.6})}
 }
 
 /* the old music school, inside */
@@ -970,10 +970,10 @@ window.IgorUI={openAccount,renderDress,refresh:()=>refresh(),toast:t=>toast(t),o
 /* ================= index ================= */
 const idx=$('index');
 idx.innerHTML=`<h2>Igor’s island</h2><ul><li><button data-i="house">Igor’s house<small>games</small></button></li><li><button data-i="field">Tofu ant field</button></li><li><button data-i="school">Music school<small>composers</small></button></li><li><button data-i="abyss">The abyss<small>game</small></button></li><li><button data-i="jetty">Other places<small>soon</small></button></li></ul>
- <h2>Games</h2><ul><li><button data-i="stairs">Pitch Stairs<small>house</small></button></li><li><button data-i="cad">Cadences<small>school</small></button></li><li><button data-i="w">The window<small>soon</small></button></li><li><button data-i="k">The kitchen<small>soon</small></button></li><li><button data-i="b">The bedroom<small>soon</small></button></li></ul>
+ <h2>Games</h2><ul><li><button data-i="stairs">Pitch Stairs<small>house</small></button></li><li><button data-i="cad">Cadences<small>school</small></button></li><li><button data-i="w">The window<small>house</small></button></li><li><button data-i="k">The kitchen<small>house</small></button></li><li><button data-i="b">The bedroom<small>house</small></button></li></ul>
  <h2>Sky</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">Igor’s weather<small>same for everyone</small></button></li><li><button data-sky="real">The sky where I am<small>uses your location</small></button></li></ul>`;
 idx.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.sky){skyMode(b.dataset.sky);return}const k=b.dataset.i;idx.hidden=true;$('indexBtn').setAttribute('aria-expanded','false');
- if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/','Cadences!',['school',0,-0.85]);return}if(k==='w'||k==='k'||k==='b'){openWip({w:'The window',k:'The kitchen',b:'The bedroom'}[k]);return}if(where!=='out')exitRoom(true);goTo(k)});
+ if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/','Cadences!',['school',0,-0.85]);return}if(k==='w'){launch('/window/','The window!',['house',-4.2,1.2]);return}if(k==='k'){launch('/kitchen/','The kitchen!',['house',3.7,-2.2]);return}if(k==='b'){launch('/bedroom/','The bedroom!',['house',2.5,1.4]);return}if(where!=='out')exitRoom(true);goTo(k)});
 function toggleIndex(){idx.hidden=!idx.hidden;skyStatus();$('indexBtn').setAttribute('aria-expanded',String(!idx.hidden));if(!idx.hidden)say(pick(['Where to?','Pick a place, I’ll take you.']),2)}
 $('indexBtn').onclick=toggleIndex;
 $('ants').onclick=()=>{toast(S.ants+' tofu ants eaten');goTo('field')};$('seeds').onclick=()=>{toast(S.seeds+' tofu seeds · win more in the games');goTo('field')};$('me').onclick=()=>openAccount();
