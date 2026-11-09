@@ -14,11 +14,13 @@ async function firestoreBackend(){
  const CODE='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
  return{
   onAuth(cb){return onAuthStateChanged(auth,async u=>{if(!u){U=null;cb(null);return}let nick='';
-   try{const s=await getDoc(D('users',u.uid));if(s.exists())nick=s.data().nick||''}catch(e){}
-   if(!nick&&window.IgorCloud&&window.IgorCloud.user)nick=window.IgorCloud.user.nick||'';
+   for(let k=0;k<4&&!nick;k++){if(k)await new Promise(r=>setTimeout(r,700*k));
+    try{const s=await getDoc(D('users',u.uid));if(s.exists())nick=s.data().nick||''}catch(e){console.warn('chat nick',e&&e.code||e)}
+    if(!nick){try{const p=await getDoc(D('profiles',u.uid));if(p.exists())nick=p.data().nick||''}catch(e){}}
+    if(!nick&&window.IgorCloud&&window.IgorCloud.user)nick=window.IgorCloud.user.nick||''}
    U={uid:u.uid,nick:String(nick).slice(0,16),admin:ADMINS.includes(u.uid)};cb(U)})},
   user:()=>U,
-  async profile(){const s=await getDoc(D('profiles',U.uid));return s.exists()?s.data():null},
+  async profile(){let err;for(let k=0;k<3;k++){try{const s=await getDoc(D('profiles',U.uid));return s.exists()?s.data():null}catch(e){err=e;console.warn('chat profile',e&&e.code||e);await new Promise(r=>setTimeout(r,800*(k+1)))}}throw err},
   async suspended(){try{return(await getDoc(D('susp',U.uid))).exists()}catch(e){return false}},
   async join(req,av){await setDoc(D('profiles',U.uid),{nick:U.nick,av,seen:serverTimestamp(),req,age14:serverTimestamp()});
    const b=writeBatch(db);if(req==='all')b.set(D('dir',U.uid),{nick:U.nick,nickL:U.nick.toLowerCase(),av});await b.commit();await this.myCode()},
@@ -259,7 +261,7 @@ const st=document.createElement('style');st.textContent=`
 document.head.appendChild(st);
 
 /* ---------- state ---------- */
-let B=null,ME=null,PROF=null,SUSP=false,started=false;
+let B=null,ME=null,PROF=null,SUSP=false,started=false,NETERR=false;
 let FR=[],RIN=[],ROUT=[],BL=[],REP=[],PCACHE={};
 const subs=[];let view='friends',chatWith=null,unMsgs=null,unProf=null,MS=[],pingT=0,prevUnread=-1;
 const panel=document.createElement('aside');panel.id='igc';panel.hidden=true;panel.setAttribute('aria-label','Chat');document.body.appendChild(panel);
@@ -281,7 +283,7 @@ function badge(){const n=unread(),b=$('chatB');if(b){let i=b.querySelector('i');
 async function start(){if(started)return;started=true;
  B=window.IgorChatFake?window.IgorChatFake:await firestoreBackend();
  B.onAuth(async u=>{subs.splice(0).forEach(f=>{try{f()}catch(e){}});clearInterval(pingT);ME=u;PROF=null;FR=[];RIN=[];ROUT=[];BL=[];REP=[];PCACHE={};chatWith=null;
-  if(u){try{PROF=await B.profile()}catch(e){PROF=null}if(PROF){SUSP=await B.suspended();live()}}
+  NETERR=false;if(u){if(!u.nick&&window.IgorCloud&&window.IgorCloud.user&&window.IgorCloud.user.nick)u.nick=window.IgorCloud.user.nick.slice(0,16);try{PROF=await B.profile()}catch(e){PROF=null;NETERR=true}if(PROF){SUSP=await B.suspended();live()}}
   badge();if(!panel.hidden)render()})}
 function live(){const av=myAv();B.syncMe(PROF,av).catch(e=>console.warn('sync',e));PROF.av=av;PROF.nick=ME.nick;
  const ping=()=>{if(document.visibilityState==='visible')B.ping().catch(()=>{})};ping();pingT=setInterval(ping,60000);
@@ -300,6 +302,8 @@ function shell(title,{back=false,menu=false,tabs=true}={}){
 function render(){if(!B)return;
  if(!ME){const b=shell(tt('Chat','Chat'),{tabs:false});b.innerHTML=`<div class="center"></div>`;const c=b.firstChild;c.appendChild(avC(myAv(),'big'));
   c.insertAdjacentHTML('beforeend',`<p>${tt('Sign in to chat with your friends.','Accedi per chattare con i tuoi amici.')}</p><button class="go" data-a="signin">${tt('Sign in / register','Accedi / registrati')}</button>`);return}
+ if(!ME.nick&&window.IgorCloud&&window.IgorCloud.user&&window.IgorCloud.user.nick)ME.nick=window.IgorCloud.user.nick.slice(0,16);
+ if(NETERR){const b=shell('Chat',{tabs:false});b.innerHTML=`<div class="center"><p>${tt('I can’t reach the chat right now.','Adesso non riesco a raggiungere la chat.')}</p><button class="go" data-a="retry">${tt('Try again','Riprova')}</button></div>`;return}
  if(!ME.nick){const b=shell('Chat',{tabs:false});b.innerHTML=`<div class="center"><p>${tt('First choose a nickname: tap your name at the top of the island.','Prima scegli un nickname: tocca il tuo nome in alto sull’isola.')}</p><button data-a="signin">${tt('Choose a nickname','Scegli il nickname')}</button></div>`;return}
  if(!PROF)return gate();
  if(SUSP){const b=shell('Chat',{tabs:false});b.innerHTML=`<div class="center"><p><b>${tt('Your chat is suspended.','La tua chat è sospesa.')}</b></p><p class="mute">${tt('For any questions write to','Per chiarimenti scrivi a')} theigortime@gmail.com</p></div>`;return}
@@ -439,6 +443,7 @@ panel.addEventListener('click',async e=>{const t=e.target.closest('[data-a],[dat
  if(a==='signin'){close();if(window.IgorUI&&window.IgorUI.openAccount)window.IgorUI.openAccount();else location.href='/?signin';return}
  if(a==='back'){if(panel._rep){panel._rep=null;return render()}if(chatWith)return closeChat();return render()}
  if(a==='home'){return render()}
+ if(a==='retry'){t.disabled=true;try{PROF=await B.profile();NETERR=false;if(PROF){SUSP=await B.suspended();live()}}catch(e){NETERR=true;toast(tt('Still not reachable, try again in a moment.','Ancora niente, riprova tra poco.'))}return render()}
  if(a==='privacy')return privacyV();
  if(a==='join'){t.disabled=true;const req=(panel.querySelector('input[name=igcReq]:checked')||{}).value||'all';await B.join(req,myAv());PROF=await B.profile();SUSP=await B.suspended();live();view='find';return render()}
  if(a==='open'){const f=FR.find(x=>x.pair===t.dataset.pair);if(f)openChat(f);return}
