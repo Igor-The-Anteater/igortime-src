@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=11"></script>
+<script src="/sound.js?v=12"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -539,7 +539,7 @@ const SPC={t:{N:['Tofu','Tofu'],seeds:1,germ:30,ready:120,yield:6,win:480,care:n
  p:{N:['Tomato','Pomodoro'],seeds:3,germ:60,ready:360,yield:20,win:720,care:'water',lv:3},
  c:{N:['Carrot','Carota'],seeds:5,germ:120,ready:720,yield:45,win:1440,care:'weed',lv:5}};
 const LVX=[0,20,60,150,300,500,800,1200];
-const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes and the tool shed!','Pomodori e capanno degli attrezzi!'],['Field 4 and a new island!','Il campo 4 e una nuova isola!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6 and bigger buildings!','Il campo 6 ed edifici più grandi!'],['Field 7!','Il campo 7!'],['Field 8: the island is complete!','Il campo 8: l’isola è completa!']];
+const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes and the tool shed!','Pomodori e capanno degli attrezzi!'],['Field 4 and the sand island!','Il campo 4 e l’isola di sabbia!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6 and bigger buildings!','Il campo 6 ed edifici più grandi!'],['Field 7!','Il campo 7!'],['Field 8 and the lake island!','Il campo 8 e l’isola del lago!']];
 const FCOST=[null,{t:15},{t:35},{t:90},{t:160},{t:260},{t:400},{t:600}];
 const MAXF=8,CAPS=[30,80,200,500,2000,6000],PENCAP=[0,2,4,6],WATERCAP=[0,3,8],IGMAX=12;
 const igCap=()=>IGMAX; // a little house appears with every new Igorlet (hired, adopted, stray, orphan)
@@ -972,6 +972,8 @@ function idleDirector(list){const F=FM();idleT=8+Math.random()*6;ballO.a=ballO.c
  const TR=nearTrees(),freeV=[];for(const k of VKEYS)for(let j=0;j<vehN(k);j++)if(!(RIDE===k&&!j)&&!riderOf(k,j)&&(!MOTOR[k]||FUEL().n>=1))freeV.push([k,j]);
  for(const o of L){const g=igById(o.id)||{},tr=g.trait;let r=Math.random();
   if(freeV.length&&Math.random()<(tr==='sporty'||tr==='explorer'?.55:.2)){const[v,j]=freeV.splice(Math.floor(Math.random()*freeV.length),1)[0];o.act={k:'ride',v,j,goal:parkOf(v,j),dir:Math.random()<.5?1:-1};continue}
+  if(ISLES[0].on&&Math.random()<(tr==='explorer'||tr==='sporty'?.25:.12)){o.act={k:'beach',goal:islePt(0)};continue}
+  if(ISLES[1].on&&Math.random()<(tr==='explorer'||tr==='music'?.2:.1)){o.act={k:'lake',goal:islePt(1)};continue}
   if(tr==='explorer')r=r<.5?.35:r;if(tr==='shy')r=.9;if(tr==='sleepy'&&r<.5){if(TR.length){const p=pick(TR).t.position;o.act={k:'think',goal:new V3(p.x+.9,0,p.z+.9),ic:'z'};continue}}
   if(tr==='music'&&r<.45){o.act={k:'think',goal:new V3(-8.4+Math.random(),0,-6.2+Math.random()),ic:'note'};continue}
   if(r<.3&&TR.length){const p=pick(TR).t.position;o.act={k:'think',goal:new V3(p.x+.9,0,p.z+.9),ic:tr==='foodie'?'ant':TRAITS[tr]?TRAITS[tr].ic:pick(['note','q','ant','heart'])}}
@@ -1944,7 +1946,7 @@ addEventListener('pointermove',e=>{if(!downAt||!e.buttons||pinch)return;const dx
 renderer.domElement.addEventListener('pointerup',e=>{const d=downAt;downAt=null;if(!d||d.moved||!started)return;if(!PL)hideChips();if(!PL&&funPick(e.clientX,e.clientY))return;if(!PL&&igPick(e.clientX,e.clientY))return;if(!PL&&fieldPick(e.clientX,e.clientY))return;
  ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,camera);
  const shown=m=>{for(let o=m;o;o=o.parent)if(!o.visible)return false;return true};const h=ray.intersectObjects(clickables.filter(m=>(m.userData.name==='igor'||m.userData.room===where)&&shown(m)),false);if(h.length){h.sort((a,b)=>(a.object.userData.name==='igor'?-1:0)-(b.object.userData.name==='igor'?-1:0)||a.distance-b.distance);h[0].object.userData.act();return}
- const g=(where==='out'?ray.intersectObjects(ISL2.on?[ground,ISL2.ground]:[ground]):ray.intersectObject(ROOMS[where].floor)).sort((a,b)=>b.point.y-a.point.y)[0];if(!g)return;closeSheet();idx.hidden=true;IG.target=g.point.clone().setY(0);IG.arrive=null;IG.manual=true;mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke()});
+ const g=(where==='out'?ray.intersectObjects([ground,...ISLES.filter(I=>I.on).map(I=>I.ground)]):ray.intersectObject(ROOMS[where].floor)).sort((a,b)=>b.point.y-a.point.y)[0];if(!g)return;closeSheet();idx.hidden=true;IG.target=g.point.clone().setY(0);IG.arrive=null;IG.manual=true;mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke()});
 renderer.domElement.addEventListener('pointermove',e=>{if(downAt&&downAt.moved)return;ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,camera);renderer.domElement.style.cursor=ray.intersectObjects(clickables.filter(m=>m.userData.room===where),false).length?'pointer':'grab'});
 const keys={};addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key===' '&&!e.repeat&&e.target.tagName!=='BUTTON'){e.preventDefault();jump();return}keys[e.key.length===1?e.key.toLowerCase():e.key]=true;if(e.key.startsWith('Arrow'))e.preventDefault()});addEventListener('keyup',e=>{keys[e.key.length===1?e.key.toLowerCase():e.key]=false});addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 const joy=$('joy'),knob=joy.querySelector('i'),JOY={id:null,x:0,z:0};
@@ -2430,32 +2432,66 @@ function tiredChips(id){const g=igById(id);if(!g)return;const P=(igSpot(id)||igo
   L.push(U.fruit>0?{t:`🍎 ${cap1(N(F0.N))} <small>×${U.fruit} · +2</small>`,main:1,fn:()=>{tiredFeed(id,'fruit');return true}}:{t:'🍎 '+tt('Fruit','Frutta')+' <small>+2</small>',off:1,why:tt('No fruit: shake a tree with fruit!','Niente frutta: scuoti un albero con la frutta!')});
   L.push(pocket()>=2?{t:`${ICA} ×2 <small>+1</small>`,main:!U.fruit,fn:()=>{tiredFeed(id,'ant');return true}}:{t:`${ICA} ×2 <small>+1</small>`,off:1,why:tt('You need 2 tofu ants.','Servono 2 formiche di tofu.')});if(ed)L.push(ed);return L},'tired'+id,1)}
 
-/* ---------- the second island (level 4): it rises from the sea, joined to the first by a strip of land; an orphan Igorlet waits there ---------- */
-const ISL2={cx:27,cz:-20,rx:8.5,rz:7.2,A:new V3(12,0,-10.6),B:new V3(22.5,0,-17.5),k:0,on:false,shown:false,risingT:-1};
-const isleE=(x,z)=>Math.hypot((x-ISL2.cx)/ISL2.rx,(z-ISL2.cz)/ISL2.rz);
-const isleNeck=(x,z)=>segD(x,z,ISL2.A.x,ISL2.A.z,ISL2.B.x,ISL2.B.z);
-function isleLand(x,z,m=0){if(!ISL2.on)return false;return isleE(x,z)<.86-m/8||isleNeck(x,z)<1-m}
-function isleIn(x,z,m=0){return ISL2.on&&isleE(x,z)<.86-m/8}
-function isleSide(x,z){if(isleE(x,z)<.86)return'isle';if(Math.hypot(x,z*1.12)<R-1.5)return'main';return isleNeck(x,z)<1.05?'neck':'main'}
-// the way across: from the first island to the new one (and back) Igor and the Igorlets walk along the strip of land
-function isleVia(tg,from){if(!ISL2.on||!tg)return tg;const p=from||igor.position,si=isleSide(p.x,p.z),st=isleSide(tg.x,tg.z);if(si===st||st==='neck')return tg;
- const near=isleNeck(p.x,p.z)<1.1; // on (or by) the strip: straight along it; otherwise first to its end on this side
- if(st==='isle')return near?ISL2.B:ISL2.A;
- return near?ISL2.A:ISL2.B}
-const isleG=new THREE.Group();isleG.visible=false;scene.add(isleG);
-{const W=26,D=20,cx=23.5,cz=-19,g=new THREE.PlaneGeometry(W,D,78,60);g.rotateX(-Math.PI/2);g.translate(cx,0,cz);
- const pos=g.attributes.position,cols=[],a=new THREE.Color('#2f5238'),b=new THREE.Color('#2b4b35'),c=new THREE.Color('#36593c'),sand=new THREE.Color('#9b9277'),path=new THREE.Color('#58584f'),t=new THREE.Color();
- for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),e=isleE(x,z),dn=isleNeck(x,z),r=Math.hypot(x,z*1.12);let y=-1.4;t.copy(sand);
+/* ---------- the new islands: each rises from the sea at its level, joined to the first island by a strip of land ----------
+   level 4: the sand island, with palms and little crabs that wander and now and then pinch an Igorlet (it tickles!); an orphan Igorlet waits there
+   level 8: the lake island, a very shallow lake you can walk across, with lily pads and frogs */
+const ISLES=[
+ {lv:4,kind:'sand',cx:27,cz:-20,rx:8.5,rz:7.2,A:new V3(12,0,-10.6),B:new V3(22.5,0,-17.5),k:0,on:false,shown:false,risingT:-1},
+ {lv:8,kind:'lake',cx:-27,cz:-20,rx:8.5,rz:7.2,A:new V3(-12,0,-10.6),B:new V3(-22.5,0,-17.5),k:0,on:false,shown:false,risingT:-1}];
+const ISL2=ISLES[0];
+const isleE1=(I,x,z)=>Math.hypot((x-I.cx)/I.rx,(z-I.cz)/I.rz);
+const isleN1=(I,x,z)=>segD(x,z,I.A.x,I.A.z,I.B.x,I.B.z);
+const isleE=(x,z)=>{let m=Infinity;for(const I of ISLES)if(I.on)m=Math.min(m,isleE1(I,x,z));return m};
+const isleNeck=(x,z)=>{let m=Infinity;for(const I of ISLES)if(I.on)m=Math.min(m,isleN1(I,x,z));return m};
+function isleLand(x,z,m=0){for(const I of ISLES)if(I.on&&(isleE1(I,x,z)<.86-m/8||isleN1(I,x,z)<1-m))return true;return false}
+function isleIn(x,z,m=0){for(const I of ISLES)if(I.on&&isleE1(I,x,z)<.86-m/8)return true;return false}
+function isleSide(x,z){for(let i=0;i<ISLES.length;i++){const I=ISLES[i];if(I.on&&isleE1(I,x,z)<.86)return'i'+i}if(Math.hypot(x,z*1.12)<R-1.5)return'main';for(let i=0;i<ISLES.length;i++){const I=ISLES[i];if(I.on&&isleN1(I,x,z)<1.05)return'n'+i}return'main'}
+// the way across: along the strip of land (from one new island to another, through the first)
+function isleVia(tg,from){if(!tg||!ISLES.some(I=>I.on))return tg;const p=from||igor.position,si=isleSide(p.x,p.z),st=isleSide(tg.x,tg.z);if(si===st)return tg;
+ const ii=si==='main'?-1:+si.slice(1),it=st==='main'?-1:+st.slice(1);if(ii===it)return tg; // on the strip of the same island
+ if(ii>=0){const I=ISLES[ii],near=isleN1(I,p.x,p.z)<1.1;return near?I.A:I.B} // first back to the first island
+ const I=ISLES[it],near=isleN1(I,p.x,p.z)<1.1;return near?I.B:I.A}
+function islePt(i){const I=ISLES[i];for(let k=0;k<20;k++){const a=Math.random()*TAU,r=Math.sqrt(Math.random())*.7,x=I.cx+Math.cos(a)*r*I.rx,z=I.cz+Math.sin(a)*r*I.rz;if(walkable(x,z))return new V3(x,0,z)}return new V3(I.cx,0,I.cz)}
+const LAKE_C='#7fc4d8';
+function isleMesh(I){const W=26,D=20,cx=(I.A.x+I.cx+Math.sign(I.cx)*I.rx)/2,cz=-19,g=new THREE.PlaneGeometry(W,D,78,60);g.rotateX(-Math.PI/2);g.translate(cx,0,cz);
+ const pos=g.attributes.position,cols=[],a=new THREE.Color('#2f5238'),b=new THREE.Color('#2b4b35'),c=new THREE.Color('#36593c'),sand=new THREE.Color('#d8c48f'),sand2=new THREE.Color('#c9b27a'),wet=new THREE.Color('#9b9277'),path=new THREE.Color('#58584f'),mud=new THREE.Color('#5d8a8f'),t=new THREE.Color();
+ for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),e=isleE1(I,x,z),dn=isleN1(I,x,z),r=Math.hypot(x,z*1.12);let y=-1.4;t.copy(wet);
   const n=Math.sin(x*.37)*Math.cos(z*.31)+Math.sin((x-z)*.13),grass=()=>t.copy(n>.5?c:n>-.25?a:b);
-  if(e<1){y=Math.max(.02,(1-e)*.35+Math.sin(x*.6)*Math.cos(z*.5)*.06);grass()}else if(e<1.28){y=-.3*(e-1)/.28}
-  if(dn<1.25){const yy=.03;if(yy>y){y=yy;grass();t.lerp(path,.55*(1-dn/1.25))}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.copy(sand)}}
-  if(r<R+.2){const yMain=r<R?Math.max(0,Math.sin(x*.21+1)*Math.cos(z*.19)*.25-.05):-.05;y=Math.min(y,yMain-.06)} // under the first island: hidden
+  if(I.kind==='sand'){if(e<1){y=Math.max(.02,(1-e)*.3+Math.sin(x*.9)*Math.cos(z*.7)*.08);t.copy(n>0?sand:sand2)}else if(e<1.28){y=-.3*(e-1)/.28;t.copy(wet)}
+   if(dn<1.25){const yy=.03;if(yy>y){y=yy;t.copy(sand2)}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.copy(wet)}}}
+  else{if(e<.8){y=.0;t.copy(mud)}else if(e<1){y=.04+(e-.8)*.6;grass()}else if(e<1.28){y=-.3*(e-1)/.28;t.copy(wet)}
+   if(dn<1.25){const yy=.03;if(yy>y){y=yy;grass();t.lerp(path,.55*(1-dn/1.25))}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.copy(wet)}}}
+  if(r<R+.2){const yMain=r<R?Math.max(0,Math.sin(x*.21+1)*Math.cos(z*.19)*.25-.05):-.05;y=Math.min(y,yMain-.06)}
   pos.setY(i,y);cols.push(t.r,t.g,t.b)}
  g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));g.computeVertexNormals();
- const m=new THREE.Mesh(g,lam('#ffffff',{vertexColors:true}));m.userData.isle=1;isleG.add(m);ISL2.ground=m}
-{const s0=seed;seed=4242;const add=(f,x,z,s)=>{f(x,z,s);const T0=trees[trees.length-1].t;scene.remove(T0);isleG.add(T0)};
- add(pine,31.5,-23.5,1.05);add(roundTree,24.5,-24.2,.95);add(pine,33.5,-18.2,.9);add(roundTree,29.8,-15.4,.85);add(pine,21.8,-21.8,.8);
- for(const[x,z,s]of[[26.2,-25.6,.9],[34.4,-21.4,.7],[20.6,-19.6,.6]]){rock(x,z,s);const r0=rocks[rocks.length-1];scene.remove(r0);isleG.add(r0)}
+ const m=new THREE.Mesh(g,lam('#ffffff',{vertexColors:true}));m.userData.isle=1;return m}
+function palm(G,x,z,s){const p=new THREE.Group();let y=0,lx=0;const lean=(Math.random()-.5)*.5;for(let k=0;k<5;k++){const sg=new THREE.Mesh(new THREE.CylinderGeometry(.11-k*.012,.14-k*.012,.62,7),lam(k%2?'#8a6a45':'#9d7a50'));sg.position.set(lx,y+.31,0);sg.rotation.z=lean*.4;p.add(sg);y+=.58;lx-=lean*.22}
+ for(let k=0;k<7;k++){const lf=new THREE.Mesh(new THREE.SphereGeometry(.5,8,6),lam(k%2?'#4f9a3e':'#5fae46'));lf.scale.set(1.5,.12,.38);const a=k/7*TAU;lf.position.set(lx+Math.cos(a)*.62,y-.05,Math.sin(a)*.62);lf.rotation.y=-a;lf.rotation.z=-.35;p.add(lf)}
+ for(let k=0;k<3;k++){const co=new THREE.Mesh(new THREE.SphereGeometry(.1,8,6),lam('#6b4a2e'));co.position.set(lx+Math.cos(k*2.1)*.15,y-.15,Math.sin(k*2.1)*.15);p.add(co)}
+ blob(p,.9);p.scale.setScalar(s);p.position.set(x,0,z);G.add(p);block(x,z,.35*s)}
+function mkCrab(){const g=new THREE.Group(),red=lam('#e0563c'),dk=lam('#a8321f');const b=new THREE.Mesh(new THREE.SphereGeometry(.17,10,8),red);b.scale.set(1.3,.55,1);b.position.y=.1;g.add(b);
+ for(const s of[-1,1]){const cl=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),red);cl.scale.set(1.3,.8,.9);cl.position.set(s*.27,.12,.13);g.add(cl);const ar=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.14,5),dk);ar.position.set(s*.2,.11,.07);ar.rotation.z=Math.PI/2;g.add(ar);
+  for(let k=0;k<3;k++){const lg=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.16,4),dk);lg.position.set(s*.2,.05,-.06+k*.06);lg.rotation.z=s*1.1;g.add(lg)}
+  const st=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.1,4),dk);st.position.set(s*.06,.2,.1);g.add(st);const ey=new THREE.Mesh(new THREE.SphereGeometry(.03,6,5),lam('#141414'));ey.position.set(s*.06,.26,.1);g.add(ey)}
+ g.userData.claws=[g.children[1],g.children[4]];return g}
+function mkFrog(){const g=new THREE.Group(),gr=lam('#5fb34a'),lt=lam('#a6d97a');const b=new THREE.Mesh(new THREE.SphereGeometry(.15,10,8),gr);b.scale.set(1,.7,1.15);b.position.y=.12;g.add(b);
+ const bl=new THREE.Mesh(new THREE.SphereGeometry(.11,8,6),lt);bl.scale.set(1,.5,1);bl.position.set(0,.08,.07);g.add(bl);
+ for(const s of[-1,1]){const e=new THREE.Mesh(new THREE.SphereGeometry(.055,8,6),gr);e.position.set(s*.07,.24,.08);g.add(e);const pu=new THREE.Mesh(new THREE.SphereGeometry(.03,6,5),lam('#141414'));pu.position.set(s*.075,.26,.12);g.add(pu);
+  const lg=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),gr);lg.scale.set(.7,.45,1.3);lg.position.set(s*.13,.06,-.05);g.add(lg)}
+ const th=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),lam('#f2e9a8'));th.scale.set(1,.7,1);th.position.set(0,.13,.15);th.visible=false;g.add(th);g.userData.throat=th;return g}
+for(const I of ISLES){const G=new THREE.Group();G.visible=false;scene.add(G);I.G=G;I.ground=isleMesh(I);G.add(I.ground);
+ const s0=seed;seed=I.kind==='sand'?4242:777;
+ if(I.kind==='sand'){for(const[x,z,s]of[[31.5,-23.5,1.05],[24.5,-24.2,.95],[33.5,-18.2,.9],[29.8,-15.4,.85],[21.8,-21.8,.8]])palm(G,x,z,s);
+  for(const[x,z,s]of[[26.2,-25.6,.9],[34.4,-21.4,.7],[20.6,-19.6,.6]]){rock(x,z,s);const r0=rocks[rocks.length-1];scene.remove(r0);G.add(r0)}
+  for(let k=0;k<9;k++){const sh=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6,0,TAU,0,Math.PI/2),lam(pick(['#f7e1d0','#f2c6c0','#fff4e0','#e8d3a8'])));const a=rnd()*TAU,r=.3+rnd()*.5;sh.position.set(I.cx+Math.cos(a)*r*I.rx,.03,I.cz+Math.sin(a)*r*I.rz);sh.scale.set(1.3,.6,1);G.add(sh)}
+  I.crabs=[];for(let k=0;k<5;k++){const c=mkCrab(),P=new V3(I.cx+(rnd()-.5)*8,0,I.cz+(rnd()-.5)*6);c.position.copy(P);G.add(c);I.crabs.push({g:c,goal:P.clone(),wait:rnd()*3,chase:null})}}
+ else{const wm=new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),curve(new THREE.MeshLambertMaterial({color:LAKE_C,transparent:true,opacity:.62,emissive:'#123844',emissiveIntensity:.4,depthWrite:false})));
+  wm.scale.set(I.rx*.82,1,I.rz*.82);wm.position.set(I.cx,.06,I.cz);G.add(wm);I.water=wm;
+  I.pads=[];for(let k=0;k<11;k++){const a=rnd()*TAU,r=.15+rnd()*.6,x=I.cx+Math.cos(a)*r*I.rx,z=I.cz+Math.sin(a)*r*I.rz,pd=new THREE.Mesh(new THREE.CircleGeometry(.32+rnd()*.15,14,.3,TAU-.6).rotateX(-Math.PI/2),lam('#4f9a3e',{side:THREE.DoubleSide}));pd.position.set(x,.075,z);pd.rotation.y=rnd()*TAU;G.add(pd);I.pads.push(pd);
+   if(k%4===1){const fl=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),lam(k%8===1?'#ffb6d0':'#ffffff'));fl.scale.set(1,.6,1);fl.position.set(x+.08,.12,z);G.add(fl)}}
+  for(let k=0;k<26;k++){const a=k/26*TAU+rnd()*.15,r=.8+rnd()*.12,x=I.cx+Math.cos(a)*r*I.rx,z=I.cz+Math.sin(a)*r*I.rz;if(isleN1(I,x,z)<1.6)continue;for(let j=0;j<3;j++){const h=.5+rnd()*.5,rd=new THREE.Mesh(new THREE.CylinderGeometry(.015,.02,h,4),lam(j?'#6f8f3a':'#7da046'));rd.position.set(x+(rnd()-.5)*.3,h/2,z+(rnd()-.5)*.3);rd.rotation.z=(rnd()-.5)*.3;G.add(rd);if(j===0&&rnd()<.5){const tp=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.18,6),lam('#6b4a2e'));tp.position.set(rd.position.x,h+.02,rd.position.z);G.add(tp)}}}
+  for(const[x,z,s]of[[-33.5,-23.8,.9],[-20.8,-23.6,.85],[-34.2,-16.6,.8]]){pine(x,z,s);const T0=trees[trees.length-1].t;scene.remove(T0);G.add(T0)}
+  I.frogs=[];for(let k=0;k<4;k++){const f=mkFrog(),pd=I.pads[k*2];f.position.set(pd.position.x,.08,pd.position.z);f.rotation.y=rnd()*TAU;G.add(f);I.frogs.push({g:f,pad:k*2,hop:null,next:2+rnd()*6,croak:3+rnd()*8})}}
  seed=s0}
 // the orphan Igorlet, with a tiny bundle on a stick
 const ORPH={x:27.4,z:-19.4};
@@ -2465,7 +2501,7 @@ const orphO=(()=>{const grp=new THREE.Group();grp.position.set(ORPH.x,0,ORPH.z);
  const st=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.75,5),lam('#7a5232'));st.position.set(.42,.32,-.05);st.rotation.z=-.5;grp.add(st);
  const bu=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),lam('#e0463c'));bu.position.set(.62,.64,-.05);grp.add(bu);
  for(const[dx,dz]of[[.25,.15],[-.2,.25],[.05,-.25]]){const s=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),lam('#f6d34a'));s.position.set(dx-.55,.07,dz);grp.add(s)}
- isleG.add(grp);hit(grp,.5,()=>orphTap(),'orphan',.4);const L=label(['An Igorlet all alone','Un Igorlet tutto solo'],['tap to say hello','tocca per salutarlo'],grp.position.clone().add(new V3(0,IGH+.6,0)),()=>orphTap(),6);
+ ISL2.G.add(grp);hit(grp,.5,()=>orphTap(),'orphan',.4);const L=label(['An Igorlet all alone','Un Igorlet tutto solo'],['tap to say hello','tocca per salutarlo'],grp.position.clone().add(new V3(0,IGH+.6,0)),()=>orphTap(),6);
  return{grp,pl,m,L,ok:igorOK}})();
 let orphSaid=0;
 function orphTap(){const F=FM();if(F.orphan||VISIT)return;if(Math.hypot(igor.position.x-ORPH.x,igor.position.z-ORPH.z)>2.4){IG.target=new V3(ORPH.x-1.1,0,ORPH.z+.8);IG.arrive=()=>orphTap();IG.manual=true;mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;poke();say(tt('Coming!','Arrivo!'),1.6);return}
@@ -2473,21 +2509,40 @@ function orphTap(){const F=FM();if(F.orphan||VISIT)return;if(Math.hypot(igor.pos
  say(tt('“Hello… I’ve been alone on this island since it was under the sea. Can I come and live with you?”','“Ciao… sono rimasto da solo su quest’isola da quando era sotto il mare. Posso venire a vivere con voi?”'),4.2);
  chips(orphO.grp.position.clone().add(new V3(0,1.4,0)),()=>[{t:'🏠 '+tt('Come with us!','Vieni con noi!'),main:1,fn:()=>{orphAdopt();return false}},{t:tt('In a moment','Tra un po’'),fn:()=>false}],'orph',1)}
 function orphAdopt(){const F=FM();if(F.orphan)return;if(F.igs.length>=IGMAX){say(tt('The village is full… but we’ll find room for you soon!','Il villaggio è pieno… ma presto troveremo posto anche per te!'),3);return}
- const extra=F.igs.length>=PENCAP[F.b.pen];if(extra)F.xh=(F.xh||0)+1;const g=newIg(F.igs.length);g.id=Math.max(...F.igs.map(x=>x.id))+1;g.look={...orphG.look};g.hue=orphG.hue;g.trait='explorer';F.igs.push(g);F.orphan=Date.now();
+ const g=newIg(F.igs.length);g.id=Math.max(...F.igs.map(x=>x.id))+1;g.look={...orphG.look};g.hue=orphG.hue;g.trait='explorer';F.igs.push(g);F.orphan=Date.now();
  const o=igObj(g);o.grp.position.set(ORPH.x,0,ORPH.z);o.goal.set(ORPH.x,0,ORPH.z);orphO.grp.visible=false;orphO.L.hidden=true;hideChips();
- bubbleQ.length=0;bubbleT=0;say(tt(`Welcome home, ${g.name}! ${extra?'We built a new little house for you in the village.':'Your little house is in the village.'}`,`Benvenuto a casa, ${g.name}! ${extra?'Ti abbiamo fatto una casetta nuova nel villaggio.':'La tua casetta è nel villaggio.'}`),3.8);
+ bubbleQ.length=0;bubbleT=0;say(tt(`Welcome home, ${g.name}! Your little house is ready in the village.`,`Benvenuto a casa, ${g.name}! La tua casetta è già pronta nel villaggio.`),3.8);
  say(tt(`(Tap ${g.name} to choose a name and a look.)`,`(Tocca ${g.name} per scegliergli nome e look.)`),3);
  if(window.IgorSound&&started)IgorSound.ig('happy',{id:g.id,trait:g.trait});fmDirty=true;save();fmRender()}
-// level 4: the island rises (once, with Igor watching if he is there), then it stays
-updaters.push(()=>{if(!S.farm)return;const F=FM(),want=lvlOf()>=4;
- if(!want){isleG.visible=false;ISL2.on=false;ISL2.k=0;return}
- if(!ISL2.shown){ISL2.shown=true;isleG.visible=true;const fresh=!F.isle2;if(fresh&&!VISIT){F.isle2=Date.now();fmDirty=true}
-  if(fresh&&!VISIT&&started){ISL2.risingT=T;setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt('Look over there! A new island is rising from the sea… and someone is waiting on it!','Guarda laggiù! Dal mare sta emergendo una nuova isola… e qualcuno ci aspetta!'),5);snd('wish')},600)}
-  else ISL2.k=1}
- if(ISL2.risingT>=0){const u=Math.min(1,(T-ISL2.risingT)/7);ISL2.k=u<1?1-Math.pow(1-u,3):1;if(u>=1)ISL2.risingT=-1;if(Math.random()<.03&&u<1)snd('water')}
- isleG.position.y=-1.7*(1-ISL2.k);ISL2.on=ISL2.k>.97;
- const adopted=!!F.orphan||VISIT;orphO.grp.visible=!adopted;orphO.L.hidden=adopted||where!=='out'||Math.hypot(igor.position.x-ORPH.x,igor.position.z-ORPH.z)>7;
- if(!adopted){orphO.pl.quaternion.copy(camera.quaternion);orphO.pl.position.y=Math.abs(Math.sin(T*1.6))*.03;if(!orphO.ok&&igorOK){orphO.ok=true;orphO.m.map=igTex(orphG,'');orphO.m.needsUpdate=true}
+// the crabs wander sideways; now and then one goes to an Igorlet on the sand and pinches it (it tickles)
+let crabNext=fT(25);
+function crabTick(I,dt){const sp=1.1;for(const c of I.crabs){const p=c.g.position;
+  if(c.chase){const o=igObjs.get(c.chase);if(!o||!o.grp.visible||isleE1(I,o.grp.position.x,o.grp.position.z)>1){c.chase=null}else c.goal.copy(o.grp.position)}
+  const v=c.goal.clone().sub(p);v.y=0;const L=v.length();
+  if(L<(c.chase?.35:.1)){if(c.chase){const o=igObjs.get(c.chase),g=igById(c.chase);c.chase=null;if(o){o.jump=.6;o.showT=T+3}snd('pop',3);c.g.userData.pinch=.6;
+     if(g&&where==='out'&&igor.position.distanceTo(p)<11){bubbleQ.length=0;bubbleT=0;say(pick(tt([`${g.name}: “Hee hee! A little crab pinched my tail!”`,`${g.name}: “Ouch… no, it tickles!”`,`${g.name}: “Hey, little crab! Want to play?”`],[`${g.name}: “Ih ih! Un granchietto mi ha pizzicato la coda!”`,`${g.name}: “Ahi… no, fa il solletico!”`,`${g.name}: “Ehi, granchietto! Vuoi giocare?”`])),2.8)}
+     const a=Math.random()*TAU;c.goal.set(p.x+Math.cos(a)*2.5,0,p.z+Math.sin(a)*2.5);c.wait=0}
+   else if((c.wait-=dt)<=0){for(let k=0;k<8;k++){const a=Math.random()*TAU,r=Math.sqrt(Math.random())*.82,x=I.cx+Math.cos(a)*r*I.rx,z=I.cz+Math.sin(a)*r*I.rz;if(!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.2)){c.goal.set(x,0,z);break}}c.wait=1+Math.random()*4}}
+  else{const s=Math.min(L,(c.chase?sp*1.6:sp)*dt);p.x+=v.x/L*s;p.z+=v.z/L*s;c.g.rotation.y=Math.atan2(v.x,v.z)+Math.PI/2;c.g.position.y=Math.abs(Math.sin(T*18))*.02}
+  const pc=c.g.userData.pinch||0;c.g.userData.pinch=Math.max(0,pc-dt);c.g.userData.claws.forEach((cl,i)=>{cl.rotation.y=pc>0?Math.sin(T*30)*.6:Math.sin(T*3+i)*.15})}
+ if(T>crabNext){crabNext=T+fT(20+Math.random()*25);const on=[...igObjs.values()].filter(o=>o.grp.visible&&isleE1(I,o.grp.position.x,o.grp.position.z)<.9);if(on.length){const o=pick(on);let best=null,bd=1e9;for(const c of I.crabs){const d=c.g.position.distanceTo(o.grp.position);if(!c.chase&&d<bd){bd=d;best=c}}if(best)best.chase=o.id}}}
+// the frogs sit on lily pads, hop from one to another and croak
+function frogTick(I,dt){for(const f of I.frogs){const g=f.g;
+  if(f.hop){f.hop.u+=dt/.55;const u=Math.min(1,f.hop.u);g.position.lerpVectors(f.hop.a,f.hop.b,u);g.position.y=.08+Math.sin(u*Math.PI)*.55;if(u>=1){f.hop=null;g.position.y=.08}}
+  else if((f.next-=dt)<=0){f.next=4+Math.random()*9;const free=I.pads.map((p,i)=>i).filter(i=>!I.frogs.some(o=>o.pad===i));if(free.length){const ni=pick(free),b=I.pads[ni].position.clone();b.y=.08;f.hop={a:g.position.clone(),b,u:0};f.pad=ni;g.rotation.y=Math.atan2(b.x-g.position.x,b.z-g.position.z);if(where==='out'&&igor.position.distanceTo(g.position)<9)snd('water')}}
+  if((f.croak-=dt)<=0){f.croak=5+Math.random()*12;f.cT=.5;if(where==='out'&&igor.position.distanceTo(g.position)<10)snd('frog')}
+  if(f.cT>0){f.cT-=dt;g.userData.throat.visible=true;const s=1+Math.sin(T*28)*.35;g.userData.throat.scale.set(s,s*.7,s)}else g.userData.throat.visible=false}}
+// the islands rise at their level (once, with Igor watching if he is there), then stay
+updaters.push((t,dt)=>{if(!S.farm)return;const F=FM(),lv=lvlOf();F.isles=F.isles||{};if(F.isle2&&!F.isles[4])F.isles[4]=F.isle2;
+ ISLES.forEach((I,i)=>{if(lv<I.lv){I.G.visible=false;I.on=false;I.k=0;I.shown=false;return}
+  if(!I.shown){I.shown=true;I.G.visible=true;const fresh=!F.isles[I.lv];if(fresh&&!VISIT){F.isles[I.lv]=Date.now();if(i===0)F.isle2=F.isles[4];fmDirty=true}
+   if(fresh&&!VISIT&&started){I.risingT=T;setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(i===0?tt('Look over there! A sandy island is rising from the sea… and someone is waiting on it!','Guarda laggiù! Dal mare sta emergendo un’isola di sabbia… e qualcuno ci aspetta!'):tt('Look! Another island is coming up, with a little lake you can walk across… and frogs!','Guarda! Sta emergendo un’altra isola, con un laghetto basso basso da attraversare a piedi… e le ranocchie!'),5);snd('wish')},600)}
+   else I.k=1}
+  if(I.risingT>=0){const u=Math.min(1,(T-I.risingT)/7);I.k=u<1?1-Math.pow(1-u,3):1;if(u>=1)I.risingT=-1;if(Math.random()<.03&&u<1)snd('water')}
+  I.G.position.y=-1.7*(1-I.k);I.on=I.k>.97;
+  if(I.G.visible&&where==='out'){if(I.crabs)crabTick(I,Math.min(dt,.1));if(I.frogs)frogTick(I,Math.min(dt,.1));if(I.water)I.water.material.opacity=.55+Math.sin(T*.8)*.05}});
+ const adopted=!!F.orphan||VISIT;orphO.grp.visible=!adopted;orphO.L.hidden=adopted||where!=='out'||!ISL2.G.visible||Math.hypot(igor.position.x-ORPH.x,igor.position.z-ORPH.z)>7;
+ if(!adopted&&ISL2.G.visible){orphO.pl.quaternion.copy(camera.quaternion);orphO.pl.position.y=Math.abs(Math.sin(T*1.6))*.03;if(!orphO.ok&&igorOK){orphO.ok=true;orphO.m.map=igTex(orphG,'');orphO.m.needsUpdate=true}
   if(ISL2.on&&started&&T-orphSaid>40&&Math.hypot(igor.position.x-ORPH.x,igor.position.z-ORPH.z)<3.2){orphSaid=T;orphTap()}}});
 /* ---------- name and look of an Igorlet (like dressing up Igor) ---------- */
 let IGD=null;
