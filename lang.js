@@ -202,3 +202,5 @@ mo.observe(document.documentElement,{childList:true,subtree:true,characterData:t
 const first=()=>{walk(document.documentElement);fixTitle()};
 if(document.readyState!=='loading')first();else document.addEventListener('DOMContentLoaded',first);
 })();
+/* who is online (admins' panel) */
+(()=>{if(window.IgorPres||document.querySelector('script[src^="/pres.js"]'))return;const s=document.createElement('script');s.src='/pres.js?v=1';s.defer=true;document.head.appendChild(s)})();
