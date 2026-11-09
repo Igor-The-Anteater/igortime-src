@@ -211,6 +211,7 @@ const SFX={
   else if(r===2){tone(f,f,.8,{g:.42,at:.04});nz(.5,{f0:f*3,Q:2,g:.13,at:.02});nz(.06,{f0:f*5,Q:1,g:.08,at:.003})}
   else if(r===3){tone(f,f,1,{g:.45,at:.06,vib:f*.006,vibF:5.5});tone(f*2,f*2,.6,{g:.03,at:.06})}
   else{tone(f,f,1.6,{g:.36,at:.12,vib:f*.008,vibF:6});tone(f*2.01,f*2.01,1.2,{g:.06,at:.15});nz(.8,{f0:f*4,Q:10,g:.03,at:.2})}},
+ shutter:()=>{nz(.03,{type:'highpass',f0:2500,g:.5});nz(.05,{f0:900,Q:1,g:.3,delay:.07});tone(1800,1200,.04,{g:.15,delay:.07,type:'square'})},
  frog:()=>{const f=R(150,210);for(let i=0;i<2;i++){tone(f*1.6,f,.11,{type:'square',g:.16,delay:i*.16,lp:900});nz(.05,{f0:500,Q:2,g:.06,delay:i*.16})}},
  marimba:f=>{f=f||523;tone(f,f,1.1,{g:.6,at:.003});tone(f*3.9,f*3.9,.18,{g:.16,at:.002});tone(f*9.2,f*9.2,.05,{g:.05,at:.001});nz(.02,{f0:1800,Q:1,g:.1})},
  wish:()=>{for(let i=0;i<8;i++){const f=st(1047,PENTA[i]);tone(f,f,.6,{g:.22,delay:i*.06,at:.003,pan:R(-.6,.6)})}tone(523,523,1.8,{g:.18,at:.3,type:'triangle'})},
