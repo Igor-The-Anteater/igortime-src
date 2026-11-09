@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=5"></script>
+<script src="/sound.js?v=6"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -2134,7 +2134,7 @@ updaters.push((t,dt)=>{if(!S.farm)return;const U=FUN();if(!funT){funT=1;beachSyn
  whTick(t);wishTick(dt);
  for(const[id,o]of igObjs){if(o.act&&o.act.k==='wh'){const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0).multiplyScalar(1.4);o.act.goal.copy(igor.position).add(cr).add(new V3(0,0,.4));if(!walkable(o.act.goal.x,o.act.goal.z))o.act.goal.copy(igor.position).sub(cr)}
   const near=o.grp.position.distanceTo(igor.position)<9;
-  if(o.mode==='idle'&&(whCall&&whCall.id===id||WH.st&&WH.id===id)){o.ic.visible=true;o.ic.material.map=WH.st?iconTex.note:iconTex.q;o.ic.position.y=IGH+.28+Math.abs(Math.sin(t*3))*.1}
+  if(o.mode==='idle'&&(whCall&&whCall.id===id||WH.st&&WH.id===id)){o.ic.visible=true;o.ic.material.map=iconTex.note;o.ic.position.y=IGH+.28+Math.abs(Math.sin(t*3))*.1}
   else if(o.mode==='idle'&&hungry(id)&&near){o.ic.visible=true;o.ic.material.map=WISHICO[wishOf(id).k]||FOODICO;o.ic.position.y=IGH+.25+Math.sin(t*2.4)*.05}}
  if(WH.st){const o=igObjs.get(WH.id);if(!o||where!=='out')whEnd()}joy.style.visibility=WH.st?'hidden':'';fab.style.visibility=WH.st?'hidden':''});
 if(TESTING)window.__ev=s=>eval(s);
@@ -2446,30 +2446,30 @@ function shopChips(k){const V=VEH[k],n=vehN(k),D=_shopD[k];say(n?tt(`Your ${N(V.
   return L},'shop'+k,1)}
 
 /* ---------- 9 Nov, later: the leaderboard board where the jetty was; the pocket (fruit, shells, messages); pick things up by walking on them ---------- */
-const BOARDS=[{g:'island',l:'all',N:['The island','L’isola'],sub:['tofu ants picked','formiche raccolte']},{g:'abyss',N:['The abyss','L’abisso'],sub:['metres','metri']},
+const BOARDS=[{g:'total',l:'all',N:['Overall','Generale'],sub:['all the games added up','tutti i giochi sommati']},{g:'island',l:'all',N:['The island','L’isola'],sub:['tofu ants picked','formiche raccolte']},{g:'abyss',N:['The abyss','L’abisso'],sub:['metres','metri']},
  {g:'kitchen',N:['The kitchen','La cucina']},{g:'window',N:['The window','La finestra']},{g:'bedroom',N:['The bedroom','La camera']},{g:'drums',N:['The drums','La batteria']},
  {g:'pitch',N:['Pitch Stairs','Pitch Stairs']},{g:'cadences',N:['Cadences','Cadenze']}];
 const LVN={easy:['Easy','Facile'],medium:['Medium','Medio'],extreme:['Extreme','Estremo']};
-let bdSel={g:'island',l:'all'};
+let bdSel={g:'total',l:'all'};
 const boardMod=()=>window.IgorCloud?import('/board.js'):Promise.reject('no cloud');
-function boardSheet(g,l){if(g)bdSel={g,l:l||(g==='island'||g==='abyss'?'all':bdSel.l!=='all'?bdSel.l:'easy')};const B=BOARDS.find(b=>b.g===bdSel.g)||BOARDS[0],lv=bdSel.g!=='island'&&bdSel.g!=='abyss';
+function boardSheet(g,l){if(g)bdSel={g,l:l||(g==='island'||g==='abyss'||g==='total'?'all':bdSel.l!=='all'?bdSel.l:'easy')};const B=BOARDS.find(b=>b.g===bdSel.g)||BOARDS[0],lv=bdSel.g!=='island'&&bdSel.g!=='abyss'&&bdSel.g!=='total';
  const tabs=BOARDS.map(b=>`<button type="button" data-bd="${b.g}" class="${b.g===bdSel.g?'on':''}">${N(b.N)}</button>`).join(''),lvs=lv?`<div class="bdl">${Object.keys(LVN).map(k=>`<button type="button" data-bl="${k}" class="${k===bdSel.l?'on':''}">${N(LVN[k])}</button>`).join('')}</div>`:'';
  openSheet('board',`<h2>🏆 ${tt('Leaderboards','Classifiche')}</h2><div class="bdt">${tabs}</div>${lvs}<div id="bdBox"><p>${tt('Loading…','Carico…')}</p></div>`);
  const box=$('bdBox'),title=`${N(B.N)}${lv?' · '+N(LVN[bdSel.l]):''}${B.sub?' · '+N(B.sub):''}`;
- if(bdSel.g==='island')islandSubmit(true);
+ if(bdSel.g==='island'||bdSel.g==='total')islandSubmit(true);
  boardMod().then(M=>M.show(box,bdSel.g,bdSel.l,null,null,title)).catch(()=>{box.innerHTML=`<p>${tt('The leaderboards are not reachable right now.','Le classifiche adesso non si raggiungono.')}</p>`})}
 sb.addEventListener('click',e=>{const b=e.target.closest('button[data-bd],button[data-bl]');if(!b)return;e.stopPropagation();if(b.dataset.bd)boardSheet(b.dataset.bd);else boardSheet(bdSel.g,b.dataset.bl)});
 {const st=document.createElement('style');st.textContent=`.bdt,.bdl{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}.bdt button,.bdl button{font:500 13px Fredoka,sans-serif;text-transform:none;letter-spacing:0;border:2px solid #2b2018;border-radius:10px;padding:4px 9px;background:#fff7e6;color:#2b2018;cursor:pointer}.bdt button.on,.bdl button.on{background:#f6d34a}.bdl button{font-size:12px;padding:3px 8px}#bdBox .ibd{max-width:none}`;document.head.appendChild(st)}
 let islAt=0,islLast=-1;
-function islandSubmit(now){const C=window.IgorCloud;if(!C||!C.user||!C.user.nick)return;const sc=FM().total|0;if(sc<=0||sc===islLast&&!now)return;if(!now&&Date.now()-islAt<120000)return;islAt=Date.now();islLast=sc;
- boardMod().then(M=>M.submit('island','all',sc,S.avatar||'igor')).catch(()=>{})}
+function islandSubmit(now){const C=window.IgorCloud;if(!C||!C.user||!C.user.nick)return;const sc=FM().total|0;if(sc===islLast&&!now)return;if(!now&&Date.now()-islAt<120000)return;islAt=Date.now();islLast=sc;
+ boardMod().then(M=>{M.submit('island','all',sc,S.avatar||'igor').catch(()=>{});M.submitTotal(M.totalOf(S.scores),S.avatar||'igor').catch(()=>{})}).catch(()=>{})}
 updaters.push(()=>{if(started&&((T*4)|0)%40===0)islandSubmit(false)});
 /* the notice board, where the jetty was */
 {const t=new THREE.Group();t.position.set(-11,0,5.3);t.rotation.y=.9;const wood=lam('#6b4a2e'),dark=lam('#4b3a2c');
  for(const x of[-.85,.85]){const p=new THREE.Mesh(new THREE.BoxGeometry(.14,2.3,.14),dark);p.position.set(x,1.15,0);t.add(p)}
  const bd=new THREE.Mesh(new THREE.BoxGeometry(2,1.3,.1),wood);bd.position.set(0,1.55,0);t.add(bd);const roof=new THREE.Mesh(new THREE.BoxGeometry(2.3,.1,.5),dark);roof.position.set(0,2.32,.05);roof.rotation.x=-.25;t.add(roof);
  const c=document.createElement('canvas');c.width=512;c.height=320;const cD=()=>{const g=c.getContext('2d');g.fillStyle='#e9d9b8';g.fillRect(0,0,512,320);g.fillStyle='#2b2018';g.font='700 54px Fredoka, sans-serif';g.textAlign='center';g.fillText('🏆 '+tt('LEADERBOARDS','CLASSIFICHE'),256,72);
-  g.font='500 30px Fredoka, sans-serif';const L=tt(['the island','the abyss','every game'],['l’isola','l’abisso','tutti i giochi']);L.forEach((s,k)=>g.fillText('★ '+s,256,140+k*52));
+  g.font='500 30px Fredoka, sans-serif';const L=tt(['overall','the island','every game'],['generale','l’isola','ogni gioco']);L.forEach((s,k)=>g.fillText('★ '+s,256,140+k*52));
   for(const[x,y]of[[24,24],[488,24],[24,296],[488,296]]){g.fillStyle='#c0392b';g.beginPath();g.arc(x,y,9,0,7);g.fill()}};cD();
  const tx=new THREE.CanvasTexture(c);SIGNS.push(()=>{cD();tx.needsUpdate=true});const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.84,1.15),new THREE.MeshBasicMaterial({map:tx}));pl.position.set(0,1.55,.056);t.add(pl);
  blob(t,1.4,.7);world.add(t);block(-11,5.3,1.1);hit(t,1.3,()=>goTo('jetty'),'board',1.2);glowObj(t,'out',-9.9,4.6,1,8,1);
