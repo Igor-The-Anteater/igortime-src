@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=6"></script>
+<script src="/sound.js?v=7"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -2465,7 +2465,7 @@ function islandSubmit(now){const C=window.IgorCloud;if(!C||!C.user||!C.user.nick
  boardMod().then(M=>{M.submit('island','all',sc,S.avatar||'igor').catch(()=>{});M.submitTotal(M.totalOf(S.scores),S.avatar||'igor').catch(()=>{})}).catch(()=>{})}
 updaters.push(()=>{if(started&&((T*4)|0)%40===0)islandSubmit(false)});
 /* the notice board, where the jetty was */
-{const t=new THREE.Group();t.position.set(-11,0,5.3);t.rotation.y=.9;const wood=lam('#6b4a2e'),dark=lam('#4b3a2c');
+{const t=new THREE.Group();t.position.set(-11,0,5.3);t.rotation.y=Math.atan2(11,-5.3);const wood=lam('#6b4a2e'),dark=lam('#4b3a2c');
  for(const x of[-.85,.85]){const p=new THREE.Mesh(new THREE.BoxGeometry(.14,2.3,.14),dark);p.position.set(x,1.15,0);t.add(p)}
  const bd=new THREE.Mesh(new THREE.BoxGeometry(2,1.3,.1),wood);bd.position.set(0,1.55,0);t.add(bd);const roof=new THREE.Mesh(new THREE.BoxGeometry(2.3,.1,.5),dark);roof.position.set(0,2.32,.05);roof.rotation.x=-.25;t.add(roof);
  const c=document.createElement('canvas');c.width=512;c.height=320;const cD=()=>{const g=c.getContext('2d');g.fillStyle='#e9d9b8';g.fillRect(0,0,512,320);g.fillStyle='#2b2018';g.font='700 54px Fredoka, sans-serif';g.textAlign='center';g.fillText('🏆 '+tt('LEADERBOARDS','CLASSIFICHE'),256,72);
@@ -2507,6 +2507,22 @@ updaters.push(()=>{const on=!bells.hidden;document.documentElement.classList.tog
 /* faster start (9 Nov): fields already growing and jobs already started get the new, shorter times once */
 {const F=FM(),tn=Date.now();if(F.speedV!==2){F.speedV=2;for(const f of F.fields)if(f.st==='sown'&&f.tr>tn&&f.t0){const sp=SPC[f.sp],m=growMult(f),full=sp.ready*m*MIN,gm=sp.germ*m*MIN;if(f.tr-f.t0>full*1.05){f.tr=Math.max(tn+MIN,f.t0+full);f.tg=Math.min(f.tg,Math.max(f.t0+gm,tn))}}
  for(const q of F.tasks){const d=taskMin(q)*MIN;if(q.dur>d){q.done=q.done*d/q.dur;q.dur=d}}fmDirty=true;saveLocal()}}
+
+/* the volume: tap the speaker and a slider opens (0 = silent) */
+const volP=document.createElement('div');volP.id='volP';volP.hidden=true;document.body.appendChild(volP);
+{const st=document.createElement('style');st.textContent=`#volP{position:fixed;z-index:6;display:flex;align-items:center;gap:9px;padding:7px 12px;background:rgba(247,236,212,.97);border:2px solid #2b2018;border-radius:14px;box-shadow:0 3px 0 #2b2018;font:600 13px/1 var(--toon);color:#2b2018}
+#volP[hidden]{display:none}#volP input{width:150px;height:28px;accent-color:#e0a800;margin:0}#volP button{border:2px solid #2b2018;border-radius:10px;background:#fff7e6;padding:3px 7px;font-size:16px;line-height:1;cursor:pointer;text-transform:none;letter-spacing:0}#volP span{min-width:3.2em;text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:560px){#volP input{width:118px}}`;document.head.appendChild(st)}
+function volVal(){const S0=window.IgorSound;return!S0||!S0.on?0:Math.round((S0.vol!=null?S0.vol:1)*100)}
+function renderVol(){const v=volVal(),h=`<button type="button" data-vm="1" aria-label="${v?tt('Mute','Silenzio'):tt('Sound on','Accendi il suono')}">${v?'🔊':'🔇'}</button><input type="range" min="0" max="100" step="1" value="${v}" aria-label="${tt('Volume','Volume')}"><span>${v}%</span>`;volP.innerHTML=h}
+function placeVol(){const r=sndB.getBoundingClientRect();volP.style.top=Math.round(r.top+r.height/2-volP.offsetHeight/2)+'px';volP.style.right=Math.round(innerWidth-r.left+8)+'px'}
+sndB.onclick=e=>{e.stopPropagation();if(!volP.hidden){volP.hidden=true;return}renderVol();volP.hidden=false;placeVol()};
+volP.addEventListener('pointerdown',e=>e.stopPropagation());
+volP.addEventListener('input',e=>{const r=e.target.closest('input');if(!r||!window.IgorSound)return;const v=+r.value/100;if(v<=0){if(IgorSound.on)IgorSound.set(false)}else{IgorSound.setVol&&IgorSound.setVol(v);if(!IgorSound.on)IgorSound.set(true)}volP.querySelector('span').textContent=r.value+'%';volP.querySelector('button').textContent=v>0?'🔊':'🔇';renderSndB()});
+volP.addEventListener('change',()=>{snd('bell',880)});
+volP.addEventListener('click',e=>{const b=e.target.closest('button[data-vm]');if(!b||!window.IgorSound)return;e.stopPropagation();if(IgorSound.on)IgorSound.set(false);else{if(!(IgorSound.vol>0))IgorSound.setVol&&IgorSound.setVol(.6);IgorSound.set(true)}renderSndB();renderVol()});
+addEventListener('pointerdown',e=>{if(!volP.hidden&&!volP.contains(e.target)&&e.target!==sndB&&!sndB.contains(e.target))volP.hidden=true});
+addEventListener('resize',()=>{if(!volP.hidden)placeVol()});
 
 /* ================= sound (sound.js): nature around Igor, footsteps, the Igorlets ================= */
 function snd(n,a){if(window.IgorSound&&started)IgorSound.sfx(n,a)}
