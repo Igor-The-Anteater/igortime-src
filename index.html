@@ -541,7 +541,7 @@ const SPC={t:{N:['Tofu','Tofu'],seeds:1,germ:30,ready:120,yield:6,win:480,care:n
 const LVX=[0,20,60,150,300,500,800,1200];
 const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes and the tool shed!','Pomodori e capanno degli attrezzi!'],['Field 4 and a new island!','Il campo 4 e una nuova isola!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6 and bigger buildings!','Il campo 6 ed edifici più grandi!'],['Field 7!','Il campo 7!'],['Field 8: the island is complete!','Il campo 8: l’isola è completa!']];
 const FCOST=[null,{t:15},{t:35},{t:90},{t:160},{t:260},{t:400},{t:600}];
-const MAXF=8,CAPS=[30,80,200,500,2000,6000],PENCAP=[0,2,4,6],WATERCAP=[0,3,8],IGMAX=8;
+const MAXF=8,CAPS=[30,80,200,500,2000,6000],PENCAP=[0,2,4,6],WATERCAP=[0,3,8],IGMAX=12;
 const igCap=()=>IGMAX; // a little house appears with every new Igorlet (hired, adopted, stray, orphan)
 const BLD={
  pen:{N:['Igorlet houses','Casette degli Igorlets'],up:[null,null]},
@@ -556,8 +556,8 @@ const TOOLS={plow:{N:['Plough','Aratro'],lv:[{cost:{t:25},fx:['plowing ×2 faste
 const ITEMS={tarp:{N:['Tarp','Telo'],cost:{t:2},lv:2},tarp2:{N:['Strong tarp','Telo forte'],cost:{t:5},lv:3},tarp3:{N:['Thermal tarp','Telo termico'],cost:{t:4},lv:2},comp:{N:['Compost','Concime'],cost:{t:6},lv:3}};
 const CROW={t:10};
 const TOYS={ball:{N:['Ball','Palla'],s:8},swing:{N:['Swing','Altalena'],s:20},hammock:{N:['Hammock','Amaca'],s:35},slide:{N:['Slide','Scivolo'],s:60}};
-const HIRE=[0,0,10,25,50,90,140,200,260];
-const IGN=['Pip','Momo','Tiki','Bobo','Lulu','Fen','Gigi','Nob','Zuzu','Ori'];
+const HIRE=[0,0,10,25,50,90,140,200,260,330,400,480,560];
+const IGN=['Pip','Momo','Tiki','Bobo','Lulu','Fen','Gigi','Nob','Zuzu','Ori','Kiki','Teo'];
 const EVK={storm:{N:['Storm','Temporale'],lead:60,dur:60,sky:'storm',neg:1,ask:['Tarps on the fields and we win a bonus!','Teli sui campi e vinciamo un bonus!']},
  hail:{N:['Hail','Grandine'],lead:60,dur:30,sky:'hail',neg:1,ask:['Strong tarps: bonus harvest!','Teli forti: raccolto bonus!']},
  frost:{N:['Frost','Gelata'],lead:60,dur:180,sky:'fog',neg:1,ask:['Thermal tarps: a big bonus!','Teli termici: un bel bonus!']},
@@ -753,7 +753,7 @@ function buyItem(key){const I=ITEMS[key];if(!pay(I.cost))return say(NEED(I.cost)
 function buyCrow(i){const f=FM().fields[i];if(!f||f.crow)return;if(!pay(CROW))return say(NEED(CROW),2.6);f.crow=true;say(tt('A scarecrow!','Uno spaventapasseri!'),2);save();fmRender()}
 function useComp(i){const F=FM(),f=F.fields[i];if(!f||f.compNext||F.items.comp<1)return;F.items.comp--;f.compNext=true;say(tt('Compost: next sowing grows faster.','Concime: la prossima semina cresce più in fretta.'),2.6);save();fmRender()}
 function toggleGh(i){const F=FM(),f=F.fields[i],used=F.fields.filter(o=>o.gh).length;if(f.gh){f.gh=false}else{if(used>=F.b.green)return say(tt('The greenhouse is full.','La serra è piena.'),2.4);f.gh=true;f.tarp=null}save();fmRender()}
-function hire(){const F=FM(),n=F.igs.length,c=HIRE[n+1];if(n>=igCap())return say(tt('The village is full: 8 Igorlets!','Il villaggio è al completo: 8 Igorlets!'),2.6);if(!pay({s:c}))return say(NEED({s:c}),2.4);
+function hire(){const F=FM(),n=F.igs.length,c=HIRE[n+1];if(n>=igCap())return say(tt('The village is full: 12 Igorlets!','Il villaggio è al completo: 12 Igorlets!'),2.6);if(!pay({s:c}))return say(NEED({s:c}),2.4);
  const g=newIg(n);g.id=Math.max(0,...F.igs.map(x=>x.id))+1;F.igs.push(g);say(tt(`Welcome, ${g.name}! Its little house is ready in the village.`,`Benvenuto, ${g.name}! La sua casetta è già pronta nel villaggio.`),3.2);if(window.IgorSound&&started)IgorSound.ig('happy',{id:g.id,trait:g.trait});save();fmRender()}
 function buyVeh(k,more){const F=FM(),V=VEH[k],own=F.veh[k];if(own&&!more)return;const n=vehN(k);if(own&&n>=vehMax())return say(tt('One each is enough: more Igorlets, more vehicles!','Uno a testa basta: più Igorlets, più mezzi!'),2.8);
  if(!pay({t:V.cost}))return say(NEED({t:V.cost}),2.6);if(own){own.n=n+1;own.cs=own.cs||[];own.cs[n]=pick(VCOL.filter(c=>c!==own.c))}else F.veh[k]={c:V.c,n:1};snd('buy');fmDirty=true;
@@ -853,7 +853,7 @@ function mkBuilding(key,levels){const g=new THREE.Group();g.position.copy(spotOf
  hit(g,Math.min(1.5,SPOTR[key]*.8),()=>bldTap(key),key,.8);BOBJ[key]=B;return B}
 const woodA=lam('#8a6a48'),woodB=lam('#6a4c34'),redW=lam('#a8463c'),roofR=lam('#9c4433'),greyM=lam('#8f8a80'),metal=lam('#9aa3a8');
 // the Igorlets' little houses: one each, around a small yard with the toys
-const HOUSEP=[[-1.7,-1.15],[0,-1.7],[1.7,-1.15],[-2.95,.35],[2.95,.35],[-2.35,1.8],[2.35,1.8],[-3.3,-1.6]],HOUSEC=[['#e9b4a6','#b4553f'],['#b9d6ea','#4f6f8a'],['#f2d790','#9c6a2a'],['#bfe3ad','#4b7f46'],['#dcc3ea','#6e4b8a'],['#f6cfaa','#a8463c'],['#f3e3a6','#5d7f3a'],['#cfe6e8','#8a4f6e']];
+const HOUSEP=[[-1.7,-1.15],[0,-1.7],[1.7,-1.15],[-2.95,.35],[2.95,.35],[-2.35,1.8],[2.35,1.8],[-3.3,-1.6],[3.4,-1.6],[0,-3.4],[-1.9,-3.1],[1.9,-3.1]],HOUSEC=[['#e9b4a6','#b4553f'],['#b9d6ea','#4f6f8a'],['#f2d790','#9c6a2a'],['#bfe3ad','#4b7f46'],['#dcc3ea','#6e4b8a'],['#f6cfaa','#a8463c'],['#f3e3a6','#5d7f3a'],['#cfe6e8','#8a4f6e'],['#f4c2d6','#7a3f5a'],['#d6e4b2','#5b6e2e'],['#c9d3f2','#3f4f8a'],['#f0d2b8','#6b4a2e']];
 const houseObjs=[];
 /* a little sign above a house when its Igorlet sleeps inside: a sleepy Igorlet face with a nightcap, closed eyes and zzz */
 const SLEEPT=(()=>{const c=document.createElement('canvas');c.width=256;c.height=192;const g=c.getContext('2d');
