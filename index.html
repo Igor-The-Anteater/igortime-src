@@ -212,6 +212,9 @@ let S;try{S=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){S=fresh()}
 if(!S.plots)S=fresh();if(S.seeds===undefined){S.seeds=1;S.v=2}
 try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}
 function save(){S.at=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.IgorCloud)window.IgorCloud.push(S)}
+/* another tab of this browser saved: take its island if it is newer (works for guests too) */
+addEventListener('storage',e=>{if(e.key!==KEY||!e.newValue)return;let v=null;try{v=JSON.parse(e.newValue)}catch(_){}if(!v||!v.plots||!((v.at||0)>(S.at||0)))return;if(S.uid&&v.uid&&v.uid!==S.uid)return;
+ S=v;ensureFarm();try{fmDirty=true;fmRender()}catch(_){}if(window.IgorUI)IgorUI.refresh()});
 const PEND='igortime_pending';
 /* the two ways in: the island or the games page (igortime_view remembers the last choice) */
 let DEST=(()=>{try{return localStorage.getItem('igortime_view')==='games'?'games':'island'}catch(e){return'island'}})();
@@ -226,9 +229,13 @@ const gotAnts=applyPending();if(gotAnts){S.at=Date.now();try{localStorage.setIte
 window.IgorSave={get:()=>S,set:v=>{S=v;save();refresh()},
  load:(d,uid)=>{const L0=S,P0=window._pendLast;window._pendLast=null;
   if(uid&&L0.uid===uid&&(L0.at||0)>(d.at||0)&&L0.base===d.at){ensureFarm();const g=applyPending();save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g} seeds from your games`,`+${g} semi dai giochi`));return}
-  const seen=S.seen;S={...fresh(),...d,seen:Math.max(seen||0,d.seen||0)};if(uid)S.uid=uid;if(d.seeds===undefined)S.seeds=Math.max(1,S.seeds|0);if(!Array.isArray(S.plots)||!S.plots.length)S.plots=fresh().plots;ensureFarm();let g=applyPending();
+  const seen=S.seen;S={...fresh(),...d,seen:Math.max(seen||0,d.seen||0)};if(uid)S.uid=uid;if(d.at)S.base=d.at;if(d.seeds===undefined)S.seeds=Math.max(1,S.seeds|0);if(!Array.isArray(S.plots)||!S.plots.length)S.plots=fresh().plots;ensureFarm();let g=applyPending();
   if(P0&&P0.g>0){S.seeds=(S.seeds|0)+P0.g;g+=P0.g;S.scores=S.scores||{};for(const[gm,o]of Object.entries(P0.scores)){S.scores[gm]=S.scores[gm]||{};for(const[l,v]of Object.entries(o))if(!(S.scores[gm][l]>=v))S.scores[gm][l]=v}}
   save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g} seeds from your games`,`+${g} semi dai giochi`))},
+ /* another device (or tab) saved a newer island: take it as it is, without saving (no ping-pong) */
+ adopt:(d,uid)=>{const seen=S.seen;S={...fresh(),...d,seen:Math.max(seen||0,d.seen||0)};if(uid)S.uid=uid;if(d.at){S.base=d.at;S.at=d.at}
+  if(d.seeds===undefined)S.seeds=Math.max(1,S.seeds|0);if(!Array.isArray(S.plots)||!S.plots.length)S.plots=fresh().plots;ensureFarm();
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}try{fmDirty=true;fmRender()}catch(e){}if(window.IgorUI){IgorUI.refresh();IgorUI.toast(tt('Updated with your other device','Aggiornata con l’altro dispositivo'))}},
  reset:()=>{const seen=S.seen;S={...fresh(),seen};ensureFarm();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.IgorUI)IgorUI.refresh()}};
 addEventListener('storage',e=>{if(e.key===KEY&&e.newValue){try{S=JSON.parse(e.newValue);ensureFarm();refresh()}catch(_){}}});
 const now=()=>Date.now();
@@ -752,7 +759,7 @@ window.IgorGift={
  apply(g){ensureFarm();const F=FM();F.gifts=F.gifts||{};if(F.gifts[g.id])return false;const n=Math.max(0,g.n|0),r={k:g.k,n,v:g.v||'',at:Date.now()};let txt='';
   const gp=F.gp=F.gp||{s:0,t:0,ls:-1,lt:-1};if(g.k==='seeds'){S.seeds=(S.seeds|0)+n;gp.s+=n;gp.ls=S.seeds;txt=tt(`+${n} ${n===1?'seed':'seeds'}`,`+${n} ${n===1?'seme':'semi'}`)}
   else if(g.k==='ants'){F.ants.t+=n;gp.t+=n;gp.lt=F.ants.t;txt=tt(`+${n} tofu ants`,`+${n} formiche di tofu`)}
-  else if(g.k==='veh'&&VEH[g.v]){const V=VEH[g.v];if(F.veh[g.v])r.had=true;else F.veh[g.v]={c:V.c,n:1};txt=`${V.ic} ${N(V.N)}`+(r.had?tt(' (you already had it)',' (ce l’avevi già)'):'')}
+  else if(g.k==='veh'&&VEH[g.v]){const V=VEH[g.v];if(F.veh[g.v]){const n=vehN(g.v);if(n<9){F.veh[g.v].n=n+1;F.veh[g.v].cs=F.veh[g.v].cs||[];F.veh[g.v].cs[n]=pick(VCOL.filter(c=>c!==F.veh[g.v].c));r.copy=true}else r.had=true}else F.veh[g.v]={c:V.c,n:1};txt=`${V.ic} ${N(V.N)}`+(r.copy?tt(' (one more!)',' (un altro!)'):r.had?tt(' (you already had it)',' (ce l’avevi già)'):'')}
   else return false;
   F.gifts[g.id]=r;fmDirty=true;save();fmRender();refresh();snd('buy');
   say(tt(`🎁 A gift from Igor Time: ${txt}!`,`🎁 Un regalo da Igor Time: ${txt}!`)+(g.msg?' '+g.msg:''),4.5);return true},
@@ -760,6 +767,7 @@ window.IgorGift={
   const gp=F.gp=F.gp||{s:0,t:0,ls:-1,lt:-1};
   if(r.k==='seeds'){tk=Math.min(r.n,gp.s|0,Math.max(0,S.seeds|0));S.seeds=(S.seeds|0)-tk;gp.s-=tk;gp.ls=S.seeds}
   else if(r.k==='ants'){tk=Math.min(r.n,gp.t|0,Math.max(0,F.ants.t|0));F.ants.t-=tk;gp.t-=tk;gp.lt=F.ants.t}
+  else if(r.k==='veh'&&r.copy&&F.veh[r.v]){const n=vehN(r.v);if(n>1){F.veh[r.v].n=n-1;tk=1}}
   else if(r.k==='veh'&&!r.had&&F.veh[r.v]){if(RIDE===r.v)dismount(true);for(const[,o]of igObjs)if(o.act&&o.act.k==='ride'&&o.act.v===r.v)o.act=null;
    const n=vehN(r.v);if(n>1)F.veh[r.v].n=n-1;else delete F.veh[r.v];tk=1}
   r.back=tk;fmDirty=true;save();fmRender();refresh();
@@ -2618,7 +2626,7 @@ syncZones();requestAnimationFrame(frame);
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import{getAuth,onAuthStateChanged,GoogleAuthProvider,signInWithPopup,signInWithRedirect,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,updateProfile,signOut}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import{getFirestore,doc,getDoc,setDoc,serverTimestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import{getFirestore,doc,getDoc,setDoc,serverTimestamp,runTransaction,onSnapshot}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 const app=initializeApp({apiKey:"AIzaSyBcUoKJT0s_kHpydzjr5qIsxh5AXTurw-0",authDomain:"igortime-f69b3.firebaseapp.com",projectId:"igortime-f69b3",storageBucket:"igortime-f69b3.firebasestorage.app",messagingSenderId:"191774217559",appId:"1:191774217559:web:1604f911cbb70652321a12"});
 const auth=getAuth(app),db=getFirestore(app);auth.useDeviceLanguage();
 let ready=false,timer=0,first=true,pendingNick='';
@@ -2628,17 +2636,35 @@ const clean=S=>JSON.parse(JSON.stringify(S));
 const acctsW=()=>{const u=auth.currentUser;if(!u||!C.user)return;const prov=u.providerData.some(p=>p.providerId==='google.com')?'google':u.providerData.some(p=>p.providerId==='password')?'password':'other';
  setDoc(doc(db,'accts',u.uid),{nick:String(C.user.nick||'').slice(0,16),email:u.email||'',prov,made:Date.parse(u.metadata&&u.metadata.creationTime)||0,seen:serverTimestamp()}).catch(e=>console.warn('accts',e&&e.code||e))};
 const C={user:null,
- push(S){if(!C.user||!ready)return;clearTimeout(timer);const uid=C.user.uid;timer=setTimeout(()=>{const snap=clean(S),at=snap.at;snap.uid=uid;setDoc(doc(db,'users',uid),{...snap,name:C.user.nick||'',nick:C.user.nick||'',updated:serverTimestamp()}).then(()=>{const L=window.IgorSave.get();if(L&&!window._wiped){L.base=at;L.uid=uid;try{localStorage.setItem('igortime_v1',JSON.stringify(L))}catch(e){}}}).catch(e=>console.warn('save',e))},1500)},
+ push(){if(!C.user||!ready)return;clearTimeout(timer);timer=setTimeout(()=>writeSave().catch(e=>{console.warn('save',e&&e.code||e);clearTimeout(timer);timer=setTimeout(()=>C.push(),10000)}),1500)},
  async google(){const p=new GoogleAuthProvider();try{await signInWithPopup(auth,p)}catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')return signInWithRedirect(auth,p);throw e}},
  login:(m,p)=>signInWithEmailAndPassword(auth,m,p),
  async register(m,p,n){pendingNick=n||'';C.fresh=true;let r;try{r=await createUserWithEmailAndPassword(auth,m,p)}catch(e){C.fresh=false;throw e}if(n){await updateProfile(r.user,{displayName:n});if(C.user){C.user.nick=C.user.name=n;acct();C.push(window.IgorSave.get())}window.IgorUI.refresh()}},
  async setNick(n){if(!C.user)return;const uid=C.user.uid;C.user.nick=C.user.name=n;acct();
-  await setDoc(doc(db,'users',uid),{...clean(window.IgorSave.get()),name:n,nick:n,updated:serverTimestamp()});
+  window.IgorSave.get().at=Date.now();await writeSave();
   try{if(auth.currentUser)await updateProfile(auth.currentUser,{displayName:n})}catch(e){}
   acctsW();
  try{const a=await getDoc(doc(db,'abyss',uid));if(a.exists())await setDoc(doc(db,'abyss',uid),{nick:n},{merge:true})}catch(e){console.warn('abyss nick',e)}},
  reset:m=>sendPasswordResetEmail(auth,m),
  async signOut(){clearTimeout(timer);ready=false;await signOut(auth);window.IgorSave.reset()}};
+/* Saving to the cloud without losing anything when the island is open on two devices (or two tabs):
+   each save says which cloud version it was built on (S.base = the cloud's "at"); the write happens in a transaction and only if the cloud
+   still has that version. If another device saved in between, nothing is overwritten: this page takes the newer island instead.
+   While the island is open it also listens to the save, so it follows the other device right away. */
+const mine=new Set();let busy=false,again=false,unSave=null;
+function adopt(c){const d={...c};delete d.updated;delete d.name;delete d.nick;window.IgorSave.adopt(d,C.user&&C.user.uid)}
+async function writeSave(){if(!C.user)return;if(busy){again=true;return}busy=true;
+ try{const uid=C.user.uid,snap=clean(window.IgorSave.get()),at=snap.at,base=snap.base;snap.uid=uid;mine.add(at);const ref=doc(db,'users',uid);
+  const theirs=await runTransaction(db,async tx=>{const cur=await tx.get(ref),c=cur.exists()?cur.data():null;
+   if(c&&c.at&&c.at!==base&&c.at!==at)return c;
+   tx.set(ref,{...snap,name:C.user.nick||'',nick:C.user.nick||'',updated:serverTimestamp()});return null});
+  if(!C.user||C.user.uid!==uid)return;
+  if(theirs)adopt(theirs);
+  else{const L=window.IgorSave.get();if(L&&!window._wiped){L.base=at;L.uid=uid;try{localStorage.setItem('igortime_v1',JSON.stringify(L))}catch(e){}}}}
+ finally{busy=false;if(again){again=false;C.push()}}}
+function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
+ unSave=onSnapshot(doc(db,'users',uid),s=>{if(!s.exists()||s.metadata.hasPendingWrites||!C.user||C.user.uid!==uid||!ready)return;const c=s.data(),L=window.IgorSave.get();
+  if(!c.at||mine.has(c.at)||c.at===L.base||c.at===L.at)return;adopt(c)},e=>console.warn('follow',e&&e.code||e))}
 window.IgorCloud=C;
 {const s=document.createElement('script');s.src='/chat.js?v=4';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
@@ -2646,8 +2672,8 @@ onAuthStateChanged(auth,async u=>{
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
   try{const s=await getDoc(doc(db,'users',u.uid));if(s.exists()){const d=s.data();if(d.nick)C.user.nick=d.nick;else if(d.name&&!google)C.user.nick=d.name;delete d.updated;delete d.name;delete d.nick;window.IgorSave.load(d,u.uid)}}catch(e){console.warn('load',e)}
   C.user.nick=String(C.user.nick||'').slice(0,16);C.user.name=C.user.nick;pendingNick='';
-  ready=true;C.push(window.IgorSave.get());acct();acctsW();C.ready=true;dispatchEvent(new Event('igor-ready'))}
- else{C.user=null;try{localStorage.removeItem('igortime_acct')}catch(e){}}
+  ready=true;C.push();follow(u.uid);acct();acctsW();C.ready=true;dispatchEvent(new Event('igor-ready'))}
+ else{C.user=null;follow(null);try{localStorage.removeItem('igortime_acct')}catch(e){}}
  window.IgorUI&&window.IgorUI.onAuth(!!u,first);first=false});
 </script>
 </body></html>
