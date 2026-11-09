@@ -1131,12 +1131,14 @@ function dismount(quiet){if(!RIDE)return;bubbleQ.length=0;bubbleT=0;const V=VEH[
 function ridePath(A,t){const V=VEH[A.v],C=VC[V.kind],P0=parkOf(A.v,A.j||0),ez=V.kind==='water'?1/1.12:1,r=Math.hypot(P0.x-C.x,(P0.z-C.z)/ez),a0=Math.atan2((P0.z-C.z)/ez,P0.x-C.x),w=V.sp*1.6/r,u=(t-A.t0)*w,laps=V.kind==='air'?1:2;
  if(u>=TAU*laps)return null;const a=a0+u*A.dir;const x=C.x+Math.cos(a)*r,z=C.z+Math.sin(a)*r*ez,dur=TAU*laps/w,el=t-A.t0;
  const h=V.kind==='air'?V.h*Math.min(1,el/3,(dur-el)/3):0;return{pos:new V3(x,0,z),y:(V.kind==='water'?-.5:0)+h,head:a+A.dir*Math.PI/2}}
+// tapping a parked vehicle: Igor walks to it and gets on (on a friend's island too)
+function vehPark(k){if(PL)return;if(RIDE===k){vehChips();return}const o=VO[k];if(!o)return;if(VEH[k].kind==='water'){mount(k);return}walkNear(o.g.position.clone().setY(0),1.2,()=>mount(k))}
 updaters.push(giftSpend);
 updaters.push((t,dt)=>{const F=FM();
  if(RIDE&&!F.veh[RIDE])RIDE=null;vehCopies(t,dt);if(RIDE&&where!=='out')dismount(true);
  if(RIDE&&VEH[RIDE].kind==='air')rideH+=(VEH[RIDE].h-rideH)*Math.min(1,dt*1.2);
  const dx=igor.position.x-lastIg.x,dz=igor.position.z-lastIg.z;if(Math.hypot(dx,dz)>.002)igHead=Math.atan2(dz,dx);lastIg.copy(igor.position);
- for(const k of VKEYS){if(!F.veh[k]){if(VO[k])VO[k].g.visible=false;continue}if(!VO[k]){VO[k]=mkVeh(k);world.add(VO[k].g);vehPaint(k)}const o=VO[k],g=o.g;g.visible=true;let flying=false;
+ for(const k of VKEYS){if(!F.veh[k]){if(VO[k])VO[k].g.visible=false;continue}if(!VO[k]){VO[k]=mkVeh(k);world.add(VO[k].g);vehPaint(k);const B0=BUILD;BUILD='out';hit(VO[k].g,1.1,()=>vehPark(k),'veh',.6);BUILD=B0}const o=VO[k],g=o.g;g.visible=true;let flying=false;
   if(RIDE===k){g.position.set(igor.position.x,(VEH[k].kind==='water'?-.5:0)+(VEH[k].kind==='air'?rideH:0),igor.position.z);g.rotation.y=-igHead;flying=VEH[k].kind==='air'}
   else{const rd=riderOf(k);if(rd&&rd.ride){g.position.copy(rd.ride.pos);g.position.y=rd.ride.y;g.rotation.y=-rd.ride.head;flying=VEH[k].kind==='air'&&rd.ride.y>.1}else{g.position.copy(VPARK[k]);g.position.y=VEH[k].kind==='water'?-.5+Math.sin(t*1.2)*.04:0;g.rotation.y=VANG[k]!=null?VANG[k]:-.4}}
   for(const s of o.spin)s.o.rotation[s.ax]+=dt*s.v*(flying||RIDE===k?1:0)}});
@@ -2894,7 +2896,7 @@ let pubAt=0,pubTr=0;function visitPub(){if(VISIT||!window.IgorCloud||!IgorCloud.
 
 /* ---------- the look: a banner on top while visiting, a loading card, a button on the sea ---------- */
 {const st=document.createElement('style');st.textContent=`
-html.visiting #todo,html.visiting #orb,html.visiting #gamesB,html.visiting #fab,html.visiting #lvB,html.visiting #pkB,html.visiting #ants,html.visiting #evb,html.visiting #fuelB,html.visiting #wish,html.visiting #bells,html.visiting #seaB{display:none!important}
+html.visiting #todo,html.visiting #orb,html.visiting #gamesB,html.visiting #buildB,html.visiting #testB,html.visiting #lvB,html.visiting #pkB,html.visiting #ants,html.visiting #evb,html.visiting #fuelB,html.visiting #wish,html.visiting #bells,html.visiting #seaB{display:none!important}
 #visB{position:fixed;z-index:7;left:50%;top:calc(var(--hh,62px) + 8px);transform:translateX(-50%);display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 20px);background:#fff7e6;border:3px solid #2b2018;border-radius:18px;box-shadow:0 3px 0 #2b2018;padding:6px 8px 6px 14px;font:600 15px/1.2 Fredoka,system-ui,sans-serif;color:#2b2018}
 @media(max-width:560px){#visB{width:calc(100vw - 20px);gap:4px;padding:6px}#visB span{flex-basis:100%;text-align:center}#visB button{padding:4px 8px!important;font-size:13px!important}}#visB[hidden]{display:none}#visB button{font:500 14px Fredoka,system-ui,sans-serif;color:#2b2018;background:#f6ead2;border:2px solid #2b2018;border-radius:999px;padding:5px 10px;cursor:pointer;box-shadow:0 2px 0 #2b2018;text-transform:none;letter-spacing:0}#visB button.home{background:#9be38a}
 #visL{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:linear-gradient(#8fd3e8,#3aa7c9);font:600 22px/1.35 Fredoka,system-ui,sans-serif;color:#2b2018;text-align:center;padding:24px}
