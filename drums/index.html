@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en"><head><script src="/lang.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The drums · Igor time</title>
+<meta name="description" content="A rhythm ear-training game in Igor's music school: listen to a groove on four drums, then play it back with the same rhythm and the same drums.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+</head><body>
+<script src="/house/kit.js"></script>
+<script>
+(()=>{
+const {TAU,clamp,lerp,ease,rr,drawCurtain,drawRoom}=IgorHouse;
+let IT=false;try{IT=(localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en'))==='it'}catch(e){}
+const tt=(en,it)=>IT?it:en;
+const touch=matchMedia('(pointer:coarse)').matches;
+
+/* the four pieces of the drum kit, left to right: keys A S D F */
+const P=[
+ {id:'hh',name:tt('hi-hat','charleston'),key:'A',col:'#f6d34a'},
+ {id:'t1',name:tt('high tom','tom alto'),key:'S',col:'#ff6a5e'},
+ {id:'t2',name:tt('low tom','tom basso'),key:'D',col:'#6f9bff'},
+ {id:'cr',name:tt('cymbal','piatto'),key:'F',col:'#7fe08a'}];
+const LEVELS={
+ easy:   {name:'Easy',   bpm:84, bars:2,grid:2,e8:0,  s16:0,  n:[3,3],repeat:1,  pieces:2,tol:.25, replays:Infinity,down:2,gap:2,off:0,metro:1,info:tt('The same bar twice, on two drums, every hit on the beat, with a click · listen as often as you like','La stessa battuta due volte, su due pezzi, tutti i colpi sul tempo, con il metronomo · ascolta quante volte vuoi')},
+ medium: {name:'Medium', bpm:92, bars:2,grid:2,e8:.5, s16:0,  n:[6,8],  pieces:3,tol:.18, replays:2,down:2,gap:2,off:3,metro:1,info:tt('Three drums, a few off-beats, with a click · you can listen three times','Tre pezzi, qualche controtempo, con il metronomo · puoi ascoltarlo tre volte')},
+ extreme:{name:'Extreme',bpm:100,bars:2,grid:4,e8:.8, s16:.25,n:[8,10], pieces:4,tol:.13, replays:1,down:1,gap:2,off:6,metro:1,info:tt('All four drums, off-beats and a few sixteenths, with a click · you hear it twice','Tutti e quattro i pezzi, controtempi e qualche semicroma, con il metronomo · lo senti due volte')}};
+
+/* ---------- sounds: synthesized drums ---------- */
+let AC=null,OUT=null;
+const METAL=[205.3,304.4,369.6,522.7,540,800];
+function metal(t,mult,dur,gain,hp){const g=AC.createGain(),bp=AC.createBiquadFilter(),h=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=10000;bp.Q.value=.8;h.type='highpass';h.frequency.value=hp;
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+.002);g.gain.exponentialRampToValueAtTime(.0008,t+dur);
+ for(const f of METAL){const o=AC.createOscillator();o.type='square';o.frequency.value=f*mult;o.connect(bp);o.start(t);o.stop(t+dur+.05)}
+ bp.connect(h);h.connect(g);g.connect(OUT)}
+function noise(t,dur,gain,type,freq,q){const s=AC.createBufferSource();s.buffer=K.NOISE;const f=AC.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q||.7;const g=AC.createGain();
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+.002);g.gain.exponentialRampToValueAtTime(.0008,t+dur);s.connect(f);f.connect(g);g.connect(OUT);s.start(t,Math.random()*2);s.stop(t+dur+.05)}
+function tom(t,f0,dur){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(f0*1.7,t);o.frequency.exponentialRampToValueAtTime(f0,t+.05);o.frequency.exponentialRampToValueAtTime(f0*.82,t+dur);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.9,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+dur+.05);
+ const o2=AC.createOscillator(),g2=AC.createGain();o2.type='triangle';o2.frequency.setValueAtTime(f0*2.4,t);o2.frequency.exponentialRampToValueAtTime(f0*1.5,t+.06);g2.gain.setValueAtTime(.25,t);g2.gain.exponentialRampToValueAtTime(.001,t+dur*.4);o2.connect(g2);g2.connect(OUT);o2.start(t);o2.stop(t+dur);
+ noise(t,.035,.35,'lowpass',2500)}
+function click(t,acc){t=Math.max(t,AC.currentTime);const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(acc?1900:1400,t);
+ g.gain.setValueAtTime(acc?.22:.13,t);g.gain.exponentialRampToValueAtTime(.001,t+.05);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+.06)}
+function sound(id,t){t=Math.max(t,AC.currentTime);
+ if(id==='hh'){metal(t,1,.07,.5,7000);noise(t,.05,.18,'highpass',8000)}
+ else if(id==='t1')tom(t,205,.3);
+ else if(id==='t2')tom(t,118,.48);
+ else{metal(t,1.55,1.5,.32,3500);noise(t,1.3,.22,'highpass',5000);noise(t,.02,.3,'bandpass',4000,1)}}
+
+/* ---------- a groove for each round ---------- */
+function makeGroove(LV){
+ if(LV.repeat){const g=makeGroove({...LV,bars:1,repeat:0,down:1});return{hits:[...g.hits,...g.hits.map(h=>({t:h.t+g.bar,p:h.p}))],dt:g.dt,steps:g.steps*2,bar:g.bar}} // easy: the same bar twice
+const steps=4*LV.grid*LV.bars,dt=60/LV.bpm/LV.grid,n=LV.n[0]+Math.floor(Math.random()*(LV.n[1]-LV.n[0]+1));
+ const cand=[];for(let s=1;s<steps;s++){const beat=s%LV.grid===0,e8=LV.grid===4?s%2===0:true;cand.push({s,w:beat?1:e8?LV.e8:LV.s16})}
+ // the beat must always be easy to feel: a hit on the first beat of each bar, never more than two silent beats, few off-beats in easy
+ const bar=4*LV.grid;let pos,tries=0;
+ do{pos=[0];if(LV.down>1)for(let b=1;b<LV.bars;b++)pos.push(b*bar);
+  while(pos.length<n){let tot=0;const c=cand.filter(x=>!pos.includes(x.s)&&x.w>0);for(const x of c)tot+=x.w;let r=Math.random()*tot;for(const x of c){r-=x.w;if(r<=0){pos.push(x.s);break}}}
+  pos.sort((a,b)=>a-b);tries++}
+ while(tries<300&&!(pos.every((v,i)=>(i?v-pos[i-1]:0)<=LV.gap*LV.grid)&&steps-pos[pos.length-1]<=LV.gap*LV.grid+LV.grid&&pos.filter(v=>v%LV.grid).length<=LV.off));
+ const ids=P.map(p=>p.id).sort(()=>Math.random()-.5).slice(0,LV.pieces);
+ let pcs;do{pcs=pos.map(()=>ids[Math.floor(Math.random()*ids.length)]);
+  // a cymbal is a nice way to start or finish; avoid four of the same in a row; use every chosen drum
+ }while(!ids.every(i=>pcs.includes(i))||/(.)\1\1\1/.test(pcs.map(x=>x[1]).join('')));
+ return{hits:pos.map((s,i)=>({t:s*dt,p:pcs[i]})),dt,steps,bar:4*LV.grid*dt}}
+
+/* ---------- comparing two grooves ---------- */
+function compare(ref,mine,LV){const nr=ref.length,np=mine.length;if(!np)return{pts:0,pairs:[],rhythm:0,piece:0,tempo:1};
+ const sr=ref[nr-1].t-ref[0].t,sp=mine[np-1].t-mine[0].t;
+ const rn=ref.map(h=>sr>0?(h.t-ref[0].t)/sr:0),pn=mine.map(h=>sp>0?(h.t-mine[0].t)/sp:0),span=Math.max(sr,.4);
+ // align the two lists (missing and extra hits allowed)
+ const G=LV.tol*1.6,D=[...Array(nr+1)].map(()=>new Array(np+1).fill(0)),B=[...Array(nr+1)].map(()=>new Array(np+1).fill(0));
+ for(let i=1;i<=nr;i++){D[i][0]=i*G;B[i][0]=1}for(let j=1;j<=np;j++){D[0][j]=j*G;B[0][j]=2}
+ for(let i=1;i<=nr;i++)for(let j=1;j<=np;j++){const m=D[i-1][j-1]+Math.min(G*2,Math.abs(rn[i-1]-pn[j-1])*span)+(ref[i-1].p===mine[j-1].p?0:LV.tol*.4);
+  const a=D[i-1][j]+G,b=D[i][j-1]+G;if(m<=a&&m<=b){D[i][j]=m;B[i][j]=0}else if(a<=b){D[i][j]=a;B[i][j]=1}else{D[i][j]=b;B[i][j]=2}}
+ const pairs=[];let i=nr,j=np;while(i>0||j>0){const b=B[i][j];if(i>0&&j>0&&b===0){pairs.push([i-1,j-1]);i--;j--}else if(i>0&&(j===0||b===1))i--;else j--}
+ pairs.reverse();const N=Math.max(nr,np);let rs=0,ps=0;
+ for(const[a,b]of pairs){const e=Math.abs(rn[a]-pn[b])*span;rs+=e<=LV.tol*.4?1:clamp(1-(e-LV.tol*.4)/(LV.tol*1.1),0,1);if(ref[a].p===mine[b].p)ps++}
+ const tempo=sr>0&&sp>0?sp/sr:1,tf=clamp(1-Math.max(0,Math.abs(tempo-1)-.15)*1.5,.6,1);
+ const rhythm=rs/N,piece=ps/N;return{pts:125*(.5*rhythm*tf+.5*piece),pairs,rhythm,piece,tempo,nr,np,rn,pn}}
+
+/* ---------- playing ---------- */
+let mine=[],lastHit=0,endT=0,flash={},nextBeat=0,beatN=0,metroUntil=0;const pops=[],refLit=[],beats=[];
+function tick(at,n,count){click(at,n%4===0);beats.push({at,n:n%4,count});if(beats.length>40)beats.splice(0,beats.length-40)}
+const canPlay=K=>K.phase==='guess'&&K.R&&K.R.played&&!K.refOn;
+function hit(K,idx){const p=P[idx];if(!p||!K.AC)return;const now=K.AC.currentTime;sound(p.id,now);flash[p.id]=K.T;
+ if(!canPlay(K)){return}
+ mine.push({t:now,p:p.id});lastHit=K.now();metroUntil=Math.max(metroUntil,now+10);K.moved();pops.push({p:idx,t:K.T});
+ clearTimeout(endT);if(mine.length>=K.R.g.hits.length)endT=setTimeout(()=>K.confirm(),650);else endT=setTimeout(()=>{if(mine.length)K.confirm()},2300);K.update()}
+function again(K){if(K.phase!=='guess')return;clearTimeout(endT);mine=[];K.R.moved=false;K.update();K.say(tt('From the top!','Da capo!'),1.6)}
+
+const K=IgorGame({key:'drums',name:tt('The drums','La batteria'),rounds:5,maxRound:100,levels:LEVELS,
+ aria:tt('A drum kit with hi-hat, high tom, low tom and cymbal, in front of a blackboard covered by a curtain','Una batteria con charleston, tom alto, tom basso e piatto, davanti a una lavagna coperta da una tenda'),
+ title:tt('The <em>drums</em>','La <em>batteria</em>'),
+ intro:tt(`<p>Listen to a <b>groove</b> on the drums. Watch the drums light up. Then play it back: <b>same rhythm, same drums</b>. A count-in (1 2 3 4) and a soft click keep the beat for you.</p><p>Four pieces: <b style="color:#f6d34a">hi-hat</b>, <b style="color:#ff6a5e">high tom</b>, <b style="color:#6f9bff">low tom</b>, <b style="color:#7fe08a">cymbal</b>. ${touch?'Tap them':'Keys <b>A S D F</b>, or click them'}. When you’ve played as many hits as you heard, the blackboard shows how it went.</p>`,
+  `<p>Ascolta un <b>ritmo</b> sulla batteria. Guarda i pezzi che si illuminano. Poi rifallo: <b>stesso ritmo, stessi pezzi</b>. Il conteggio (1 2 3 4) e un clic leggero ti tengono il tempo.</p><p>Quattro pezzi: <b style="color:#f6d34a">charleston</b>, <b style="color:#ff6a5e">tom alto</b>, <b style="color:#6f9bff">tom basso</b>, <b style="color:#7fe08a">piatto</b>. ${touch?'Toccali':'Tasti <b>A S D F</b>, oppure cliccali'}. Quando hai suonato tanti colpi quanti ne hai sentiti, la lavagna mostra com’è andata.</p>`),
+ keys:tt('keys: A S D F = drums, L = listen, R = start again, enter = that’s it','tasti: A S D F = batteria, L = ascolta, R = da capo, invio = fatto'),
+ bar:`<button id="listen" type="button">▶ Listen</button><button id="redo" type="button">${tt('↺ Again','↺ Da capo')}</button><button id="ok" class="main" type="button">That’s it!</button>`,
+ roundLine:(R,K)=>K.round===1?tt('Listen to the groove…','Ascolta il ritmo…'):K.round===5?tt('Last groove. Play it like a pro.','Ultimo ritmo. Suonalo da professionista.'):[tt('New groove! Listen…','Nuovo ritmo! Ascolta…'),tt('Shh. Count with your ears.','Shh. Conta con le orecchie.'),tt('Here comes another one.','Eccone un altro.')][K.round%3],
+ revealMs:5600,msgDelay:1100,bubble:1.3,
+ newRound(R,LV,K){R.g=makeGroove(LV);mine=[];clearTimeout(endT);R.res=null},
+ playRef(R,LV,K){clearTimeout(endT);mine=[];beats.length=0;nextBeat=0;const bt=60/LV.bpm,c0=K.AC.currentTime+.1,t0=c0+4*bt;
+  for(let i=0;i<4;i++)tick(c0+i*bt,i,true); // count-in: 1 2 3 4
+  const last=R.g.hits[R.g.hits.length-1].t,nb=LV.metro?Math.floor(last/bt+1e-6)+1:0;for(let i=0;i<nb;i++)tick(t0+i*bt,i,false);
+  for(const h of R.g.hits){sound(h.p,t0+h.t);refLit.push({at:t0+h.t,id:h.p})}R.t0=t0;
+  if(LV.metro){const k=Math.ceil((last+.7+4*bt)/bt);nextBeat=t0+(k-4)*bt;beatN=k-4;metroUntil=nextBeat+24} // the pulse carries on while you play
+  return 4*bt+last+.7},
+ refEnd(R,K){if(K.phase==='guess')K.say(tt('Your turn!','Tocca a te!'),2)},
+ busy:()=>mine.length>0,
+ judge(R,LV,K){clearTimeout(endT);nextBeat=0;const res=compare(R.g.hits,mine,LV);R.res=res;R.mine=mine.slice();
+  const good=res.rhythm>.85&&res.piece>.99;let msg;const miss=res.nr-res.np;
+  if(res.pts>=115)msg=tt('Perfect groove! Same rhythm, same drums.','Ritmo perfetto! Stessi colpi, stessi pezzi.');
+  else if(miss>0)msg=tt(`Nice! There ${miss>1?'were':'was'} ${miss} more hit${miss>1?'s':''}. Next one!`,`Bello! Mancava${miss>1?'no':''} ${miss} colp${miss>1?'i':'o'}. Al prossimo!`);
+  else if(miss<0)msg=tt('Great energy! A few extra hits, that’s all.','Che energia! Solo qualche colpo in più.');
+  else if(res.piece>.99&&res.rhythm<.85)msg=tt('All the right drums! Now just a little tighter.','Tutti i pezzi giusti! Ora solo un po’ più preciso.');
+  else if(res.rhythm>.8&&res.piece<.99)msg=tt('Great rhythm! Listen again to which drum.','Ottimo ritmo! Riascolta quale pezzo.');
+  else if(res.tempo<.85||res.tempo>1.15)msg=tt(res.tempo<1?'Nice! It was a bit slower.':'Nice! It was a bit faster.',res.tempo<1?'Bene! Era un po’ più lento.':'Bene! Era un po’ più veloce.');
+  else msg=tt('Good try! Listen again, the next one’s yours.','Bel tentativo! Riascolta, il prossimo è tuo.');
+  return{pts:res.pts,good,msg}},
+ update(K){const r=document.getElementById('redo');if(r)r.disabled=!(K.phase==='guess'&&mine.length>0);const ok=document.getElementById('ok');if(ok&&K.phase==='guess')ok.disabled=mine.length===0},
+ onAudio(K){AC=K.AC;OUT=K.OUT},
+ key_down(e,K){const k=e.key.toLowerCase(),i='asdf'.indexOf(k);if(i>=0){e.preventDefault();hit(K,i);return}if(k==='r')again(K)},
+ draw});
+document.getElementById('redo').onclick=()=>again(K);
+/* tap or click a drum (several fingers at once are fine) */
+let SPOTS=[];
+K.cv.addEventListener('pointerdown',e=>{if(!K.AC)return;let best=-1,bd=1e9;for(const s of SPOTS){const d=Math.hypot((e.clientX-s.x)/s.rx,(e.clientY-s.y)/s.ry);if(d<1&&d<bd){bd=d;best=s.i}}if(best>=0){e.preventDefault();hit(K,best)}});
+K.update();
+
+/* ---------- drawing ---------- */
+function glyph(g,id,x,y,r,col,hollow){g.save();g.strokeStyle=col;g.fillStyle=col;g.lineWidth=Math.max(2,r*.32);g.lineCap='round';
+ if(id==='hh'){g.beginPath();g.moveTo(x-r,y-r);g.lineTo(x+r,y+r);g.moveTo(x+r,y-r);g.lineTo(x-r,y+r);g.stroke()}
+ else if(id==='cr'){g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?r*.5:r*1.25;g.lineTo(x+q*Math.cos(a),y+q*Math.sin(a))}g.closePath();hollow?g.stroke():g.fill()}
+ else{const rr2=id==='t2'?r*1.05:r*.75;g.beginPath();g.arc(x,y,rr2,0,TAU);hollow?g.stroke():g.fill()}
+ g.restore()}
+function blackboard(g,x,y,w,h,K){const R=K.R;g.fillStyle='#6b4a2e';rr(g,x-10,y-10,w+20,h+20,8);g.fill();g.fillStyle='#2f4a3a';g.fillRect(x,y,w,h);
+ g.fillStyle='rgba(255,255,255,.05)';for(let i=0;i<5;i++){g.beginPath();g.ellipse(x+w*(.2+.15*i),y+h*(.3+.1*(i%2)),w*.12,h*.08,.3,0,TAU);g.fill()}
+ g.fillStyle='#8a5a33';g.fillRect(x+w*.1,y+h+8,w*.8,6);g.fillStyle='#f3efe2';g.fillRect(x+w*.7,y+h+4,18,5);
+ const fs=Math.max(11,Math.min(18,h*.11)),L=x+Math.max(w*.17,fs*4.2),Rr=x+w*.95,rowA=y+h*.36,rowB=y+h*.72;
+ g.fillStyle='rgba(243,239,226,.85)';g.font=`600 ${fs}px Fredoka,sans-serif`;g.textAlign='left';g.fillText(tt('rhythm','ritmo'),x+w*.03,rowA+fs*.35);g.fillText(tt('you','tu'),x+w*.03,rowB+fs*.35);
+ g.strokeStyle='rgba(243,239,226,.35)';g.lineWidth=1.5;for(const yy of[rowA,rowB]){g.beginPath();g.moveTo(L-6,yy);g.lineTo(Rr+6,yy);g.stroke()}
+ if(!R||!R.res)return;const res=R.res,ref=R.g.hits,mm=R.mine||[],gl=Math.max(5,Math.min(10,h*.06));
+ // beat ticks of the bar, scaled like the groove
+ const sr=ref[ref.length-1].t||1;g.strokeStyle='rgba(243,239,226,.25)';for(let b=0;b<=8;b++){const tb=b*R.g.bar/4;if(tb>sr+1e-6)break;const xx=L+(Rr-L)*tb/sr;g.beginPath();g.moveTo(xx,rowA-h*.12);g.lineTo(xx,rowA+h*.12);g.stroke()}
+ const X=v=>L+(Rr-L)*v;const k=ease(clamp((K.revT-.9)/.6,0,1));g.globalAlpha=k;
+ const matchedR=new Set(res.pairs.map(p=>p[0])),matchedM=new Set(res.pairs.map(p=>p[1]));
+ g.setLineDash([4,5]);g.strokeStyle='rgba(243,239,226,.4)';g.lineWidth=1.5;for(const[a,b]of res.pairs){g.beginPath();g.moveTo(X(res.rn[a]),rowA+gl*1.4);g.lineTo(X(res.pn[b]),rowB-gl*1.4);g.stroke()}g.setLineDash([]);
+ ref.forEach((hh,i)=>glyph(g,hh.p,X(res.rn[i]),rowA,gl,P.find(p=>p.id===hh.p).col,!matchedR.has(i)));
+ mm.forEach((hh,j)=>{const xx=X(res.pn[j]);glyph(g,hh.p,xx,rowB,gl,P.find(p=>p.id===hh.p).col,false);
+  const pr=res.pairs.find(p=>p[1]===j);if(!pr||ref[pr[0]].p!==hh.p){g.strokeStyle='rgba(255,255,255,.9)';g.lineWidth=2;g.beginPath();g.arc(xx,rowB,gl*1.9,0,TAU);g.stroke()}});
+ g.fillStyle='#f6d34a';g.font=`700 ${fs*1.3}px Fredoka,sans-serif`;g.textAlign='right';g.fillText('+'+R.pts,Rr+4,y+fs*1.4);g.globalAlpha=1}
+function drum(g,x,y,rx,ry,h,shell,head,hitK){ // a tom seen from the front, slightly from above
+ const s=1+hitK*.06;g.save();g.translate(x,y);g.scale(s,s);
+ g.fillStyle=shell;g.fillRect(-rx,0,rx*2,h);g.beginPath();g.ellipse(0,h,rx,ry,0,0,Math.PI);g.fill();
+ g.fillStyle='rgba(255,255,255,.18)';g.fillRect(-rx*.75,0,rx*.18,h);g.strokeStyle='#c9ccd1';g.lineWidth=2;for(const yy of[h*.12,h*.88]){g.beginPath();g.ellipse(0,yy,rx,ry,0,0,Math.PI);g.stroke()}
+ g.fillStyle='#d9dde3';for(let i=0;i<6;i++){const a=Math.PI*(i+.5)/6;g.fillRect(Math.cos(a)*rx*.95-2,Math.sin(a)*ry*.3+h*.1,4,h*.8)}
+ g.fillStyle=head;g.beginPath();g.ellipse(0,0,rx,ry,0,0,TAU);g.fill();g.strokeStyle='#9aa1a8';g.lineWidth=3;g.stroke();
+ if(hitK>0){g.fillStyle=`rgba(255,255,255,${.5*hitK})`;g.beginPath();g.ellipse(0,0,rx*.9,ry*.9,0,0,TAU);g.fill()}g.restore()}
+function cymbal(g,x,y,r,tilt,hitK,top){const wob=Math.sin(hitK*20)*hitK*.12;g.save();g.translate(x,y);g.rotate(wob);
+ if(top){g.fillStyle='#b8902f';g.beginPath();g.ellipse(0,-6,r,r*tilt,0,0,TAU);g.fill()}
+ const gr=g.createLinearGradient(-r,0,r,0);gr.addColorStop(0,'#c99a2e');gr.addColorStop(.5,'#f3d27a');gr.addColorStop(1,'#b8862a');g.fillStyle=gr;g.beginPath();g.ellipse(0,0,r,r*tilt,0,0,TAU);g.fill();
+ g.strokeStyle='rgba(120,80,20,.5)';g.lineWidth=1;for(let k=.35;k<1;k+=.2){g.beginPath();g.ellipse(0,0,r*k,r*tilt*k,0,0,TAU);g.stroke()}
+ g.fillStyle='#8a6a20';g.beginPath();g.ellipse(0,0,r*.12,r*tilt*.12,0,0,TAU);g.fill();
+ if(hitK>0){g.fillStyle=`rgba(255,250,220,${.55*hitK})`;g.beginPath();g.ellipse(0,0,r,r*tilt,0,0,TAU);g.fill()}g.restore()}
+function stand(g,x,y0,y1){g.strokeStyle='#5a5f66';g.lineWidth=3;g.beginPath();g.moveTo(x,y0);g.lineTo(x,y1);g.moveTo(x,y1);g.lineTo(x-16,y1+10);g.moveTo(x,y1);g.lineTo(x+16,y1+10);g.stroke()}
+function badge(g,x,y,txt,col){g.save();g.font='700 15px "IBM Plex Mono",monospace';g.textAlign='center';g.fillStyle='rgba(20,13,9,.75)';rr(g,x-13,y-12,26,24,7);g.fill();g.strokeStyle=col;g.lineWidth=2;g.stroke();g.fillStyle=col;g.fillText(txt,x,y+5);g.restore()}
+
+/* ---------- the music room: a poster, drumsticks on the wall, a framed record, a rug, an amp ---------- */
+function poster(g,x,y,w,h){g.fillStyle='rgba(40,25,10,.25)';g.fillRect(x+4,y+5,w,h);g.fillStyle='#1f2a44';g.fillRect(x,y,w,h);
+ const gr=g.createLinearGradient(0,y,0,y+h);gr.addColorStop(0,'#f1b46e');gr.addColorStop(1,'#e0463c');g.fillStyle=gr;g.fillRect(x+w*.06,y+h*.05,w*.88,h*.55);
+ g.fillStyle='#1f2a44';g.beginPath();g.arc(x+w*.5,y+h*.4,w*.22,Math.PI,TAU);g.fill();g.fillRect(x+w*.3,y+h*.4,w*.4,h*.12);g.fillStyle='#f3e7d3';g.beginPath();g.arc(x+w*.5,y+h*.46,w*.12,0,TAU);g.fill(); // a drum silhouette
+ g.fillStyle='#f6d34a';g.beginPath();g.ellipse(x+w*.22,y+h*.2,w*.13,w*.035,-.3,0,TAU);g.fill();g.beginPath();g.ellipse(x+w*.78,y+h*.18,w*.15,w*.04,.3,0,TAU);g.fill();
+ g.fillStyle='#f8f5ec';for(const[a,b]of[[.15,.5],[.82,.48],[.7,.12]]){g.fillRect(x+w*a-3,y+h*b-3,6,6)}
+ g.fillStyle='#f3e7d3';g.textAlign='center';g.font=`700 ${Math.round(w*.13)}px Fredoka,sans-serif`;g.fillText('IGOR',x+w*.5,y+h*.72);
+ g.font=`600 ${Math.round(w*.075)}px Fredoka,sans-serif`;g.fillText(tt('& the Tofu Ants','& le Formiche di Tofu'),x+w*.5,y+h*.81);
+ g.fillStyle='#f1b46e';g.font=`500 ${Math.round(w*.065)}px "IBM Plex Mono",monospace`;g.fillText(tt('LIVE · TONIGHT','LIVE · STASERA'),x+w*.5,y+h*.92);
+ g.fillStyle='#c9b9a0';for(const[a,b]of[[0,0],[1,0]]){g.beginPath();g.arc(x+w*a+(a?-6:6),y+6,3,0,TAU);g.fill()}}
+function sticks(g,x,y,L,t){const sw=Math.sin(t*.9)*.02;g.fillStyle='#6b4426';for(const dx of[-L*.32,L*.32]){g.beginPath();g.arc(x+dx,y,3.5,0,TAU);g.fill()}
+ g.strokeStyle='rgba(60,40,20,.5)';g.lineWidth=1.2;g.beginPath();g.moveTo(x-L*.32,y);g.lineTo(x,y+L*.12);g.lineTo(x+L*.32,y);g.stroke();
+ for(const s of[-1,1]){g.save();g.translate(x,y+L*.45);g.rotate(s*.62+sw);g.lineCap='round';g.strokeStyle='#d9a868';g.lineWidth=Math.max(4,L*.06);g.beginPath();g.moveTo(0,-L*.5);g.lineTo(0,L*.5);g.stroke();
+  g.strokeStyle='#b07a45';g.lineWidth=Math.max(2,L*.03);g.beginPath();g.moveTo(0,L*.3);g.lineTo(0,L*.5);g.stroke();g.fillStyle='#e9c48a';g.beginPath();g.ellipse(0,-L*.52,L*.035,L*.05,0,0,TAU);g.fill();g.restore()}}
+function record(g,x,y,r,t){g.fillStyle='rgba(40,25,10,.25)';g.fillRect(x-r-6+4,y-r-6+5,2*r+12,2*r+12);g.fillStyle='#f3efe2';g.fillRect(x-r-6,y-r-6,2*r+12,2*r+12);g.strokeStyle='#6b4426';g.lineWidth=4;g.strokeRect(x-r-6,y-r-6,2*r+12,2*r+12);
+ g.fillStyle='#1a1a1a';g.beginPath();g.arc(x,y,r,0,TAU);g.fill();g.strokeStyle='rgba(255,255,255,.08)';g.lineWidth=1;for(let k=.45;k<1;k+=.1){g.beginPath();g.arc(x,y,r*k,0,TAU);g.stroke()}
+ g.strokeStyle='rgba(255,255,255,.18)';g.lineWidth=2;g.beginPath();g.arc(x,y,r*.85,-2.3,-1.7);g.stroke();g.fillStyle='#a8d621';g.beginPath();g.arc(x,y,r*.3,0,TAU);g.fill();g.fillStyle='#1a1a1a';g.beginPath();g.arc(x,y,r*.04,0,TAU);g.fill()}
+function amp(g,x,y,w,h){g.fillStyle='#2b2724';rr(g,x,y-h,w,h,6);g.fill();g.fillStyle='#3d3833';rr(g,x+w*.08,y-h*.82,w*.84,h*.62,4);g.fill();
+ g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=1;for(let i=1;i<9;i++){const yy=y-h*.82+h*.62*i/9;g.beginPath();g.moveTo(x+w*.08,yy);g.lineTo(x+w*.92,yy);g.stroke()}
+ g.fillStyle='#d9a868';g.fillRect(x+w*.08,y-h*.95,w*.84,h*.1);g.fillStyle='#2b2724';for(let i=0;i<4;i++){g.beginPath();g.arc(x+w*(.2+i*.2),y-h*.9,h*.035,0,TAU);g.fill()}
+ g.fillStyle='#e0463c';g.beginPath();g.arc(x+w*.88,y-h*.9,h*.025,0,TAU);g.fill();g.fillStyle='#f3e7d3';g.font=`700 ${Math.round(h*.1)}px Fredoka,sans-serif`;g.textAlign='center';g.fillText('IGOR',x+w*.5,y-h*.08)}
+function decor(g,W,H,floorY,bx,by,bw,bh,cx,base,u,t){const band0=by+bh+30,band1=floorY-14,bandH=band1-band0;
+ if(W>=700){const ph=Math.min(bandH+bh*.6,260),pw=ph*.72,px=Math.max(24,bx-pw-Math.min(bw*.1,(W-bw)/2-4)-40);poster(g,Math.min(px,cx-u*2.6-pw),Math.max(by+10,band1-ph),pw,ph);
+  sticks(g,cx-u*2.6+Math.min(80,u*.6),band0+Math.min(bandH*.15,30),Math.min(110,bandH*.7),t);
+  record(g,cx+u*2.45,band0+Math.min(bandH*.3,60),Math.min(42,bandH*.22),t)}
+ else if(bandH>90){const ph=Math.min(bandH*.85,170),pw=ph*.72;poster(g,14,band0+(bandH-ph)/2,pw,ph);
+  sticks(g,W*.5,band0+bandH*.12,Math.min(95,bandH*.6),t);record(g,W-14-Math.min(36,bandH*.2)-6,band0+bandH*.4,Math.min(36,bandH*.2),t)}
+ // rug under the drum kit
+ const ry=base+6,rx=u*2.3,ryy=Math.max(18,(H-base)*.35);g.save();g.beginPath();g.ellipse(cx,ry,rx,ryy,0,0,TAU);g.clip();g.fillStyle='#6a3b4f';g.fillRect(cx-rx,ry-ryy,2*rx,2*ryy);
+ g.strokeStyle='#e8c27a';g.lineWidth=3;for(let i=1;i<4;i++){g.beginPath();g.ellipse(cx,ry,rx*(1-i*.2),ryy*(1-i*.2),0,0,TAU);g.stroke()}g.restore();
+ if(W>=700)amp(g,Math.min(W-u*1.05,cx+u*2.35),base+4,u*.8,u*.7)}
+
+function draw(K,dt){const g=K.g,W=K.W,H=K.H,t=K.T,R=K.R;
+ const floorY=drawRoom(g,0,W,H,{floorY:H*.66,wall:['#ded4bd','#cfc3a8'],stripe:'rgba(90,70,40,.05)',wains:'#5b4a3c',floor:['#8c8174','#5d554c']});
+ // the blackboard, behind a curtain until the end of the round
+ const bw=Math.min(W*(W<600?.8:.6),720),bh=W<600?Math.min(H*.28,bw*.62):Math.min(H*.25,bw*.42),bx=(W-bw)/2,by=Math.max(70,H*.1);
+ blackboard(g,bx,by,bw,bh,K);
+ // a few school things: notes on the wall, a metronome on a shelf
+ if(W>700){g.fillStyle='rgba(60,40,25,.55)';g.font='700 34px serif';g.fillText('♪',bx-60,by+40);g.fillText('♫',bx+bw+34,by+70);
+  const mx=bx+bw+70,my=floorY-H*.18;g.fillStyle='#6b4426';g.fillRect(mx-40,my+40,80,6);g.fillStyle='#8a5a33';g.beginPath();g.moveTo(mx-16,my+40);g.lineTo(mx+16,my+40);g.lineTo(mx+6,my);g.lineTo(mx-6,my);g.closePath();g.fill();
+  const a=Math.sin(t*Math.PI*(R?LEVELS[K.lv].bpm/60:1))*.5;g.strokeStyle='#2b2018';g.lineWidth=2;g.beginPath();g.moveTo(mx,my+36);g.lineTo(mx+Math.sin(a)*30,my+36-Math.cos(a)*30);g.stroke()}
+ const u=Math.min(W*(W<600?.235:.2),H*.17,170),cx=W/2,base=Math.min(H-110,floorY+H*.2),top=base-u*1.25;
+ decor(g,W,H,floorY,bx,by,bw,bh,cx,base,u,t);
+ const open=K.phase==='reveal'||K.phase==='end'?clamp(K.revT/.9,0,1):0;
+ const light=K.refOn?.6+.4*Math.sin(t*20):0;
+ const cw=Math.min(bw*.1,(W-bw)/2-4);drawCurtain(g,bx-14-cw,bx+bw+14+cw,by-14,by+bh+18,open,light,t);
+ // the drum kit, with Igor sitting behind it
+ const lastAgo=K.now()-lastHit,bob=lastAgo<.15?(1-lastAgo/.15)*.04:0,ih=Math.min(u*1.9,H*.32);
+ K.drawIgor(cx,top-ih*.12-bob*ih,ih,-1,{shadow:false});
+ const ac=K.AC?K.AC.currentTime:0;for(let q=refLit.length-1;q>=0;q--){const r=refLit[q];if(ac>r.at+.4){refLit.splice(q,1);continue}if(ac>=r.at&&!r.done){r.done=1;flash[r.id]=t;pops.push({p:P.findIndex(x=>x.id===r.id),t})}}
+ const hk=id=>{const a=t-(flash[id]??-9);return a<.32?1-a/.32:0};
+ // bass drum in the middle (not played: just to make it a kit)
+ g.fillStyle='#7a2d2a';g.beginPath();g.arc(cx,base-u*.55,u*.62,0,TAU);g.fill();g.fillStyle='#efe4cf';g.beginPath();g.arc(cx,base-u*.55,u*.5,0,TAU);g.fill();
+ g.fillStyle='#2b2018';g.font=`700 ${Math.round(u*.16)}px Fredoka,sans-serif`;g.textAlign='center';g.fillText('IGOR',cx,base-u*.14);
+ const pos=[{x:cx-u*1.55,y:top-u*.05},{x:cx-u*.6,y:top+u*.12},{x:cx+u*.62,y:top+u*.32},{x:cx+u*1.55,y:top-u*.35}];
+ stand(g,pos[0].x,pos[0].y,base);stand(g,pos[3].x,pos[3].y,base);
+ cymbal(g,pos[0].x,pos[0].y,u*.5,.22,hk('hh'),true);
+ drum(g,pos[1].x,pos[1].y,u*.42,u*.13,u*.38,'#b8402f','#f2eadb',hk('t1'));
+ g.strokeStyle='#5a5f66';g.lineWidth=3;g.beginPath();g.moveTo(pos[2].x,pos[2].y+u*.6);g.lineTo(pos[2].x,base);g.stroke();
+ drum(g,pos[2].x,pos[2].y,u*.52,u*.16,u*.58,'#b8402f','#f2eadb',hk('t2'));
+ cymbal(g,pos[3].x,pos[3].y,u*.62,.24,hk('cr'),false);
+ SPOTS=pos.map((p,i)=>({i,x:p.x,y:p.y+(i===2?u*.15:0),rx:u*(i===3?.75:.6),ry:u*.48}));
+ const live=canPlay(K);
+ // the pulse: keeps ticking while it's your turn (easy and medium), and four dots show where the beat is
+ if(K.AC&&K.LV){const LV=K.LV,bt=60/LV.bpm,now=K.AC.currentTime;
+  if(live&&LV.metro&&nextBeat&&now<metroUntil){if(nextBeat<now-.05){const k=Math.ceil((now-nextBeat)/bt);nextBeat+=k*bt;beatN+=k}while(nextBeat<now+.12){tick(nextBeat,beatN++,false);nextBeat+=bt}}
+  let cur=null;for(const b of beats)if(b.at<=now)cur=b;
+  if(cur&&now-cur.at<2.2*bt&&(K.phase==='guess')){const dy=by+bh-10,gap=W<600?20:24,fresh=clamp(1-(now-cur.at)/(bt*.7),0,1);
+   g.save();g.fillStyle='rgba(43,32,24,.55)';rr(g,cx-gap*2.4,dy-14,gap*4.8,28,14);g.fill();
+   for(let i=0;i<4;i++){const x=cx+(i-1.5)*gap,on=i===cur.n;g.fillStyle=on?(i===0?'#f6d34a':'#f3e7d3'):'rgba(243,231,211,.25)';g.beginPath();g.arc(x,dy,on?5+3*fresh:4,0,TAU);g.fill()}
+   if(cur.count){g.fillStyle=`rgba(246,211,74,${.4+.6*fresh})`;g.font=`700 ${Math.round(40+16*fresh)}px Fredoka,sans-serif`;g.textAlign='center';g.fillText(String(cur.n+1),cx,dy-24)}
+   g.restore()}}
+ pos.forEach((p,i)=>{const c=P[i].col,h=hk(P[i].id);if(h>0){g.save();g.globalCompositeOperation='lighter';const gr=g.createRadialGradient(p.x,p.y,4,p.x,p.y,u*.95);gr.addColorStop(0,c);gr.addColorStop(1,'rgba(0,0,0,0)');g.globalAlpha=.85*h;g.fillStyle=gr;g.beginPath();g.ellipse(p.x,p.y,u*.95,u*.7,0,0,TAU);g.fill();g.restore();g.strokeStyle=c;g.lineWidth=5;g.globalAlpha=h;g.beginPath();g.ellipse(p.x,p.y,SPOTS[i].rx*.95,SPOTS[i].ry*.6,0,0,TAU);g.stroke();g.globalAlpha=1}
+  if(live){g.strokeStyle=c;g.globalAlpha=.35+.25*Math.sin(t*4+i);g.lineWidth=3;g.beginPath();g.ellipse(p.x,p.y,SPOTS[i].rx*.85,SPOTS[i].ry*.5,0,0,TAU);g.stroke();g.globalAlpha=1}
+  if(!touch)badge(g,p.x,p.y-u*.42,P[i].key,c);
+  g.fillStyle='rgba(43,32,24,.8)';g.font=`600 ${Math.max(11,Math.round(u*.12))}px Fredoka,sans-serif`;g.textAlign='center';g.fillText(P[i].name,p.x,base+18)});
+ // little notes popping out of the drums you hit
+ for(let k=pops.length-1;k>=0;k--){const q=pops[k],a=t-q.t;if(a>.9){pops.splice(k,1);continue}const p=pos[q.p];g.globalAlpha=1-a/.9;g.fillStyle=P[q.p].col;g.font=`700 ${Math.round(u*.28)}px serif`;g.fillText('♪',p.x+(q.p-1.5)*8,p.y-u*.3-a*u*.6);g.globalAlpha=1}
+ if(K.phase==='guess'&&R&&R.played&&!K.refOn&&mine.length){g.fillStyle='#e0463c';g.beginPath();g.arc(cx-u*.35,base+42,6,0,TAU);g.fill();g.fillStyle='rgba(43,32,24,.85)';g.font='600 13px Fredoka,sans-serif';g.textAlign='left';g.fillText(tt('playing…','suoni…'),cx-u*.35+12,base+47)}
+ if(R&&R.res&&R.res.good&&!R.ate&&K.revT>1.4){R.ate=1;K.eat(pos[1].x,pos[1].y,Math.max(1.4,u/60),'#f8f5ec')}}
+})();
+</script>
+</body></html>
