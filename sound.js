@@ -19,12 +19,15 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),R=(a,b)=>a+Math.random()*(b-a),pi
 const G=v=>{const g=ac.createGain();g.gain.value=v;return g};
 const F=(type,f,Q)=>{const b=ac.createBiquadFilter();b.type=type;b.frequency.value=f;if(Q!=null)b.Q.value=Q;return b};
 const P=p=>{if(!ac.createStereoPanner)return G(1);const s=ac.createStereoPanner();s.pan.value=clamp(p||0,-1,1);return s};
-function noiseBuf(sec,kind){const n=Math.ceil(ac.sampleRate*sec),b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0,br=0;
- for(let i=0;i<n;i++){const w=Math.random()*2-1;
-  if(kind==='white')d[i]=w;
-  else if(kind==='pink'){b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8665*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;d[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}
-  else{br=(br+.02*w)/1.02;d[i]=br*3.5}}
- const f=Math.min(4000,n>>3);for(let i=0;i<f;i++){const k=i/f;d[i]*=k;d[n-1-i]*=k} // no click at the loop seam
+function noiseBuf(sec,kind){const n=Math.ceil(ac.sampleRate*sec),f=Math.min(Math.round(ac.sampleRate*.25),n>>2),m=n+f,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0),x=new Float32Array(m);let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0,br=0;
+ for(let i=0;i<m;i++){const w=Math.random()*2-1;
+  if(kind==='white')x[i]=w;
+  else if(kind==='pink'){b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8665*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;x[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.11;b6=w*.115926}
+  else{br=(br+.02*w)/1.02;x[i]=br*3.5}}
+ // seamless loop: the extra tail is cross-faded (equal power) into the head, so the end flows into the start
+ // without a click and without any dip in level (before, the ends faded to silence: shhh… pause… shhh)
+ for(let i=0;i<n;i++)d[i]=x[i];
+ for(let i=0;i<f;i++){const k=i/f*Math.PI/2;d[i]=x[i]*Math.sin(k)+x[n+i]*Math.cos(k)}
  return b}
 function loop(buf){const s=ac.createBufferSource();s.buffer=buf;s.loop=true;s.start(ac.currentTime,R(0,buf.duration));return s}
 const set=(p,v,tc=.35)=>p.setTargetAtTime(v,ac.currentTime,tc);
@@ -34,7 +37,7 @@ function init(ctx){if(ac)return;try{ac=ctx||new (window.AudioContext||window.web
  // the little sounds go through a soft lowpass, like in the Abyss
  sfxIn=G(.17);const slp=F('lowpass',3400,.7);sfxIn.connect(slp);slp.connect(out);
  ambIn=G(1);ambLP=F('lowpass',16000,.5);const ambHP=F('highpass',55,.6);ambIn.connect(ambHP);ambHP.connect(ambLP);ambLP.connect(out);
- WHITE=noiseBuf(3,'white');PINK=noiseBuf(6,'pink');BROWN=noiseBuf(6,'brown');
+ WHITE=noiseBuf(7,'white');PINK=noiseBuf(6,'pink');BROWN=noiseBuf(6,'brown');
  A={wave:{ph:.6,per:7},drops:0,hail:0,bird:R(3,8),crick:1,crk:[R(0,1),R(0,1),R(0,1)],gust:R(0,100)};
  // the sea: a low bed, and the breaking of each wave, panned towards the closest shore
  A.seaPan=P(0);A.seaPan.connect(ambIn);
