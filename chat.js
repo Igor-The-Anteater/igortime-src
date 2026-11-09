@@ -215,7 +215,7 @@ function check(t){const n=norm(t).replace(/[^a-z\s]/g,' '),W=n.split(/\s+/).filt
 /* ---------- style ---------- */
 const st=document.createElement('style');st.textContent=`
 #chatB{position:relative}#chatB i{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#e0463c;color:#fff;font:600 10.5px/17px system-ui,sans-serif;font-style:normal;text-align:center;border:2px solid #2b2018}#chatB i:empty{display:none}
-#igc{position:fixed;z-index:60;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(420px,calc(100vw - 24px));height:min(640px,calc(100vh - var(--hh,62px) - 40px));display:flex;flex-direction:column;overflow:hidden;background:#fbf3e1;color:#2b2018;border:3px solid #2b2018;border-radius:22px;box-shadow:0 6px 0 #2b2018,0 18px 40px rgba(0,0,0,.35);animation:igcIn .22s ease-out;font:500 15px/1.35 'Fredoka','Trebuchet MS',system-ui,sans-serif;-webkit-user-select:text;user-select:text}
+#igc{position:fixed;z-index:60;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(480px,calc(100vw - 24px));height:min(680px,calc(100vh - var(--hh,62px) - 40px));display:flex;flex-direction:column;overflow:hidden;background:#fbf3e1;color:#2b2018;border:3px solid #2b2018;border-radius:22px;box-shadow:0 6px 0 #2b2018,0 18px 40px rgba(0,0,0,.35);animation:igcIn .22s ease-out;font:500 15px/1.35 'Fredoka','Trebuchet MS',system-ui,sans-serif;-webkit-user-select:text;user-select:text}
 #igc[hidden]{display:none}#igc *{box-sizing:border-box}
 #igc button{font:inherit;color:#2b2018;background:#fff8e8;border:2px solid #2b2018;border-radius:999px;padding:7px 13px;cursor:pointer;box-shadow:0 2px 0 #2b2018;letter-spacing:0;text-transform:none;-webkit-tap-highlight-color:transparent}
 #igc button:active{transform:translateY(1px);box-shadow:0 1px 0 #2b2018}#igc button:disabled{opacity:.45;cursor:default}
@@ -246,7 +246,7 @@ const st=document.createElement('style');st.textContent=`
 #igc .m::after{content:'';position:absolute;left:-8px;bottom:7px;width:11px;height:11px;background:inherit;border:2.5px solid #2b2018;border-top:0;border-right:0;transform:rotate(45deg);border-radius:0 0 0 3px}
 #igc .m.me{align-self:flex-end;background:#ffd7a3;margin:0 6px 0 0}#igc .m.me::after{left:auto;right:-8px;transform:rotate(-135deg)}#igc .m small{display:block;font-size:11px;color:#6d5a44;margin-top:2px;text-align:right}
 #igc .day{align-self:center;font-size:12px;color:#6d5a44;margin:6px 0;padding:2px 10px;border:1.5px dashed rgba(43,32,24,.35);border-radius:999px}
-#igc .bar{display:flex;gap:6px;padding:8px 10px;border-top:3px solid #2b2018;background:#f3e6c8;align-items:center}#igc .bar button.go{background:#f1b46e}
+#igc .bar{display:flex;gap:6px;padding:8px 10px;border-top:3px solid #2b2018;background:#f3e6c8;align-items:center;height:auto;min-height:64px;overflow:visible;margin:0;border-radius:0;box-sizing:border-box}#igc .bar button.go{background:#f1b46e}
 #igc .bar input{flex:1;min-width:0;height:46px;font-size:16px;padding:10px 14px}#igc .bar button{width:46px;height:46px;padding:0;flex:none;font-size:20px}
 #igc .emo{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:6px 10px;border-top:2px solid rgba(43,32,24,.12)}#igc .emo[hidden]{display:none}
 #igc .emo button{background:transparent;border:0;box-shadow:none;font-size:23px;padding:4px 0;border-radius:10px}#igc .emo button:hover{background:#fff8e8}
