@@ -10,9 +10,13 @@
 (()=>{
 const KEY='igortime_sound';
 let wanted=true;try{wanted=localStorage.getItem(KEY)!=='off'}catch(e){}
+/* the mixer: three faders, saved in localStorage igortime_mix = {nat, met, ig} (0..1, 0.8 = the original level)
+   nat = the island (sea, wind, birds, crickets), met = the weather (rain, hail, thunder), ig = Igor, the Igorlets and the little sounds */
 let VOL=.8;try{const v=parseFloat(localStorage.getItem('igortime_volume'));if(v>=0&&v<=1)VOL=v}catch(e){}
-const gainNow=()=>wanted?VOL*VOL*1.25:0;
-let ac=null,out,sfxIn,ambIn,ambLP,WHITE,PINK,BROWN,A=null,T=0;
+let MIX={nat:VOL,met:Math.min(VOL,.6),ig:VOL};
+try{const m=JSON.parse(localStorage.getItem('igortime_mix')||'null');if(m)for(const k in MIX)if(m[k]>=0&&m[k]<=1)MIX[k]=m[k]}catch(e){}
+const gainNow=()=>wanted?.8:0,mixG=k=>(MIX[k]/.8)*(MIX[k]/.8);
+let ac=null,out,sfxIn,ambIn,ambLP,natIn,metIn,igOut,WHITE,PINK,BROWN,A=null,T=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),R=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
 
 /* ---------- plumbing ---------- */
@@ -35,19 +39,21 @@ const set=(p,v,tc=.35)=>p.setTargetAtTime(v,ac.currentTime,tc);
 function init(ctx){if(ac)return;try{ac=ctx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){ac=null;return}
  out=G(gainNow());const comp=ac.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=12;comp.ratio.value=3.5;out.connect(comp);comp.connect(ac.destination);
  // the little sounds go through a soft lowpass, like in the Abyss
- sfxIn=G(.17);const slp=F('lowpass',3400,.7);sfxIn.connect(slp);slp.connect(out);
+ igOut=G(mixG('ig'));igOut.connect(out);
+ sfxIn=G(.17);const slp=F('lowpass',3400,.7);sfxIn.connect(slp);slp.connect(igOut);
  ambIn=G(1);ambLP=F('lowpass',16000,.5);const ambHP=F('highpass',55,.6);ambIn.connect(ambHP);ambHP.connect(ambLP);ambLP.connect(out);
+ natIn=G(mixG('nat'));natIn.connect(ambIn);metIn=G(mixG('met'));metIn.connect(ambIn);
  WHITE=noiseBuf(7,'white');PINK=noiseBuf(6,'pink');BROWN=noiseBuf(6,'brown');
  A={wave:{ph:.6,per:7},drops:0,hail:0,bird:R(3,8),crick:1,crk:[R(0,1),R(0,1),R(0,1)],gust:R(0,100)};
  // the sea: a low bed, and the breaking of each wave, panned towards the closest shore
- A.seaPan=P(0);A.seaPan.connect(ambIn);
+ A.seaPan=P(0);A.seaPan.connect(natIn);
  const s1=loop(PINK);A.seaLP=F('lowpass',450,.6);A.seaG=G(0);s1.connect(A.seaLP);A.seaLP.connect(A.seaG);A.seaG.connect(A.seaPan);
  const s2=loop(WHITE);A.surfBP=F('bandpass',1400,.7);A.surfLP=F('lowpass',5000,.5);A.surfG=G(0);s2.connect(A.surfBP);A.surfBP.connect(A.surfLP);A.surfLP.connect(A.surfG);A.surfG.connect(A.seaPan);
  // the wind, and a thin whistle in storms and snow
- const w1=loop(PINK);A.windBP=F('bandpass',500,1.1);A.windG=G(0);w1.connect(A.windBP);A.windBP.connect(A.windG);A.windG.connect(ambIn);
- const w2=loop(WHITE);A.whBP=F('bandpass',1100,16);A.whG=G(0);w2.connect(A.whBP);A.whBP.connect(A.whG);A.whG.connect(ambIn);
+ const w1=loop(PINK);A.windBP=F('bandpass',500,1.1);A.windG=G(0);w1.connect(A.windBP);A.windBP.connect(A.windG);A.windG.connect(natIn);
+ const w2=loop(WHITE);A.whBP=F('bandpass',1100,16);A.whG=G(0);w2.connect(A.whBP);A.whBP.connect(A.whG);A.whG.connect(natIn);
  // the rain
- const r1=loop(WHITE);A.rainHP=F('highpass',900,.5);A.rainLP=F('lowpass',7000,.5);A.rainG=G(0);r1.connect(A.rainHP);A.rainHP.connect(A.rainLP);A.rainLP.connect(A.rainG);A.rainG.connect(ambIn);
+ const r1=loop(WHITE);A.rainHP=F('highpass',900,.5);A.rainLP=F('lowpass',7000,.5);A.rainG=G(0);r1.connect(A.rainHP);A.rainHP.connect(A.rainLP);A.rainLP.connect(A.rainG);A.rainG.connect(metIn);
  if(!ctx){document.addEventListener('visibilitychange',()=>{if(!ac)return;if(document.hidden)ac.suspend();else if(wanted)ac.resume()})}}
 
 /* ---------- building blocks for the little sounds ---------- */
@@ -106,19 +112,19 @@ function snore(o={}){const g=(o.g!=null?o.g:1)*.5;if(g<.02)return;const t=ac.cur
  s.start(t,R(0,3));s.stop(t+2.7);tone(85,80,1.3,{g:g*.4,at:.6,pan:o.pan});tone(900,600,.25,{g:g*.15,delay:2.1,pan:o.pan})}
 
 /* ---------- nature, one-shot ---------- */
-function drop(outside){if(outside){const f=R(1800,5200);tone(f,f*R(.45,.7),R(.012,.03),{g:R(.03,.1),pan:R(-.9,.9),bus:ambIn,at:.002})}
- else nz(.05,{f0:R(350,700),Q:1.2,g:R(.05,.12),pan:R(-.8,.8),bus:ambIn,at:.002})} // on the roof
-function hailTick(outside){nz(R(.008,.02),{type:'highpass',f0:outside?R(2500,5000):1200,Q:.7,g:R(.04,.13),pan:R(-.9,.9),bus:ambIn,at:.001})}
+function drop(outside){if(outside){const f=R(1800,5200);tone(f,f*R(.45,.7),R(.012,.03),{g:R(.03,.1),pan:R(-.9,.9),bus:metIn,at:.002})}
+ else nz(.05,{f0:R(350,700),Q:1.2,g:R(.05,.12),pan:R(-.8,.8),bus:metIn,at:.002})} // on the roof
+function hailTick(outside){nz(R(.008,.02),{type:'highpass',f0:outside?R(2500,5000):1200,Q:.7,g:R(.04,.13),pan:R(-.9,.9),bus:metIn,at:.001})}
 function bird(){const pan=R(-.8,.8),sp=Math.random();let t=0;
- if(sp<.35){const f=R(3200,4200);for(let i=0;i<R(6,11);i++){tone(f,f*.92,.035,{g:.09,delay:t,pan,bus:ambIn,at:.004});t+=.055}} // trill
- else{const f=R(2300,3600);for(let i=0;i<R(2,6);i++){const a=f*R(.85,1.2),b=a*pick([.7,.8,1.25,1.4]);tone(a,b,R(.06,.13),{g:.08,delay:t,pan,bus:ambIn,at:.008});t+=R(.1,.2)}}}
-function cricket(i){const f=[4300,4550,4150][i],pan=[-.6,.5,.1][i];for(let k=0;k<3;k++)tone(f,f,.022,{g:.035,delay:k*.045,pan,bus:ambIn,at:.003})}
+ if(sp<.35){const f=R(3200,4200);for(let i=0;i<R(6,11);i++){tone(f,f*.92,.035,{g:.09,delay:t,pan,bus:natIn,at:.004});t+=.055}} // trill
+ else{const f=R(2300,3600);for(let i=0;i<R(2,6);i++){const a=f*R(.85,1.2),b=a*pick([.7,.8,1.25,1.4]);tone(a,b,R(.06,.13),{g:.08,delay:t,pan,bus:natIn,at:.008});t+=R(.1,.2)}}}
+function cricket(i){const f=[4300,4550,4150][i],pan=[-.6,.5,.1][i];for(let k=0;k<3;k++)tone(f,f,.022,{g:.035,delay:k*.045,pan,bus:natIn,at:.003})}
 function thunder(near){const t=ac.currentTime+R(.25,near?.6:2.4),d=R(4,6.5),g=near?.6:R(.3,.5);
- const s=ac.createBufferSource();s.buffer=BROWN;const lp=F('lowpass',R(130,200),.7),e=G(0);s.connect(lp);lp.connect(e);e.connect(ambIn);
+ const s=ac.createBufferSource();s.buffer=BROWN;const lp=F('lowpass',R(130,200),.7),e=G(0);s.connect(lp);lp.connect(e);e.connect(metIn);
  e.gain.setValueAtTime(0,t);let k=t+.08;e.gain.linearRampToValueAtTime(g*.9,k);
  while(k<t+d-.6){k+=R(.25,.8);e.gain.linearRampToValueAtTime(g*R(.25,.95)*(1-(k-t)/d*.7),k)}e.gain.exponentialRampToValueAtTime(.001,t+d);
  lp.frequency.setValueAtTime(lp.frequency.value,t);lp.frequency.exponentialRampToValueAtTime(70,t+d);s.start(t,R(0,.5));s.stop(t+d+.1);
- const c=ac.createBufferSource();c.buffer=WHITE;const ch=F('highpass',900,.7),ce=G(0);c.connect(ch);ch.connect(ce);ce.connect(ambIn);ce.gain.setValueAtTime(0,t);ce.gain.linearRampToValueAtTime(g*.22,t+.01);ce.gain.exponentialRampToValueAtTime(.001,t+.35);c.start(t);c.stop(t+.4)}
+ const c=ac.createBufferSource();c.buffer=WHITE;const ch=F('highpass',900,.7),ce=G(0);c.connect(ch);ch.connect(ce);ce.connect(metIn);ce.gain.setValueAtTime(0,t);ce.gain.linearRampToValueAtTime(g*.22,t+.01);ce.gain.exponentialRampToValueAtTime(.001,t+.35);c.start(t);c.stop(t+.4)}
 
 /* ---------- the island's state, every frame ---------- */
 function frame(S){if(!ac||!A)return;const dt=Math.min(.1,S.dt||.016);T+=dt;const W=S.W||{},out=S.out!==false,rain=W.rain||0,storm=W.storm||0,snow=W.snow||0,hail=W.hail||0,cloud=W.cloud||0,fog=W.fog||0;
@@ -138,7 +144,7 @@ function frame(S){if(!ac||!A)return;const dt=Math.min(.1,S.dt||.016);T+=dt;const
  set(A.windG.gain,wind*(.35+.65*gust)*quiet,.5);set(A.windBP.frequency,240+680*gust*(1+storm*.6),.6);
  set(A.whG.gain,(.025*storm+.02*snow)*gust*gust*(out?1:.3)*quiet,.6);set(A.whBP.frequency,650+1100*gust,.8);
  // rain and hail
- const wet=clamp(rain+hail*.4,0,1);set(A.rainG.gain,.075*wet*(out?1:.6)*quiet,.6);set(A.rainLP.frequency,out?7000:1100,.4);
+ const wet=clamp(rain+hail*.4,0,1);set(A.rainG.gain,.055*wet*(out?1:.6)*quiet,.6);set(A.rainLP.frequency,out?7000:1100,.4);
  A.drops+=dt*rain*(out?22:9);let nd=0;while(A.drops>=1&&nd<6){A.drops-=1;nd++;drop(out)}if(A.drops>3)A.drops=0;
  A.hail+=dt*hail*32;let nh=0;while(A.hail>=1&&nh<8){A.hail-=1;nh++;hailTick(out)}if(A.hail>4)A.hail=0;
  // birds by day, crickets on warm nights
@@ -181,7 +187,7 @@ const SFX={
  // little things to do on the island
  pop:k=>{const f=st(784,PENTA[(k||0)%8]);tone(f*.7,f,.1,{g:.5,type:'triangle',glide:.35});nz(.03,{f0:2600,Q:1.5,g:.12})},
  bell:f=>{f=f||880;tone(f,f,1.5,{g:.5,at:.003});tone(f*2,f*2,.9,{g:.12,at:.003});tone(f*2.76,f*2.76,.5,{g:.1,at:.002});tone(f*5.4,f*5.4,.25,{g:.04,at:.002})},
- whistle:o=>{const f=(o&&o.f)||880;tone(f,f,.66,{g:.34,at:.035,vib:f*.005,vibF:5.5,bus:out});tone(f*2,f*2,.4,{g:.025,at:.035,bus:out});nz(.45,{f0:f*2,Q:8,g:.025,at:.05})},
+ whistle:o=>{const f=(o&&o.f)||880;tone(f,f,.66,{g:.34,at:.035,vib:f*.005,vibF:5.5,bus:igOut});tone(f*2,f*2,.4,{g:.025,at:.035,bus:igOut});nz(.45,{f0:f*2,Q:8,g:.025,at:.05})},
  shake:k=>{for(let i=0;i<6;i++)nz(.13,{f0:R(1800,3400),Q:.8,g:.2,delay:i*.07,pan:R(-.5,.5)});const f=170+((k||0)%5)*22;tone(f,f*.8,.12,{type:'triangle',g:.45});tone(f*1.5,f*1.2,.1,{type:'triangle',g:.3,delay:.12})},
  thud:()=>{tone(R(140,190),90,.09,{g:.3});nz(.05,{f0:600,Q:1,g:.12})},
  shell:()=>{tone(1568,1568,.6,{g:.3,at:.003});tone(2349,2349,.45,{g:.2,delay:.08,at:.003});tone(3136,3136,.3,{g:.1,delay:.16,at:.003})},
@@ -208,8 +214,11 @@ document.addEventListener('click',e=>{if(!ac||!wanted)return;const b=e.target.cl
 window.IgorSound={
  get on(){return wanted},
  set(v){wanted=!!v;try{localStorage.setItem(KEY,wanted?'on':'off')}catch(e){}if(wanted){if(!ac)init();if(ac&&ac.state==='suspended')ac.resume()}if(ac)out.gain.setTargetAtTime(gainNow(),ac.currentTime,.08)},
- get vol(){return VOL},
- setVol(v){VOL=Math.max(0,Math.min(1,+v||0));try{localStorage.setItem('igortime_volume',String(VOL))}catch(e){}if(ac)out.gain.setTargetAtTime(gainNow(),ac.currentTime,.05)},
+ get vol(){return Math.max(MIX.nat,MIX.met,MIX.ig)},
+ get mix(){return Object.assign({},MIX)},
+ setMix(k,v){if(!(k in MIX))return;MIX[k]=Math.max(0,Math.min(1,+v||0));try{localStorage.setItem('igortime_mix',JSON.stringify(MIX))}catch(e){}
+  if(ac){const n={nat:natIn,met:metIn,ig:igOut}[k];n.gain.setTargetAtTime(mixG(k),ac.currentTime,.05)}},
+ setVol(v){for(const k in MIX)this.setMix(k,k==='met'?Math.min(v,.6):v)}, // old single slider: sets all three
  toggle(){this.set(!wanted);return wanted},
  frame,
  sfx(name,arg){if(!ac||!wanted)return;const f=SFX[name];if(f)try{f(arg)}catch(e){}},
