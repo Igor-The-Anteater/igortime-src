@@ -256,7 +256,7 @@ ${cfg.phones?'<p class="warn">🎧 Use headphones, and keep your volume fixed fo
   const n=Math.round(tot/100*MULT[K.lv]);let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
   p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const sc=p.scores[cfg.key]=p.scores[cfg.key]||{};if(!(sc[K.lv]>=tot))sc[K.lv]=tot;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}
   $('endseeds').textContent=n?'+'+n+' tofu seed'+(n>1?'s':'')+' for '+nm+'’s field'+(MULT[K.lv]>1?' (×'+MULT[K.lv]+' on '+K.LV.name+')':'')+'. Collect them back on the island.':'';
-  $('end').hidden=false;K.update()}
+  $('end').hidden=false;K.update();import('/board.js').then(B=>B.show(document.querySelector('#end .card'),cfg.key,K.lv,tot,ME&&ME.avatar)).catch(()=>{})}
  K.update=()=>{const L=$('listen');if(L){L.disabled=!K.canListen();const R=K.R;L.textContent=R&&R.played&&isFinite(R.left)?`▶ Listen (${Math.max(0,R.left)})`:'▶ Listen'}
   if(okB)okB.disabled=K.phase!=='guess';cfg.update&&cfg.update(K)};
  $('listen')&&($('listen').onclick=K.listen);okB&&(okB.onclick=K.confirm);
