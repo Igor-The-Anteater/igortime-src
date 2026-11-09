@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Igor’s games · Igor time</title>
-<meta name="description" content="All of Igor’s games on one page: Pitch Stairs, the kitchen, the bedroom, the window, the abyss and Cadences.">
+<meta name="description" content="All of Igor’s games on one page: Pitch Stairs, the kitchen, the bedroom, the window, the abyss, Cadences and the drums.">
 <link rel="canonical" href="https://igortime.com/games/">
 <script>try{localStorage.setItem('igortime_view','games');localStorage.setItem('igortime_home','/games/')}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,7 +75,7 @@ header h1 a{text-decoration:none}
 </section>
 <main class="grid" id="grid"></main>
 <section class="note">
- <p data-k="note" data-html>All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom and the window are in my house, Cadences in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.</p>
+ <p data-k="note" data-html>All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom and the window are in my house, Cadences and the drums in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.</p>
  <a class="pill" href="/" data-island><span style="font-size:22px">🏝</span><span data-k="toIsland">Take me to the island</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="#2b2018" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
 </section>
 
@@ -204,7 +204,7 @@ const FLAG={it:'<svg viewBox="0 0 30 20"><rect width="10" height="20" fill="#2f9
 const SEED='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c4.5 3 6.5 6.6 6.5 10a6.5 6.5 0 0 1-13 0C5.5 9.6 7.5 6 12 3z" fill="#f3ead2" stroke="#2b2018" stroke-width="1.8"/><path d="M12 7c1.6 2.3 2.2 4.6 1.8 7.2" stroke="#5aa64a" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>';
 const ANT='<g stroke="#2b2018" stroke-width="2.2" fill="#f8f5ec"><rect x="0" y="4" width="13" height="11" rx="2.5"/><rect x="14" y="6.5" width="6.5" height="6.5" rx="1.6"/><rect x="21.5" y="5" width="9" height="9" rx="2"/></g><circle cx="27.5" cy="8.5" r="1.3" fill="#2b2018"/>';
 
-/* the six games, in Fabio's order: stairs, kitchen, bedroom, window, abyss, cadences */
+/* the seven games, in Fabio's order: stairs, kitchen, bedroom, window, abyss, cadences, drums */
 const ART={
 stairs:`<svg viewBox="0 0 160 120"><rect width="160" height="120" fill="#f0dcb4"/><rect y="92" width="160" height="28" fill="#c99a62"/><path d="M0 92H160" stroke="#2b2018" stroke-width="3"/>
  <path d="M18 104V86H44V68H70V50H96V32H122V14H150V104Z" fill="#b27a45" stroke="#2b2018" stroke-width="3.5" stroke-linejoin="round"/>
@@ -254,20 +254,29 @@ cad:`<svg viewBox="0 0 160 120"><rect width="160" height="120" fill="#efe4cf"/>
  <rect x="10" y="64" width="140" height="48" rx="4" fill="#fffdf6" stroke="#2b2018" stroke-width="3.5"/>
  <g stroke="#2b2018" stroke-width="2"><path d="M30 64v48M50 64v48M70 64v48M90 64v48M110 64v48M130 64v48"/></g>
  <g fill="#2b2018"><rect x="24" y="64" width="11" height="28" rx="1.5"/><rect x="45" y="64" width="11" height="28" rx="1.5"/><rect x="84" y="64" width="11" height="28" rx="1.5"/><rect x="105" y="64" width="11" height="28" rx="1.5"/><rect x="125" y="64" width="11" height="28" rx="1.5"/></g>
- <rect x="51" y="94" width="18" height="17" fill="#ffd76a"/></svg>`};
+ <rect x="51" y="94" width="18" height="17" fill="#ffd76a"/></svg>`,
+drums:`<svg viewBox="0 0 160 120"><rect width="160" height="120" fill="#ded4bd"/><rect y="86" width="160" height="34" fill="#8c8174"/><path d="M0 86H160" stroke="#2b2018" stroke-width="3"/>
+ <ellipse cx="80" cy="104" rx="66" ry="12" fill="#6a3b4f"/>
+ <g stroke="#2b2b2e" stroke-width="3"><path d="M30 46V104M132 30V104"/></g>
+ <ellipse cx="30" cy="46" rx="20" ry="5" fill="#f6d34a" stroke="#2b2018" stroke-width="2.5"/><ellipse cx="132" cy="30" rx="24" ry="6" fill="#7fe08a" stroke="#2b2018" stroke-width="2.5" transform="rotate(-10 132 30)"/>
+ <circle cx="80" cy="80" r="24" fill="#f4efe2" stroke="#c0392b" stroke-width="7"/><text x="80" y="85" font-family="Fredoka,sans-serif" font-weight="700" font-size="13" text-anchor="middle" fill="#2b2018">IGOR</text>
+ <g stroke="#2b2018" stroke-width="2.5"><rect x="46" y="48" width="26" height="16" rx="3" fill="#ff6a5e"/><ellipse cx="59" cy="48" rx="13" ry="4" fill="#f4efe2"/><rect x="88" y="46" width="32" height="20" rx="3" fill="#6f9bff"/><ellipse cx="104" cy="46" rx="16" ry="4.5" fill="#f4efe2"/></g>
+ <g stroke="#d9a868" stroke-width="4" stroke-linecap="round"><path d="M64 14l14 22M96 14l-14 22"/></g>
+ <g fill="#2b2018" font-family="serif" font-size="16"><text x="10" y="24">♪</text><text x="146" y="70">♫</text></g></svg>`};
 const GAMES=[
  {k:'stairs',url:'/pitch-stairs/',sc:'pitchStairs',n:['Pitch Stairs','Pitch Stairs'],w:['pitch','altezza'],d:['A tofu ant sings a note: take Igor up the stairs to the same one.','Una formica di tofu canta una nota: porta Igor sulla scala alla stessa nota.'],at:['in the house · the stairs','in casa · le scale']},
  {k:'kitchen',url:'/kitchen/',sc:'kitchen',n:['The kitchen','La cucina'],w:['duration','durata'],d:['Behind the curtain a flame burns: hold the gas just as long.','Dietro la tenda brucia una fiamma: tieni acceso il gas per lo stesso tempo.'],at:['in the house · the stove','in casa · il fornello']},
  {k:'bedroom',url:'/bedroom/',sc:'bedroom',n:['The bedroom','La camera'],w:['timbre','timbro'],d:['With the triangle remote, find the same colour of sound.','Col telecomando a triangolo ritrova lo stesso colore del suono.'],at:['in the house · the bed','in casa · il letto']},
  {k:'window',url:'/window/',sc:'window',n:['The window','La finestra'],w:['loudness','volume'],d:['Wind, rain, birds outside: open the window until it sounds as loud.','Vento, pioggia, uccellini: apri la finestra finché il volume è uguale.'],at:['in the house · the window','in casa · la finestra']},
  {k:'abyss',url:'/abyss/',sc:'abyss',n:['The abyss','L’abisso'],w:['runner','runner'],d:['Dive deep: eat, jump, duck the jellyfish and beat the leviathans.','Tuffati: mangia, salta, abbassati sotto le meduse e batti i leviatani.'],at:['on the island · the well','sull’isola · il pozzo']},
- {k:'cad',url:'/cadences/',sc:'cadences',n:['Cadences','Cadenze'],w:['harmony','armonia'],d:['Write the last two chords in four voices: Igor checks your cadence.','Scrivi gli ultimi due accordi a quattro voci: Igor controlla la cadenza.'],at:['on the island · the music school','sull’isola · la scuola di musica']}];
+ {k:'cad',url:'/cadences/',sc:'cadences',n:['Cadences','Cadenze'],w:['harmony','armonia'],d:['Write the last two chords in four voices: Igor checks your cadence.','Scrivi gli ultimi due accordi a quattro voci: Igor controlla la cadenza.'],at:['on the island · the music school','sull’isola · la scuola di musica']},
+ {k:'drums',url:'/drums/',sc:'drums',n:['The drums','La batteria'],w:['rhythm','ritmo'],d:['Listen to a groove on four drums, then play it back: same rhythm, same drums.','Ascolta un ritmo su quattro pezzi, poi rifallo: stesso ritmo, stessi pezzi.'],at:['on the island · the music school','sull’isola · la scuola di musica']}];
 
 /* what is saved: the island keeps scores in igortime_v1, the games leave new ones in igortime_pending (the island collects them) */
 const J=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
 function bests(){const S=J('igortime_v1')||{},P=J('igortime_pending')||{},out={};
  for(const src of[S.scores||{},P.scores||{}])for(const[g,o]of Object.entries(src))for(const[l,v]of Object.entries(o||{})){const r=out[g]=out[g]||{};if(!(r[l]>=v))r[l]=v}
- for(const g of['kitchen','window','bedroom'])for(const l of['easy','medium','extreme']){let v=null;try{v=+localStorage.getItem('igortime_'+g+'_best_'+l)}catch(e){}if(v){const r=out[g]=out[g]||{};if(!(r[l]>=v))r[l]=v}}
+ for(const g of['kitchen','window','bedroom','drums'])for(const l of['easy','medium','extreme']){let v=null;try{v=+localStorage.getItem('igortime_'+g+'_best_'+l)}catch(e){}if(v){const r=out[g]=out[g]||{};if(!(r[l]>=v))r[l]=v}}
  return{out,seeds:(S.seeds|0)+(P.seeds|0)+(P.ants|0)}}
 const LVN={easy:['easy','facile'],medium:['medium','medio'],extreme:['extreme','estremo']};
 function bestTxt(g){const o=bests().out[g.sc];if(!o)return tt('Not played yet','Non ancora giocato');
@@ -277,7 +286,7 @@ function bestTxt(g){const o=bests().out[g.sc];if(!o)return tt('Not played yet','
 
 function render(){document.documentElement.lang=LANG;document.title=tt('Igor’s games · Igor time','I giochi di Igor · Igor time');
  const T={toIsland:['Take me to the island','Portami all’isola'],island:['Island','Isola'],h:['All my games!','Tutti i miei giochi!'],p:['Pick one and play. Every game gives tofu seeds: you plant them on my island.','Scegline uno e gioca. Ogni gioco dà semi di tofu: li pianti sulla mia isola.'],
-  note:['All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom and the window are in my house, Cadences in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.','Tutti questi giochi sono anche <strong>sulla mia isola</strong>: Pitch Stairs, la cucina, la camera e la finestra sono in casa mia, le Cadenze nella scuola di musica e l’abisso giù nel pozzo. Sull’isola i semi diventano campi, formiche di tofu e Igorlets.']};
+  note:['All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom and the window are in my house, Cadences and the drums in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.','Tutti questi giochi sono anche <strong>sulla mia isola</strong>: Pitch Stairs, la cucina, la camera e la finestra sono in casa mia, le Cadenze e la batteria nella scuola di musica e l’abisso giù nel pozzo. Sull’isola i semi diventano campi, formiche di tofu e Igorlets.']};
  document.querySelectorAll('[data-k]').forEach(el=>{const v=T[el.dataset.k];if(!v)return;if('html' in el.dataset)el.innerHTML=tt(...v);else el.textContent=tt(...v)});
  $('langB').innerHTML=FLAG[LANG];$('langB').setAttribute('aria-label',tt('Language: English. Switch to Italian','Lingua: italiano. Passa all’inglese'));$('langB').title=$('langB').getAttribute('aria-label');
  let A=null;A=J('igortime_acct');$('me').innerHTML=A&&A.uid?'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.2" fill="#2b2018"/><path d="M3.5 21c.8-4.6 4.2-7 8.5-7s7.7 2.4 8.5 7z" fill="#2b2018"/></svg>'+esc(A.name||tt('Me','Io')):`<span class="t">${esc(tt('Sign in / register','Accedi / registrati'))}</span><span class="s">${esc(tt('Sign in','Accedi'))}</span>`;
