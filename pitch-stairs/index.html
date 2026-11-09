@@ -308,7 +308,7 @@ function finish(){phase='end';let best=0;try{best=+localStorage.getItem('pitchSt
  $('endlv').textContent=LV.name+' · your score';$('endsc').textContent=total;
  const N=AV[avKey].name;$('endmsg').textContent=total>=450?'Golden ears. '+N+' is full and very grateful.':total>=350?'Great ears! '+N+' had a lovely meal.':total>=200?'Nice ears! '+N+' had a tasty snack and is ready for a second course.':N+' loved the concert! One more round and lunch is yours.';
  $('endbest').textContent=total>best?'New personal best on '+LV.name+'!':'Your best on '+LV.name+': '+best;
- const won=reward(total);$('endants').textContent=won?'+'+won+' tofu seed'+(won>1?'s':'')+' for '+N+'’s field'+(MULT[lvKey]>1?' (×'+MULT[lvKey]+' on '+LV.name+')':'')+'. Collect them back home.':'';$('end').hidden=false;import('/board.js').then(B=>B.show(document.querySelector('#end .card'),'pitch',lvKey,total,avKey)).catch(()=>{});updateButtons()}
+ const won=reward(total);$('endants').textContent=won?'+'+won+' tofu seed'+(won>1?'s':'')+' for '+N+'’s field'+(MULT[lvKey]>1?' (×'+MULT[lvKey]+' on '+LV.name+')':'')+'. Collect them back home.':'';$('end').hidden=false;import('/board.js?v=3').then(B=>B.show(document.querySelector('#end .card'),'pitch',lvKey,total,avKey)).catch(()=>{});updateButtons()}
 function updateButtons(){const gu=phase==='guess';$('ok').disabled=!gu;$('mine').disabled=!gu;
  const L=$('listen');L.disabled=!gu||(R&&R.played&&R.left<=0);L.textContent=R&&R.played&&isFinite(R.left)?`▶ Listen (${R.left})`:'▶ Listen'}
 
