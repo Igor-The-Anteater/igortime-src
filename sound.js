@@ -176,7 +176,7 @@ const SFX={
  // little things to do on the island
  pop:k=>{const f=st(784,PENTA[(k||0)%8]);tone(f*.7,f,.1,{g:.5,type:'triangle',glide:.35});nz(.03,{f0:2600,Q:1.5,g:.12})},
  bell:f=>{f=f||880;tone(f,f,1.5,{g:.5,at:.003});tone(f*2,f*2,.9,{g:.12,at:.003});tone(f*2.76,f*2.76,.5,{g:.1,at:.002});tone(f*5.4,f*5.4,.25,{g:.04,at:.002})},
- whistle:o=>{const f=(o&&o.f)||880;tone(f*.93,f,.44,{g:.55,at:.05,glide:.25,vib:f*.012,vibF:6});nz(.4,{f0:f*2,Q:6,g:.04,at:.05})},
+ whistle:o=>{const f=(o&&o.f)||880;tone(f,f,.62,{g:1,at:.035,vib:f*.005,vibF:5.5});tone(f*2,f*2,.4,{g:.07,at:.035});nz(.45,{f0:f*2,Q:8,g:.025,at:.05})},
  shake:k=>{for(let i=0;i<6;i++)nz(.13,{f0:R(1800,3400),Q:.8,g:.2,delay:i*.07,pan:R(-.5,.5)});const f=170+((k||0)%5)*22;tone(f,f*.8,.12,{type:'triangle',g:.45});tone(f*1.5,f*1.2,.1,{type:'triangle',g:.3,delay:.12})},
  thud:()=>{tone(R(140,190),90,.09,{g:.3});nz(.05,{f0:600,Q:1,g:.12})},
  shell:()=>{tone(1568,1568,.6,{g:.3,at:.003});tone(2349,2349,.45,{g:.2,delay:.08,at:.003});tone(3136,3136,.3,{g:.1,delay:.16,at:.003})},
