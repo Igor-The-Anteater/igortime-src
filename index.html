@@ -2610,7 +2610,7 @@ const C={user:null,
  reset:m=>sendPasswordResetEmail(auth,m),
  async signOut(){clearTimeout(timer);ready=false;await signOut(auth);window.IgorSave.reset()}};
 window.IgorCloud=C;
-{const s=document.createElement('script');s.src='/chat.js?v=1';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=2';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
   try{const s=await getDoc(doc(db,'users',u.uid));if(s.exists()){const d=s.data();if(d.nick)C.user.nick=d.nick;else if(d.name&&!google)C.user.nick=d.name;delete d.updated;delete d.name;delete d.nick;window.IgorSave.load(d,u.uid)}}catch(e){console.warn('load',e)}
