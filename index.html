@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=4"></script>
+<script src="/sound.js?v=5"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -599,7 +599,7 @@ function addAnts(sp,n){const room=Math.max(0,capOf()-pocket()),got=Math.min(n,ro
 const enMax=()=>5;
 const restMult=()=>1/(1-.2*Object.values(FM().toys).filter(Boolean).length);
 const LEAF=30; // minutes for one leaf of energy
-const EARLY=[1,.5,.6,.75,.9,1,1,1,1],early=()=>EARLY[lvlOf()]||1; // the first levels go faster
+const EARLY=[1,.15,.2,.3,.42,.55,.7,.85,1],early=()=>EARLY[lvlOf()]||1; // the first levels go faster
 const restLeft=g=>Math.max(0,(REST_TO-g.en)*LEAF*MIN*early()/restMult());
 const isBuildK=k=>k==='build'||k==='clear';
 const igById=id=>FM().igs.find(g=>g.id===id);
@@ -1153,17 +1153,7 @@ let diving=0;function dive(){if(diving)return;diving=.001;snd('dive');closeSheet
 updaters.push((t,dt)=>{if(!diving)return;diving+=dt;const k=Math.min(1,diving/1.1);igor.position.x+=(POOL.x-igor.position.x)*Math.min(1,dt*4);igor.position.z+=(POOL.z-igor.position.z)*Math.min(1,dt*4);igor.position.y=-k*k*2.2;if(diving>1.25){diving=-1;location.href='/abyss/'}});
 addEventListener('pageshow',e=>{if(e.persisted){diving=0;igor.position.y=0;igor.position.set(POOL.x,0,POOL.z+2.6)}});
 
-/* --- the jetty: other places, soon --- */
-{const t=new THREE.Group();t.position.set(-11.5,0,5.5);PLACES.jetty={pos:new V3(-9.4,0,4.6),open:()=>say(tt('One day this boat will sail to other islands.','Un giorno questa barca andrà su altre isole.'),3.4),name:'The jetty'};
- const wood=lam('#4b3a2c');for(let i=0;i<7;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(1.4,.08,.34),wood);b.position.set(-1-i*.0,-.02,0);b.position.x=-i*.42-1;b.rotation.y=Math.PI/2;b.position.y=-.05-(i>3?.12:0);t.add(b)}
- const sign=new THREE.Mesh(new THREE.BoxGeometry(1.1,.5,.06),lam('#6b5040'));sign.position.set(.2,1.2,0);sign.rotation.y=.6;t.add(sign);
- const post=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,1.2,6),wood);post.position.set(.2,.6,0);t.add(post);
- const boat=new THREE.Group();const hull=new THREE.Mesh(new THREE.CylinderGeometry(.5,.35,2.2,8,1,false,0,Math.PI),lam('#3a2a20',{side:THREE.DoubleSide}));hull.rotation.z=Math.PI/2;hull.rotation.y=Math.PI/2;boat.add(hull);boat.position.set(-2.2,-.45,1.1);t.add(boat);
- const lamp=halo('#f1b46e',1.4,.5);lamp.position.set(-3.2,.4,0);t.add(lamp);
- updaters.push(tt=>{boat.position.y=-.45+Math.sin(tt*1.2)*.05;boat.rotation.x=Math.sin(tt*.9)*.05});
- scene.add(t);hit(t,1.6,()=>goTo('jetty'),'jetty',.8);glowObj(t,'out',-9.4,4.6,1,8,.9);
- label(['Other places','Altri posti'],['coming soon','presto'],new V3(-11.5,2.2,5.5),()=>goTo('jetty'),13)}
-
+/* the jetty became the leaderboards notice board (see later) */
 /* vegetation, kept away from the places */
 const free=(x,z)=>Math.hypot(x-POOL.x,z-POOL.z)<4||segD(x,z,0,3,POOL.x,POOL.z+2)<1.3||Math.hypot(x,z+7)<5.3||(Math.abs(x-FIELD.x)<7&&z>FIELD.z-4.5&&z<FIELD.z+9)||Math.hypot(x+10,z+9.5)<4.2||Math.hypot(x+11,z-5.5)<3.5||Math.hypot(x,z)<4.2||segD(x,z,0,-4.2,0,8)<1.4||segD(x,z,0,-4.2,8,-0.5)<1.3||segD(x,z,0,-4.2,-9,-7.5)<1.4||segD(x,z,0,3,-10.5,5)<1.3;
 let placed=0,tries=0;while(placed<38&&tries<4000){tries++;const a=rnd()*TAU,r=5+rnd()*(R-6),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z)||blocked.some(b=>Math.hypot(b.x-x,b.z-z)<2.4))continue;(rnd()<.4?pine:roundTree)(x,z,.8+rnd()*.5);placed++}
@@ -1539,11 +1529,11 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
 const LINESB={en:{
  idle:['My games are inside the house.','Have you looked at the fields?','The deep pool leads to the abyss.','Seeds grow ants. Ants build things.','Quiet night. I like it.','Composers only at the old school. Are you one?','Tofu ants grow better with music.','Tap me if you’re lost.','Gnam. I could eat a whole field.','The boat is not ready yet.'],
  go_house:['Come in, come in.','Let’s go home.','Games are this way.'],go_abyss:['Into the deep!','Let’s dive.'],go_field:['To the fields!','Let’s check the ants.'],go_pen:['To the Igorlets!'],go_prizes:['To the prize shop!'],
- go_school:['The old school… careful, the roof is gone.','Composers this way.','Bring a pencil.'],go_jetty:['Other places are coming soon.','From here, one day, new islands.'],
+ go_school:['The old school… careful, the roof is gone.','Composers this way.','Bring a pencil.'],go_jetty:['To the leaderboards!','Who is first today?'],
  ready:['Harvest time! Gnam.','Some ants are ready!']},
  it:{idle:['I miei giochi sono in casa.','Hai visto i campi?','Il pozzo porta all’abisso.','I semi fanno formiche. Le formiche costruiscono.','Notte tranquilla. Mi piace.','La vecchia scuola è per i compositori. Lo sei?','Le formiche di tofu crescono meglio con la musica.','Toccami se ti perdi.','Gnam. Mi mangerei un campo intero.','La barca non è ancora pronta.'],
  go_house:['Entra, entra.','Andiamo a casa.','I giochi sono di qua.'],go_abyss:['Giù nel profondo!','Tuffiamoci.'],go_field:['Ai campi!','Andiamo a vedere le formiche.'],go_pen:['Dagli Igorlets!'],go_prizes:['Al negozietto dei premi!'],
- go_school:['La vecchia scuola… attento, il tetto non c’è più.','Compositori di qua.','Porta una matita.'],go_jetty:['Altri posti arriveranno presto.','Da qui, un giorno, nuove isole.'],
+ go_school:['La vecchia scuola… attento, il tetto non c’è più.','Compositori di qua.','Porta una matita.'],go_jetty:['Alle classifiche!','Chi è primo oggi?'],
  ready:['Si raccoglie! Gnam.','Ci sono formiche pronte!']}};
 const LINES=new Proxy({},{get:(_,k)=>LINESB[LANG][k]});
 const bubble=$('bubble');let bubbleT=0,bubbleS=0;const bubbleQ=[];
@@ -1696,12 +1686,12 @@ function fieldPick(cx,cy){if(where!=='out'||PL)return false;const F=FM();let bes
 /* Igor's balloon steps aside from the chips, the zoom buttons and the bottom buttons */
 function bubbleAvoid(L,T2,w,h){const ov=(r)=>r&&r.width&&L<r.right+6&&L+w>r.left-6&&T2<r.bottom+6&&T2+h>r.top-6;
  const ch=$('chips');if(ch&&!ch.hidden){const r=ch.getBoundingClientRect();if(ov(r)){const up=r.top-h-10;T2=up>(window._hh||60)+6?up:Math.min(innerHeight-h-12,r.bottom+10)}}
- for(const id of['zoomB','fab','orb','gamesB','lvB','todo']){const el=$(id);if(!el||el.style.display==='none')continue;const r=el.getBoundingClientRect();if(ov(r))L=r.left>innerWidth/2?Math.max(12,r.left-w-10):Math.min(innerWidth-w-12,r.right+10)}
+ for(const id of['zoomB','fab','orb','gamesB','lvB','todo','bells']){const el=$(id);if(!el||el.style.display==='none')continue;const r=el.getBoundingClientRect();if(ov(r))L=r.left>innerWidth/2?Math.max(12,r.left-w-10):Math.min(innerWidth-w-12,r.right+10)}
  return[L,T2]}
 updaters.push(()=>{const hn=$('hint');if(hn)hn.style.visibility=started?'':'hidden'});
 function igPick(cx,cy){if(where!=='out')return false;let best=null,bd=46;for(const[id,o]of igObjs){if(!o.grp.visible)continue;const v=projC(o.grp.position.clone().add(new V3(0,.42,0)));if(v.z>1)continue;const d=Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy);if(d<bd){bd=d;best=id}}if(best==null)return false;igTap(best);return true}
 function igTap(id){if(PL)return;const g=igById(id);if(!g)return;const T0=TRAITS[g.trait]||TRAITS.shy,o=igObjs.get(id);if(o)o.showT=T+6;if(window.IgorSound&&started)IgorSound.ig('tap',{id,trait:g.trait,pan:0});bubbleQ.length=0;bubbleT=0;
- if(g.rest){say(tt(`${g.name} is sleeping in the little house. Up in ${fmt(restLeft(g))}. A snack wakes it up!`,`${g.name} dorme nella casetta. Si sveglia tra ${fmt(restLeft(g))}. Una merenda lo sveglia!`),3.2);tiredChips(id);return}if(g.en<3.5)tiredChips(id);say(tt(`${g.name} is ${N(T0.N)}.`,`${g.name} è ${N(T0.N)}.`),2.4);say(`“${N(T0.say)}”`,3)}
+ if(g.rest){say(tt(`${g.name} is sleeping in the little house. Up in ${fmt(restLeft(g))}. A snack wakes it up!`,`${g.name} dorme nella casetta. Si sveglia tra ${fmt(restLeft(g))}. Una merenda lo sveglia!`),3.2);tiredChips(id);return}if(g.en<5)tiredChips(id);say(tt(`${g.name} is ${N(T0.N)}.`,`${g.name} è ${N(T0.N)}.`),2.4);say(`“${N(T0.say)}”`,3)}
 /* the build button and its bar */
 const zb=document.createElement('div');zb.id='zoomB';zb.innerHTML='<button type="button" data-z=".8" aria-label="Zoom in">+</button><button type="button" data-z="1.25" aria-label="Zoom out">−</button>';document.body.appendChild(zb);zb.onclick=e=>{const b=e.target.closest('button');if(b&&b.dataset.z)zoomTo(CAM.z*+b.dataset.z)};
 const SPK='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="#2b2018"/>',sndB=document.createElement('button');sndB.type='button';sndB.id='sndB';sndB.dataset.snd='0';zb.appendChild(sndB);
@@ -1746,7 +1736,8 @@ function renderBanner(){const F=FM(),E=F.ev,tn=Date.now();if(!E||tn<E.warn||tn>=
 evb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const a=b.dataset.ev;if(a==='cover')coverAll();else if(a==='water')waterAll();else if(a==='stray')takeStray();else if(a==='feed')feedBirds();renderBanner()});
 
 /* the header, news while you were away (as balloons), level-ups */
-let hudFarm=function(){const sn=$('seedN');if(sn&&sn.textContent!==String(S.seeds|0))sn.textContent=S.seeds|0;const el=$('antN');if(el){const s=`${pocket()}/${capOf()}`;if(el.textContent!==s)el.textContent=s}};
+const seedShown=()=>Math.max(0,(S.seeds|0)-Math.round(window._seedLag||0));
+let hudFarm=function(){const sn=$('seedN');if(sn&&sn.textContent!==String(seedShown()))sn.textContent=seedShown();const el=$('antN');if(el){const s=`${pocket()}/${capOf()}`;if(el.textContent!==s)el.textContent=s}};
 let fmSeen0=FM().seen;
 function awaySummary(){const F=FM(),L=F.log.filter(e=>e.t>fmSeen0+500&&e.t<Date.now()-4000);fmSeen0=Date.now();
  if(fmNew){fmNew=false;say(tt('We have a farm now!','Adesso abbiamo una fattoria!'),2.6);say(tt(`Meet ${F.igs[0].name}, our Igorlet.`,`Ecco ${F.igs[0].name}, il nostro Igorlet.`),2.6);say(tt('Tap the field to start!','Tocca il campo per cominciare!'),3);return}
@@ -1787,9 +1778,9 @@ lvB.onclick=()=>{const l=lvlOf(),b=LVX[l];say(b?tt(`Level ${l}. At ${b} tofu ant
 updaters.push(renderLv);
 /* coming back from a game: a little party for the seeds */
 const GNAME={kitchen:['from the kitchen','dalla cucina'],window:['from the window','dalla finestra'],bedroom:['from the bedroom','dalla camera'],stairs:['from Pitch Stairs','da Pitch Stairs'],pitch:['from Pitch Stairs','da Pitch Stairs'],cadences:['from Cadences','da Cadenze'],cad:['from Cadences','da Cadenze'],drums:['from the drums','dalla batteria'],abyss:['from the abyss','dall’abisso']};
-function seedParty(n){snd('seeds',n);const g=GNAME[window._fromGame||''],from=g?' '+N(g):'';toast(tt(`+${n} seeds${from}!`,`+${n} semi${from}!`));bubbleQ.length=0;bubbleT=0;say(tt(`Hooray! +${n} seeds. Let’s sow them!`,`Evviva! +${n} semi. Seminiamoli!`),4);
+function seedParty(n){snd('seeds',n);const _k=Math.min(14,n+3),_lag0=window._seedLag||0;window._seedLag=_lag0;const g=GNAME[window._fromGame||''],from=g?' '+N(g):'';toast(tt(`+${n} seeds${from}!`,`+${n} semi${from}!`));bubbleQ.length=0;bubbleT=0;say(tt(`Hooray! +${n} seeds. Let’s sow them!`,`Evviva! +${n} semi. Seminiamoli!`),4);
  const to=$('seeds').getBoundingClientRect(),k=Math.min(14,n+3);for(let j=0;j<k;j++){const el=document.createElement('div');el.className='seedFly';el.textContent='🌱';const x0=innerWidth/2+(Math.random()-.5)*160,y0=innerHeight*.55+(Math.random()-.5)*80;el.style.transform=`translate(${x0}px,${y0}px) scale(1.4)`;document.body.appendChild(el);
-  setTimeout(()=>{el.style.transform=`translate(${to.left+to.width/2-10}px,${to.top+to.height/2-10}px) scale(.6)`;el.style.opacity='.2'},60+j*70);setTimeout(()=>{el.remove();const sb=$('seeds');sb.classList.remove('pop');void sb.offsetWidth;sb.classList.add('pop')},1100+j*70)}}
+  setTimeout(()=>{el.style.transform=`translate(${to.left+to.width/2-10}px,${to.top+to.height/2-10}px) scale(.6)`;el.style.opacity='.2'},60+j*70);setTimeout(()=>{el.remove();if(_lag0)window._seedLag=Math.max(0,_lag0*(1-(j+1)/_k));hudFarm();const sb=$('seeds');sb.classList.remove('pop');void sb.offsetWidth;sb.classList.add('pop')},1100+j*70)}}
 /* now and then Igor proposes one of the games in his house: a glowing balloon; tap it and he walks there and starts the game */
 const HG={stairs:{stand:new V3(-3,0,.4),url:'/pitch-stairs/',go:['Up the stairs!','Su per le scale!'],ask:['Shall we climb the stairs? Pitch Stairs!','Saliamo le scale? Giochiamo a Pitch Stairs!']},
  k:{stand:new V3(3.7,0,-2.4),url:'/kitchen/',go:['To the stove!','Al fornello!'],ask:['I’m hungry… shall we cook together?','Ho fame… cuciniamo insieme?']},
@@ -1866,7 +1857,7 @@ window.IgorUI={openAccount,renderDress,refresh:()=>refresh(),toast:t=>toast(t),o
 
 /* ================= index ================= */
 const idx=$('index');
-function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igor')}</h2><ul><li><button data-i="house">${tt('Igor’s house','La casa di Igor')}<small>${tt('games','giochi')}</small></button></li><li><button data-i="field">${tt('The fields','I campi')}</button></li><li><button data-i="pen">${tt('Igorlet village','Villaggio degli Igorlets')}</button></li><li><button data-i="prizes">${tt('Prize shop','Negozietto dei premi')}</button></li><li><button data-i="school">${tt('Music school','Scuola di musica')}<small>${tt('composers','compositori')}</small></button></li><li><button data-i="abyss">${tt('The abyss','L’abisso')}<small>${tt('game','gioco')}</small></button></li><li><button data-i="jetty">${tt('Other places','Altri posti')}<small>${tt('soon','presto')}</small></button></li></ul>
+function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igor')}</h2><ul><li><button data-i="house">${tt('Igor’s house','La casa di Igor')}<small>${tt('games','giochi')}</small></button></li><li><button data-i="field">${tt('The fields','I campi')}</button></li><li><button data-i="pen">${tt('Igorlet village','Villaggio degli Igorlets')}</button></li><li><button data-i="prizes">${tt('Prize shop','Negozietto dei premi')}</button></li><li><button data-i="school">${tt('Music school','Scuola di musica')}<small>${tt('composers','compositori')}</small></button></li><li><button data-i="abyss">${tt('The abyss','L’abisso')}<small>${tt('game','gioco')}</small></button></li><li><button data-i="jetty">${tt('Leaderboards','Classifiche')}<small>${tt('everyone','tutti')}</small></button></li></ul>
  <h2>${tt('Games','Giochi')}</h2><ul><li><button data-i="gamesPage">${tt('The games page','La pagina dei giochi')}<small>${tt('all seven','tutti e sette')}</small></button></li><li><button data-i="stairs">Pitch Stairs<small>${tt('house','casa')}</small></button></li><li><button data-i="cad">${tt('Cadences','Cadenze')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="drums">${tt('The drums','La batteria')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="w">${tt('The window','La finestra')}<small>${tt('house','casa')}</small></button></li><li><button data-i="k">${tt('The kitchen','La cucina')}<small>${tt('house','casa')}</small></button></li><li><button data-i="b">${tt('The bedroom','La camera')}<small>${tt('house','casa')}</small></button></li></ul>
  <h2>${tt('Language','Lingua')}</h2><ul><li><button data-lang="en" aria-pressed="${LANG==='en'}">English</button></li><li><button data-lang="it" aria-pressed="${LANG==='it'}">Italiano</button></li></ul>
  <h2>${tt('Sky','Cielo')}</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">${tt('Igor’s weather','Il meteo di Igor')}<small>${tt('same for everyone','uguale per tutti')}</small></button></li><li><button data-sky="real">${tt('The sky where I am','Il cielo dove sono')}<small>${tt('uses your location','usa la tua posizione')}</small></button></li></ul>`}
@@ -1890,7 +1881,7 @@ $('indexBtn').onclick=toggleIndex;
 $('me').onclick=()=>openAccount();
 
 /* ================= HUD ================= */
-function refresh(){hudFarm();$('seedN').textContent=S.seeds|0;const u=window.IgorCloud&&window.IgorCloud.user;$('who').textContent=u?(u.nick||tt('Me','Io')):tt('Guest','Ospite');$('me').title=u?tt('Your account','Il tuo account'):tt('Sign in','Accedi');sprKey=''}
+function refresh(){hudFarm();$('seedN').textContent=seedShown();const u=window.IgorCloud&&window.IgorCloud.user;$('who').textContent=u?(u.nick||tt('Me','Io')):tt('Guest','Ospite');$('me').title=u?tt('Your account','Il tuo account'):tt('Sign in','Accedi');sprKey=''}
 let toastT=0;function toast(t){const el=$('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>el.style.opacity=0,2400)}
 const hh=()=>{window._hh=document.querySelector('header').offsetHeight;document.documentElement.style.setProperty('--hh',window._hh+'px')};hh();
 
@@ -1929,7 +1920,7 @@ $('goSign').onclick=()=>{setView(DEST);setOnb({dest:DEST});start();openAccount()
 /* someone new who came from the games page skips the question: they asked for the island */
 try{if(!(S.seen>=1)&&localStorage.getItem('igortime_view'))introStep('b')}catch(e){}
 let cameBack=false;if(S.seen>=1){$('intro').classList.add('gone');started=true;setTimeout(awaySummary,1800);setTimeout(()=>{if(!cameBack)say(pick(tt(['Welcome back!','So good to see you!'],['Bentornato!','Che bello rivederti!'])))},1200);hintOn=true}
-if(gotAnts)setTimeout(()=>seedParty(gotAnts),1600);
+if(gotAnts){window._seedLag=gotAnts;setTimeout(()=>seedParty(gotAnts),1600);setTimeout(()=>{window._seedLag=0;hudFarm()},9000)}
 refresh();
 if(/[?&]signin\b/.test(location.search)){try{history.replaceState(null,'','/')}catch(e){}if(!ONB)setOnb({dest:DEST});if(!started){$('intro').classList.add('gone');start()}setTimeout(openAccount,400)}
 else if(ONB&&started){setTimeout(()=>{if(sheet.hidden)openAccount()},700)}
@@ -2023,7 +2014,7 @@ function beachSpot(){for(let k=0;k<40;k++){const a=Math.random()*TAU,r=R-1.05-Ma
 function beachAdd(){const B=FUN().beach;if(B.length>=4)return;const p=beachSpot();if(!p)return;const r=Math.random();
  const it=r<.25?{k:'bottle',...p}:{k:'shell',v:shellRoll(),...p};B.push(it);fmDirty=true;beachSync()}
 function beachTake(j){const B=FUN().beach,it=B[j];if(!it)return;B.splice(j,1);fmDirty=true;beachSync();const U=FUN();poke();bubbleQ.length=0;bubbleT=0;
- if(it.k==='bottle'){U.bottles++;snd('bottle');const m=BOTTLE_MSG[(U.bottles*7+Math.floor(Math.random()*3))%BOTTLE_MSG.length];say(tt('A bottle with a message!','Una bottiglia con un messaggio!'),2);say(`“${N(m)}”`,5);return}
+ if(it.k==='bottle'){U.bottles++;snd('bottle');const m=BOTTLE_MSG[bottlePick()];say(tt('A bottle with a message!','Una bottiglia con un messaggio!'),2);say(`“${N(m)}”`,5);return}
  gotShell(it.v)}
 function gotShell(v,gift){const U=FUN(),it={v};const S0=SHELL[it.v];if(!S0)return;const had=U.col[it.v]|0;U.col[it.v]=had+1;if(!had){U.colT=U.colT||{};U.colT[it.v]=Date.now()}snd(S0.ti===4?'sing':'shell',S0.ti);caseDirty=true;const n=shellN(),T0=TIERS[S0.ti],stars='★'.repeat(T0.st);
  if(!had){toast(`${stars} ${N(S0.N)} · ${n}/${SHELLS.length}`);
@@ -2086,8 +2077,8 @@ function whNew(){const base=620*Math.pow(2,Math.floor(Math.random()*6)/12),iv=pi
  const L=whLen();let s;do{s=Array.from({length:L},()=>Math.floor(Math.random()*3))}while(new Set(s).size<2);WH.seq=s;WH.in=[];WH.tries=0}
 function whPlay(){const o=igObjs.get(WH.id);WH.st='listen';WH.in=[];whRender();let k=0;const g=igById(WH.id);
  if(window.IgorSound&&started)IgorSound.ig('tap',{id:WH.id,trait:g&&g.trait,pan:0,g:.6});
- WH.seq.forEach((n,j)=>setTimeout(()=>{if(WH.st!=='listen')return;snd('whistle',{f:WH.notes[n]});if(o)o.jump=.3},500+j*560));
- setTimeout(()=>{if(WH.st!=='listen')return;WH.st='play';whRender()},500+WH.seq.length*560+150)}
+ WH.seq.forEach((n,j)=>setTimeout(()=>{if(WH.st!=='listen')return;snd('whistle',{f:WH.notes[n]});if(o)o.jump=.3},600+j*760));
+ setTimeout(()=>{if(WH.st!=='listen')return;WH.st='play';whRender()},600+WH.seq.length*760+200)}
 function whStart(id){const o=igObjs.get(id);if(!o)return;hideChips();WH.id=id;whNew();bells.hidden=false;bubbleQ.length=0;bubbleT=0;const g=igById(id);say(tt(`${g.name} whistles: sing it back on the bells!`,`${g.name} fischia: rifallo con le campanelle!`),2.6);setTimeout(whPlay,400)}
 function whEnd(){WH.st='';bells.hidden=true;const o=igObjs.get(WH.id);if(o&&o.act&&o.act.k==='wh')o.act=null;WH.id=null;whNext=T+fT(160+Math.random()*140)}
 function whBell(k){if(WH.st!=='play')return;snd('bell',WH.notes[k]);const b=bells.querySelector(`[data-b="${k}"]`);if(b){b.classList.remove('ring');void b.offsetWidth;b.classList.add('ring')}
@@ -2453,6 +2444,69 @@ function shopChips(k){const V=VEH[k],n=vehN(k),D=_shopD[k];say(n?tt(`Your ${N(V.
    L.push(n<vehMax()?{t:`+1 ${tt('for the Igorlets','per gli Igorlets')} ${cst({t:V.cost})}`,fn:()=>{buyVeh(k,1);return true}}:{t:`×${n}`,off:1,why:tt('One each is enough: more Igorlets, more vehicles!','Uno a testa basta: più Igorlets, più mezzi!')});
    L.push({t:'🎨 '+tt('Colour','Colore'),fn:()=>{CH.more='col';return true}})}
   return L},'shop'+k,1)}
+
+/* ---------- 9 Nov, later: the leaderboard board where the jetty was; the pocket (fruit, shells, messages); pick things up by walking on them ---------- */
+const BOARDS=[{g:'island',l:'all',N:['The island','L’isola'],sub:['tofu ants picked','formiche raccolte']},{g:'abyss',N:['The abyss','L’abisso'],sub:['metres','metri']},
+ {g:'kitchen',N:['The kitchen','La cucina']},{g:'window',N:['The window','La finestra']},{g:'bedroom',N:['The bedroom','La camera']},{g:'drums',N:['The drums','La batteria']},
+ {g:'pitch',N:['Pitch Stairs','Pitch Stairs']},{g:'cadences',N:['Cadences','Cadenze']}];
+const LVN={easy:['Easy','Facile'],medium:['Medium','Medio'],extreme:['Extreme','Estremo']};
+let bdSel={g:'island',l:'all'};
+const boardMod=()=>window.IgorCloud?import('/board.js'):Promise.reject('no cloud');
+function boardSheet(g,l){if(g)bdSel={g,l:l||(g==='island'||g==='abyss'?'all':bdSel.l!=='all'?bdSel.l:'easy')};const B=BOARDS.find(b=>b.g===bdSel.g)||BOARDS[0],lv=bdSel.g!=='island'&&bdSel.g!=='abyss';
+ const tabs=BOARDS.map(b=>`<button type="button" data-bd="${b.g}" class="${b.g===bdSel.g?'on':''}">${N(b.N)}</button>`).join(''),lvs=lv?`<div class="bdl">${Object.keys(LVN).map(k=>`<button type="button" data-bl="${k}" class="${k===bdSel.l?'on':''}">${N(LVN[k])}</button>`).join('')}</div>`:'';
+ openSheet('board',`<h2>🏆 ${tt('Leaderboards','Classifiche')}</h2><div class="bdt">${tabs}</div>${lvs}<div id="bdBox"><p>${tt('Loading…','Carico…')}</p></div>`);
+ const box=$('bdBox'),title=`${N(B.N)}${lv?' · '+N(LVN[bdSel.l]):''}${B.sub?' · '+N(B.sub):''}`;
+ if(bdSel.g==='island')islandSubmit(true);
+ boardMod().then(M=>M.show(box,bdSel.g,bdSel.l,null,null,title)).catch(()=>{box.innerHTML=`<p>${tt('The leaderboards are not reachable right now.','Le classifiche adesso non si raggiungono.')}</p>`})}
+sb.addEventListener('click',e=>{const b=e.target.closest('button[data-bd],button[data-bl]');if(!b)return;e.stopPropagation();if(b.dataset.bd)boardSheet(b.dataset.bd);else boardSheet(bdSel.g,b.dataset.bl)});
+{const st=document.createElement('style');st.textContent=`.bdt,.bdl{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}.bdt button,.bdl button{font:500 13px Fredoka,sans-serif;text-transform:none;letter-spacing:0;border:2px solid #2b2018;border-radius:10px;padding:4px 9px;background:#fff7e6;color:#2b2018;cursor:pointer}.bdt button.on,.bdl button.on{background:#f6d34a}.bdl button{font-size:12px;padding:3px 8px}#bdBox .ibd{max-width:none}`;document.head.appendChild(st)}
+let islAt=0,islLast=-1;
+function islandSubmit(now){const C=window.IgorCloud;if(!C||!C.user||!C.user.nick)return;const sc=FM().total|0;if(sc<=0||sc===islLast&&!now)return;if(!now&&Date.now()-islAt<120000)return;islAt=Date.now();islLast=sc;
+ boardMod().then(M=>M.submit('island','all',sc,S.avatar||'igor')).catch(()=>{})}
+updaters.push(()=>{if(started&&((T*4)|0)%40===0)islandSubmit(false)});
+/* the notice board, where the jetty was */
+{const t=new THREE.Group();t.position.set(-11,0,5.3);t.rotation.y=.9;const wood=lam('#6b4a2e'),dark=lam('#4b3a2c');
+ for(const x of[-.85,.85]){const p=new THREE.Mesh(new THREE.BoxGeometry(.14,2.3,.14),dark);p.position.set(x,1.15,0);t.add(p)}
+ const bd=new THREE.Mesh(new THREE.BoxGeometry(2,1.3,.1),wood);bd.position.set(0,1.55,0);t.add(bd);const roof=new THREE.Mesh(new THREE.BoxGeometry(2.3,.1,.5),dark);roof.position.set(0,2.32,.05);roof.rotation.x=-.25;t.add(roof);
+ const c=document.createElement('canvas');c.width=512;c.height=320;const cD=()=>{const g=c.getContext('2d');g.fillStyle='#e9d9b8';g.fillRect(0,0,512,320);g.fillStyle='#2b2018';g.font='700 54px Fredoka, sans-serif';g.textAlign='center';g.fillText('🏆 '+tt('LEADERBOARDS','CLASSIFICHE'),256,72);
+  g.font='500 30px Fredoka, sans-serif';const L=tt(['the island','the abyss','every game'],['l’isola','l’abisso','tutti i giochi']);L.forEach((s,k)=>g.fillText('★ '+s,256,140+k*52));
+  for(const[x,y]of[[24,24],[488,24],[24,296],[488,296]]){g.fillStyle='#c0392b';g.beginPath();g.arc(x,y,9,0,7);g.fill()}};cD();
+ const tx=new THREE.CanvasTexture(c);SIGNS.push(()=>{cD();tx.needsUpdate=true});const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.84,1.15),new THREE.MeshBasicMaterial({map:tx}));pl.position.set(0,1.55,.056);t.add(pl);
+ blob(t,1.4,.7);world.add(t);block(-11,5.3,1.1);hit(t,1.3,()=>goTo('jetty'),'board',1.2);glowObj(t,'out',-9.9,4.6,1,8,1);
+ label(['Leaderboards','Classifiche'],['the island and the games','l’isola e i giochi'],new V3(-11,3.1,5.3),()=>goTo('jetty'),9)}
+PLACES.jetty={pos:new V3(-9.9,0,4.4),open:()=>boardSheet(),name:'Leaderboards'};
+
+/* the pocket: fruit, shells, messages in bottles; tap it for the list of messages found */
+const pkB=document.createElement('button');pkB.id='pkB';pkB.type='button';document.body.appendChild(pkB);
+{const st=document.createElement('style');st.textContent=`#pkB{position:fixed;z-index:4;top:calc(var(--hh,62px) + var(--evh,0px) + 6px);left:150px;display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:999px;background:rgba(247,236,212,.92);border:2px solid #2b2018;color:#2b2018;font:600 13px/1 var(--toon);text-transform:none;letter-spacing:0;cursor:pointer;white-space:nowrap}
+.msgl{list-style:none;padding:0;margin:8px 0}.msgl li{padding:7px 9px;margin:5px 0;border-radius:10px;background:rgba(255,255,255,.07);font-size:14px;line-height:1.35}.msgl li.no{opacity:.45}.pkr{display:flex;gap:14px;flex-wrap:wrap;font-size:15px;margin:6px 0 10px}`;document.head.appendChild(st)}
+const FRIC={Spring:'🍒',Summer:'🍑',Autumn:'🍎',Winter:'🍊'};
+function msgsFound(){const U=FUN();U.msgs=U.msgs||[];return U.msgs}
+function renderPk(){const U=FUN(),h=`<span>${FRIC[U.fk]||FRIC[SKY.season]||'🍎'} ${U.fruit|0}</span><span>🐚 ${shellN()}</span><span>🍾 ${msgsFound().length}/${BOTTLE_MSG.length}</span>`;if(pkB.innerHTML!==h)pkB.innerHTML=h;
+ pkB.setAttribute('aria-label',tt('Your pocket','La tua tasca'));const r=lvB.getBoundingClientRect();pkB.style.left=Math.round(r.right+6)+'px';pkB.style.display=lvB.style.display;
+ if(r.right+6+pkB.offsetWidth>innerWidth-8){pkB.style.left='';pkB.style.right='max(12px,env(safe-area-inset-right,0px))';pkB.style.top='calc(var(--hh,62px) + var(--evh,0px) + 6px)'}}
+updaters.push(()=>renderPk());
+function pocketSheet(){const U=FUN(),F0=FRUIT[U.fk]||fruitOf(),M=msgsFound();
+ openSheet('pocket',`<h2>${tt('Your pocket','La tua tasca')}</h2><div class="pkr"><span>${FRIC[U.fk]||'🍎'} ${U.fruit|0} ${N(F0.N)}</span><span>🐚 ${shellN()}/${SHELLS.length} ${tt('shells','conchiglie')}</span><span>${ICA} ${pocket()} ${tt('tofu ants','formiche di tofu')}</span></div>
+ <p class="shn">${tt('Fruit is a snack for the Igorlets (+2 leaves). Tomato and carrot fields give tofu ants, like tofu fields: more of them, more slowly.','La frutta è la merenda degli Igorlets (+2 foglioline). I campi di pomodori e carote danno formiche di tofu, come quelli di tofu: di più, ma più lentamente.')}</p>
+ <h3 style="margin:14px 0 4px">🍾 ${tt('Messages in bottles','Messaggi nelle bottiglie')} · ${M.length}/${BOTTLE_MSG.length}</h3><ul class="msgl">${BOTTLE_MSG.map((m,i)=>M.includes(i)?`<li>“${esc(N(m))}”</li>`:`<li class="no">${tt('Not found yet…','Non ancora trovato…')}</li>`).join('')}</ul>`)}
+pkB.addEventListener('pointerdown',e=>e.stopPropagation());pkB.onclick=e=>{e.stopPropagation();pocketSheet()};
+function bottlePick(){const M=msgsFound(),left=BOTTLE_MSG.map((_,i)=>i).filter(i=>!M.includes(i));const i=left.length?pick(left):Math.floor(Math.random()*BOTTLE_MSG.length);if(!M.includes(i)){M.push(i);fmDirty=true}return i}
+
+/* walk onto a shell or a bottle and Igor picks it up */
+let walkPickT=0;
+updaters.push((t,dt)=>{if(!started||where!=='out'||PL||(walkPickT+=dt)<.15)return;walkPickT=0;if(RIDE&&VEH[RIDE].kind!=='land')return;const B=FUN().beach;
+ for(let j=0;j<B.length;j++){const it=B[j];if(Math.hypot(it.x-igor.position.x,it.z-igor.position.z)<.75){beachTake(j);break}}});
+
+/* the bells panel never covers Igor and the Igorlet: it goes to the top or the bottom, and the top-left buttons step aside while you play */
+{const st=document.createElement('style');st.textContent=`html.bellsOn #orb,html.bellsOn #gamesB,html.bellsOn #todo,html.bellsOn #pkB,html.bellsOn #lvB,html.bellsOn #tmrs{visibility:hidden!important}#bells.top{bottom:auto!important;top:calc(var(--hh,62px) + var(--evh,0px) + 10px)!important}`;document.head.appendChild(st)}
+updaters.push(()=>{const on=!bells.hidden;document.documentElement.classList.toggle('bellsOn',on);if(!on)return;const o=igObjs.get(WH.id);let low=0;
+ for(const P of[igor.position,o&&o.grp.position])if(P){projC(pv.copy(P).setY(.8));const y=(-pv.y*.5+.5)*innerHeight;low=Math.max(low,y)}
+ bells.classList.toggle('top',low>innerHeight*.5)});
+
+/* faster start (9 Nov): fields already growing and jobs already started get the new, shorter times once */
+{const F=FM(),tn=Date.now();if(F.speedV!==2){F.speedV=2;for(const f of F.fields)if(f.st==='sown'&&f.tr>tn&&f.t0){const sp=SPC[f.sp],m=growMult(f),full=sp.ready*m*MIN,gm=sp.germ*m*MIN;if(f.tr-f.t0>full*1.05){f.tr=Math.max(tn+MIN,f.t0+full);f.tg=Math.min(f.tg,Math.max(f.t0+gm,tn))}}
+ for(const q of F.tasks){const d=taskMin(q)*MIN;if(q.dur>d){q.done=q.done*d/q.dur;q.dur=d}}fmDirty=true;saveLocal()}}
 
 /* ================= sound (sound.js): nature around Igor, footsteps, the Igorlets ================= */
 function snd(n,a){if(window.IgorSound&&started)IgorSound.sfx(n,a)}
