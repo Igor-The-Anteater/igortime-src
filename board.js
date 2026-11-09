@@ -15,7 +15,10 @@ const col=(g,l)=>g==='abyss'?'abyss':`b_${g}_${l||'all'}`;
 let nickC=null;
 async function nick(){if(!user)return'';if(nickC!==null)return nickC;try{const u=await getDoc(doc(db,'users',user.uid));nickC=u.exists()&&u.data().nick||''}catch(e){nickC=''}return nickC}
 export async function me(){await authReady;return user?user.uid:null}
-export async function top(g,l,n=10){const q=await getDocs(query(collection(db,col(g,l)),orderBy('score','desc'),limit(n)));return q.docs.map(d=>({uid:d.id,n:d.data().nick,s:d.data().score}))}
+async function overall(n){const ALL=[['abyss','all'],...['kitchen','window','bedroom','drums','pitch','cadences'].flatMap(g=>['easy','medium','extreme'].map(l=>[g,l]))],acc={};
+ await Promise.all(ALL.map(async([g,l])=>{try{const q=await getDocs(query(collection(db,col(g,l)),orderBy('score','desc'),limit(300)));q.docs.forEach(d=>{const r=d.data(),o=acc[d.id]=acc[d.id]||{uid:d.id,n:'',s:0,t:0};o.s+=Math.floor(+r.score||0);const t=r.at&&r.at.toMillis?r.at.toMillis():0;if(r.nick&&t>=o.t){o.n=r.nick;o.t=t}})}catch(e){}}));
+ return Object.values(acc).sort((a,b)=>b.s-a.s).slice(0,n)}
+export async function top(g,l,n=10){if(g==='total')return overall(n);const q=await getDocs(query(collection(db,col(g,l)),orderBy('score','desc'),limit(n)));return q.docs.map(d=>({uid:d.id,n:d.data().nick,s:d.data().score}))}
 export async function submit(g,l,score,avatar){await authReady;if(!user)return'guest';const nk=await nick();if(!nk)return'nonick';score=Math.floor(+score||0);if(score<=0)return'zero';
  const ref=doc(db,col(g,l),user.uid);let cur=null;try{cur=await getDoc(ref)}catch(e){}
  if(cur&&cur.exists()&&cur.data().score>=score){if(cur.data().nick!==nk)try{await setDoc(ref,{nick:nk},{merge:true})}catch(e){}return'lower'}
@@ -38,5 +41,5 @@ export async function show(el,g,l,score,avatar,title){if(!el)return;let box=el.q
 const GAMES=['kitchen','window','bedroom','drums','pitchStairs','cadences','abyss'];
 export function totalOf(...sets){const best={};for(const sc of sets){if(!sc)continue;for(const g of GAMES){const o=sc[g];if(!o||typeof o!=='object')continue;for(const[l,v]of Object.entries(o)){const k=g+'/'+l,n=+v||0;if(!(best[k]>=n))best[k]=n}}}return Math.floor(Object.values(best).reduce((a,b)=>a+b,0))}
 export function totalLocal(){let S={},P={};try{S=JSON.parse(localStorage.getItem('igortime_v1'))||{}}catch(e){}try{P=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}return totalOf(S.scores,P.scores)}
-export async function submitTotal(score,avatar){return submit('total','all',score==null?totalLocal():score,avatar)}
+export async function submitTotal(){return'sum'}
 window.IgorBoard={me,top,submit,show,totalOf,totalLocal,submitTotal};
