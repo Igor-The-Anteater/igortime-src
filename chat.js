@@ -215,7 +215,7 @@ function check(t){const n=norm(t).replace(/[^a-z\s]/g,' '),W=n.split(/\s+/).filt
 /* ---------- style ---------- */
 const st=document.createElement('style');st.textContent=`
 #chatB{position:relative}#chatB i{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#e0463c;color:#fff;font:600 10.5px/17px system-ui,sans-serif;font-style:normal;text-align:center;border:2px solid #2b2018}#chatB i:empty{display:none}
-#igc{position:fixed;z-index:60;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(380px,calc(100vw - 24px));height:min(600px,calc(100vh - var(--hh,62px) - 40px));display:flex;flex-direction:column;overflow:hidden;background:#fbf3e1;color:#2b2018;border:3px solid #2b2018;border-radius:22px;box-shadow:0 6px 0 #2b2018,0 18px 40px rgba(0,0,0,.35);animation:igcIn .22s ease-out;font:500 15px/1.35 'Fredoka','Trebuchet MS',system-ui,sans-serif;-webkit-user-select:text;user-select:text}
+#igc{position:fixed;z-index:60;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(420px,calc(100vw - 24px));height:min(640px,calc(100vh - var(--hh,62px) - 40px));display:flex;flex-direction:column;overflow:hidden;background:#fbf3e1;color:#2b2018;border:3px solid #2b2018;border-radius:22px;box-shadow:0 6px 0 #2b2018,0 18px 40px rgba(0,0,0,.35);animation:igcIn .22s ease-out;font:500 15px/1.35 'Fredoka','Trebuchet MS',system-ui,sans-serif;-webkit-user-select:text;user-select:text}
 #igc[hidden]{display:none}#igc *{box-sizing:border-box}
 #igc button{font:inherit;color:#2b2018;background:#fff8e8;border:2px solid #2b2018;border-radius:999px;padding:7px 13px;cursor:pointer;box-shadow:0 2px 0 #2b2018;letter-spacing:0;text-transform:none;-webkit-tap-highlight-color:transparent}
 #igc button:active{transform:translateY(1px);box-shadow:0 1px 0 #2b2018}#igc button:disabled{opacity:.45;cursor:default}
@@ -226,7 +226,7 @@ const st=document.createElement('style');st.textContent=`
 #igc .top .x,#igc .top .bk,#igc .top .mn{width:34px;height:34px;padding:0;flex:none;font-size:16px;background:#f7ecd4}#igc .top .mute{color:#2b4a12!important}#igc .top .dot{border-color:#a8d621}
 #igc .tabs{display:flex;gap:6px;padding:8px 10px;flex-wrap:wrap;border-bottom:2px dashed rgba(43,32,24,.25);background:#f3e6c8}#igc .tabs button{padding:4px 10px;font-size:13.5px}#igc .tabs button[aria-pressed=true]{background:#f1b46e}
 #igc .tabs b{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:9px;background:#e0463c;color:#fff;font-size:11.5px;line-height:18px}
-#igc .body{flex:1;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}
+#igc .body{flex:1;min-height:0;overflow:auto;padding:12px;-webkit-overflow-scrolling:touch}#igc .top,#igc .tabs,#igc .bar,#igc .tip,#igc .emo{flex:none}
 #igc .row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:14px;margin-bottom:6px;background:#fff8e8;border:2px solid rgba(43,32,24,.15)}
 #igc .row.tap{cursor:pointer}#igc .row.tap:hover{border-color:#2b2018}
 #igc .row .nm{flex:1;min-width:0}#igc .row .nm b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#igc .row .nm small{color:#7a6650;font-size:12.5px}
@@ -247,7 +247,7 @@ const st=document.createElement('style');st.textContent=`
 #igc .m.me{align-self:flex-end;background:#ffd7a3;margin:0 6px 0 0}#igc .m.me::after{left:auto;right:-8px;transform:rotate(-135deg)}#igc .m small{display:block;font-size:11px;color:#6d5a44;margin-top:2px;text-align:right}
 #igc .day{align-self:center;font-size:12px;color:#6d5a44;margin:6px 0;padding:2px 10px;border:1.5px dashed rgba(43,32,24,.35);border-radius:999px}
 #igc .bar{display:flex;gap:6px;padding:8px 10px;border-top:3px solid #2b2018;background:#f3e6c8;align-items:center}#igc .bar button.go{background:#f1b46e}
-#igc .bar input{flex:1}#igc .bar button{width:42px;height:42px;padding:0;flex:none;font-size:19px}
+#igc .bar input{flex:1;min-width:0;height:46px;font-size:16px;padding:10px 14px}#igc .bar button{width:46px;height:46px;padding:0;flex:none;font-size:20px}
 #igc .emo{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:6px 10px;border-top:2px solid rgba(43,32,24,.12)}#igc .emo[hidden]{display:none}
 #igc .emo button{background:transparent;border:0;box-shadow:none;font-size:23px;padding:4px 0;border-radius:10px}#igc .emo button:hover{background:#fff8e8}
 #igc .tip{margin:0 12px 6px;padding:8px 11px;border-radius:14px;background:#fff3b0;border:2px solid #2b2018;font-size:14px}#igc .tip[hidden]{display:none}
