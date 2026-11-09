@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=9"></script>
+<script src="/sound.js?v=10"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -72,6 +72,8 @@ button.link{border:0;padding:9px 4px;color:var(--dim);text-transform:none;letter
 .avs button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 10px 8px;border-radius:16px;text-transform:none;letter-spacing:.04em}
 .avs canvas{width:56px;height:62px}
 .avs button[aria-pressed="true"]{border-color:var(--glow);color:var(--glow)}
+.igdv{display:flex;justify-content:center;margin:2px 0 6px}.igdv canvas{width:110px;height:auto}.igdn{display:flex;gap:8px;align-items:center}.igdn input{flex:1;min-width:0;font:inherit;font-size:16px;padding:9px 12px;border-radius:12px;border:1px solid rgba(219,231,234,.35);background:rgba(255,255,255,.08);color:inherit}.igdm{min-height:1em;font-size:12px;color:#ffb27a;margin:4px 0 6px}
+#igM .igr{display:flex;gap:6px;align-items:stretch}#igM .igr>button[data-id]{flex:1}#igM .igr>.ed{flex:0 0 auto;width:40px;padding:0;font-size:15px}
 .gl{margin:6px 0 8px!important}.gl button{padding:8px 10px;font-size:10px}.gl button[aria-pressed="true"]{border-color:var(--glow);color:var(--glow)}
 #index{position:fixed;z-index:6;top:calc(var(--hh,62px) - 6px);right:max(16px,env(safe-area-inset-right,0px));width:min(300px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:var(--veil);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(219,231,234,.15);padding:14px 16px}
 #index h2{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0 0 8px}
@@ -1731,7 +1733,7 @@ function igTap(id){if(PL)return;const g=igById(id);if(!g)return;const T0=TRAITS[
  if(o&&o.hi!=null&&(o.mode==='sleep'||o.mode==='rest'||o.mode==='shelter')){const D=penIn(o.hi),dx=igor.position.x-D.x,dz=igor.position.z-D.z,d=Math.hypot(dx,dz)||1,cr=new V3().setFromMatrixColumn(camera.matrixWorld,0);cr.y=0;cr.normalize();const cw=new V3(camera.position.x-igor.position.x,0,camera.position.z-igor.position.z).normalize();o.vdx=dx+cw.x*.9+cr.x*.7;o.vdz=dz+cw.z*.9+cr.z*.7;if(!walkable(D.x+o.vdx,D.z+o.vdz)){o.vdx=dx+cw.x*.9-cr.x*.7;o.vdz=dz+cw.z*.9-cr.z*.7}
   const out=o.visitT>T;o.visitT=T+10;o.showT=T+10;if(!out){if(o.mode!=='shelter'&&window.IgorSound&&started)setTimeout(()=>IgorSound.ig('tap',{id,trait:'sleepy',pan:0}),350);
    if(o.mode==='sleep'){bubbleQ.length=0;bubbleT=0;say(tt(`Yawn… hi Igor! ${g.name} comes out for a moment in a night cap.`,`Uaaah… ciao Igor! ${g.name} esce un momento col berretto da notte.`),3.2);tiredChips(id);return}}}if(window.IgorSound&&started)IgorSound.ig('tap',{id,trait:g.trait,pan:0});bubbleQ.length=0;bubbleT=0;
- if(g.rest){say(tt(`${g.name} is sleeping in the little house. Up in ${fmt(restLeft(g))}. A snack wakes it up!`,`${g.name} dorme nella casetta. Si sveglia tra ${fmt(restLeft(g))}. Una merenda lo sveglia!`),3.2);tiredChips(id);return}if(g.en<enMaxG(g))tiredChips(id);say(tt(`${g.name} is ${N(T0.N)}.`,`${g.name} è ${N(T0.N)}.`),2.4);say(`“${N(T0.say)}”`,3)}
+ if(g.rest){say(tt(`${g.name} is sleeping in the little house. Up in ${fmt(restLeft(g))}. A snack wakes it up!`,`${g.name} dorme nella casetta. Si sveglia tra ${fmt(restLeft(g))}. Una merenda lo sveglia!`),3.2);tiredChips(id);return}tiredChips(id);say(tt(`${g.name} is ${N(T0.N)}.`,`${g.name} è ${N(T0.N)}.`),2.4);say(`“${N(T0.say)}”`,3)}
 /* the build button and its bar */
 const zb=document.createElement('div');zb.id='zoomB';zb.innerHTML='<button type="button" data-z=".8" aria-label="Zoom in">+</button><button type="button" data-z="1.25" aria-label="Zoom out">−</button>';document.body.appendChild(zb);zb.onclick=e=>{const b=e.target.closest('button');if(b&&b.dataset.z)zoomTo(CAM.z*+b.dataset.z)};
 const SPK='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="#2b2018"/>',sndB=document.createElement('button');sndB.type='button';sndB.id='sndB';sndB.dataset.snd='0';zb.appendChild(sndB);
@@ -1856,9 +1858,9 @@ updaters.push(()=>{orb.style.display=started&&!leaving?'':'none';gmB.style.displ
 /* the Igorlet counter opens a list of the Igorlets: tap one and Igor walks to it, wherever it is */
 const igM=document.createElement('div');igM.id='igM';igM.hidden=true;document.body.appendChild(igM);
 function igStatus(g){if(g.rest)return'💤 '+tt('napping · a snack?','pisolino · merenda?');const q=g.task&&FM().tasks.find(o=>o.id===g.task);if(q)return'🛠 '+N(TNAME[q.k]||['working','lavora']);const o=igObjs.get(g.id);if(o&&o.ride)return'🚲 '+tt('out for a ride','a fare un giro');return g.en<1?'😴 '+tt('tired · a snack?','stanco · merenda?'):'🙂 '+tt('free','libero')}
-function renderIgM(){const F=FM();igM.innerHTML=`<div class="hh">Igorlets · ${F.igs.length}</div>`+F.igs.map(g=>`<button type="button" data-id="${g.id}"><b>${g.name}</b><small>${igStatus(g)} · ${'●'.repeat(Math.max(0,Math.round(g.en)))}${'○'.repeat(Math.max(0,5-Math.round(g.en)))}</small></button>`).join('')}
+function renderIgM(){const F=FM();igM.innerHTML=`<div class="hh">Igorlets · ${F.igs.length}</div>`+F.igs.map(g=>`<div class="igr"><button type="button" data-id="${g.id}"><b>${esc(g.name)}</b><small>${igStatus(g)} · ${'●'.repeat(Math.max(0,Math.round(g.en)))}${'○'.repeat(Math.max(0,5-Math.round(g.en)))}</small></button>${VISIT?'':`<button type="button" class="ed" data-ed="${g.id}" aria-label="${tt('Name and look of','Nome e look di')} ${esc(g.name)}">✏️</button>`}</div>`).join('')}
 igB.onclick=e=>{e.stopPropagation();if(!igM.hidden){igM.hidden=true;return}renderIgM();igM.hidden=false;helpC.hidden=true;hideChips();closeBar()};
-igM.onclick=e=>{const b=e.target.closest('button[data-id]');if(!b)return;igM.hidden=true;goToIg(+b.dataset.id)};
+igM.onclick=e=>{const ed=e.target.closest('button[data-ed]');if(ed){igM.hidden=true;igDress(+ed.dataset.ed);return}const b=e.target.closest('button[data-id]');if(!b)return;igM.hidden=true;goToIg(+b.dataset.id)};
 addEventListener('pointerdown',e=>{if(!igM.hidden&&!igM.contains(e.target)&&!igB.contains(e.target))igM.hidden=true});
 let FOLLOW=null;const _fv=new V3();
 function igSpot(id){const o=igObjs.get(id);if(!o)return null;if(!o.grp.visible&&o.hi!=null&&houseObjs[o.hi%HOUSEP.length])return houseObjs[o.hi%HOUSEP.length].door();return _fv.set(o.grp.position.x,0,o.grp.position.z).clone()}
@@ -2120,16 +2122,16 @@ function whPlay(){const o=igObjs.get(WH.id);WH.st='listen';WH.in=[];whRender();l
  if(window.IgorSound&&started)IgorSound.ig('tap',{id:WH.id,trait:g&&g.trait,pan:0,g:.6});
  WH.seq.forEach((n,j)=>setTimeout(()=>{if(WH.st!=='listen')return;snd('whistle',{f:WH.notes[n]});if(o)o.jump=.3},600+j*760));
  setTimeout(()=>{if(WH.st!=='listen')return;WH.st='play';whRender()},600+WH.seq.length*760+200)}
-function whStart(id){if(VISIT){return}const o=igObjs.get(id);if(!o)return;hideChips();WH.id=id;whNew();bells.hidden=false;bubbleQ.length=0;bubbleT=0;const g=igById(id);say(tt(`${g.name} whistles: sing it back on the bells!`,`${g.name} fischia: rifallo con le campanelle!`),2.6);setTimeout(whPlay,400)}
-function whEnd(){WH.st='';bells.hidden=true;const o=igObjs.get(WH.id);if(o&&o.act&&o.act.k==='wh')o.act=null;WH.id=null;whNext=T+fT(160+Math.random()*140)}
+function whStart(id){if(VISIT){return}const o=igObjs.get(id);if(!o)return;hideChips();WH.id=id;whNew();bells.hidden=false;if(window.IgorSound&&IgorSound.focus)IgorSound.focus(true);bubbleQ.length=0;bubbleT=0;const g=igById(id);say(tt(`${g.name} whistles: sing it back on the bells!`,`${g.name} fischia: rifallo con le campanelle!`),2.6);setTimeout(whPlay,400)}
+function whEnd(){WH.st='';bells.hidden=true;if(window.IgorSound&&IgorSound.focus)IgorSound.focus(false);const o=igObjs.get(WH.id);if(o&&o.act&&o.act.k==='wh')o.act=null;WH.id=null;whNext=T+fT(160+Math.random()*140)}
 function whBell(k){if(WH.st!=='play')return;snd('bell',WH.notes[k]);const b=bells.querySelector(`[data-b="${k}"]`);if(b){b.classList.remove('ring');void b.offsetWidth;b.classList.add('ring')}
  WH.in.push(k);const j=WH.in.length-1,g=igById(WH.id),o=igObjs.get(WH.id);
  if(WH.in[j]!==WH.seq[j]){WH.tries++;WH.st='wait';whRender();bubbleQ.length=0;bubbleT=0;
   if(WH.tries>=3){say(tt(`Almost! ${g?g.name:''} loved singing with you.`,`Quasi! A ${g?g.name:''} è piaciuto tanto cantare con te.`),3);setTimeout(whEnd,1400);return}
   say(pick(tt(['Almost! Listen again.','So close! Once more.'],['Quasi! Riascolta.','Ci sei quasi! Ancora una volta.'])),2);setTimeout(whPlay,1300);return}
  whRender();if(WH.in.length<WH.seq.length)return;
- WH.st='wait';const U=FUN();U.wh++;S.seeds=(S.seeds|0)+1;fmDirty=true;hudFarm();snd('seeds',3);if(o)o.jump=.5;
- setTimeout(()=>{if(window.IgorSound&&started)IgorSound.ig('happy',{id:WH.id,trait:g&&g.trait,pan:0,g:1})},250);
+ WH.st='wait';setTimeout(()=>{if(window.IgorSound&&IgorSound.focus)IgorSound.focus(false)},700);const U=FUN();U.wh++;S.seeds=(S.seeds|0)+1;fmDirty=true;hudFarm();setTimeout(()=>snd('seeds',3),750);if(o)o.jump=.5;
+ setTimeout(()=>{if(window.IgorSound&&started)IgorSound.ig('happy',{id:WH.id,trait:g&&g.trait,pan:0,g:1})},800);
  const sb=$('seeds');sb.classList.remove('pop');void sb.offsetWidth;sb.classList.add('pop');bubbleQ.length=0;bubbleT=0;
  say(tt(`Perfect! +1 seed.${U.wh===3?' Next time: three notes!':U.wh===10?' Next time: four notes!':''}`,`Perfetto! +1 seme.${U.wh===3?' La prossima volta: tre note!':U.wh===10?' La prossima volta: quattro note!':''}`),3);setTimeout(whEnd,1100)}
 bells.addEventListener('pointerdown',e=>e.stopPropagation());
@@ -2372,11 +2374,44 @@ function tiredFeed(id,what){if(VISIT){return}const g=igById(id),U=FUN();if(!g)re
  setTimeout(()=>{if(window.IgorSound&&started)IgorSound.ig('happy',{id,trait:g.trait,pan:0,g:1})},450);bubbleQ.length=0;bubbleT=0;
  say(woke?tt(`${g.name} wakes up full of energy!`,`${g.name} si sveglia pieno di energia!`):what==='fruit'?tt(`${g.name}: +2 leaves. Yum!`,`${g.name}: +2 foglioline. Gnam!`):tt(`${g.name}: +1 leaf. Yum!`,`${g.name}: +1 fogliolina. Gnam!`),2.6);simTo(Date.now(),true);save();fmRender()}
 function tiredChips(id){const g=igById(id);if(!g)return;const P=(igSpot(id)||igor.position.clone()).clone().add(new V3(0,1.3,0));
- chips(P,()=>{const g=igById(id),U=FUN(),L=[];if(!g||g.en>=enMaxG(g))return L;const F0=FRUIT[U.fk]||fruitOf(),mx=enMaxG(g),e=Math.max(0,Math.min(mx,Math.floor(g.en+1e-6)));
+ chips(P,()=>{const g=igById(id),U=FUN(),L=[];if(!g)return L;if(!VISIT)L.push({t:'✏️ '+tt('Name & look','Nome e look'),fn:()=>{hideChips();igDress(id);return false}});if(g.en>=enMaxG(g))return L;const F0=FRUIT[U.fk]||fruitOf(),mx=enMaxG(g),e=Math.max(0,Math.min(mx,Math.floor(g.en+1e-6)));
   L.push({t:`${g.name} <small>${'●'.repeat(e)}${'○'.repeat(mx-e)}</small>`,off:1,why:tt(`${g.name} has ${e} leaves of energy out of ${mx}.`,`${g.name} ha ${e} foglioline di energia su ${mx}.`)});
   L.push(U.fruit>0?{t:`🍎 ${cap1(N(F0.N))} <small>×${U.fruit} · +2</small>`,main:1,fn:()=>{tiredFeed(id,'fruit');return true}}:{t:'🍎 '+tt('Fruit','Frutta')+' <small>+2</small>',off:1,why:tt('No fruit: shake a tree with fruit!','Niente frutta: scuoti un albero con la frutta!')});
   L.push(pocket()>=2?{t:`${ICA} ×2 <small>+1</small>`,main:!U.fruit,fn:()=>{tiredFeed(id,'ant');return true}}:{t:`${ICA} ×2 <small>+1</small>`,off:1,why:tt('You need 2 tofu ants.','Servono 2 formiche di tofu.')});return L},'tired'+id,1)}
 
+/* ---------- name and look of an Igorlet (like dressing up Igor) ---------- */
+let IGD=null;
+function igName(n){return String(n||'').replace(/[^\p{L}\p{N} '’\-]/gu,'').replace(/\s+/g,' ').trim().slice(0,12)}
+function igRetex(id){const o=igObjs.get(id),g=igById(id);if(!o||!g)return;o.mat.map=igTex(g,o.hat||'');o.mat.needsUpdate=true}
+function igDress(id){const g=igById(id);if(!g)return;IGD=id;const L=g.look=g.look||igLook(id-1),A=accOf(L),av=L.avatar||'igor';
+ const sw=(key,list,cur)=>`<div class="sw">${list.map((c,i)=>`<button data-${key}="${i}" aria-pressed="${cur===c}" style="background:${c==='nb'?'linear-gradient(#fcf434 25%,#fff 25% 50%,#9c59d1 50% 75%,#2c2c2c 75%)':c}" aria-label="${c==='nb'?'non-binary flag':c}"></button>`).join('')}</div>`,
+  opt=(key,list,cur)=>`<div class="row gl">${list.map(([k,n])=>`<button data-${key}="${k}" aria-pressed="${(cur||'')===k}">${N(n)}</button>`).join('')}</div>`;
+ openSheet('igdress',`<div class="k">Igorlet · ${N((TRAITS[g.trait]||TRAITS.shy).N)}</div><h3>${esc(g.name)}</h3>
+ <div class="igdv"><canvas id="igdC" width="${IGC}" height="${IGCH}"></canvas></div>
+ <div class="k">${tt('Name','Nome')}</div><div class="row igdn"><input id="igdN" maxlength="12" autocomplete="off" value="${esc(g.name)}" aria-label="${tt('Name','Nome')}"><button class="main" data-ign="1">✓ ${tt('Save','Salva')}</button></div><p class="igdm" id="igdM"></p>
+ <div class="k">${tt('Lashes','Ciglia')}</div>${opt('iav',[['igor',['None','Nessuno']],['she',['Two','Due']],['queer',['One','Uno']]],av)}
+ <div class="k">${tt('On the head','In testa')}</div>${opt('ih',ACC_HEADS,A.head)}${A.head?sw('ihc',A.head==='star'?['nb',...ACC_HCOL]:ACC_HCOL,A.hcol):''}
+ <div class="k">${tt('Glasses','Occhiali')}</div>${opt('igl',[['',['None','Niente']],['eye',['Glasses','Da vista']],['sun',['Sunglasses','Da sole']]],A.glasses)}${A.glasses?sw('igc',ACC_GLASS,A.gcol):''}
+ <div class="k">${tt('Earrings','Orecchini')}</div>${opt('ie',ACC_EARS,A.ears)}${A.ears?sw('iec',ACC_ECOL,A.ecol):''}
+ <div class="row" style="margin-top:14px"><button data-igdone="1">✓ ${tt('Done','Fatto')}</button></div>`);
+ const cv=$('igdC');if(cv){const c=cv.getContext('2d'),im=igTex(g,'').image;c.clearRect(0,0,cv.width,cv.height);if(im)c.drawImage(im,0,0)}
+ const inp=$('igdN');if(inp)inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();igSaveName()}})}
+function igSaveName(){const g=igById(IGD),inp=$('igdN');if(!g||!inp)return;const n=igName(inp.value),m=$('igdM');
+ if(!n){if(m)m.textContent=tt('Write a name (letters and numbers, up to 12).','Scrivi un nome (lettere e numeri, fino a 12).');return}
+ if(n!==g.name){const old=g.name;g.name=n;fmDirty=true;const o=igObjs.get(g.id);if(o)o.lt='';say(tt(`From now on I’m ${n}!`,`Da adesso mi chiamo ${n}!`),2.4);if(window.IgorSound&&started)IgorSound.ig('happy',{id:g.id,trait:g.trait,pan:0,g:.8})}
+ igDress(g.id)}
+sb.addEventListener('click',e=>{if(sheetKind!=='igdress')return;const b=e.target.closest('button');if(!b)return;const g=igById(IGD);if(!g)return;const d=b.dataset;
+ if(d.ign){e.stopPropagation();igSaveName();return}
+ if(d.igdone){const inp=$('igdN');if(inp&&igName(inp.value)&&igName(inp.value)!==g.name){igSaveName()}closeSheet();return}
+ const L=g.look=g.look||{};let ch=false;
+ if(d.iav!==undefined){L.avatar=d.iav;ch=true}
+ if(d.ih!==undefined){L.head=d.ih;if(d.ih==='star')L.hcol=L.hcol==='nb'||!L.hcol?'nb':L.hcol;else if(!L.hcol||L.hcol==='nb')L.hcol=ACC_HDEF[d.ih]||ACC_HCOL[0];ch=true}
+ if(d.ihc!==undefined){L.hcol=(L.head==='star'?['nb',...ACC_HCOL]:ACC_HCOL)[+d.ihc];ch=true}
+ if(d.igl!==undefined){L.glasses=d.igl||null;if(!L.gcol)L.gcol='#141414';ch=true}
+ if(d.igc!==undefined){L.gcol=ACC_GLASS[+d.igc];ch=true}
+ if(d.ie!==undefined){L.ears=d.ie||null;if(!L.ecol)L.ecol='#f1c84b';ch=true}
+ if(d.iec!==undefined){L.ecol=ACC_ECOL[+d.iec];ch=true}
+ if(ch){e.stopPropagation();fmDirty=true;igRetex(g.id);const inp=$('igdN'),typed=inp?inp.value:null;igDress(g.id);if(typed!=null&&$('igdN'))$('igdN').value=typed}});
 /* ---------- little timers over the things that are working ---------- */
 const tmBox=document.createElement('div');tmBox.id='tmrs';document.body.appendChild(tmBox);
 {const st=document.createElement('style');st.textContent=`#tmrs{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}

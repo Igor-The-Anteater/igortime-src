@@ -16,7 +16,7 @@ let VOL=.8;try{const v=parseFloat(localStorage.getItem('igortime_volume'));if(v>
 let MIX={nat:VOL,met:Math.min(VOL,.6),ig:VOL};
 try{const m=JSON.parse(localStorage.getItem('igortime_mix')||'null');if(m)for(const k in MIX)if(m[k]>=0&&m[k]<=1)MIX[k]=m[k]}catch(e){}
 const gainNow=()=>wanted?.8:0,mixG=k=>(MIX[k]/.8)*(MIX[k]/.8);
-let ac=null,out,sfxIn,ambIn,ambLP,natIn,metIn,igOut,WHITE,PINK,BROWN,A=null,T=0;
+let ac=null,out,bgOut,soloOut,FOCUS=false,sfxIn,ambIn,ambLP,natIn,metIn,igOut,WHITE,PINK,BROWN,A=null,T=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),R=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
 
 /* ---------- plumbing ---------- */
@@ -39,9 +39,11 @@ const set=(p,v,tc=.35)=>p.setTargetAtTime(v,ac.currentTime,tc);
 function init(ctx){if(ac)return;try{ac=ctx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){ac=null;return}
  out=G(gainNow());const comp=ac.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=12;comp.ratio.value=3.5;out.connect(comp);comp.connect(ac.destination);
  // the little sounds go through a soft lowpass, like in the Abyss
- igOut=G(mixG('ig'));igOut.connect(out);
+ // everything goes through bgOut; in focus (an Igorlet singing) bgOut goes silent and only soloOut is heard
+ bgOut=G(FOCUS?0:1);bgOut.connect(out);soloOut=G(1.15);soloOut.connect(out);
+ igOut=G(mixG('ig'));igOut.connect(bgOut);
  sfxIn=G(.17);const slp=F('lowpass',3400,.7);sfxIn.connect(slp);slp.connect(igOut);
- ambIn=G(1);ambLP=F('lowpass',16000,.5);const ambHP=F('highpass',55,.6);ambIn.connect(ambHP);ambHP.connect(ambLP);ambLP.connect(out);
+ ambIn=G(1);ambLP=F('lowpass',16000,.5);const ambHP=F('highpass',55,.6);ambIn.connect(ambHP);ambHP.connect(ambLP);ambLP.connect(bgOut);
  natIn=G(mixG('nat'));natIn.connect(ambIn);metIn=G(mixG('met'));metIn.connect(ambIn);
  WHITE=noiseBuf(7,'white');PINK=noiseBuf(6,'pink');BROWN=noiseBuf(6,'brown');
  A={wave:{ph:.6,per:7},drops:0,hail:0,bird:R(3,8),crick:1,crk:[R(0,1),R(0,1),R(0,1)],gust:R(0,100)};
@@ -186,8 +188,8 @@ const SFX={
  scare:()=>{whoosh(.5,.35,false);for(let i=0;i<6;i++)nz(.04,{f0:R(1800,2800),Q:2,g:.15,delay:i*.05,pan:R(-.7,.7)})},
  // little things to do on the island
  pop:k=>{const f=st(784,PENTA[(k||0)%8]);tone(f*.7,f,.1,{g:.5,type:'triangle',glide:.35});nz(.03,{f0:2600,Q:1.5,g:.12})},
- bell:f=>{f=f||880;tone(f,f,1.5,{g:.5,at:.003});tone(f*2,f*2,.9,{g:.12,at:.003});tone(f*2.76,f*2.76,.5,{g:.1,at:.002});tone(f*5.4,f*5.4,.25,{g:.04,at:.002})},
- whistle:o=>{const f=(o&&o.f)||880;tone(f,f,.66,{g:.34,at:.035,vib:f*.005,vibF:5.5,bus:igOut});tone(f*2,f*2,.4,{g:.025,at:.035,bus:igOut});nz(.45,{f0:f*2,Q:8,g:.025,at:.05})},
+ bell:f=>{f=f||880;const k=FOCUS?.3:1,bus=FOCUS?soloOut:sfxIn;tone(f,f,1.5,{g:.5*k,at:.003,bus});tone(f*2,f*2,.9,{g:.12*k,at:.003,bus});tone(f*2.76,f*2.76,.5,{g:.1*k,at:.002,bus});tone(f*5.4,f*5.4,.25,{g:.04*k,at:.002,bus})},
+ whistle:o=>{const f=(o&&o.f)||880,bus=FOCUS?soloOut:igOut;tone(f,f,.66,{g:.34,at:.035,vib:f*.005,vibF:5.5,bus});tone(f*2,f*2,.4,{g:.025,at:.035,bus});if(!FOCUS)nz(.45,{f0:f*2,Q:8,g:.025,at:.05})},
  shake:k=>{for(let i=0;i<6;i++)nz(.13,{f0:R(1800,3400),Q:.8,g:.2,delay:i*.07,pan:R(-.5,.5)});const f=170+((k||0)%5)*22;tone(f,f*.8,.12,{type:'triangle',g:.45});tone(f*1.5,f*1.2,.1,{type:'triangle',g:.3,delay:.12})},
  thud:()=>{tone(R(140,190),90,.09,{g:.3});nz(.05,{f0:600,Q:1,g:.12})},
  shell:()=>{tone(1568,1568,.6,{g:.3,at:.003});tone(2349,2349,.45,{g:.2,delay:.08,at:.003});tone(3136,3136,.3,{g:.1,delay:.16,at:.003})},
@@ -210,7 +212,7 @@ SFX.clear=SFX.weed;
 /* ---------- unlock on the first gesture, the on/off switch ---------- */
 function unlock(){if(!wanted)return;if(!ac)init();if(ac&&ac.state==='suspended')ac.resume()}
 ['pointerdown','keydown','touchend'].forEach(ev=>addEventListener(ev,unlock,{capture:true,passive:true}));
-document.addEventListener('click',e=>{if(!ac||!wanted)return;const b=e.target.closest('button,a,.lbl');if(!b||b.dataset.snd==='0')return;try{(b.classList.contains('main')||b.classList.contains('m')?SFX.tapMain:SFX.tap)()}catch(_){}},true);
+document.addEventListener('click',e=>{if(!ac||!wanted)return;const b=e.target.closest('button,a,.lbl');if(!b||b.dataset.snd==='0'||FOCUS)return;try{(b.classList.contains('main')||b.classList.contains('m')?SFX.tapMain:SFX.tap)()}catch(_){}},true);
 window.IgorSound={
  get on(){return wanted},
  set(v){wanted=!!v;try{localStorage.setItem(KEY,wanted?'on':'off')}catch(e){}if(wanted){if(!ac)init();if(ac&&ac.state==='suspended')ac.resume()}if(ac)out.gain.setTargetAtTime(gainNow(),ac.currentTime,.08)},
@@ -220,10 +222,13 @@ window.IgorSound={
   if(ac){const n={nat:natIn,met:metIn,ig:igOut}[k];n.gain.setTargetAtTime(mixG(k),ac.currentTime,.05)}},
  setVol(v){for(const k in MIX)this.setMix(k,k==='met'?Math.min(v,.6):v)}, // old single slider: sets all three
  toggle(){this.set(!wanted);return wanted},
+ // focus: an Igorlet sings and you answer: everything else is silent (sea, rain, steps, voices, taps)
+ focus(on){FOCUS=!!on;if(ac&&bgOut)bgOut.gain.setTargetAtTime(FOCUS?0:1,ac.currentTime,FOCUS?.06:.4)},
+ get focused(){return FOCUS},
  frame,
- sfx(name,arg){if(!ac||!wanted)return;const f=SFX[name];if(f)try{f(arg)}catch(e){}},
- ig(kind,o){if(!ac||!wanted)return;try{if(kind==='work')igWork(o);else if(kind==='snore')snore(o);else igVoice(kind,o)}catch(e){}},
- thunder(near){if(!ac||!wanted)return;try{thunder(near)}catch(e){}},
+ sfx(name,arg){if(!ac||!wanted)return;if(FOCUS&&name!=='whistle'&&name!=='bell')return;const f=SFX[name];if(f)try{f(arg)}catch(e){}},
+ ig(kind,o){if(!ac||!wanted||FOCUS)return;try{if(kind==='work')igWork(o);else if(kind==='snore')snore(o);else igVoice(kind,o)}catch(e){}},
+ thunder(near){if(!ac||!wanted||FOCUS)return;try{thunder(near)}catch(e){}},
  _init:init // for rendering a demo offline
 };
 })();

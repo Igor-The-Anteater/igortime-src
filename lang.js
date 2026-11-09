@@ -202,5 +202,22 @@ mo.observe(document.documentElement,{childList:true,subtree:true,characterData:t
 const first=()=>{walk(document.documentElement);fixTitle()};
 if(document.readyState!=='loading')first();else document.addEventListener('DOMContentLoaded',first);
 })();
+/* a way back, always: when a menu covers the game's own back link (or there is none), a little "← Island" pill appears in the top-left corner */
+(()=>{if(/^\/(games\/?)?$/.test(location.pathname)||location.pathname==='/index.html')return;
+let H='/';try{H=localStorage.getItem('igortime_home')||'/'}catch(e){}
+let IT=false;try{IT=(localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en'))==='it'}catch(e){}
+const G=/^\/games\/?/.test(H),txt=G?(IT?'← Giochi':'← Games'):(IT?'← Isola':'← Island');
+let b=null;
+function mk(){b=document.createElement('a');b.id='igBackFix';b.href=H;b.textContent=txt;b.setAttribute('aria-label',G?(IT?'Torna ai giochi':'Back to the games'):(IT?'Torna all’isola':'Back to the island'));
+ b.style.cssText='position:fixed;left:max(10px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));z-index:2147483000;display:none;align-items:center;gap:6px;font:600 14px/1 Fredoka,system-ui,sans-serif;color:#2b2018;background:#fffaf0;border:2.5px solid #2b2018;border-radius:999px;padding:9px 14px;text-decoration:none;box-shadow:0 3px 0 #2b2018;-webkit-tap-highlight-color:transparent';
+ document.body.appendChild(b)}
+const own=()=>[...document.querySelectorAll('a')].filter(a=>a!==b&&a.offsetParent!==null&&/^←/.test(a.textContent.trim())&&(a.getAttribute('href')||'').length);
+function reachable(a){const r=a.getBoundingClientRect();if(r.width<4||r.height<4||r.bottom<0||r.top>innerHeight||r.right<0||r.left>innerWidth)return false;
+ const cs=getComputedStyle(a);if(cs.visibility==='hidden'||+cs.opacity<.3)return false;
+ const e=document.elementFromPoint(Math.min(innerWidth-1,Math.max(0,r.left+r.width/2)),Math.min(innerHeight-1,Math.max(0,r.top+r.height/2)));return !!e&&(e===a||a.contains(e))}
+function tick(){if(!document.body)return;if(!b)mk();b.style.display='none';const ok=own().some(reachable);b.style.display=ok?'none':'inline-flex'}
+const go=()=>{tick();setInterval(tick,350);addEventListener('resize',tick)};
+if(document.readyState!=='loading')go();else document.addEventListener('DOMContentLoaded',go);
+})();
 /* who is online (admins' panel) */
 (()=>{if(window.IgorPres||document.querySelector('script[src^="/pres.js"]'))return;const s=document.createElement('script');s.src='/pres.js?v=1';s.defer=true;document.head.appendChild(s)})();
