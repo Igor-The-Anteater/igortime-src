@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=8"></script>
+<script src="/sound.js?v=9"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -2516,19 +2516,23 @@ updaters.push(()=>{const on=!bells.hidden;document.documentElement.classList.tog
 {const F=FM(),tn=Date.now();if(F.speedV!==2){F.speedV=2;for(const f of F.fields)if(f.st==='sown'&&f.tr>tn&&f.t0){const sp=SPC[f.sp],m=growMult(f),full=sp.ready*m*MIN,gm=sp.germ*m*MIN;if(f.tr-f.t0>full*1.05){f.tr=Math.max(tn+MIN,f.t0+full);f.tg=Math.min(f.tg,Math.max(f.t0+gm,tn))}}
  for(const q of F.tasks){const d=taskMin(q)*MIN;if(q.dur>d){q.done=q.done*d/q.dur;q.dur=d}}fmDirty=true;saveLocal()}}
 
-/* the volume: tap the speaker and a slider opens (0 = silent) */
+/* the volume: tap the speaker and a little mixer opens: island, weather, Igor (and a mute button) */
 const volP=document.createElement('div');volP.id='volP';volP.hidden=true;document.body.appendChild(volP);
-{const st=document.createElement('style');st.textContent=`#volP{position:fixed;z-index:6;display:flex;align-items:center;gap:9px;padding:7px 12px;background:rgba(247,236,212,.97);border:2px solid #2b2018;border-radius:14px;box-shadow:0 3px 0 #2b2018;font:600 13px/1 var(--toon);color:#2b2018}
-#volP[hidden]{display:none}#volP input{width:150px;height:28px;accent-color:#e0a800;margin:0}#volP button{border:2px solid #2b2018;border-radius:10px;background:#fff7e6;padding:3px 7px;font-size:16px;line-height:1;cursor:pointer;text-transform:none;letter-spacing:0}#volP span{min-width:3.2em;text-align:right;font-variant-numeric:tabular-nums}
-@media (max-width:560px){#volP input{width:118px}}`;document.head.appendChild(st)}
-function volVal(){const S0=window.IgorSound;return!S0||!S0.on?0:Math.round((S0.vol!=null?S0.vol:1)*100)}
-function renderVol(){const v=volVal(),h=`<button type="button" data-vm="1" aria-label="${v?tt('Mute','Silenzio'):tt('Sound on','Accendi il suono')}">${v?'🔊':'🔇'}</button><input type="range" min="0" max="100" step="1" value="${v}" aria-label="${tt('Volume','Volume')}"><span>${v}%</span>`;volP.innerHTML=h}
-function placeVol(){const r=sndB.getBoundingClientRect();volP.style.top=Math.round(r.top+r.height/2-volP.offsetHeight/2)+'px';volP.style.right=Math.round(innerWidth-r.left+8)+'px'}
+{const st=document.createElement('style');st.textContent=`#volP{position:fixed;z-index:6;display:grid;grid-template-columns:auto auto auto;align-items:center;gap:4px 9px;padding:8px 12px;background:rgba(247,236,212,.97);border:2px solid #2b2018;border-radius:14px;box-shadow:0 3px 0 #2b2018;font:600 13px/1 var(--toon);color:#2b2018}
+#volP[hidden]{display:none}#volP input{width:140px;height:28px;accent-color:#e0a800;margin:0}#volP button{border:2px solid #2b2018;border-radius:10px;background:#fff7e6;padding:3px 7px;font-size:15px;line-height:1;cursor:pointer;text-transform:none;letter-spacing:0;justify-self:start}#volP span{min-width:2.8em;text-align:right;font-variant-numeric:tabular-nums}#volP label{white-space:nowrap}
+#volP .vh{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}#volP.off input{opacity:.45}
+@media (max-width:560px){#volP input{width:110px}}`;document.head.appendChild(st)}
+const MIXK=[['nat','🏝',()=>tt('Island','Isola')],['met','🌧',()=>tt('Weather','Meteo')],['ig','🐾',()=>tt('Igor','Igor')]];
+function renderVol(){const S0=window.IgorSound,on=!S0||S0.on,m=S0&&S0.mix||{nat:.8,met:.6,ig:.8};
+ let h=`<div class="vh"><b>${tt('Sounds','Suoni')}</b><button type="button" data-vm="1" aria-label="${on?tt('Mute','Silenzio'):tt('Sound on','Accendi il suono')}">${on?'🔊':'🔇'}</button></div>`;
+ for(const[k,ic,lb]of MIXK){const v=Math.round(m[k]*100);h+=`<label for="vm_${k}">${ic} ${lb()}</label><input id="vm_${k}" data-k="${k}" type="range" min="0" max="100" step="1" value="${v}" aria-label="${lb()}"><span>${v}%</span>`}
+ volP.innerHTML=h;volP.classList.toggle('off',!on)}
+function placeVol(){const r=sndB.getBoundingClientRect();let top=Math.round(r.top+r.height/2-volP.offsetHeight/2);top=Math.max(6,Math.min(innerHeight-volP.offsetHeight-6,top));volP.style.top=top+'px';volP.style.right=Math.round(innerWidth-r.left+8)+'px'}
 sndB.onclick=e=>{e.stopPropagation();if(!volP.hidden){volP.hidden=true;return}renderVol();volP.hidden=false;placeVol()};
 volP.addEventListener('pointerdown',e=>e.stopPropagation());
-volP.addEventListener('input',e=>{const r=e.target.closest('input');if(!r||!window.IgorSound)return;const v=+r.value/100;if(v<=0){if(IgorSound.on)IgorSound.set(false)}else{IgorSound.setVol&&IgorSound.setVol(v);if(!IgorSound.on)IgorSound.set(true)}volP.querySelector('span').textContent=r.value+'%';volP.querySelector('button').textContent=v>0?'🔊':'🔇';renderSndB()});
-volP.addEventListener('change',()=>{snd('bell',880)});
-volP.addEventListener('click',e=>{const b=e.target.closest('button[data-vm]');if(!b||!window.IgorSound)return;e.stopPropagation();if(IgorSound.on)IgorSound.set(false);else{if(!(IgorSound.vol>0))IgorSound.setVol&&IgorSound.setVol(.6);IgorSound.set(true)}renderSndB();renderVol()});
+volP.addEventListener('input',e=>{const r=e.target.closest('input[data-k]');if(!r||!window.IgorSound||!IgorSound.setMix)return;IgorSound.setMix(r.dataset.k,+r.value/100);if(!IgorSound.on&&+r.value>0){IgorSound.set(true);renderSndB();volP.classList.remove('off');volP.querySelector('button').textContent='🔊'}r.nextElementSibling.textContent=r.value+'%'});
+volP.addEventListener('change',e=>{const r=e.target.closest('input[data-k]');if(r&&r.dataset.k==='ig')snd('bell',880)}); // island and weather are heard live
+volP.addEventListener('click',e=>{const b=e.target.closest('button[data-vm]');if(!b||!window.IgorSound)return;e.stopPropagation();IgorSound.set(!IgorSound.on);if(IgorSound.on&&!(IgorSound.vol>0))IgorSound.setVol(.6);renderSndB();renderVol()});
 addEventListener('pointerdown',e=>{if(!volP.hidden&&!volP.contains(e.target)&&e.target!==sndB&&!sndB.contains(e.target))volP.hidden=true});
 addEventListener('resize',()=>{if(!volP.hidden)placeVol()});
 
