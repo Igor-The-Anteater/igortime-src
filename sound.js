@@ -184,6 +184,13 @@ const SFX={
  munch:()=>{for(let i=0;i<3;i++){nz(.06,{f0:R(700,1100),Q:1.2,g:.3,delay:i*.15});tone(300,220,.07,{g:.25,delay:i*.15,type:'triangle'})}},
  star:()=>{tone(2637,2093,1.2,{g:.1,type:'triangle',at:.25});tone(3136,3136,.8,{g:.05,delay:.3,at:.2})},
  sing:()=>{const m=[0,4,7,9,12,9,7,12,16,14,12];m.forEach((n,i)=>{const f=st(784,n);tone(f*.97,f,.42,{g:.4,delay:i*.2,at:.04,glide:.2,vib:f*.01,vibF:5.5,type:'sine'})});for(let i=0;i<10;i++){const f=st(2093,PENTA[i%8]);tone(f,f,.4,{g:.08,delay:2.3+i*.05,at:.003,pan:R(-.6,.6)})}},
+ glock:f=>{f=f||784;tone(f,f,1.7,{g:.42,at:.002});tone(f*2.76,f*2.76,.35,{g:.07,at:.002});tone(f*5.4,f*5.4,.12,{g:.03,at:.001});nz(.012,{f0:4200,Q:1,g:.06})},
+ kalimba:f=>{f=f||392;tone(f,f,1.3,{g:.55,at:.002});tone(f*2,f*2,.25,{g:.07,at:.002});tone(f*6.3,f*6.3,.07,{g:.07,at:.001});nz(.015,{f0:2400,Q:1.2,g:.1})},
+ harp:f=>{f=f||294;tone(f,f,2,{g:.42,at:.004,type:'triangle',lp:f*5});tone(f*2,f*2,1.1,{g:.12,at:.004});tone(f*3,f*3,.6,{g:.05,at:.004});nz(.02,{f0:f*6,Q:2,g:.05})},
+ tubes:f=>{f=f||523;for(const[m,d,g]of[[1,3.2,.4],[2.01,2.2,.16],[2.76,1.6,.12],[4.1,1,.07],[5.4,.6,.04]])tone(f*m,f*m,d,{g,at:.002});nz(.03,{f0:3000,Q:1,g:.12})},
+ steel:f=>{f=f||349;tone(f*1.012,f,1.3,{g:.45,at:.004,glide:.05});tone(f*2,f*2,.9,{g:.22,at:.004});tone(f*3,f*3,.45,{g:.1,at:.003});tone(f*4.02,f*4.02,.2,{g:.05,at:.003})},
+ flute:f=>{f=f||587;tone(f,f,1,{g:.42,at:.07,vib:f*.007,vibF:5});tone(f*2,f*2,.8,{g:.05,at:.08});nz(.85,{f0:f*2,Q:5,g:.06,at:.06})},
+ glass:f=>{f=f||698;tone(f,f,2.2,{g:.38,at:.003});tone(f*2.32,f*2.32,1,{g:.06,at:.003});tone(f*4.1,f*4.1,.3,{g:.03,at:.002});nz(.01,{f0:5000,Q:1,g:.05})},
  marimba:f=>{f=f||523;tone(f,f,1.1,{g:.6,at:.003});tone(f*3.9,f*3.9,.18,{g:.16,at:.002});tone(f*9.2,f*9.2,.05,{g:.05,at:.001});nz(.02,{f0:1800,Q:1,g:.1})},
  wish:()=>{for(let i=0;i<8;i++){const f=st(1047,PENTA[i]);tone(f,f,.6,{g:.22,delay:i*.06,at:.003,pan:R(-.6,.6)})}tone(523,523,1.8,{g:.18,at:.3,type:'triangle'})},
 };
