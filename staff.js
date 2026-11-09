@@ -3,7 +3,7 @@
    Firestore: inbox/<uid>/m/<id> {t, by, byNick, at, rd}; accts/<uid> {nick, email, prov, made, seen}; pres/<device>; susp/<uid>.
    See the Firestore rules "Amministrazione". */
 import{initializeApp,getApps,getApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import{getFirestore,collection,query,where,orderBy,limit,getDocs,doc,setDoc,updateDoc,deleteDoc,onSnapshot,serverTimestamp,Timestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import{getFirestore,collection,query,where,orderBy,limit,getDocs,getDoc,doc,setDoc,updateDoc,deleteDoc,onSnapshot,serverTimestamp,Timestamp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 const CFG={apiKey:"AIzaSyBcUoKJT0s_kHpydzjr5qIsxh5AXTurw-0",authDomain:"igortime-f69b3.firebaseapp.com",projectId:"igortime-f69b3",storageBucket:"igortime-f69b3.firebasestorage.app",messagingSenderId:"191774217559",appId:"1:191774217559:web:1604f911cbb70652321a12"};
 const app=getApps().length?getApp():initializeApp(CFG),db=getFirestore(app);
 let LANG='en';try{LANG=localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en')}catch(e){}
@@ -47,7 +47,8 @@ const st=document.createElement('style');st.textContent=`
 #adm .acts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 #adm .sent{background:#fff;border:2px solid rgba(43,32,24,.2);border-radius:12px;padding:7px 10px;margin-bottom:6px;font-size:14px;white-space:pre-wrap;word-wrap:break-word}#adm .sent small{display:block;color:#7a6650;font-size:12px;margin-top:3px}
 #adm .toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);background:#2b2018;color:#f7ecd4;padding:8px 14px;border-radius:12px;font-size:14px;max-width:90%;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s}#adm .toast.on{opacity:1}
-#adm .back{margin-bottom:10px}`;
+#adm .back{margin-bottom:10px}
+#adm .gift{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}#adm .gift select,#adm .gift input{font:inherit;padding:7px 10px;border-radius:12px;border:2px solid #2b2018;background:#fff;color:#2b2018}#adm .gift input[type=number]{width:96px}#adm .gift input[type=text]{flex:1;min-width:160px}#adm .gift [hidden]{display:none}#adm #admInv{margin:4px 0 6px}#adm #admInv b{color:#2b2018}`;
 document.head.appendChild(st);
 
 const fmtDate=t=>t?new Date(t).toLocaleDateString(LANG==='it'?'it-IT':'en-GB',{day:'numeric',month:'short',year:'numeric'}):'—';
@@ -70,6 +71,19 @@ function inbox(){if(unIn)unIn(),unIn=null;queue=[];note.hidden=true;if(!ME)retur
  unIn=onSnapshot(query(collection(db,'inbox',ME.uid,'m'),where('rd','==',null)),s=>{
   queue=s.docs.map(d=>{const x=d.data();return{id:d.id,t:x.t,byNick:x.byNick||'',at:ms(x.at)||Date.now()}}).sort((a,b)=>a.at-b.at);showNote()},e=>console.warn('inbox',e))}
 
+/* ================= gifts from the admins (every player, only on the island) =================
+   gifts/<uid>/g/<id> {k: seeds|ants|veh, n, v, msg, by, byNick, at, st: new|got|back|gone|cancel, tk}
+   new → the island applies it (IgorGift.apply) → got;  admin: got → back → the island takes it back (only what was given, never below zero) → gone with tk = how much was taken */
+let unG=null,onReady=null;
+async function handleGift(g){if(!ME)return;const ref=doc(db,'gifts',ME.uid,'g',g.id);
+ try{if(g.st==='new'){window.IgorGift.apply(g);await updateDoc(ref,{st:'got'})}
+  else if(g.st==='back'){const tk=window.IgorGift.has(g.id)?window.IgorGift.take(g):0;await updateDoc(ref,{st:'gone',tk})}
+  else if((g.st==='gone'||g.st==='cancel')&&window.IgorGift.has(g.id))window.IgorGift.take(g,true)}catch(e){console.warn('gift',e)}}
+function gifts(){if(unG)unG(),unG=null;if(onReady)removeEventListener('igor-ready',onReady),onReady=null;if(!ME)return;
+ const go=()=>{const C=window.IgorCloud;if(!window.IgorGift||!C||!C.ready||!C.user||C.user.uid!==ME.uid)return false;
+  unG=onSnapshot(collection(db,'gifts',ME.uid,'g'),s=>s.docs.forEach(d=>handleGift({id:d.id,...d.data()})),e=>console.warn('gifts',e));return true};
+ if(!go()){onReady=()=>{if(go()){removeEventListener('igor-ready',onReady);onReady=null}};addEventListener('igor-ready',onReady)}}
+
 /* ================= the admins' panel ================= */
 const PLACE={island:['Island · outside','Isola · fuori'],'island:house':['Island · Igor’s house','Isola · casa di Igor'],'island:school':['Island · music school','Isola · scuola di musica'],'island:prizes':['Island · prize shop','Isola · negozio dei premi'],
  games:['Games page','Pagina dei giochi'],kitchen:['Kitchen (duration)','Cucina (durata)'],window:['Window (volume)','Finestra (volume)'],bedroom:['Bedroom (timbre)','Camera (timbro)'],drums:['Drums','Batteria'],pitch:['Pitch Stairs','Pitch Stairs'],cadences:['Cadences','Cadenze'],abyss:['The abyss','L’abisso'],other:['Other page','Altra pagina']};
@@ -83,7 +97,8 @@ function adminButton(){if($('admB'))return;const ref=$('chatB')||$('me');if(!ref
 function makePanel(){panel=document.createElement('aside');panel.id='adm';panel.className='igs';panel.hidden=true;panel.setAttribute('aria-label',tt('Admin','Amministrazione'));document.body.appendChild(panel);
  ['keydown','keyup','keypress'].forEach(k=>panel.addEventListener(k,e=>e.stopPropagation()));
  ['pointerdown','wheel','touchstart'].forEach(k=>panel.addEventListener(k,e=>e.stopPropagation(),{passive:true}));
- panel.addEventListener('click',onClick);panel.addEventListener('input',e=>{if(e.target.id==='admQ'){q=e.target.value.trim().toLowerCase();drawList()}})}
+ panel.addEventListener('click',onClick);panel.addEventListener('change',e=>{if(e.target.id==='admGk'){const v=e.target.value==='veh';$('admGn').hidden=v;$('admGv').hidden=!v}});
+ panel.addEventListener('input',e=>{if(e.target.id==='admQ'){q=e.target.value.trim().toLowerCase();drawList()}})}
 function toast(t){const e=panel.querySelector('.toast');if(!e)return;e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2600)}
 function shell(){panel.innerHTML=`<div class="top"><h3>🛡 ${tt('Admin','Amministrazione')}</h3><button data-a="reload" title="${tt('Refresh','Aggiorna')}" aria-label="${tt('Refresh','Aggiorna')}">↻</button><button data-a="close" aria-label="${tt('Close','Chiudi')}">×</button></div>
  <div class="tabs">${[['online',tt('Online now','Online ora')],['users',tt('Accounts','Account')]].map(([k,l])=>`<button data-tab="${k}" aria-pressed="${view===k}">${l}</button>`).join('')}<button data-a="reports">${tt('Chat reports','Segnalazioni chat')} ↗</button></div><div class="body"></div><div class="toast" role="status"></div>`;return panel.querySelector('.body')}
@@ -140,8 +155,24 @@ function userV(){const b=shell(),a=allAccounts().find(x=>x.uid===sel)||{uid:sel,
  <p class="mute">${tt('Blocking closes the chat for this account, removes them from all the leaderboards and stops new records. They can still play.','Bloccare chiude la chat a questo account, lo toglie da tutte le classifiche e non gli fa registrare nuovi record. Può comunque giocare.')}</p></div>
  <h4>✉️ ${tt('Send a message','Manda un messaggio')}</h4><textarea id="admMsg" maxlength="1000" placeholder="${tt('It appears on the island the next time they open it (or right away if they are there).','Compare sull’isola la prossima volta che la aprono (o subito, se ci sono).')}"></textarea>
  <div style="display:flex;justify-content:flex-end;margin:8px 0 4px"><button class="go" data-a="send">${tt('Send','Manda')}</button></div>
- <h4>${tt('Messages sent','Messaggi mandati')}</h4><div id="admSent"><p class="mute">${tt('Loading…','Carico…')}</p></div>`;
- loadSent(sel).then(drawSent)}
+ <h4>${tt('Messages sent','Messaggi mandati')}</h4><div id="admSent"><p class="mute">${tt('Loading…','Carico…')}</p></div>
+ <h4>🎁 ${tt('Gifts','Regali')}</h4><div id="admInv" class="mute">${tt('Loading…','Carico…')}</div>
+ <div class="gift"><select id="admGk"><option value="seeds">🌱 ${tt('Seeds','Semi')}</option><option value="ants">🧊 ${tt('Tofu ants','Formiche di tofu')}</option><option value="veh">🏆 ${tt('A prize (vehicle)','Un premio (mezzo)')}</option></select>
+ <input id="admGn" type="number" min="1" max="100000" value="10" inputmode="numeric"><select id="admGv" hidden>${Object.keys(VEHS).map(k=>`<option value="${k}">${esc(vName(k))}</option>`).join('')}</select>
+ <input id="admGm" type="text" maxlength="200" placeholder="${tt('Note for the player (optional)','Biglietto per il giocatore (facoltativo)')}"><button class="go" data-a="gift">${tt('Give','Regala')}</button></div>
+ <p class="mute">${tt('It arrives on the island (right away if they are there). You can take back only what you gave, never what they earned, and never below zero.','Arriva sull’isola (subito, se ci sono). Si può ritirare solo quello che hai regalato, mai quello che hanno guadagnato, e mai sotto zero.')}</p>
+ <div id="admGifts"></div>`;
+ loadSent(sel).then(drawSent);loadGifts(sel).then(drawGifts);loadInv(sel).then(drawInv)}
+let GIFTS=[],INV=null;
+async function loadGifts(uid){try{const s=await getDocs(query(collection(db,'gifts',uid,'g'),orderBy('at','desc'),limit(50)));GIFTS=s.docs.map(d=>({id:d.id,...d.data(),at:ms(d.data().at)}))}catch(e){console.warn('gifts',e);GIFTS=[]}}
+async function loadInv(uid){try{const d=await getDoc(doc(db,'users',uid));INV=d.exists()?d.data():false}catch(e){console.warn('inv',e);INV=null}}
+function drawInv(){const e=$('admInv');if(!e)return;if(INV===null){e.textContent=tt('Cannot read their island.','Non riesco a leggere la sua isola.');return}if(INV===false){e.textContent=tt('No saved island yet.','Ancora nessuna isola salvata.');return}
+ const F=INV.farm||{},v=Object.keys(F.veh||{});e.innerHTML=`${tt('Now on the island','Adesso sull’isola')}: 🌱 <b>${INV.seeds|0}</b> · 🧊 <b>${(F.ants&&F.ants.t)|0}</b> ${tt('in the pocket','in tasca')} · ${tt('collected','raccolte')} ${F.total|0}${v.length?' · '+v.map(k=>esc(vName(k))+((F.veh[k].n|0)>1?' ×'+F.veh[k].n:'')).join(', '):''}<br><small>${tt('(as of their last save)','(al loro ultimo salvataggio)')}</small>`}
+function giftLabel(g){return g.k==='seeds'?`🌱 ${g.n} ${tt('seeds','semi')}`:g.k==='ants'?`🧊 ${g.n} ${tt('tofu ants','formiche di tofu')}`:esc(vName(g.v))}
+function giftNote(g){if(g.st!=='gone')return'';if(g.k==='veh')return g.tk?'':` (${tt('they had bought it: kept','l’aveva comprato: resta')})`;return(g.tk|0)<g.n?` (${tt('taken','tolti')} ${g.tk|0} ${tt('of','su')} ${g.n})`:''}
+function drawGifts(){const e=$('admGifts');if(!e)return;if(!GIFTS.length){e.innerHTML=`<p class="mute">${tt('No gifts yet.','Ancora nessun regalo.')}</p>`;return}
+ const ST={new:tt('waiting: arrives at their next visit','in attesa: arriva alla prossima visita'),got:tt('received','ricevuto'),back:tt('being taken back at their next visit','in ritiro alla prossima visita'),gone:tt('taken back','ritirato'),cancel:tt('cancelled before it arrived','annullato prima che arrivasse')};
+ e.innerHTML=GIFTS.map(g=>`<div class="sent"><b>${giftLabel(g)}</b>${g.msg?' · '+esc(g.msg):''}<small>${esc(fmtTime(g.at))}${g.byNick?' · '+esc(g.byNick):''} · ${ST[g.st]||esc(g.st)}${giftNote(g)}</small>${g.st==='new'||g.st==='got'?`<div style="margin-top:5px"><button class="no" data-a="ungift" data-id="${esc(g.id)}">${g.st==='new'?tt('Cancel','Annulla'):tt('Take back','Ritira')}</button></div>`:''}</div>`).join('')}
 function drawSent(){const e=$('admSent');if(!e)return;e.innerHTML=SENT.length?SENT.map(m=>`<div class="sent">${esc(m.t)}<small>${esc(fmtTime(m.at))}${m.byNick?' · '+esc(m.byNick):''} · ${m.rd?tt('read ','letto ')+esc(fmtTime(m.rd)):tt('not read yet','non ancora letto')}</small></div>`).join(''):`<p class="mute">${tt('None yet.','Ancora nessuno.')}</p>`}
 
 async function block(uid,nick){await setDoc(doc(db,'susp',uid),{at:serverTimestamp(),nick:nick||''});SUSP[uid]=nick||'';
@@ -160,13 +191,20 @@ async function onClick(e){const t=e.target.closest('[data-a],[data-tab],[data-f]
  if(a==='copy'){const x=allAccounts().find(v=>v.uid===sel);try{await navigator.clipboard.writeText(x.email);toast(tt('Copied','Copiata'))}catch(err){toast(x.email)}return}
  if(a==='block'){if(!t.dataset.sure){t.dataset.sure=1;t.textContent=tt('Tap again to block','Tocca ancora per bloccare');return}t.disabled=true;const x=allAccounts().find(v=>v.uid===sel)||{};await block(sel,x.nick);toast(tt('Blocked','Bloccato'));return render()}
  if(a==='unblock'){t.disabled=true;await unblock(sel);toast(tt('Unblocked','Sbloccato'));return render()}
+ if(a==='gift'){const k=$('admGk').value,n=k==='veh'?1:Math.floor(+$('admGn').value||0),v=k==='veh'?$('admGv').value:'',m=($('admGm').value||'').trim().slice(0,200);
+  if(n<1||n>100000)return toast(tt('Choose a number from 1 to 100000.','Scegli un numero da 1 a 100000.'));t.disabled=true;
+  await setDoc(doc(collection(db,'gifts',sel,'g')),{k,n,v,msg:m,by:ME.uid,byNick:ME.nick||'',at:serverTimestamp(),st:'new',tk:0});$('admGm').value='';toast(tt('Gift sent! 🎁','Regalo mandato! 🎁'));t.disabled=false;await loadGifts(sel);return drawGifts()}
+ if(a==='ungift'){const g=GIFTS.find(x=>x.id===t.dataset.id);if(!g)return;if(!t.dataset.sure){t.dataset.sure=1;t.textContent=tt('Tap again','Tocca ancora');return}t.disabled=true;
+  await updateDoc(doc(db,'gifts',sel,'g',g.id),{st:g.st==='new'?'cancel':'back'});toast(g.st==='new'?tt('Cancelled','Annullato'):tt('It will be taken back at their next visit (or right away).','Verrà ritirato alla prossima visita (o subito).'));await loadGifts(sel);return drawGifts()}
  if(a==='send'){const ta=$('admMsg'),v=(ta.value||'').trim().slice(0,1000);if(!v)return toast(tt('Write something first.','Scrivi prima qualcosa.'));t.disabled=true;
   await setDoc(doc(collection(db,'inbox',sel,'m')),{t:v,by:ME.uid,byNick:ME.nick||'',at:serverTimestamp(),rd:null});ta.value='';toast(tt('Sent!','Mandato!'));t.disabled=false;await loadSent(sel);return drawSent()}
  }catch(err){console.warn('admin',a,err);toast(tt('Something went wrong (rules?).','Qualcosa non ha funzionato (regole?).'));t.disabled=false}}
 function open(){if(!panel)makePanel();panel.hidden=false;sfx('open');render();reload();clearInterval(presT);presT=setInterval(async()=>{if(panel.hidden)return;await loadPres();if(!sel&&view==='online')render()},30000)}
 function close(){if(panel)panel.hidden=true;clearInterval(presT)}
+const VEHS={scooter:['🛴','Scooter','Monopattino'],bike:['🚲','Bike','Bici'],moto:['🏍','Motorbike','Moto'],tractor:['🚜','Tractor','Trattore'],car:['🚗','Car','Auto'],boat:['⛵','Boat','Barchetta'],heli:['🚁','Helicopter','Elicottero'],plane:['✈','Plane','Aeroplano']};
+const vName=k=>VEHS[k]?VEHS[k][0]+' '+tt(VEHS[k][1],VEHS[k][2]):k;
 const ADMINS=['suJRvYnJ8TZsrtggf88oxTCgKI42','vKhCdacBFoOn8al4qCMz9VioWle2'];
 
-export function init(u){ME=u&&u.uid?u:null;inbox();
+export function init(u){ME=u&&u.uid?u:null;inbox();gifts();
  const b=$('admB');if(ME&&ME.admin){adminButton()}else{if(b)b.remove();close()}}
 export{open as openAdmin};
