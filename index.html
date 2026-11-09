@@ -2451,7 +2451,7 @@ const BOARDS=[{g:'total',l:'all',N:['Overall','Generale'],sub:['all the games ad
  {g:'pitch',N:['Pitch Stairs','Pitch Stairs']},{g:'cadences',N:['Cadences','Cadenze']}];
 const LVN={easy:['Easy','Facile'],medium:['Medium','Medio'],extreme:['Extreme','Estremo']};
 let bdSel={g:'total',l:'all'};
-const boardMod=()=>window.IgorCloud?import('/board.js'):Promise.reject('no cloud');
+const boardMod=()=>window.IgorCloud?import('/board.js?v=2'):Promise.reject('no cloud');
 function boardSheet(g,l){if(g)bdSel={g,l:l||(g==='island'||g==='abyss'||g==='total'?'all':bdSel.l!=='all'?bdSel.l:'easy')};const B=BOARDS.find(b=>b.g===bdSel.g)||BOARDS[0],lv=bdSel.g!=='island'&&bdSel.g!=='abyss'&&bdSel.g!=='total';
  const tabs=BOARDS.map(b=>`<button type="button" data-bd="${b.g}" class="${b.g===bdSel.g?'on':''}">${N(b.N)}</button>`).join(''),lvs=lv?`<div class="bdl">${Object.keys(LVN).map(k=>`<button type="button" data-bl="${k}" class="${k===bdSel.l?'on':''}">${N(LVN[k])}</button>`).join('')}</div>`:'';
  openSheet('board',`<h2>🏆 ${tt('Leaderboards','Classifiche')}</h2><div class="bdt">${tabs}</div>${lvs}<div id="bdBox"><p>${tt('Loading…','Carico…')}</p></div>`);
