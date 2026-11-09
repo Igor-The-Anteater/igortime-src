@@ -406,7 +406,7 @@ function openChat(f){chatWith=f;MS=[];if(unMsgs)unMsgs();if(unProf)unProf();
  unMsgs=B.onMsgs(f.pair,l=>{MS=l;drawMsgs();const fr=FR.find(x=>x.pair===f.pair);if(!panel.hidden&&document.visibilityState==='visible'&&(l.some(m=>m.to===ME.uid&&!m.rd)||(fr&&fr.un)))B.markRead(f.pair,l).catch(()=>{})});
  unProf=B.onProfile(f.other,p=>{if(p){PCACHE[f.other]=p;const s=$('igcSeen');if(s)s.textContent=ago(p.seen);const d=panel.querySelector('.top .dot');if(d)d.classList.toggle('on',online(p))}});render()}
 function closeChat(){chatWith=null;MS=[];if(unMsgs)unMsgs(),unMsgs=null;if(unProf)unProf(),unProf=null;render()}
-function menuV(){let m=panel.querySelector('.menu');if(m){m.remove();return}panel.insertAdjacentHTML('beforeend',`<div class="menu"><button data-a="report">🛡 ${tt('Report','Segnala')}</button><button data-a="block">🚫 ${tt('Block','Blocca')}</button><button data-a="unfriend">${tt('Remove friend','Rimuovi dagli amici')}</button></div>`)}
+function menuV(){let m=panel.querySelector('.menu');if(m){m.remove();return}panel.insertAdjacentHTML('beforeend',`<div class="menu"><button data-a="visit">🏝 ${tt('Visit their island','Visita la sua isola')}</button><button data-a="report">🛡 ${tt('Report','Segnala')}</button><button data-a="block">🚫 ${tt('Block','Blocca')}</button><button data-a="unfriend">${tt('Remove friend','Rimuovi dagli amici')}</button></div>`)}
 function reportV(who,whoNick,pair){const b=shell(tt('Report','Segnala'),{back:true,tabs:false});
  const R=[['bad',tt('Offensive or mean words','Parole offensive o cattive')],['unc',tt('Makes me feel uncomfortable','Mi mette a disagio')],['pers',tt('Asks for personal information or photos','Chiede dati personali o foto')],['spam',tt('Spam or too many messages','Spam o troppi messaggi')],['other',tt('Something else','Altro')]];
  b.innerHTML=`<p>${tt('Tell us what happened with','Dicci cosa è successo con')} <b>${esc(whoNick)}</b>. ${tt('They won’t know you reported them.','Non saprà che l’hai segnalato.')}</p>
@@ -461,6 +461,7 @@ panel.addEventListener('click',async e=>{const t=e.target.closest('[data-a],[dat
  if(a==='leave'){if(!t.dataset.sure){t.dataset.sure=1;t.textContent=tt('Tap again to leave','Tocca ancora per uscire');return}
   subs.splice(0).forEach(f=>f());clearInterval(pingT);await B.leave(FR.map(f=>f.pair));PROF=null;FR=[];RIN=[];ROUT=[];badge();return render()}
  if(a==='menu')return menuV();
+ if(a==='visit'){const p=prof(chatWith.other),u=chatWith.other;if(window.IgorVisit)return IgorVisit.go(u,p.nick);location.href='/?visit='+encodeURIComponent(u);return}
  if(a==='emo'){const e2=$('igcEmo');e2.hidden=!e2.hidden;return}
  if(a==='send')return send();
  if(a==='report'){const p=prof(chatWith.other);return reportV(chatWith.other,p.nick,chatWith.pair)}
