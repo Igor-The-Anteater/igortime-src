@@ -581,7 +581,7 @@ const FM=()=>S.farm;
 let fmNew=false;
 function freshFarm(){const t=Date.now();return{v:2,created:t,t,seen:t,total:0,ants:{t:0},fields:[{sp:'t',st:'wild',x:4.9,z:-4.4}],igs:[newIg(0)],pos:{pen:{x:-7,z:9}},cut:{t:[],r:[]},
  b:{pen:1,store:0,shop:0,green:0},tools:{plow:0,can:0,basket:0,cart:0},items:{tarp:0,tarp2:0,tarp3:0,comp:0},toys:{ball:0,swing:0,hammock:0,slide:0},
- tasks:[],nid:1,water:0,ev:null,evDone:{},log:[],first:true,lvlSeen:1,veh:{}}}
+ tasks:[],nid:1,water:0,ev:null,evDone:{},log:[],first:true,lvlSeen:1,veh:{},gifts:{}}}
 function newIg(i){return{id:i+1,name:IGN[i%IGN.length],en:5,rest:false,task:null,hue:[0,-8,10,-4,6,-12,4,12][i%8],look:igLook(i),trait:TKEYS[i%TKEYS.length]}}
 function fixFarm(f){const d=freshFarm();for(const k of Object.keys(d))if(f[k]===undefined||f[k]===null&&k!=='ev')f[k]=d[k];for(const k of['ants','b','tools','items','toys'])f[k]={...d[k],...f[k]};if(f.ev&&!EVK[f.ev.k])f.ev=null;
  if(f.ants.p||f.ants.c){f.ants.t+=(f.ants.p||0)+(f.ants.c||0);delete f.ants.p;delete f.ants.c}
@@ -747,6 +747,26 @@ function buyVeh(k,more){const F=FM(),V=VEH[k],own=F.veh[k];if(own&&!more)return;
  if(!pay({t:V.cost}))return say(NEED({t:V.cost}),2.6);if(own){own.n=n+1;own.cs=own.cs||[];own.cs[n]=pick(VCOL.filter(c=>c!==own.c))}else F.veh[k]={c:V.c,n:1};snd('buy');fmDirty=true;
  say(own?tt(`Another ${N(V.N).toLowerCase()} for the Igorlets! Now there are ${n+1}.`,`${N(V.N)} per gli Igorlets! Adesso ce ne sono ${n+1}.`):tt(`A ${N(V.N).toLowerCase()}! Tap ${V.ic} to hop on.`,`${N(V.N)}! Tocca ${V.ic} per salire.`),3.2);save();fmRender()}
 function buyToy(k){const F=FM();if(F.toys[k])return;if(!pay({s:TOYS[k].s}))return say(NEED({s:TOYS[k].s}),2.4);F.toys[k]=1;say(tt(`A ${N(TOYS[k].N).toLowerCase()} for the yard!`,`${N(TOYS[k].N)} per il cortile!`),2.4);save();fmRender()}
+/* gifts from the admins (staff.js): seeds, tofu ants, a vehicle; F.gifts[id] remembers each one so it is applied once and only what was given can be taken back */
+window.IgorGift={
+ apply(g){ensureFarm();const F=FM();F.gifts=F.gifts||{};if(F.gifts[g.id])return false;const n=Math.max(0,g.n|0),r={k:g.k,n,v:g.v||'',at:Date.now()};let txt='';
+  const gp=F.gp=F.gp||{s:0,t:0,ls:-1,lt:-1};if(g.k==='seeds'){S.seeds=(S.seeds|0)+n;gp.s+=n;gp.ls=S.seeds;txt=tt(`+${n} ${n===1?'seed':'seeds'}`,`+${n} ${n===1?'seme':'semi'}`)}
+  else if(g.k==='ants'){F.ants.t+=n;gp.t+=n;gp.lt=F.ants.t;txt=tt(`+${n} tofu ants`,`+${n} formiche di tofu`)}
+  else if(g.k==='veh'&&VEH[g.v]){const V=VEH[g.v];if(F.veh[g.v])r.had=true;else F.veh[g.v]={c:V.c,n:1};txt=`${V.ic} ${N(V.N)}`+(r.had?tt(' (you already had it)',' (ce l’avevi già)'):'')}
+  else return false;
+  F.gifts[g.id]=r;fmDirty=true;save();fmRender();refresh();snd('buy');
+  say(tt(`🎁 A gift from Igor Time: ${txt}!`,`🎁 Un regalo da Igor Time: ${txt}!`)+(g.msg?' '+g.msg:''),4.5);return true},
+ take(g,quiet){ensureFarm();const F=FM(),r=F.gifts&&F.gifts[g.id];if(!r||r.back!==undefined)return 0;let tk=0;
+  const gp=F.gp=F.gp||{s:0,t:0,ls:-1,lt:-1};
+  if(r.k==='seeds'){tk=Math.min(r.n,gp.s|0,Math.max(0,S.seeds|0));S.seeds=(S.seeds|0)-tk;gp.s-=tk;gp.ls=S.seeds}
+  else if(r.k==='ants'){tk=Math.min(r.n,gp.t|0,Math.max(0,F.ants.t|0));F.ants.t-=tk;gp.t-=tk;gp.lt=F.ants.t}
+  else if(r.k==='veh'&&!r.had&&F.veh[r.v]){if(RIDE===r.v)dismount(true);for(const[,o]of igObjs)if(o.act&&o.act.k==='ride'&&o.act.v===r.v)o.act=null;
+   const n=vehN(r.v);if(n>1)F.veh[r.v].n=n-1;else delete F.veh[r.v];tk=1}
+  r.back=tk;fmDirty=true;save();fmRender();refresh();
+  if(!quiet&&tk)say(tt('The admins took back a gift.','Gli amministratori hanno ritirato un regalo.'),3);return tk},
+ has:id=>!!(FM()&&FM().gifts&&FM().gifts[id])};
+/* F.gp = gifted seeds/ants not spent yet: whatever is spent comes out of the gifts first, so taking a gift back never touches what the player earned */
+function giftSpend(){const F=FM();if(!F||!F.gp)return;const g=F.gp,s=S.seeds|0,a=(F.ants&&F.ants.t)|0;if(g.ls>=0&&s<g.ls)g.s=Math.max(0,g.s-(g.ls-s));if(g.lt>=0&&a<g.lt)g.t=Math.max(0,g.t-(g.lt-a));g.ls=s;g.lt=a}
 /* ================= the island: field beds, buildings, Igorlets ================= */
 const soilM=lam('#7a5a40'),soilWet=lam('#5e4330'),soilLock=lam('#4c5e45',{transparent:true,opacity:.55}),soilWild=lam('#5d6b3c'),furM=lam('#4e3626'),weedM=lam('#4f7a3a'),stemM=lam('#6fa35a',{emissive:'#2d4a22',emissiveIntensity:.35}),leafM2=lam('#4f8d45');
 const flowerM={t:lam('#f4efe2',{emissive:'#555',emissiveIntensity:.2}),p:lam('#f6d34a'),c:lam('#ffffff')},fruitM={t:tofuM,p:lam('#e0463c',{emissive:'#5a1410',emissiveIntensity:.4}),c:lam('#f08a2c',{emissive:'#5a2a08',emissiveIntensity:.4})};
@@ -1097,6 +1117,7 @@ function dismount(quiet){if(!RIDE)return;bubbleQ.length=0;bubbleT=0;const V=VEH[
 function ridePath(A,t){const V=VEH[A.v],C=VC[V.kind],P0=parkOf(A.v,A.j||0),ez=V.kind==='water'?1/1.12:1,r=Math.hypot(P0.x-C.x,(P0.z-C.z)/ez),a0=Math.atan2((P0.z-C.z)/ez,P0.x-C.x),w=V.sp*1.6/r,u=(t-A.t0)*w,laps=V.kind==='air'?1:2;
  if(u>=TAU*laps)return null;const a=a0+u*A.dir;const x=C.x+Math.cos(a)*r,z=C.z+Math.sin(a)*r*ez,dur=TAU*laps/w,el=t-A.t0;
  const h=V.kind==='air'?V.h*Math.min(1,el/3,(dur-el)/3):0;return{pos:new V3(x,0,z),y:(V.kind==='water'?-.5:0)+h,head:a+A.dir*Math.PI/2}}
+updaters.push(giftSpend);
 updaters.push((t,dt)=>{const F=FM();
  if(RIDE&&!F.veh[RIDE])RIDE=null;vehCopies(t,dt);if(RIDE&&where!=='out')dismount(true);
  if(RIDE&&VEH[RIDE].kind==='air')rideH+=(VEH[RIDE].h-rideH)*Math.min(1,dt*1.2);
@@ -2621,10 +2642,11 @@ const C={user:null,
 window.IgorCloud=C;
 {const s=document.createElement('script');s.src='/chat.js?v=3';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
+ C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
   try{const s=await getDoc(doc(db,'users',u.uid));if(s.exists()){const d=s.data();if(d.nick)C.user.nick=d.nick;else if(d.name&&!google)C.user.nick=d.name;delete d.updated;delete d.name;delete d.nick;window.IgorSave.load(d,u.uid)}}catch(e){console.warn('load',e)}
   C.user.nick=String(C.user.nick||'').slice(0,16);C.user.name=C.user.nick;pendingNick='';
-  ready=true;C.push(window.IgorSave.get());acct();acctsW()}
+  ready=true;C.push(window.IgorSave.get());acct();acctsW();C.ready=true;dispatchEvent(new Event('igor-ready'))}
  else{C.user=null;try{localStorage.removeItem('igortime_acct')}catch(e){}}
  window.IgorUI&&window.IgorUI.onAuth(!!u,first);first=false});
 </script>
