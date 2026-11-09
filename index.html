@@ -952,6 +952,7 @@ function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>
   else if(g.rest){o.goal.copy(penIn(i));mode='rest';o.act=null}
   else if(wet){o.goal.copy(penIn(i));hat=SKY.W.rain>.35?'rain':'';mode='shelter';o.act=null}
   else{idle.push(o);if(snow&&!o.act){o.goal.copy(snowman.position).add(new V3(Math.cos(i*2)*.9,0,Math.sin(i*2)*.9))}}
+  if(o.visitT>T&&mode!=='idle'&&mode!=='work'){const D=penIn(i);o.goal.set(D.x+(o.vdx||0),0,D.z+(o.vdz||0));if(mode!=='shelter')hat='night'}
   if(o.hat!==hat){o.hat=hat;o.mat.map=igTex(g,hat);o.mat.needsUpdate=true}
   if(!o.texOK&&igorOK){o.texOK=true;o.mat.map=igTex(g,hat);o.mat.needsUpdate=true}o.hi=i;
   o.mode=mode;const e=Math.min(5,Math.floor(g.en+1e-6)),lt=esc(g.name)+`<small>${g.rest?'💤 '+fmt(restLeft(g)):'●'.repeat(e)+'○'.repeat(5-e)+(q?' '+N(TNAME[q.k]):mode==='sleep'?' zzz':'')}</small>`;if(o.lt!==lt){o.lt=lt;o.L.el.innerHTML=lt}});
@@ -975,7 +976,7 @@ function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>
   o.pl.quaternion.copy(camera.quaternion);if(moving)o.pl.rotateZ(Math.sin(o.walk)*.06);if(working)o.pl.rotateZ(Math.sin(t*9+o.ph)*.12);if(sleeping)o.pl.rotateZ(.25*o.face);
   o.pl.scale.set(o.face,1,1);if(sleeping||o.mode==='rest'){o.ic.visible=true;o.ic.material.map=iconTex.z;o.ic.position.y=IGH+.2+((t*.5+o.ph)%1)*.3}
   if(o.ride&&!(o.act&&o.act.k==='ride'))o.ride=null;const ry=o.ride?o.ride.y+VEH[o.act.v].seat:0;o.pl.position.y+=ry;
-  const home=(o.mode==='sleep'||o.mode==='rest'||o.mode==='shelter')&&!moving&&o.hi!=null&&L<.2;o.grp.visible=!home;o.L.hidden=home||!(o.showT>T);const H=houseObjs[(o.hi||0)%HOUSEP.length];if(H&&o.hi!=null){H.z.visible=home&&o.mode!=='shelter';if(H.z.visible)H.z.position.y=1.5+Math.sin(t*1.6+o.ph*6)*.04}
+  const home=(o.mode==='sleep'||o.mode==='rest'||o.mode==='shelter')&&!moving&&o.hi!=null&&L<.2&&!(o.visitT>T);o.grp.visible=!home;o.L.hidden=home||!(o.showT>T);const H=houseObjs[(o.hi||0)%HOUSEP.length];if(H&&o.hi!=null){H.z.visible=home&&o.mode!=='shelter';if(H.z.visible)H.z.position.y=1.5+Math.sin(t*1.6+o.ph*6)*.04}
   o.L.pos.set(p.x,IGH+.55+ry,p.z)}
  if(toyObj.swing.visible)toyObj.swing.userData.seat.rotation.x=Math.sin(t*1.6)*.35}
 
@@ -1692,7 +1693,10 @@ function bubbleAvoid(L,T2,w,h){const ov=(r)=>r&&r.width&&L<r.right+6&&L+w>r.left
  return[L,T2]}
 updaters.push(()=>{const hn=$('hint');if(hn)hn.style.visibility=started?'':'hidden'});
 function igPick(cx,cy){if(where!=='out')return false;let best=null,bd=46;for(const[id,o]of igObjs){if(!o.grp.visible)continue;const v=projC(o.grp.position.clone().add(new V3(0,.42,0)));if(v.z>1)continue;const d=Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy);if(d<bd){bd=d;best=id}}if(best==null)return false;igTap(best);return true}
-function igTap(id){if(PL)return;const g=igById(id);if(!g)return;const T0=TRAITS[g.trait]||TRAITS.shy,o=igObjs.get(id);if(o)o.showT=T+6;if(window.IgorSound&&started)IgorSound.ig('tap',{id,trait:g.trait,pan:0});bubbleQ.length=0;bubbleT=0;
+function igTap(id){if(PL)return;const g=igById(id);if(!g)return;const T0=TRAITS[g.trait]||TRAITS.shy,o=igObjs.get(id);if(o)o.showT=T+6;
+ if(o&&o.hi!=null&&(o.mode==='sleep'||o.mode==='rest'||o.mode==='shelter')){const D=penIn(o.hi),dx=igor.position.x-D.x,dz=igor.position.z-D.z,d=Math.hypot(dx,dz)||1,cr=new V3().setFromMatrixColumn(camera.matrixWorld,0);cr.y=0;cr.normalize();const cw=new V3(camera.position.x-igor.position.x,0,camera.position.z-igor.position.z).normalize();o.vdx=dx+cw.x*.9+cr.x*.7;o.vdz=dz+cw.z*.9+cr.z*.7;if(!walkable(D.x+o.vdx,D.z+o.vdz)){o.vdx=dx+cw.x*.9-cr.x*.7;o.vdz=dz+cw.z*.9-cr.z*.7}
+  const out=o.visitT>T;o.visitT=T+10;o.showT=T+10;if(!out){if(o.mode!=='shelter'&&window.IgorSound&&started)setTimeout(()=>IgorSound.ig('tap',{id,trait:'sleepy',pan:0}),350);
+   if(o.mode==='sleep'){bubbleQ.length=0;bubbleT=0;say(tt(`Yawn… hi Igor! ${g.name} comes out for a moment in a night cap.`,`Uaaah… ciao Igor! ${g.name} esce un momento col berretto da notte.`),3.2);tiredChips(id);return}}}if(window.IgorSound&&started)IgorSound.ig('tap',{id,trait:g.trait,pan:0});bubbleQ.length=0;bubbleT=0;
  if(g.rest){say(tt(`${g.name} is sleeping in the little house. Up in ${fmt(restLeft(g))}. A snack wakes it up!`,`${g.name} dorme nella casetta. Si sveglia tra ${fmt(restLeft(g))}. Una merenda lo sveglia!`),3.2);tiredChips(id);return}if(g.en<5)tiredChips(id);say(tt(`${g.name} is ${N(T0.N)}.`,`${g.name} è ${N(T0.N)}.`),2.4);say(`“${N(T0.say)}”`,3)}
 /* the build button and its bar */
 const zb=document.createElement('div');zb.id='zoomB';zb.innerHTML='<button type="button" data-z=".8" aria-label="Zoom in">+</button><button type="button" data-z="1.25" aria-label="Zoom out">−</button>';document.body.appendChild(zb);zb.onclick=e=>{const b=e.target.closest('button');if(b&&b.dataset.z)zoomTo(CAM.z*+b.dataset.z)};
