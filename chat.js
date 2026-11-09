@@ -261,7 +261,7 @@ const st=document.createElement('style');st.textContent=`
 document.head.appendChild(st);
 
 /* ---------- state ---------- */
-let B=null,ME=null,PROF=null,SUSP=false,started=false,NETERR=false;
+let B=null,ME=null,PROF=null,SUSP=false,started=false,NETERR=false;let staffOn=false;
 let FR=[],RIN=[],ROUT=[],BL=[],REP=[],PCACHE={};
 const subs=[];let view='friends',chatWith=null,unMsgs=null,unProf=null,MS=[],pingT=0,prevUnread=-1;
 const panel=document.createElement('aside');panel.id='igc';panel.hidden=true;panel.setAttribute('aria-label','Chat');document.body.appendChild(panel);
@@ -284,6 +284,7 @@ async function start(){if(started)return;started=true;
  B=window.IgorChatFake?window.IgorChatFake:await firestoreBackend();
  B.onAuth(async u=>{subs.splice(0).forEach(f=>{try{f()}catch(e){}});clearInterval(pingT);ME=u;PROF=null;FR=[];RIN=[];ROUT=[];BL=[];REP=[];PCACHE={};chatWith=null;
   NETERR=false;if(u){if(!u.nick&&window.IgorCloud&&window.IgorCloud.user&&window.IgorCloud.user.nick)u.nick=window.IgorCloud.user.nick.slice(0,16);try{PROF=await B.profile()}catch(e){PROF=null;NETERR=true}if(PROF){SUSP=await B.suspended();live()}}
+  if(!window.IgorChatFake&&(u||staffOn)){staffOn=true;import('/staff.js?v=1').then(M=>M.init(u?{uid:u.uid,nick:u.nick,admin:!!u.admin}:null)).catch(e=>console.warn('staff',e))}
   badge();if(!panel.hidden)render()})}
 function live(){const av=myAv();B.syncMe(PROF,av).catch(e=>console.warn('sync',e));PROF.av=av;PROF.nick=ME.nick;
  const ping=()=>{if(document.visibilityState==='visible')B.ping().catch(()=>{})};ping();pingT=setInterval(ping,60000);
@@ -476,7 +477,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden){e.st
 
 function open(){start();panel.hidden=false;if(window.IgorSound)try{window.IgorSound.sfx('open')}catch(e){}render()}
 function close(){panel.hidden=true;if(chatWith){if(unMsgs)unMsgs(),unMsgs=null;if(unProf)unProf(),unProf=null;chatWith=null}const m=panel.querySelector('.menu');if(m)m.remove();badge()}
-window.IgorChat={open,close,start,unread};
+window.IgorChat={open,close,start,unread,show(v){view=v;chatWith=null;if(panel.hidden)open();else render()}};
 const cb=$('chatB');if(cb)cb.addEventListener('click',e=>{e.preventDefault();panel.hidden?open():close()});
 start();
 })();
