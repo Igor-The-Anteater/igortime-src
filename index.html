@@ -542,9 +542,9 @@ const LVX=[0,20,60,150,300,500,800,1200];
 const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes and the tool shed!','Pomodori e capanno degli attrezzi!'],['Field 4 and a new island!','Il campo 4 e una nuova isola!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6 and bigger buildings!','Il campo 6 ed edifici più grandi!'],['Field 7!','Il campo 7!'],['Field 8: the island is complete!','Il campo 8: l’isola è completa!']];
 const FCOST=[null,{t:15},{t:35},{t:90},{t:160},{t:260},{t:400},{t:600}];
 const MAXF=8,CAPS=[30,80,200,500,2000,6000],PENCAP=[0,2,4,6],WATERCAP=[0,3,8],IGMAX=8;
-const igCap=()=>{const F=FM();return Math.min(IGMAX,PENCAP[F.b.pen]+(F.xh||0))};
+const igCap=()=>IGMAX; // a little house appears with every new Igorlet (hired, adopted, stray, orphan)
 const BLD={
- pen:{N:['Igorlet houses','Casette degli Igorlets'],up:[null,null,{lv:3,cost:{t:25},min:30,gives:['room for 4 Igorlets','posto per 4 Igorlets']},{lv:5,cost:{t:150},min:120,gives:['room for 6 Igorlets','posto per 6 Igorlets']}]},
+ pen:{N:['Igorlet houses','Casette degli Igorlets'],up:[null,null]},
  store:{N:['Ant store','Magazzino'],what:['It keeps more tofu ants.','Tiene più formiche di tofu.'],up:[null,{lv:2,cost:{t:20},min:30,gives:['80 ants','80 formiche']},{lv:4,cost:{t:100},min:120,gives:['200 ants','200 formiche']},{lv:6,cost:{t:300},min:240,gives:['500 ants','500 formiche']},{lv:7,cost:{t:450},min:300,gives:['2000 ants','2000 formiche']},{lv:8,cost:{t:1500},min:360,gives:['6000 ants','6000 formiche']}]},
  shop:{N:['Tool shed','Capanno degli attrezzi'],what:['Tools for the Igorlets.','Attrezzi per gli Igorlets.'],up:[null,{lv:3,cost:{t:40},min:60,gives:['tools','gli attrezzi']},{lv:6,cost:{t:160},min:180,gives:['better tools','attrezzi migliori']}]},
  green:{N:['Greenhouse','Serra'],what:['Safe from the weather, 20% faster.','Al riparo dal meteo, più veloce del 20%.'],up:[null,{lv:5,cost:{t:200},min:240,gives:['1 field inside','1 campo dentro']},{lv:7,cost:{t:400},min:360,gives:['2 fields inside','2 campi dentro']}]}};
@@ -753,8 +753,8 @@ function buyItem(key){const I=ITEMS[key];if(!pay(I.cost))return say(NEED(I.cost)
 function buyCrow(i){const f=FM().fields[i];if(!f||f.crow)return;if(!pay(CROW))return say(NEED(CROW),2.6);f.crow=true;say(tt('A scarecrow!','Uno spaventapasseri!'),2);save();fmRender()}
 function useComp(i){const F=FM(),f=F.fields[i];if(!f||f.compNext||F.items.comp<1)return;F.items.comp--;f.compNext=true;say(tt('Compost: next sowing grows faster.','Concime: la prossima semina cresce più in fretta.'),2.6);save();fmRender()}
 function toggleGh(i){const F=FM(),f=F.fields[i],used=F.fields.filter(o=>o.gh).length;if(f.gh){f.gh=false}else{if(used>=F.b.green)return say(tt('The greenhouse is full.','La serra è piena.'),2.4);f.gh=true;f.tarp=null}save();fmRender()}
-function hire(){const F=FM(),n=F.igs.length,c=HIRE[n+1];if(n>=igCap())return say(tt('No free house: build more!','Non ci sono casette libere: costruiscine altre!'),2.6);if(!pay({s:c}))return say(NEED({s:c}),2.4);
- const g=newIg(n);g.id=Math.max(0,...F.igs.map(x=>x.id))+1;F.igs.push(g);say(tt(`Welcome, ${g.name}!`,`Benvenuto, ${g.name}!`),3);if(window.IgorSound&&started)IgorSound.ig('happy',{id:g.id,trait:g.trait});save();fmRender()}
+function hire(){const F=FM(),n=F.igs.length,c=HIRE[n+1];if(n>=igCap())return say(tt('The village is full: 8 Igorlets!','Il villaggio è al completo: 8 Igorlets!'),2.6);if(!pay({s:c}))return say(NEED({s:c}),2.4);
+ const g=newIg(n);g.id=Math.max(0,...F.igs.map(x=>x.id))+1;F.igs.push(g);say(tt(`Welcome, ${g.name}! Its little house is ready in the village.`,`Benvenuto, ${g.name}! La sua casetta è già pronta nel villaggio.`),3.2);if(window.IgorSound&&started)IgorSound.ig('happy',{id:g.id,trait:g.trait});save();fmRender()}
 function buyVeh(k,more){const F=FM(),V=VEH[k],own=F.veh[k];if(own&&!more)return;const n=vehN(k);if(own&&n>=vehMax())return say(tt('One each is enough: more Igorlets, more vehicles!','Uno a testa basta: più Igorlets, più mezzi!'),2.8);
  if(!pay({t:V.cost}))return say(NEED({t:V.cost}),2.6);if(own){own.n=n+1;own.cs=own.cs||[];own.cs[n]=pick(VCOL.filter(c=>c!==own.c))}else F.veh[k]={c:V.c,n:1};snd('buy');fmDirty=true;
  say(own?tt(`Another ${N(V.N).toLowerCase()} for the Igorlets! Now there are ${n+1}.`,`${N(V.N)} per gli Igorlets! Adesso ce ne sono ${n+1}.`):tt(`A ${N(V.N).toLowerCase()}! Tap ${V.ic} to hop on.`,`${N(V.N)}! Tocca ${V.ic} per salire.`),3.2);save();fmRender()}
@@ -2415,11 +2415,14 @@ function tiredFeed(id,what){if(VISIT){return}const g=igById(id),U=FUN();if(!g)re
  snd('munch');fmDirty=true;hudFarm();const o=igObjs.get(id);let woke=false;if(g.rest&&g.en>=REST_TO){g.rest=false;woke=true}if(o){o.jump=.5;o.showT=T+4}
  setTimeout(()=>{if(window.IgorSound&&started)IgorSound.ig('happy',{id,trait:g.trait,pan:0,g:1})},450);bubbleQ.length=0;bubbleT=0;
  say(woke?tt(`${g.name} wakes up full of energy!`,`${g.name} si sveglia pieno di energia!`):what==='fruit'?tt(`${g.name}: +2 leaves. Yum!`,`${g.name}: +2 foglioline. Gnam!`):tt(`${g.name}: +1 leaf. Yum!`,`${g.name}: +1 fogliolina. Gnam!`),2.6);simTo(Date.now(),true);save();fmRender()}
+function treat(id){if(VISIT)return;const g=igById(id),U=FUN(),o=igObjs.get(id);if(!g||U.fruit<1)return;const w=wishOf(id);U.fruit--;snd('munch');if(w&&w.k==='fruit'){wishDone(id);return}
+ fmDirty=true;if(o){o.jump=.5;o.showT=T+4}setTimeout(()=>{if(window.IgorSound&&started)IgorSound.ig('happy',{id,trait:g.trait,pan:0,g:1})},400);bubbleQ.length=0;bubbleT=0;say(tt(`${g.name}: “Yum, thank you!” (already full of energy)`,`${g.name}: “Gnam, grazie!” (era già pieno di energia)`),2.6)}
 function tiredChips(id){const g=igById(id);if(!g)return;const P=(igSpot(id)||igor.position.clone()).clone().add(new V3(0,1.3,0));
- chips(P,()=>{const g=igById(id),U=FUN(),L=[];if(!g)return L;if(!VISIT)L.push({t:'✏️ '+tt('Name & look','Nome e look'),fn:()=>{hideChips();igDress(id);return false}});if(g.en>=enMaxG(g))return L;const F0=FRUIT[U.fk]||fruitOf(),mx=enMaxG(g),e=Math.max(0,Math.min(mx,Math.floor(g.en+1e-6)));
+ chips(P,()=>{const g=igById(id),U=FUN(),L=[];if(!g)return L;const ed=VISIT?null:{t:'✏️ '+tt('Name & look','Nome e look'),fn:()=>{hideChips();igDress(id);return false}};
+  if(g.en>=enMaxG(g)){const F0=FRUIT[U.fk]||fruitOf();L.push(U.fruit>0?{t:`🍎 ${cap1(N(F0.N))} <small>×${U.fruit}</small>`,main:1,fn:()=>{treat(id);return false}}:{t:'🍎 '+tt('Fruit','Frutta'),off:1,why:tt('No fruit: shake a tree with fruit!','Niente frutta: scuoti un albero con la frutta!')});if(ed)L.push(ed);return L}const F0=FRUIT[U.fk]||fruitOf(),mx=enMaxG(g),e=Math.max(0,Math.min(mx,Math.floor(g.en+1e-6)));
   L.push({t:`${g.name} <small>${'●'.repeat(e)}${'○'.repeat(mx-e)}</small>`,off:1,why:tt(`${g.name} has ${e} leaves of energy out of ${mx}.`,`${g.name} ha ${e} foglioline di energia su ${mx}.`)});
   L.push(U.fruit>0?{t:`🍎 ${cap1(N(F0.N))} <small>×${U.fruit} · +2</small>`,main:1,fn:()=>{tiredFeed(id,'fruit');return true}}:{t:'🍎 '+tt('Fruit','Frutta')+' <small>+2</small>',off:1,why:tt('No fruit: shake a tree with fruit!','Niente frutta: scuoti un albero con la frutta!')});
-  L.push(pocket()>=2?{t:`${ICA} ×2 <small>+1</small>`,main:!U.fruit,fn:()=>{tiredFeed(id,'ant');return true}}:{t:`${ICA} ×2 <small>+1</small>`,off:1,why:tt('You need 2 tofu ants.','Servono 2 formiche di tofu.')});return L},'tired'+id,1)}
+  L.push(pocket()>=2?{t:`${ICA} ×2 <small>+1</small>`,main:!U.fruit,fn:()=>{tiredFeed(id,'ant');return true}}:{t:`${ICA} ×2 <small>+1</small>`,off:1,why:tt('You need 2 tofu ants.','Servono 2 formiche di tofu.')});if(ed)L.push(ed);return L},'tired'+id,1)}
 
 /* ---------- the second island (level 4): it rises from the sea, joined to the first by a strip of land; an orphan Igorlet waits there ---------- */
 const ISL2={cx:27,cz:-20,rx:8.5,rz:7.2,A:new V3(12,0,-10.6),B:new V3(22.5,0,-17.5),k:0,on:false,shown:false,risingT:-1};
