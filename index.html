@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=10"></script>
+<script src="/sound.js?v=11"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -539,7 +539,7 @@ const SPC={t:{N:['Tofu','Tofu'],seeds:1,germ:30,ready:120,yield:6,win:480,care:n
  p:{N:['Tomato','Pomodoro'],seeds:3,germ:60,ready:360,yield:20,win:720,care:'water',lv:3},
  c:{N:['Carrot','Carota'],seeds:5,germ:120,ready:720,yield:45,win:1440,care:'weed',lv:5}};
 const LVX=[0,20,60,150,300,500,800,1200];
-const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes and the tool shed!','Pomodori e capanno degli attrezzi!'],['Field 4!','Il campo 4!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6 and bigger buildings!','Il campo 6 ed edifici più grandi!'],['Field 7!','Il campo 7!'],['Field 8: the island is complete!','Il campo 8: l’isola è completa!']];
+const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes and the tool shed!','Pomodori e capanno degli attrezzi!'],['Field 4 and a new island!','Il campo 4 e una nuova isola!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6 and bigger buildings!','Il campo 6 ed edifici più grandi!'],['Field 7!','Il campo 7!'],['Field 8: the island is complete!','Il campo 8: l’isola è completa!']];
 const FCOST=[null,{t:15},{t:35},{t:90},{t:160},{t:260},{t:400},{t:600}];
 const MAXF=8,CAPS=[30,80,200,500,2000,6000],PENCAP=[0,2,4,6],WATERCAP=[0,3,8],IGMAX=8;
 const igCap=()=>{const F=FM();return Math.min(IGMAX,PENCAP[F.b.pen]+(F.xh||0))};
@@ -1002,7 +1002,7 @@ function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>
  if(ballO.a&&ballO.c&&ballO.a.act&&ballO.a.act.k==='ball'&&ballO.c.act&&ballO.c.act.k==='ball'&&ballO.a.grp.position.distanceTo(ballO.a.goal)<.3&&ballO.c.grp.position.distanceTo(ballO.c.goal)<.3){ballO.u+=dt*.7;const u=ballO.u%2,k=u<1?u:2-u,A=ballO.a.grp.position,B=ballO.c.grp.position;
   ballO.b.visible=true;ballO.b.position.set(A.x+(B.x-A.x)*k,.5+Math.sin(k*Math.PI)*1.1,A.z+(B.z-A.z)*k);toyObj.ball.visible=false;if(Math.abs(k-1)<.04&&ballO.c.jump<=0)ballO.c.jump=.35;if(k<.04&&ballO.a.jump<=0)ballO.a.jump=.35}
  else{ballO.b.visible=false;toyObj.ball.visible=!!F.toys.ball}
- for(const[oid,o]of igObjs){const p=o.grp.position,v=o.goal.clone().sub(p);v.y=0;const L=v.length();let moving=false;
+ for(const[oid,o]of igObjs){const p=o.grp.position,v=(o.ride?o.goal:isleVia(o.goal,p)).clone().sub(p);v.y=0;const L=v.length();let moving=false;
   if(L>.08){const sp=Math.min(L,(o.mode==='work'?2.8:1.9)*dt);v.divideScalar(L);p.x+=v.x*sp;p.z+=v.z*sp;moving=true;o.walk+=dt*12;const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0),d=v.dot(cr);if(Math.abs(d)>.2)o.face=d>0?1:-1}
   igSnd(oid,o,moving,dt);o.jump-=dt;const jy=o.jump>0?Math.sin(o.jump/.5*Math.PI)*.35:0;
   const working=o.mode==='work'&&!moving&&!o.doze,sleeping=(o.mode==='sleep'||o.mode==='work'&&o.doze)&&!moving;
@@ -1065,7 +1065,7 @@ let PL=null;
 const plR=P=>P.k==='field'||P.k==='movefield'?1.05:SPOTR[P.key];
 function startPlace(P){if(where!=='out')exitRoom(true);hideChips();closeBar();PL={...P,r:plR(P),x:null,z:null,ok:false,cuts:{t:[],r:[]}};ghost.g.visible=true;const f=PL.k.includes('field'),w=f?1.7:PL.r*1.5;ghost.sq.scale.set(w,1,w);ghost.ring.scale.setScalar(f?1.2:PL.r);
  say(tt('Walk me to a free spot.','Portami in un posto libero.'),3)}
-function placeCheck(x,z){const F=FM(),r=PL.r;if(Math.hypot(x,z*1.12)>R-1.5-r)return tt('Too close to the sea.','Troppo vicino al mare.');
+function placeCheck(x,z){const F=FM(),r=PL.r;if(Math.hypot(x,z*1.12)>R-1.5-r&&!isleIn(x,z,1.5+r))return tt('Too close to the sea.','Troppo vicino al mare.');
  for(const[a,b,c]of FIXB)if(Math.hypot(x-a,z-b)<c+r)return tt('Too close to a house.','Troppo vicino a una casa.');
  for(let i=0;i<F.fields.length;i++){if(PL.k==='movefield'&&PL.i===i)continue;const f=F.fields[i];if(Math.hypot(x-f.x,z-f.z)<r+1.02)return tt('Too close to a field.','Troppo vicino a un campo.')}
  for(const k of BKEYS){if(PL.key===k||!F.pos[k])continue;const p=spotOf(k);if(Math.hypot(x-p.x,z-p.z)<r+SPOTR[k]+.2)return tt('Too close to a building.','Troppo vicino a un edificio.')}
@@ -1115,7 +1115,7 @@ let RUSH=0;function rideSp(){return(RIDE?VEH[RIDE].sp:1)*(!RIDE&&RUSH>T?1.9:1)}
 function rideY(){if(!RIDE)return 0;const V=VEH[RIDE];return(V.kind==='water'?-.5:0)+(V.kind==='air'?rideH:0)+V.seat}
 function rideCamY(){return RIDE&&VEH[RIDE].kind==='air'?rideH*.7:0}
 function rideAirOrSea(){return!!RIDE&&VEH[RIDE].kind!=='land'}
-function rideOk(x,z){if(!RIDE)return null;const V=VEH[RIDE],r=Math.hypot(x,z*1.12);if(V.kind==='water')return r>R+2.4&&r<R+14;if(V.kind==='air')return r<R+12;return null}
+function rideOk(x,z){if(!RIDE)return null;const V=VEH[RIDE],r=Math.hypot(x,z*1.12);if(V.kind==='water')return r>R+2.4&&r<R+20&&isleE(x,z)>1.3&&isleNeck(x,z)>1.9;if(V.kind==='air')return r<R+12||isleE(x,z)<1.6;return null}
 function vehPaint(k){const o=VO[k];if(o)o.paint.color.set(FM().veh[k].c)}
 function riderOf(k,j=0){for(const[,o]of igObjs)if(o.act&&o.act.k==='ride'&&o.act.v===k&&(o.act.j||0)===j)return o;return null}
 const vehN=k=>{const v=FM().veh[k];return v?Math.max(1,v.n|0):0},vehMax=()=>Math.min(9,FM().igs.length+1);
@@ -1231,7 +1231,7 @@ const IG={target:null,arrive:null,face:1,walk:0,idle:3,manual:false,jy:0,jv:0};
 function jump(){if(diving||IG.jy>.05||!started)return;IG.jv=5.6;IG.jy=.001;snd('jump');poke();hideHint()}const IN={x:0,z:0};
 let where='out';window.__where=()=>where;const ROOMS={};
 function walkable(x,z){if(where==='out'&&RIDE){const ok=rideOk(x,z);if(ok!==null)return ok}if(where!=='out'){const Rm=ROOMS[where];if(Math.abs(x)>Rm.w/2-.7||z<-Rm.d/2+1.1||z>Rm.d/2-.3)return false;return!Rm.blocks.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3)}
- if(Math.hypot(x,z*1.12)>R-.6)return false;return!blocked.some(b=>{const d=Math.hypot(b.x-x,b.z-z);if(d>=b.r+.3)return false;const d0=Math.hypot(b.x-igor.position.x,b.z-igor.position.z);return!(d0<b.r+.3&&d>d0)})}
+ if(Math.hypot(x,z*1.12)>R-.6&&!isleLand(x,z))return false;return!blocked.some(b=>{const d=Math.hypot(b.x-x,b.z-z);if(d>=b.r+.3)return false;const d0=Math.hypot(b.x-igor.position.x,b.z-igor.position.z);return!(d0<b.r+.3&&d>d0)})}
 function goTo(k,arg){const P=PLACES[k];if(!P)return;if(where!=='out'){exitRoom(true);}closeSheet();$('index').hidden=true;IG.target=P.pos.clone();IG.manual=true;IG.arrive=()=>P.open(arg);mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke();
  if(igor.position.distanceTo(P.pos)<.6){IG.target=null;const f=IG.arrive;IG.arrive=null;f()}else say(pick(LINES['go_'+k]||[tt('Follow me.','Seguimi.')]),2.2)}
 // draw Igor a little towards the camera (same size and place on screen), so walls behind never cut him
@@ -1245,8 +1245,8 @@ function igorUpdate(t,dt){blink(t);let moving=false;
   const mx=ix*Math.cos(y)+iz*Math.sin(y),mz=-ix*Math.sin(y)+iz*Math.cos(y),sp=4.4*rideSp()*k*dt;const nx=igor.position.x+mx*sp,nz=igor.position.z+mz*sp;
   if(walkable(nx,nz)){igor.position.x=nx;igor.position.z=nz}else if(walkable(nx,igor.position.z))igor.position.x=nx;else if(walkable(igor.position.x,nz))igor.position.z=nz;
   if(Math.abs(ix)>.2)IG.face=ix>0?1:-1;moving=true;IG.walk+=dt*10*k;hideHint();poke()}
- else if(IG.target){const v=IG.target.clone().sub(igor.position);v.y=0;const L=v.length();
-  if(L<.15){IG.target=null;if(IG.arrive){const f=IG.arrive;IG.arrive=null;f()}}
+ else if(IG.target){const TG=where==='out'?isleVia(IG.target):IG.target;if(TG!==IG.target&&IG.tgw!==TG){IG.tgw=TG;IG.best=1e9;IG.bestT=T}const v=TG.clone().sub(igor.position);v.y=0;const L=v.length();
+  if(L<.15&&TG!==IG.target){IG.best=1e9;IG.bestT=T}else if(L<.15){IG.target=null;if(IG.arrive){const f=IG.arrive;IG.arrive=null;f()}}
   else{v.divideScalar(L);const sp=Math.min(L,4.2*rideSp()*dt);const nx=igor.position.x+v.x*sp,nz=igor.position.z+v.z*sp;
    if(IG.tgRef!==IG.target){IG.tgRef=IG.target;IG.best=L;IG.bestT=T;IG.side=0}if(L<IG.best-.25){IG.best=L;IG.bestT=T}let moved=false;if(walkable(nx,nz)){igor.position.x=nx;igor.position.z=nz;moved=true}else{const sd=IG.side||(Math.random()<.5?1:-1);for(const a of[.5,1,1.5,2,2.5]){for(const s0 of[sd,-sd]){const aa=a*s0,c=Math.cos(aa),s1=Math.sin(aa),dx=v.x*c-v.z*s1,dz=v.x*s1+v.z*c,x=igor.position.x+dx*sp,z=igor.position.z+dz*sp;if(walkable(x,z)){igor.position.x=x;igor.position.z=z;IG.side=s0;moved=true;break}}if(moved)break}}if(!moved||T-IG.bestT>5){const f=L<1.6?IG.arrive:null;IG.target=null;IG.arrive=null;IG.side=0;if(f)f()}
    const camRight=new V3().setFromMatrixColumn(camera.matrixWorld,0);const d=v.dot(camRight);if(Math.abs(d)>.25)IG.face=d>0?1:-1;moving=true;IG.walk+=dt*10}}
@@ -1942,7 +1942,7 @@ addEventListener('pointermove',e=>{if(!downAt||!e.buttons||pinch)return;const dx
 renderer.domElement.addEventListener('pointerup',e=>{const d=downAt;downAt=null;if(!d||d.moved||!started)return;if(!PL)hideChips();if(!PL&&funPick(e.clientX,e.clientY))return;if(!PL&&igPick(e.clientX,e.clientY))return;if(!PL&&fieldPick(e.clientX,e.clientY))return;
  ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,camera);
  const shown=m=>{for(let o=m;o;o=o.parent)if(!o.visible)return false;return true};const h=ray.intersectObjects(clickables.filter(m=>(m.userData.name==='igor'||m.userData.room===where)&&shown(m)),false);if(h.length){h.sort((a,b)=>(a.object.userData.name==='igor'?-1:0)-(b.object.userData.name==='igor'?-1:0)||a.distance-b.distance);h[0].object.userData.act();return}
- const g=ray.intersectObject(where==='out'?ground:ROOMS[where].floor)[0];if(!g)return;closeSheet();idx.hidden=true;IG.target=g.point.clone().setY(0);IG.arrive=null;IG.manual=true;mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke()});
+ const g=(where==='out'?ray.intersectObjects(ISL2.on?[ground,ISL2.ground]:[ground]):ray.intersectObject(ROOMS[where].floor)).sort((a,b)=>b.point.y-a.point.y)[0];if(!g)return;closeSheet();idx.hidden=true;IG.target=g.point.clone().setY(0);IG.arrive=null;IG.manual=true;mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke()});
 renderer.domElement.addEventListener('pointermove',e=>{if(downAt&&downAt.moved)return;ndc.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);ray.setFromCamera(ndc,camera);renderer.domElement.style.cursor=ray.intersectObjects(clickables.filter(m=>m.userData.room===where),false).length?'pointer':'grab'});
 const keys={};addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key===' '&&!e.repeat&&e.target.tagName!=='BUTTON'){e.preventDefault();jump();return}keys[e.key.length===1?e.key.toLowerCase():e.key]=true;if(e.key.startsWith('Arrow'))e.preventDefault()});addEventListener('keyup',e=>{keys[e.key.length===1?e.key.toLowerCase():e.key]=false});addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 const joy=$('joy'),knob=joy.querySelector('i'),JOY={id:null,x:0,z:0};
@@ -2166,7 +2166,9 @@ wishB.onclick=e=>{e.stopPropagation();if(!wishS)return;const r=wishB.getBounding
 function funPick(cx,cy){if(where!=='out')return false;return beachPick(cx,cy)||ftPick(cx,cy)}
 {const _it=igTap;igTap=function(id){if(PL)return;const o=igObjs.get(id);
   if(whCall&&whCall.id===id&&!WH.st){whCall=null;const go=()=>whStart(id);if(o&&igor.position.distanceTo(o.grp.position)>3.2)walkNear(o.grp.position.clone(),1.4,go);else go();return}
-  if(hungry(id)&&o&&o.mode==='idle'){const go=()=>wishChips(id);if(igor.position.distanceTo(o.grp.position)>4)walkNear(o.grp.position.clone(),1.3,go);else go();return}_it(id)}}
+  if(hungry(id)&&o&&o.mode==='idle'){const go=()=>wishChips(id);if(igor.position.distanceTo(o.grp.position)>4)walkNear(o.grp.position.clone(),1.3,go);else go();return}
+  // asleep, napping or sheltering: a wish you can hand over (fruit, a tofu ant, a shell) is granted all the same: it comes out of the little house for a moment
+  if(hungry(id)&&o&&['fruit','ant','shell'].includes(wishOf(id).k)){const go=()=>{_it(id);setTimeout(()=>{if(hungry(id))wishChips(id)},900)},P=igSpot(id)||o.grp.position;if(Math.hypot(igor.position.x-P.x,igor.position.z-P.z)>3)walkNear(P.clone(),1.4,go);else go();return}_it(id)}}
 let beachNext=fT(90),ftNext=fT(100),hunNext=fT(150);
 updaters.push((t,dt)=>{if(!S.farm)return;const U=FUN();if(!funT){funT=1;beachSync();ftSync();if(!U.beach.length)beachAdd()}
  for(const o of beachObjs){o.g.userData.h.material.opacity=.25+.15*Math.sin(t*2.6+o.it.x);o.g.position.y=Math.sin(t*1.7+o.it.z)*.015}
@@ -2217,13 +2219,53 @@ function caseAsk(){if(VISIT){return}const F=FM();if(F.b.case||F.pos.case||PL)ret
  chips(igor.position.clone().add(new V3(0,1.6,0)),()=>FM().b.case||FM().pos.case?[]:[{t:`🔨 ${N(BLD.case.N)} ${cst(BLD.case.up[1].cost)}`,main:1,fn:()=>{startPlace({k:'build',key:'case'});say(N(BLD.case.what),2.6);return false}},{t:tt('Later','Dopo'),fn:()=>false}],'caseAsk')}
 function caseSheet(sel){const U=FUN(),n=shellN(),S0=sel&&SHELL[sel],own=S0&&U.col[sel];
  const det=S0?`<div class="shd"><b>${own?N(S0.N):'?'}</b> <span style="color:${TIERS[S0.ti].c}">${'★'.repeat(TIERS[S0.ti].st)}</span> ${N(TIERS[S0.ti].N)}${own?` · ×${own}`:''}<br><small>${own?(own>1?tt(`${own-1} to swap, one day.`,`${own-1} da scambiare, un giorno.`):tt('Only one.','Solo una.')):tt('Not found yet. The sea will bring it… maybe.','Non ancora trovata. Il mare la porterà… forse.')}</small></div>`:`<div class="shd"><small>${tt('Tap a shell. One day you will be able to swap them with other players.','Tocca una conchiglia. Un giorno potrai scambiarle con gli altri giocatori.')}</small></div>`;
- openSheet('shells',`<h2>${N(BLD.case.N)}</h2><p class="shn">${n}/${SHELLS.length} · ${TIERS.map(T0=>`<span style="color:${T0.c}">${'★'.repeat(T0.st)}</span> ${N(T0.N)}`).join(' · ')}</p><div class="shg">${SHELLS.map(x=>{const o=U.col[x.id];return`<button type="button" data-shell="${x.id}" class="${sel===x.id?'on':''}" style="--t:${TIERS[x.ti].c}" aria-label="${o?esc(N(x.N)):'?'}">${o?`<i style="background:${x.c}"></i>${o>1?`<small>${o}</small>`:''}`:'?'}</button>`}).join('')}</div>${det}`)}
+ openSheet('shells',`<h2>${N(BLD.case.N)}</h2><p class="shn">${n}/${SHELLS.length} · ${TIERS.map(T0=>`<span style="color:${T0.c}">${'★'.repeat(T0.st)}</span> ${N(T0.N)}`).join(' · ')}</p><div class="row" style="margin:4px 0 2px"><button type="button" class="main" data-shplay="1">🎵 ${tt('Play the shells','Suona le conchiglie')}</button></div><div class="shg">${SHELLS.map(x=>{const o=U.col[x.id];return`<button type="button" data-shell="${x.id}" class="${sel===x.id?'on':''}" style="--t:${TIERS[x.ti].c}" aria-label="${o?esc(N(x.N)):'?'}">${o?`<i style="background:${x.c}"></i>${o>1?`<small>${o}</small>`:''}`:'?'}</button>`}).join('')}</div>${det}`)}
 sb.addEventListener('click',e=>{const b=e.target.closest('button[data-shell]');if(b){e.stopPropagation();snd('tap');caseSheet(b.dataset.shell)}});
 {const st=document.createElement('style');st.textContent=`.shn{font-size:13px;line-height:1.5}.shg{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin:8px 0}.shg button{position:relative;aspect-ratio:1;border:2px solid var(--t);border-radius:9px;background:rgba(255,255,255,.08);color:inherit;font:600 13px Fredoka,sans-serif;padding:0;display:grid;place-items:center;cursor:pointer}.shg button.on{outline:3px solid #fff3b0}.shg i{width:58%;height:46%;border-radius:50% 50% 45% 45%;box-shadow:inset -2px -2px 0 #0003}.shg small{position:absolute;right:2px;bottom:0;font-size:10px}.shd{font-size:14px;line-height:1.4;min-height:44px}`;document.head.appendChild(st)}
+
+/* ---------- the shell display becomes a wind instrument (idea of Alessandro, 9 Nov): every shell you find is a note;
+   each shelf has its own breath (conch, flute, pan pipe, ocarina, singing shell). You can record melodies and keep them;
+   the marimba, once in tune, plays one of them at random ---------- */
+const SHROW=[48,55,60,67,72],WHITE=[0,2,4,5,7,9,11];
+function shellMidi(id){const k=(+String(id).slice(1)||1)-1,row=Math.floor(k/10),i=k%10;let m=SHROW[row];for(let j=0;j<i;j++){do{m++}while(!WHITE.includes(m%12))}return m}
+const shellRow=id=>Math.floor(((+String(id).slice(1)||1)-1)/10);
+const shellF=id=>440*Math.pow(2,(shellMidi(id)-69)/12);
+const shellNote=id=>NNAME[shellMidi(id)%12][LANG==='it'?1:0];
+const ROWN=[['Conch','Conchiglia tromba'],['Flute','Flauto'],['Pan pipe','Flauto di Pan'],['Ocarina','Ocarina'],['Singing shell','Conchiglia che canta']];
+const MEL=()=>{const U=FUN();U.mel=U.mel||[];return U.mel};
+let REC=null,PLAYT=[];
+function shPlay(id,vis=true){snd('wind',{f:shellF(id),r:shellRow(id)});if(vis){const b=sb.querySelector(`[data-shp="${id}"]`);if(b){b.classList.remove('ring');void b.offsetWidth;b.classList.add('ring')}}
+ if(REC&&REC.on){if(!REC.t0)REC.t0=performance.now();REC.ev.push([Math.round(performance.now()-REC.t0),id]);if(REC.ev.length>=64||REC.ev[REC.ev.length-1][0]>40000)recStop();else{const c=$('recN');if(c)c.textContent=REC.ev.length}}}
+function melStop(){PLAYT.forEach(clearTimeout);PLAYT=[]}
+function melPlay(m,how){melStop();if(!m||!m.ev||!m.ev.length)return;const t0=m.ev[0][0];
+ m.ev.forEach(([t,id])=>PLAYT.push(setTimeout(()=>{if(how==='mar'){let f=shellF(id);while(f<262)f*=2;while(f>1050)f/=2;snd("marimba",f)}else shPlay(id,sheetKind==='shplay')},t-t0)))}
+function recStop(){if(!REC)return;const ev=REC.ev;REC=null;if(ev.length>=2){const L=MEL();if(L.length>=8)L.shift();let n=1;while(L.some(m=>m.n===tt('Melody','Melodia')+' '+n))n++;L.push({n:tt('Melody','Melodia')+' '+n,ev,at:Date.now()});fmDirty=true;save();say(tt('Saved! Every melody you keep, the marimba may play one day.','Salvata! Le melodie che tieni, la marimba un giorno le suona.'),3)}
+ else say(tt('Too short: play at least two notes.','Troppo corta: suona almeno due note.'),2.4);if(sheetKind==='shplay')shellPlaySheet()}
+function shellPlaySheet(){const U=FUN(),own=SHELLS.filter(x=>U.col[x.id]).length,L=MEL();
+ const grid=SHELLS.map(x=>{const o=U.col[x.id];return`<button type="button" ${o?`data-shp="${x.id}"`:'disabled'} class="r${shellRow(x.id)}" aria-label="${o?esc(N(x.N))+' · '+shellNote(x.id):'?'}">${o?`<i style="background:${x.c}"></i><b>${shellNote(x.id)}</b>`:'·'}</button>`}).join('');
+ const rows=ROWN.map((r,k)=>`<span class="r${k}">${N(r)}</span>`).join('');
+ const rec=REC?`<button type="button" data-rec="stop" class="m">■ ${tt('Stop','Ferma')} · <b id="recN">${REC.ev.length}</b> ${tt('notes','note')}</button>`:`<button type="button" data-rec="go">● ${tt('Record','Registra')}</button>`;
+ const list=L.length?`<ul class="mell">${L.map((m,i)=>`<li><button type="button" data-mel="${i}">▶ ${esc(m.n)} <small>${m.ev.length} ${tt('notes','note')}</small></button><button type="button" data-meld="${i}" aria-label="${tt('Delete','Cancella')}">🗑</button></li>`).join('')}</ul>`:`<p class="shn">${tt('No melodies yet: press Record and play the shells.','Ancora nessuna melodia: premi Registra e suona le conchiglie.')}</p>`;
+ openSheet('shplay',`<h2>🎵 ${tt('The shell instrument','Lo strumento delle conchiglie')}</h2><p class="shn">${tt(`${own} notes collected out of 50. Every shell you find is a new note; each shelf breathes differently.`,`${own} note raccolte su 50. Ogni conchiglia che trovi è una nota nuova; ogni ripiano ha il suo fiato.`)}</p>
+ <div class="shrow">${rows}</div><div class="shg shp">${grid}</div><div class="row recr">${rec}<button type="button" data-shback="1">🐚 ${tt('Collection','Collezione')}</button></div><div class="k">${tt('Your melodies','Le tue melodie')} · ${L.length}/8</div>${list}`)}
+sb.addEventListener('click',e=>{const b=e.target.closest('button[data-marmel]');if(!b)return;e.stopPropagation();const m=pick(MEL());if(m){melPlay(m,'mar');say(tt(`“${m.n}” on the marimba.`,`«${m.n}» alla marimba.`),2.4)}});
+sb.addEventListener('pointerdown',e=>{const b=e.target.closest('button[data-shp]');if(b&&sheetKind==='shplay'){e.preventDefault();e.stopPropagation();shPlay(b.dataset.shp)}});
+sb.addEventListener('click',e=>{if(sheetKind!=='shplay'&&sheetKind!=='shells')return;const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ if(d.shp){e.stopPropagation();return}
+ if(d.shplay){e.stopPropagation();shellPlaySheet();return}
+ if(d.shback){e.stopPropagation();if(REC)recStop();melStop();caseSheet();return}
+ if(d.rec==='go'){e.stopPropagation();melStop();REC={on:true,t0:0,ev:[]};shellPlaySheet();say(tt('Recording: play the shells!','Registro: suona le conchiglie!'),2);return}
+ if(d.rec==='stop'){e.stopPropagation();recStop();return}
+ if(d.mel!=null){e.stopPropagation();melPlay(MEL()[+d.mel]);return}
+ if(d.meld!=null){e.stopPropagation();if(b.dataset.sure){MEL().splice(+d.meld,1);fmDirty=true;save();shellPlaySheet()}else{b.dataset.sure=1;b.textContent='✓?';setTimeout(()=>{if(b.isConnected){delete b.dataset.sure;b.textContent='🗑'}},2500)}return}});
+updaters.push(()=>{if(REC&&sheetKind!=='shplay')recStop()});
+{const st=document.createElement('style');st.textContent=`.shp button{border-color:var(--rc,#fff6)}.shp button.r0{--rc:#e9a77a}.shp button.r1{--rc:#9fd3f0}.shp button.r2{--rc:#c9e39a}.shp button.r3{--rc:#f1c4e0}.shp button.r4{--rc:#ffe08a}.shp button b{position:absolute;bottom:1px;left:0;right:0;font-size:8.5px;font-weight:600;opacity:.85}.shp button:disabled{opacity:.35;cursor:default}.shp button.ring{animation:shring .5s}@keyframes shring{0%{transform:scale(1.18);background:rgba(255,255,255,.45)}100%{transform:scale(1)}}
+.shrow{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px}.shrow span{display:inline-flex;align-items:center;gap:4px}.shrow span:before{content:'';width:10px;height:10px;border-radius:50%;border:2px solid var(--rc)}.shrow .r0{--rc:#e9a77a}.shrow .r1{--rc:#9fd3f0}.shrow .r2{--rc:#c9e39a}.shrow .r3{--rc:#f1c4e0}.shrow .r4{--rc:#ffe08a}
+.recr{display:flex;gap:8px;margin:6px 0 10px}.mell{list-style:none;padding:0;margin:6px 0}.mell li{display:flex;gap:6px;margin-bottom:6px}.mell li button:first-child{flex:1;text-align:left;text-transform:none}.mell small{opacity:.7;margin-left:6px}`;document.head.appendChild(st)}
 {const _bt=bldTap;bldTap=function(k){if(k!=='case')return _bt(k);const F=FM(),bt=F.tasks.find(q=>q.k==='build'&&q.b==='case');if(bt||PL)return _bt(k);
  if(igor.position.distanceTo(spotOf('case'))>5){IG.target=spotOf('case').add(new V3(0,0,SPOTR.case+1));IG.arrive=null;IG.manual=true}
  const n=shellN();say(n?tt(`${n} shells out of 50.`,`${n} conchiglie su 50.`):tt('Empty for now: look on the beach!','Per ora è vuoto: cerca sulla spiaggia!'),2.4);
- chips(spotOf('case').add(new V3(0,2.4,0)),()=>[{t:'🐚 '+tt('Collection','Collezione'),main:1,fn:()=>{caseSheet();return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'case'});return false}}],'bcase')}}
+ chips(spotOf('case').add(new V3(0,2.4,0)),()=>[{t:'🎵 '+tt('Play','Suona'),main:1,fn:()=>{shellPlaySheet();return false}},{t:'🐚 '+tt('Collection','Collezione'),fn:()=>{caseSheet();return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'case'});return false}}],'bcase')}}
 
 /* ---------- the Igorlets' wishes: one at a time each, a new one about an hour after the last ---------- */
 const WISHES={fruit:['Could I have some fruit?','Mi daresti un po’ di frutta?'],ant:['A little tofu snack, please?','Una merendina di tofu, per favore?'],shell:['I’d love a shell! A spare one is fine.','Mi regali una conchiglia? Va bene anche una doppia.'],sea:['Will you walk me to the sea?','Mi accompagni al mare?'],jump:['Let’s jump together! Three jumps!','Saltiamo insieme! Tre salti!']};
@@ -2351,7 +2393,7 @@ function insSheet(){const I=INSK[INSEL],M=insS(INSEL),n=insOut(INSEL),k=insSel,p
  const ctl=k>=0&&M.off[k]?`<div class="mctl"><p>${cap1(pn)} <b>${insNote(I,k)}</b>: ${tt('slide until it sounds right with the others.','sposta lo slider finché suona giusta con le altre.')}</p>
  <div class="msl"><span>${tt('lower','più giù')}</span><input type="range" min="-100" max="100" step="1" value="${M.sl[k]}" data-ms="${k}" aria-label="${tt('Tune','Intona')}"><span>${tt('higher','più su')}</span></div>
  <div class="mbt"><button type="button" data-mp="one">▶ ${tt('The note','La nota')}</button><button type="button" data-mp="nb">▶ ${tt('With its neighbours','Con le vicine')}</button><button type="button" data-mp="ok" class="m">✓ ${tt('In tune!','Intonata!')}</button></div></div>`
- :`<div class="mctl"><p>${n?tt('Tap one marked “?”.','Tocca quella con il “?”.'):tt('Everything is in tune. Tap to play! Every hour one note goes out of tune again.','È tutto intonato. Tocca per suonare! Ogni ora una nota si scorda di nuovo.')}</p></div>`;
+ :`<div class="mctl"><p>${n?tt('Tap one marked “?”.','Tocca quella con il “?”.'):tt('Everything is in tune. Tap to play! Every hour one note goes out of tune again.','È tutto intonato. Tocca per suonare! Ogni ora una nota si scorda di nuovo.')}</p>${!n&&INSEL==='mar'&&MEL().length?`<div class="mbt"><button type="button" data-marmel="1" class="m">▶ ${tt('One of your melodies','Una tua melodia')}</button></div>`:''}</div>`;
  openSheet('mar',`<h2>${N(I.N)}</h2><p class="shn">${n?`${n} ${tt(n>1?'notes out of tune':'note out of tune',n>1?'note stonate':'nota stonata')}`:tt('In tune ♪','Intonato ♪')}</p><div class="mbars">${bars}</div>${ctl}`)}
 const marSheet=insSheet;
 sb.addEventListener('click',e=>{const b=e.target.closest('button[data-mb],button[data-mp]');if(!b)return;e.stopPropagation();const M=insS(INSEL);
@@ -2365,7 +2407,7 @@ sb.addEventListener('click',e=>{const b=e.target.closest('button[data-mb],button
   else{insTry++;bubbleQ.length=0;bubbleT=0;say(insTry>=2?(err>0?tt('Almost: still a little high.','Quasi: è ancora un po’ alta.'):tt('Almost: still a little low.','Quasi: è ancora un po’ bassa.')):tt('Not yet… listen with its neighbours.','Non ancora… ascoltala con le vicine.'),2.6)}}});
 sb.addEventListener('input',e=>{const r=e.target.closest('input[data-ms]');if(!r)return;const M=insS(INSEL),k=+r.dataset.ms;M.sl[k]=+r.value;fmDirty=true;const n=performance.now();if(n-insLast>170){insLast=n;insPlay(INSEL,k)}});
 sb.addEventListener('change',e=>{const r=e.target.closest('input[data-ms]');if(r)insPlay(INSEL,+r.dataset.ms)});
-function insTune(k){const seq=[0,2,4,5,4,2,3,1,0,2,4,7,6,5],o=insO[k];seq.forEach((i,j)=>setTimeout(()=>insPlay(k,i),j*240));if(!o)return;const P=o.g.position;for(const[,q]of igObjs)if(q.grp.position.distanceTo(P)<9){[0,1,2].forEach(n=>setTimeout(()=>{q.jump=.45},n*900+Math.random()*300))}}
+function insTune(k){const seq=[0,2,4,5,4,2,3,1,0,2,4,7,6,5],o=insO[k],ML=MEL();if(k==='mar'&&ML.length){const m=pick(ML);melPlay(m,'mar');setTimeout(()=>say(tt(`The marimba plays your “${m.n}”!`,`La marimba suona la tua «${m.n}»!`),3),300)}else seq.forEach((i,j)=>setTimeout(()=>insPlay(k,i),j*240));if(!o)return;const P=o.g.position;for(const[,q]of igObjs)if(q.grp.position.distanceTo(P)<9){[0,1,2].forEach(n=>setTimeout(()=>{q.jump=.45},n*900+Math.random()*300))}}
 {const st=document.createElement('style');st.textContent=`.mbars{display:flex;gap:6px;align-items:flex-end;justify-content:center;margin:12px 0}.mbars button{position:relative;width:11%;border:2px solid #2b2018;border-radius:8px;background:linear-gradient(#b8764a,#8a5432);color:#f7ecd4;font:600 13px Fredoka,sans-serif;cursor:pointer;touch-action:manipulation;padding:0}.mbars button.off{border-color:#ff7a5a;box-shadow:0 0 0 3px #ff7a5a55}.mbars button.on{outline:3px solid #fff3b0}.mbars i{position:absolute;top:-10px;right:-6px;font-style:normal;background:#ff7a5a;color:#fff;border-radius:50%;width:20px;height:20px;line-height:20px;font-size:13px}.mctl p{font-size:14px;line-height:1.4}.msl{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:13px}.msl input{flex:1;height:34px;accent-color:#f6d34a}.mbt{display:flex;gap:8px;flex-wrap:wrap}.mbt button{flex:1;min-width:110px;font:500 14px Fredoka,sans-serif;border:2px solid #2b2018;border-radius:12px;padding:8px;background:#fff7e6;color:#2b2018;cursor:pointer}.mbt button.m{background:#9be38a}`;document.head.appendChild(st)}
 
 /* ---------- a tired or sleeping Igorlet gets a snack: fruit +2 leaves, 2 tofu ants +1. A snack wakes a napping one ---------- */
@@ -2379,6 +2421,65 @@ function tiredChips(id){const g=igById(id);if(!g)return;const P=(igSpot(id)||igo
   L.push(U.fruit>0?{t:`🍎 ${cap1(N(F0.N))} <small>×${U.fruit} · +2</small>`,main:1,fn:()=>{tiredFeed(id,'fruit');return true}}:{t:'🍎 '+tt('Fruit','Frutta')+' <small>+2</small>',off:1,why:tt('No fruit: shake a tree with fruit!','Niente frutta: scuoti un albero con la frutta!')});
   L.push(pocket()>=2?{t:`${ICA} ×2 <small>+1</small>`,main:!U.fruit,fn:()=>{tiredFeed(id,'ant');return true}}:{t:`${ICA} ×2 <small>+1</small>`,off:1,why:tt('You need 2 tofu ants.','Servono 2 formiche di tofu.')});return L},'tired'+id,1)}
 
+/* ---------- the second island (level 4): it rises from the sea, joined to the first by a strip of land; an orphan Igorlet waits there ---------- */
+const ISL2={cx:27,cz:-20,rx:8.5,rz:7.2,A:new V3(12,0,-10.6),B:new V3(22.5,0,-17.5),k:0,on:false,shown:false,risingT:-1};
+const isleE=(x,z)=>Math.hypot((x-ISL2.cx)/ISL2.rx,(z-ISL2.cz)/ISL2.rz);
+const isleNeck=(x,z)=>segD(x,z,ISL2.A.x,ISL2.A.z,ISL2.B.x,ISL2.B.z);
+function isleLand(x,z,m=0){if(!ISL2.on)return false;return isleE(x,z)<.86-m/8||isleNeck(x,z)<1-m}
+function isleIn(x,z,m=0){return ISL2.on&&isleE(x,z)<.86-m/8}
+function isleSide(x,z){if(isleE(x,z)<.86)return'isle';if(Math.hypot(x,z*1.12)<R-1.5)return'main';return isleNeck(x,z)<1.05?'neck':'main'}
+// the way across: from the first island to the new one (and back) Igor and the Igorlets walk along the strip of land
+function isleVia(tg,from){if(!ISL2.on||!tg)return tg;const p=from||igor.position,si=isleSide(p.x,p.z),st=isleSide(tg.x,tg.z);if(si===st||st==='neck')return tg;
+ const near=isleNeck(p.x,p.z)<1.1; // on (or by) the strip: straight along it; otherwise first to its end on this side
+ if(st==='isle')return near?ISL2.B:ISL2.A;
+ return near?ISL2.A:ISL2.B}
+const isleG=new THREE.Group();isleG.visible=false;scene.add(isleG);
+{const W=26,D=20,cx=23.5,cz=-19,g=new THREE.PlaneGeometry(W,D,78,60);g.rotateX(-Math.PI/2);g.translate(cx,0,cz);
+ const pos=g.attributes.position,cols=[],a=new THREE.Color('#2f5238'),b=new THREE.Color('#2b4b35'),c=new THREE.Color('#36593c'),sand=new THREE.Color('#9b9277'),path=new THREE.Color('#58584f'),t=new THREE.Color();
+ for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),e=isleE(x,z),dn=isleNeck(x,z),r=Math.hypot(x,z*1.12);let y=-1.4;t.copy(sand);
+  const n=Math.sin(x*.37)*Math.cos(z*.31)+Math.sin((x-z)*.13),grass=()=>t.copy(n>.5?c:n>-.25?a:b);
+  if(e<1){y=Math.max(.02,(1-e)*.35+Math.sin(x*.6)*Math.cos(z*.5)*.06);grass()}else if(e<1.28){y=-.3*(e-1)/.28}
+  if(dn<1.25){const yy=.03;if(yy>y){y=yy;grass();t.lerp(path,.55*(1-dn/1.25))}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.copy(sand)}}
+  if(r<R+.2){const yMain=r<R?Math.max(0,Math.sin(x*.21+1)*Math.cos(z*.19)*.25-.05):-.05;y=Math.min(y,yMain-.06)} // under the first island: hidden
+  pos.setY(i,y);cols.push(t.r,t.g,t.b)}
+ g.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));g.computeVertexNormals();
+ const m=new THREE.Mesh(g,lam('#ffffff',{vertexColors:true}));m.userData.isle=1;isleG.add(m);ISL2.ground=m}
+{const s0=seed;seed=4242;const add=(f,x,z,s)=>{f(x,z,s);const T0=trees[trees.length-1].t;scene.remove(T0);isleG.add(T0)};
+ add(pine,31.5,-23.5,1.05);add(roundTree,24.5,-24.2,.95);add(pine,33.5,-18.2,.9);add(roundTree,29.8,-15.4,.85);add(pine,21.8,-21.8,.8);
+ for(const[x,z,s]of[[26.2,-25.6,.9],[34.4,-21.4,.7],[20.6,-19.6,.6]]){rock(x,z,s);const r0=rocks[rocks.length-1];scene.remove(r0);isleG.add(r0)}
+ seed=s0}
+// the orphan Igorlet, with a tiny bundle on a stick
+const ORPH={x:27.4,z:-19.4};
+const orphG={hue:-6,look:{avatar:'queer',head:'beanie',hcol:'#f1b46e',glasses:null,ears:'l',ecol:'#7fe3ef'}};
+const orphO=(()=>{const grp=new THREE.Group();grp.position.set(ORPH.x,0,ORPH.z);const m=curve(new THREE.MeshBasicMaterial({map:igTex(orphG,''),transparent:true,alphaTest:.15,side:THREE.DoubleSide,color:new THREE.Color(.93,.95,.97)}));
+ const pl=new THREE.Mesh(new THREE.PlaneGeometry(IGW,IGH2).translate(0,IGH2/2,0),m);grp.add(pl);blob(grp,.28);
+ const st=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.75,5),lam('#7a5232'));st.position.set(.42,.32,-.05);st.rotation.z=-.5;grp.add(st);
+ const bu=new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),lam('#e0463c'));bu.position.set(.62,.64,-.05);grp.add(bu);
+ for(const[dx,dz]of[[.25,.15],[-.2,.25],[.05,-.25]]){const s=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),lam('#f6d34a'));s.position.set(dx-.55,.07,dz);grp.add(s)}
+ isleG.add(grp);hit(grp,.5,()=>orphTap(),'orphan',.4);const L=label(['An Igorlet all alone','Un Igorlet tutto solo'],['tap to say hello','tocca per salutarlo'],grp.position.clone().add(new V3(0,IGH+.6,0)),()=>orphTap(),6);
+ return{grp,pl,m,L,ok:igorOK}})();
+let orphSaid=0;
+function orphTap(){const F=FM();if(F.orphan||VISIT)return;if(Math.hypot(igor.position.x-ORPH.x,igor.position.z-ORPH.z)>2.4){IG.target=new V3(ORPH.x-1.1,0,ORPH.z+.8);IG.arrive=()=>orphTap();IG.manual=true;mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;poke();say(tt('Coming!','Arrivo!'),1.6);return}
+ bubbleQ.length=0;bubbleT=0;if(window.IgorSound&&started)IgorSound.ig('tap',{id:99,trait:'shy',pan:0});
+ say(tt('“Hello… I’ve been alone on this island since it was under the sea. Can I come and live with you?”','“Ciao… sono rimasto da solo su quest’isola da quando era sotto il mare. Posso venire a vivere con voi?”'),4.2);
+ chips(orphO.grp.position.clone().add(new V3(0,1.4,0)),()=>[{t:'🏠 '+tt('Come with us!','Vieni con noi!'),main:1,fn:()=>{orphAdopt();return false}},{t:tt('In a moment','Tra un po’'),fn:()=>false}],'orph',1)}
+function orphAdopt(){const F=FM();if(F.orphan)return;if(F.igs.length>=IGMAX){say(tt('The village is full… but we’ll find room for you soon!','Il villaggio è pieno… ma presto troveremo posto anche per te!'),3);return}
+ const extra=F.igs.length>=PENCAP[F.b.pen];if(extra)F.xh=(F.xh||0)+1;const g=newIg(F.igs.length);g.id=Math.max(...F.igs.map(x=>x.id))+1;g.look={...orphG.look};g.hue=orphG.hue;g.trait='explorer';F.igs.push(g);F.orphan=Date.now();
+ const o=igObj(g);o.grp.position.set(ORPH.x,0,ORPH.z);o.goal.set(ORPH.x,0,ORPH.z);orphO.grp.visible=false;orphO.L.hidden=true;hideChips();
+ bubbleQ.length=0;bubbleT=0;say(tt(`Welcome home, ${g.name}! ${extra?'We built a new little house for you in the village.':'Your little house is in the village.'}`,`Benvenuto a casa, ${g.name}! ${extra?'Ti abbiamo fatto una casetta nuova nel villaggio.':'La tua casetta è nel villaggio.'}`),3.8);
+ say(tt(`(Tap ${g.name} to choose a name and a look.)`,`(Tocca ${g.name} per scegliergli nome e look.)`),3);
+ if(window.IgorSound&&started)IgorSound.ig('happy',{id:g.id,trait:g.trait});fmDirty=true;save();fmRender()}
+// level 4: the island rises (once, with Igor watching if he is there), then it stays
+updaters.push(()=>{if(!S.farm)return;const F=FM(),want=lvlOf()>=4;
+ if(!want){isleG.visible=false;ISL2.on=false;ISL2.k=0;return}
+ if(!ISL2.shown){ISL2.shown=true;isleG.visible=true;const fresh=!F.isle2;if(fresh&&!VISIT){F.isle2=Date.now();fmDirty=true}
+  if(fresh&&!VISIT&&started){ISL2.risingT=T;setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt('Look over there! A new island is rising from the sea… and someone is waiting on it!','Guarda laggiù! Dal mare sta emergendo una nuova isola… e qualcuno ci aspetta!'),5);snd('wish')},600)}
+  else ISL2.k=1}
+ if(ISL2.risingT>=0){const u=Math.min(1,(T-ISL2.risingT)/7);ISL2.k=u<1?1-Math.pow(1-u,3):1;if(u>=1)ISL2.risingT=-1;if(Math.random()<.03&&u<1)snd('water')}
+ isleG.position.y=-1.7*(1-ISL2.k);ISL2.on=ISL2.k>.97;
+ const adopted=!!F.orphan||VISIT;orphO.grp.visible=!adopted;orphO.L.hidden=adopted||where!=='out'||Math.hypot(igor.position.x-ORPH.x,igor.position.z-ORPH.z)>7;
+ if(!adopted){orphO.pl.quaternion.copy(camera.quaternion);orphO.pl.position.y=Math.abs(Math.sin(T*1.6))*.03;if(!orphO.ok&&igorOK){orphO.ok=true;orphO.m.map=igTex(orphG,'');orphO.m.needsUpdate=true}
+  if(ISL2.on&&started&&T-orphSaid>40&&Math.hypot(igor.position.x-ORPH.x,igor.position.z-ORPH.z)<3.2){orphSaid=T;orphTap()}}});
 /* ---------- name and look of an Igorlet (like dressing up Igor) ---------- */
 let IGD=null;
 function igName(n){return String(n||'').replace(/[^\p{L}\p{N} '’\-]/gu,'').replace(/\s+/g,' ').trim().slice(0,12)}
@@ -2545,12 +2646,12 @@ function shopChips(k){if(VISIT){visitNo();return}const V=VEH[k],n=vehN(k),D=_sho
   return L},'shop'+k,1)}
 
 /* ---------- 9 Nov, later: the leaderboard board where the jetty was; the pocket (fruit, shells, messages); pick things up by walking on them ---------- */
-const BOARDS=[{g:'total',l:'all',N:['Overall','Generale'],sub:['all the games added up','tutti i giochi sommati']},{g:'island',l:'all',N:['The island','L’isola'],sub:['tofu ants picked','formiche raccolte']},{g:'abyss',N:['The abyss','L’abisso'],sub:['metres','metri']},
- {g:'kitchen',N:['The kitchen','La cucina']},{g:'window',N:['The window','La finestra']},{g:'bedroom',N:['The bedroom','La camera']},{g:'drums',N:['The drums','La batteria']},
- {g:'pitch',N:['Pitch Stairs','Pitch Stairs']},{g:'cadences',N:['Cadences','Cadenze']}];
+const BOARDS=[{g:'total',l:'all',N:['Overall','Generale'],sub:['all the games added up','tutti i giochi sommati']},{g:'island',l:'all',N:['The island','L’isola'],sub:['tofu ants picked','formiche raccolte']},{g:'abyss',N:['The abyss','L’abisso'],sub:['metres, all dives added up','metri, tutte le immersioni sommate']},
+ {g:'kitchen',N:['The kitchen','La cucina'],sub:['all your games added up','tutte le partite sommate']},{g:'window',N:['The window','La finestra'],sub:['all your games added up','tutte le partite sommate']},{g:'bedroom',N:['The bedroom','La camera'],sub:['all your games added up','tutte le partite sommate']},{g:'drums',N:['The drums','La batteria'],sub:['all your games added up','tutte le partite sommate']},
+ {g:'pitch',N:['Pitch Stairs','Pitch Stairs'],sub:['all your games added up','tutte le partite sommate']},{g:'cadences',N:['Cadences','Cadenze'],sub:['all your games added up','tutte le partite sommate']}];
 const LVN={easy:['Easy','Facile'],medium:['Medium','Medio'],extreme:['Extreme','Estremo']};
 let bdSel={g:'total',l:'all'};
-const boardMod=()=>window.IgorCloud?import('/board.js?v=2'):Promise.reject('no cloud');
+const boardMod=()=>window.IgorCloud?import('/board.js?v=3'):Promise.reject('no cloud');
 function boardSheet(g,l){if(g)bdSel={g,l:l||(g==='island'||g==='abyss'||g==='total'?'all':bdSel.l!=='all'?bdSel.l:'easy')};const B=BOARDS.find(b=>b.g===bdSel.g)||BOARDS[0],lv=bdSel.g!=='island'&&bdSel.g!=='abyss'&&bdSel.g!=='total';
  const tabs=BOARDS.map(b=>`<button type="button" data-bd="${b.g}" class="${b.g===bdSel.g?'on':''}">${N(b.N)}</button>`).join(''),lvs=lv?`<div class="bdl">${Object.keys(LVN).map(k=>`<button type="button" data-bl="${k}" class="${k===bdSel.l?'on':''}">${N(LVN[k])}</button>`).join('')}</div>`:'';
  const BPLAY={kitchen:'k',window:'w',bedroom:'b',drums:'drums',pitch:'stairs',cadences:'cad',abyss:'abyss'}[bdSel.g],playB=BPLAY?`<button type="button" class="bdGo" data-play="${BPLAY}">🏃 ${N(B.N)} · ${tt('let’s play!','giochiamo!')}</button>`:'';
@@ -2768,7 +2869,7 @@ updaters.push((t,dt)=>{if(!S.farm||VISIT)return;const U=FUEL();if((fuelAcc+=dt)>
    shells you give) is kept apart in _HOME and saved as usual. Each kind gesture (care for a field, a gift, a souvenir, signing the
    guest book, tuning an instrument) can be done once a day per friend; the friend finds them when they come back. */
 var VIS=null,_HOME=null;
-const visitMod=()=>import('/visit.js?v=1');
+const visitMod=()=>import('/visit.js?v=2');
 const SOUV={flower:{N:['little flower','fiorellino'],ic:'🌼'},doll:{N:['little Igor doll','pupazzetto di Igor'],ic:'🧸'},stone:{N:['painted pebble','sasso dipinto'],ic:'🪨'},
  lantern:{N:['paper lantern','lanterna di carta'],ic:'🏮'},flag:{N:['little flag','bandierina'],ic:'🎏'},mush:{N:['toy mushroom','funghetto'],ic:'🍄'}};
 const an=o=>N([(/^[aeiou]/.test(o.N[0])?'an ':'a ')+o.N[0],(/(a|e)$/.test(o.N[1].split(' ')[0])?'una ':'un ')+o.N[1]]);
@@ -2836,13 +2937,18 @@ function giftChips(){const U=homeFun(),dup=Object.entries(U.col||{}).filter(([k,
   L.push(dup?{t:`🐚 ${N(SHELL[dup[0]].N)} <small>×${dup[1]}</small>`,fn:()=>{const id=dup[0];vSend('gift',{t:'shell',s:id},tt(`A shell for ${VIS.nick}: it will be in their display case!`,`Una conchiglia per ${VIS.nick}: la troverà nell’espositore!`),()=>homeEdit(H=>{const c=H.farm.fun.col;c[id]=Math.max(0,(c[id]|0)-1);if(!c[id])delete c[id]}));return false}}:{t:'🐚 '+tt('Spare shell','Conchiglia doppia'),off:1,why:tt('No spare shells yet.','Ancora nessuna conchiglia doppia.')});
   return L},'vgift',1)}
 function souvChips(){chips(igor.position.clone().add(new V3(0,1.7,0)),()=>Object.entries(SOUV).map(([k,o])=>({t:`${o.ic} ${cap1(N(o.N))}`,fn:()=>{const fw=new V3(Math.sin(igor.rotation.y),0,Math.cos(igor.rotation.y)),x=+(igor.position.x+fw.x*.9).toFixed(2),z=+(igor.position.z+fw.z*.9).toFixed(2);
-   vSend('souv',{t:k,x,z},tt(`You left ${an(o)} for ${VIS.nick}. They’ll wonder what it is!`,`Hai lasciato ${an(o)} per ${VIS.nick}. Chissà cosa penserà!`),()=>{const F=FM();F.souv=F.souv||[];F.souv.push({t:k,x,z,by:myNick(),at:Date.now()})});return false}})),'vsouv',1)}
+   vSend('souv',k==='doll'?{t:k,x,z,av:myLook()}:{t:k,x,z},tt(`You left ${an(o)} for ${VIS.nick}. They’ll wonder what it is!`,`Hai lasciato ${an(o)} per ${VIS.nick}. Chissà cosa penserà!`),()=>{const F=FM();F.souv=F.souv||[];F.souv.push({t:k,x,z,by:myNick(),at:Date.now(),...(k==='doll'?{av:myLook()}:{})})});return false}})),'vsouv',1)}
+/* the doll looks like the Igor of whoever leaves it: avatar and accessories */
+function myLook(){const H=VISIT&&_HOME?_HOME:S,A=accOf(H);return{avatar:H.avatar||'igor',head:A.head||'',hcol:A.hcol||null,glasses:A.glasses||null,gcol:A.gcol||null,ears:A.ears||null,ecol:A.ecol||null}}
+function cleanLook(a){if(!a||typeof a!=='object')return null;const s=v=>typeof v==='string'&&v.length<=12?v:null,o={avatar:['igor','she','queer'].includes(a.avatar)?a.avatar:'igor',head:['cap','bow','flower','star','beanie'].includes(a.head)?a.head:'',hcol:s(a.hcol),glasses:['eye','sun'].includes(a.glasses)?a.glasses:null,gcol:s(a.gcol),ears:['r','l','both'].includes(a.ears)?a.ears:null,ecol:s(a.ecol)};return o}
 function visitTuned(k,bar){vSend('tune',{ins:k,bar},tt(`You tuned it for ${VIS.nick}!`,`L’hai riaccordato per ${VIS.nick}!`));save()}
 
 /* ---------- souvenirs on the island ---------- */
 const souvObjs=new Map();
-function souvMesh(t){const g=new THREE.Group(),m=c=>lam(c);
- if(t==='flower'){const st=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.35,5),m('#4b8a3a'));st.position.y=.17;g.add(st);for(let k=0;k<6;k++){const p=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),m('#ffd86b'));const a=k/6*TAU;p.position.set(Math.cos(a)*.08,.37,Math.sin(a)*.08);p.scale.set(1,.5,1);g.add(p)}const c=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),m('#e07a2a'));c.position.y=.38;g.add(c)}
+function souvMesh(t,s){const g=new THREE.Group(),m=c=>lam(c);
+ if(t==='doll'&&s&&s.av){const look=cleanLook(s.av),base=new THREE.Mesh(new THREE.CylinderGeometry(.16,.18,.06,14),m('#b07a4c'));base.position.y=.03;g.add(base);
+  const G0={hue:0,look},k=.55,mat=curve(new THREE.MeshBasicMaterial({map:igTex(G0,''),transparent:true,alphaTest:.15,side:THREE.DoubleSide,color:new THREE.Color(.97,.97,.97)})),pl=new THREE.Mesh(new THREE.PlaneGeometry(IGW*k,IGH2*k).translate(0,IGH2*k/2+.05,0),mat);g.add(pl);g.userData.bb={pl,mat,G0,ok:igorOK}}
+ else if(t==='flower'){const st=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.35,5),m('#4b8a3a'));st.position.y=.17;g.add(st);for(let k=0;k<6;k++){const p=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),m('#ffd86b'));const a=k/6*TAU;p.position.set(Math.cos(a)*.08,.37,Math.sin(a)*.08);p.scale.set(1,.5,1);g.add(p)}const c=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),m('#e07a2a'));c.position.y=.38;g.add(c)}
  else if(t==='doll'){const b=new THREE.Mesh(new THREE.SphereGeometry(.16,12,10),m('#8cc63f'));b.position.y=.16;b.scale.set(1,1.1,1);g.add(b);const sn=new THREE.Mesh(new THREE.CylinderGeometry(.03,.06,.22,8),m('#8cc63f'));sn.rotation.z=Math.PI/2.4;sn.position.set(.2,.2,0);g.add(sn);
   for(const z of[-.06,.06]){const e=new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),m('#ffffff'));e.position.set(.08,.27,z);g.add(e);const pu=new THREE.Mesh(new THREE.SphereGeometry(.02,6,5),m('#141414'));pu.position.set(.12,.27,z);g.add(pu)}}
  else if(t==='stone'){const s=new THREE.Mesh(new THREE.SphereGeometry(.17,10,8),m('#9aa3a8'));s.scale.set(1.2,.55,1);s.position.y=.08;g.add(s);[['#e0463c',.05,.06],['#2f6fd6',-.06,.02],['#f6d34a',0,-.07]].forEach(([c,x,z])=>{const d=new THREE.Mesh(new THREE.SphereGeometry(.035,6,5),m(c));d.position.set(x,.16,z);g.add(d)})}
@@ -2853,9 +2959,9 @@ function souvMesh(t){const g=new THREE.Group(),m=c=>lam(c);
 function souvTap(j){const F=FM(),s=F.souv&&F.souv[j];if(!s)return;const o=SOUV[s.t]||SOUV.flower,d=new Date(s.at||Date.now()).toLocaleDateString(LANG==='it'?'it-IT':'en-GB',{day:'numeric',month:'long'});
  bubbleQ.length=0;bubbleT=0;say(tt(`${cap1(an(o))} left by ${s.by||'a friend'} on ${d}.`,`${cap1(an(o))} lasciato da ${s.by||'un amico'} il ${d}.`),3.4);if(VISIT)return;
  chips(new V3(s.x,1,s.z),()=>[{t:tt('Keep it','Tienilo'),main:1,fn:()=>false},{t:tt('Put it away','Mettilo via'),fn:()=>{F.souv.splice(j,1);fmDirty=true;save();return false}}],'souv'+j)}
-updaters.push(()=>{if(!S.farm)return;const L=FM().souv||[],keys=new Set(L.map((s,j)=>`${j}|${s.t}|${s.x}|${s.z}`));
+updaters.push(()=>{if(!S.farm)return;const L=FM().souv||[],keys=new Set(L.map((s,j)=>`${j}|${s.t}|${s.x}|${s.z}`+(s.av?'|av':'')));
  for(const[k,o]of souvObjs)if(!keys.has(k)){world.remove(o);const i=clickables.indexOf(o.userData.hit);if(i>=0)clickables.splice(i,1);souvObjs.delete(k)}
- L.forEach((s,j)=>{const k=`${j}|${s.t}|${s.x}|${s.z}`;if(souvObjs.has(k))return;const B0=BUILD;BUILD='out';const g=souvMesh(s.t);g.position.set(s.x,0,s.z);g.scale.setScalar(1.6);g.rotation.y=(j*1.7)%TAU;world.add(g);g.userData.hit=hit(g,.4,()=>souvTap(j),'souv',.3);BUILD=B0;souvObjs.set(k,g)})});
+ L.forEach((s,j)=>{const k=`${j}|${s.t}|${s.x}|${s.z}`+(s.av?'|av':'');if(souvObjs.has(k)){const b=souvObjs.get(k).userData.bb;if(b){b.pl.quaternion.copy(camera.quaternion);b.pl.parent&&b.pl.quaternion.premultiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,-souvObjs.get(k).rotation.y,0)));if(!b.ok&&igorOK){b.ok=true;b.mat.map=igTex(b.G0,'');b.mat.needsUpdate=true}}return}const B0=BUILD;BUILD='out';const g=souvMesh(s.t,s);g.position.set(s.x,0,s.z);g.scale.setScalar(1.6);g.rotation.y=(j*1.7)%TAU;world.add(g);g.userData.hit=hit(g,.4,()=>souvTap(j),'souv',.3);BUILD=B0;souvObjs.set(k,g)})});
 
 /* ---------- the guest book, by the jetty ---------- */
 const GB=new V3(-8.3,0,6.4);
@@ -2875,7 +2981,7 @@ function guestSheet(){const L=FM().guest||[],fmt2=t=>new Date(t).toLocaleDateStr
 /* ---------- what changes while visiting ---------- */
 {const _bt=bldTap;bldTap=function(k){if(!VISIT)return _bt(k);if(PL)return;const P=spotOf(k).add(new V3(0,k==='pen'?1.6:2.2,0));
  if(k==='case'&&FM().b.case){const n=shellN();say(tt(`${VIS.nick} has ${n} shells out of 50.`,`${VIS.nick} ha ${n} conchiglie su 50.`),2.4);
-  chips(P,()=>[{t:'🐚 '+tt('Collection','Collezione'),main:1,fn:()=>{caseSheet();return false}},{t:'🔄 '+tt('Propose a trade','Proponi uno scambio'),fn:()=>{tradeSheet();return false}}],'vcase',1);return}
+  chips(P,()=>[{t:'🎵 '+tt('Play','Suona'),main:1,fn:()=>{shellPlaySheet();return false}},{t:'🐚 '+tt('Collection','Collezione'),fn:()=>{caseSheet();return false}},{t:'🔄 '+tt('Propose a trade','Proponi uno scambio'),fn:()=>{tradeSheet();return false}}],'vcase',1);return}
  say(tt(`${N(BLD[k].N)} of ${VIS.nick}.`,`${N(BLD[k].N)} di ${VIS.nick}.`),2.2)}}
 {const _m=mount;mount=function(k){if(VISIT){say(tt(`These are ${VIS.nick}’s vehicles: let’s ride ours at home!`,`Questi sono i mezzi di ${VIS.nick}: guidiamo i nostri a casa!`),2.8);return}return _m(k)}}
 {const _lt=igTap;igTap=function(id){if(VISIT){const g=igById(id),o=igObjs.get(id);if(!g)return;if(o)o.showT=T+6;const T0=TRAITS[g.trait]||TRAITS.shy;bubbleQ.length=0;bubbleT=0;if(window.IgorSound&&started)IgorSound.ig('tap',{id,trait:g.trait,pan:0});
@@ -2888,7 +2994,7 @@ function applyVisit(v){const F=FM(),U=FUN(),d=v.d||{};
   case'gift':if(d.t==='fruit'){U.fruit=(U.fruit|0)+1;return tt('left you some fruit','ti ha lasciato della frutta')}
    if(d.t==='shell'&&SHELL[d.s]){if(!U.col[d.s])U.colT[d.s]=Date.now();U.col[d.s]=(U.col[d.s]|0)+1;try{caseDirty=true}catch(e){}return tt(`gave you a shell (${N(SHELL[d.s].N)})`,`ti ha regalato una conchiglia (${N(SHELL[d.s].N)})`)}return'';
   case'tune':{if(INSK[d.ins]){const M=insS(d.ins);if(M.off[d.bar|0]){M.off[d.bar|0]=0;M.sl[d.bar|0]=0}}return tt('tuned one of your instruments','ha riaccordato uno dei tuoi strumenti')}
-  case'souv':{if(!SOUV[d.t])return'';F.souv=F.souv||[];F.souv.push({t:d.t,x:+d.x||0,z:+d.z||0,by:v.nick,at:Date.now()});if(F.souv.length>30)F.souv.shift();return tt(`left ${an(SOUV[d.t])} somewhere on your island`,`ha lasciato ${an(SOUV[d.t])} da qualche parte sulla tua isola`)}
+  case'souv':{if(!SOUV[d.t])return'';F.souv=F.souv||[];const av=d.t==='doll'?cleanLook(d.av):null;F.souv.push({t:d.t,x:+d.x||0,z:+d.z||0,by:v.nick,at:Date.now(),...(av?{av}:{})});if(F.souv.length>30)F.souv.shift();return tt(`left ${an(SOUV[d.t])} somewhere on your island`,`ha lasciato ${an(SOUV[d.t])} da qualche parte sulla tua isola`)}
   case'sign':{F.guest=F.guest||[];F.guest.unshift({nick:v.nick,p:d.p|0,at:Date.now()});if(F.guest.length>40)F.guest.length=40;return tt('signed your guest book','ha firmato il tuo libro degli ospiti')}}return''}
 let visitBusy=false;
 async function visitCollect(){if(VISIT||visitBusy||!window.IgorCloud||!IgorCloud.user||!S.farm)return;visitBusy=true;try{const M=await visitMod();

@@ -204,6 +204,13 @@ const SFX={
  steel:f=>{f=f||349;tone(f*1.012,f,1.3,{g:.45,at:.004,glide:.05});tone(f*2,f*2,.9,{g:.22,at:.004});tone(f*3,f*3,.45,{g:.1,at:.003});tone(f*4.02,f*4.02,.2,{g:.05,at:.003})},
  flute:f=>{f=f||587;tone(f,f,1,{g:.42,at:.07,vib:f*.007,vibF:5});tone(f*2,f*2,.8,{g:.05,at:.08});nz(.85,{f0:f*2,Q:5,g:.06,at:.06})},
  glass:f=>{f=f||698;tone(f,f,2.2,{g:.38,at:.003});tone(f*2.32,f*2.32,1,{g:.06,at:.003});tone(f*4.1,f*4.1,.3,{g:.03,at:.002});nz(.01,{f0:5000,Q:1,g:.05})},
+ // the shell display as a wind instrument: one timbre per shelf (r 0-4)
+ wind:o=>{const f=(o&&o.f)||523,r=(o&&o.r)|0;
+  if(r===0){tone(f,f,1.1,{type:'triangle',g:.4,at:.09,vib:f*.004,vibF:4,lp:f*4});nz(1,{f0:f*2,Q:3,g:.07,at:.1})}
+  else if(r===1){tone(f,f,1,{g:.42,at:.07,vib:f*.007,vibF:5});tone(f*2,f*2,.8,{g:.05,at:.08});nz(.85,{f0:f*2,Q:5,g:.06,at:.06})}
+  else if(r===2){tone(f,f,.8,{g:.42,at:.04});nz(.5,{f0:f*3,Q:2,g:.13,at:.02});nz(.06,{f0:f*5,Q:1,g:.08,at:.003})}
+  else if(r===3){tone(f,f,1,{g:.45,at:.06,vib:f*.006,vibF:5.5});tone(f*2,f*2,.6,{g:.03,at:.06})}
+  else{tone(f,f,1.6,{g:.36,at:.12,vib:f*.008,vibF:6});tone(f*2.01,f*2.01,1.2,{g:.06,at:.15});nz(.8,{f0:f*4,Q:10,g:.03,at:.2})}},
  marimba:f=>{f=f||523;tone(f,f,1.1,{g:.6,at:.003});tone(f*3.9,f*3.9,.18,{g:.16,at:.002});tone(f*9.2,f*9.2,.05,{g:.05,at:.001});nz(.02,{f0:1800,Q:1,g:.1})},
  wish:()=>{for(let i=0;i<8;i++){const f=st(1047,PENTA[i]);tone(f,f,.6,{g:.22,delay:i*.06,at:.003,pan:R(-.6,.6)})}tone(523,523,1.8,{g:.18,at:.3,type:'triangle'})},
 };

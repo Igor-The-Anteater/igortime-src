@@ -1,6 +1,6 @@
 /* Igor Time — leaderboards for every game and for the island.
    Firestore: one collection per board, b_<game>_<level> (b_island_all for the island), one document per player
-   {nick, score, avatar, at}; each player writes only their own best. The abyss keeps its own collection "abyss".
+   {nick, score, avatar, at}; the games are cumulative (each finished game adds its points), the island keeps its total. The abyss keeps its own collection "abyss".
    Used by the games (end screen) and by the island's notice board:  import('/board.js').then(B=>B.show(el,game,level,score))
    Needs the Firestore rules that allow b_* collections (see the project notes). */
 import{initializeApp,getApps,getApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
@@ -21,8 +21,10 @@ async function overall(n){const ALL=[['abyss','all'],...['kitchen','window','bed
 export async function top(g,l,n=10){if(g==='total')return overall(n);const q=await getDocs(query(collection(db,col(g,l)),orderBy('score','desc'),limit(n)));return q.docs.map(d=>({uid:d.id,n:d.data().nick,s:d.data().score}))}
 export async function submit(g,l,score,avatar){await authReady;if(!user)return'guest';const nk=await nick();if(!nk)return'nonick';score=Math.floor(+score||0);if(score<=0)return'zero';
  const ref=doc(db,col(g,l),user.uid);let cur=null;try{cur=await getDoc(ref)}catch(e){}
- if(cur&&cur.exists()&&cur.data().score>=score){if(cur.data().nick!==nk)try{await setDoc(ref,{nick:nk},{merge:true})}catch(e){}return'lower'}
- await setDoc(ref,{nick:nk,score,avatar:String(avatar||'igor'),at:serverTimestamp()});return'ok'}
+ // the games add up: every game you finish adds its points to your total (300 + 400 + 500 = 1200); the island already counts every tofu ant ever picked
+ const add=g!=='island',old=cur&&cur.exists()?Math.floor(+cur.data().score||0):0;
+ if(!add&&old>=score){if(cur.data().nick!==nk)try{await setDoc(ref,{nick:nk},{merge:true})}catch(e){}return'lower'}
+ await setDoc(ref,{nick:nk,score:add?old+score:score,avatar:String(avatar||'igor'),at:serverTimestamp()});return add?'added':'ok'}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 if(!document.getElementById('ibdCss')){const st=document.createElement('style');st.id='ibdCss';st.textContent=`.ibd{margin:12px auto 4px;max-width:24rem;text-align:left;border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.06);font-size:14px;line-height:1.35}
 .ibd h4{margin:0 0 6px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;opacity:.8;font-weight:600}.ibd ol{margin:0;padding:0;list-style:none}.ibd li{display:flex;gap:8px;padding:3px 4px;border-radius:8px}
@@ -35,9 +37,9 @@ export async function show(el,g,l,score,avatar,title){if(!el)return;let box=el.q
  box.innerHTML=`<h4>${esc(title||tt('Leaderboard · everyone','Classifica · tutti'))}</h4><p>${tt('Loading…','Carico…')}</p>`;
  let res='';try{if(score!=null){res=await submit(g,l,score,avatar);if(g!=='total'&&g!=='island')submitTotal(null,avatar).catch(()=>{})}}catch(e){res='err'}
  const mine=await me();let rows=null;try{rows=await top(g,l)}catch(e){rows=null}
- const note=res==='guest'?tt('Sign in on the island to enter the leaderboard.','Accedi sull’isola per entrare in classifica.'):res==='nonick'?tt('Choose a nickname on the island to enter the leaderboard.','Scegli un nickname sull’isola per entrare in classifica.'):res==='err'?tt('Could not save your score right now.','Non riesco a salvare il punteggio adesso.'):'';
+ const note=res==='added'?tt('Your points are added to your total: every game counts!','I tuoi punti si sommano al totale: ogni partita conta!'):res==='guest'?tt('Sign in on the island to enter the leaderboard.','Accedi sull’isola per entrare in classifica.'):res==='nonick'?tt('Choose a nickname on the island to enter the leaderboard.','Scegli un nickname sull’isola per entrare in classifica.'):res==='err'?tt('Could not save your score right now.','Non riesco a salvare il punteggio adesso.'):'';
  box.innerHTML=`<h4>${esc(title||tt('Leaderboard · everyone','Classifica · tutti'))}</h4>`+(rows?list(rows,mine):`<p>${tt('The leaderboard is not reachable right now.','La classifica adesso non si raggiunge.')}</p>`)+(note?`<p>${note}</p>`:'')}
-/* the overall leaderboard: the sum of your records in every game and every level (the abyss counts its best dive) */
+/* the overall leaderboard: the sum of your totals in every game and every level */
 const GAMES=['kitchen','window','bedroom','drums','pitchStairs','cadences','abyss'];
 export function totalOf(...sets){const best={};for(const sc of sets){if(!sc)continue;for(const g of GAMES){const o=sc[g];if(!o||typeof o!=='object')continue;for(const[l,v]of Object.entries(o)){const k=g+'/'+l,n=+v||0;if(!(best[k]>=n))best[k]=n}}}return Math.floor(Object.values(best).reduce((a,b)=>a+b,0))}
 export function totalLocal(){let S={},P={};try{S=JSON.parse(localStorage.getItem('igortime_v1'))||{}}catch(e){}try{P=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}return totalOf(S.scores,P.scores)}

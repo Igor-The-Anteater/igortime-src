@@ -114,7 +114,7 @@ const D={
  'Grand staff with five chords: the first three are given, you write the last two':'Doppio pentagramma con cinque accordi: i primi tre sono dati, tu scrivi gli ultimi due',
  // abyss
  'The abyss · Igor time':'L’abisso · Igor time','Dive in':'Tuffati','Back to the island':'Torna all’isola','Again':'Ancora','End of the dive':'Fine dell’immersione',
- 'Deepest dives · everyone':'Immersioni più profonde · tutti','Reading the annals…':'Leggo gli annali…','Playing with your account':'Giochi col tuo account',
+ 'Deepest dives · everyone':'Immersioni più profonde · tutti','Total depth · everyone':'Profondità totale · tutti','depth added to your total in the annals ✓':'profondità aggiunta al tuo totale negli annali ✓','Reading the annals…':'Leggo gli annali…','Playing with your account':'Giochi col tuo account',
  '150 points give a tofu seed: dive deeper next time.':'150 punti danno un seme di tofu: la prossima volta scendi più giù.',
  'Couldn’t reach the annals this time. Your seeds are safe.':'Questa volta non ho raggiunto gli annali. I tuoi semi sono al sicuro.',
  'No depth to carve this time.':'Nessuna profondità da incidere questa volta.','Sign in on the island':'Accedi sull’isola','Sign in on the island to carve your name in the annals.':'Accedi sull’isola per incidere il tuo nome negli annali.',

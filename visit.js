@@ -15,11 +15,15 @@ function compact(S){const f=JSON.parse(JSON.stringify(S.farm||{}));for(const k o
  if(f.fun){for(const k of['beach','ft','hun','wish','wnext','fr','msgs','bottles'])delete f.fun[k]}return JSON.stringify({farm:f})}
 export function publish(S,nick,av){const uid=me();if(!uid||!S||!S.farm)return;const j=compact(S);if(j===pubLast)return;clearTimeout(pubT);
  pubT=setTimeout(async()=>{if(pubBusy)return;pubBusy=true;try{if(j.length<480000){await setDoc(doc(db,'islands',uid),{nick:String(nick||'').slice(0,16)||'?',av:av||{},j,at:serverTimestamp()});pubLast=j}}catch(e){console.warn('island copy',e&&e.code||e)}finally{pubBusy=false}},4000)}
-export async function fetchIsland(uid){const s=await getDoc(doc(db,'islands',uid));if(!s.exists())throw new Error('none');const d=s.data();return{nick:d.nick,av:d.av,data:JSON.parse(d.j)}}
+/* a friend's island, online or not: their own save (friends may read it: rule on users/{uid}), else the copy in islands/{uid} */
+const avOf=S=>({avatar:S.avatar||'igor',head:S.head,hcol:S.hcol,glasses:S.glasses,gcol:S.gcol,ears:S.ears,ecol:S.ecol});
+export async function fetchIsland(uid){let u=null;try{const s=await getDoc(doc(db,'users',uid));if(s.exists())u=s.data()}catch(e){}
+ if(u&&u.farm){return{nick:u.nick||u.name||'?',av:avOf(u),data:JSON.parse(compact(u))}}
+ const s=await getDoc(doc(db,'islands',uid));if(!s.exists())throw new Error('none');const d=s.data();return{nick:d.nick,av:d.av,data:JSON.parse(d.j)}}
 export async function friends(){const uid=me();if(!uid)return[];const s=await getDocs(query(collection(db,'friends'),where('u','array-contains',uid)));const out=[];
  let bl=new Set();try{const b=await getDocs(query(collection(db,'blocks'),where('by','==',uid)));b.forEach(d=>bl.add(d.data().who))}catch(e){}
  for(const d of s.docs){const o=d.data().u.find(x=>x!==uid);if(bl.has(o))continue;let p=null;try{const q=await getDoc(doc(db,'profiles',o));if(q.exists())p=q.data()}catch(e){}
-  let isl=false;try{isl=(await getDoc(doc(db,'islands',o))).exists()}catch(e){}out.push({uid:o,nick:p?p.nick:'?',av:p?p.av:{},island:isl})}
+  let isl=false;try{isl=(await getDoc(doc(db,'users',o))).exists()}catch(e){}if(!isl)try{isl=(await getDoc(doc(db,'islands',o))).exists()}catch(e){}out.push({uid:o,nick:p?p.nick:'?',av:p?p.av:{},island:isl})}
  return out.sort((a,b)=>a.nick.localeCompare(b.nick))}
 /* a kind gesture on a friend's island: false if already done today */
 export async function send(host,k,d,nick){const uid=me();if(!uid)throw new Error('auth');const dd=day(),id=`${uid}_${dd}_${k}`;
