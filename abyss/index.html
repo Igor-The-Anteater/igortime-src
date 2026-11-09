@@ -441,7 +441,7 @@ function loadBoard(){const A=window.AbyssCloud;if(!A)return;A.me().then(u=>{myUi
 addEventListener('abysscloud',loadBoard);if(window.AbyssCloud)loadBoard();
 setTimeout(()=>{if(!window.AbyssCloud&&diveMsg.startsWith('carving'))diveMsg='Couldn’t reach the annals this time. Your seeds are safe.';if(glbState==='loading'){glbState='err';paintBoard()}},9000);
 function submitDive(sc){const A=window.AbyssCloud;if(!A){addEventListener('abysscloud',()=>submitDive(sc),{once:true});return}
- A.submit(sc,AVK).then(r=>{diveMsg=r==='ok'?'depth carved into the annals ✓':r==='lower'?'carved in the annals: your deepest dive still counts ✓':r==='nonick'?'Choose a nickname on the island (tap your name at the top) to appear in the annals.':'Sign in on the island to carve your name in the annals.';paintBoard();loadBoard()})
+ A.submit(sc,AVK).then(r=>{diveMsg=r==='ok'?'depth added to your total in the annals ✓':r==='lower'?'carved in the annals: your deepest dive still counts ✓':r==='nonick'?'Choose a nickname on the island (tap your name at the top) to appear in the annals.':'Sign in on the island to carve your name in the annals.';paintBoard();loadBoard()})
   .catch(e=>{console.warn('submit',e);diveMsg='Couldn’t reach the annals this time. Your seeds are safe.';paintBoard()})}
 let ACCT=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'))}catch(e){}
 const HOME=(()=>{try{return localStorage.getItem('igortime_home')||'/'}catch(e){return '/'}})();$('back').href=HOME;
@@ -458,7 +458,7 @@ function showStart(){mode='ready';playing=false;M.style.display='flex';
    '<span class="g">D</span> (hold, max 2s) duck under the <span class="r">jellyfish</span> &nbsp;·&nbsp; <span class="y">★</span> golden lure: 4s to eat the red ones too<br>'+
    'Now and then a heart gives back a life (max 5). At 700 points, then every 1500, a <b>leviathan</b> rises: when its shield drops, <span class="g">shoot</span> your prey with <span class="g">␣</span>.<br>'+
    '<span class="y">Every 150 points = 1 tofu seed</span> for the field.</p>'+
-   avHTML()+'<p class="lb">Deepest dives · everyone</p>'+lbHTML()+
+   avHTML()+'<p class="lb">Total depth · everyone</p>'+lbHTML()+
    '<button class="btn" id="ab-go">Dive in</button> <a class="btn ghost" style="text-decoration:none;display:inline-block" href="'+HOME+'">Back to the island</a>';
   $('ab-go').onclick=()=>{won=0;reset()};MC.querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>{setAvatar(b.dataset.av);showStart()});avPreviews();startIdle()}
 function showOver(){mode='dead';M.style.display='flex';const sc=score();
@@ -468,7 +468,7 @@ function showOver(){mode='dead';M.style.display='flex';const sc=score();
    if(ACCT){diveMsg='carving your depth into the annals…';if(sc>0)submitDive(sc);else diveMsg='No depth to carve this time.'}
    else{const best=Math.max(0,...lb.map(e=>e.s));diveMsg='Your best on this device: <span class="g">'+best+'</span>. <a href="'+HOME+'" style="color:inherit">Sign in on the island</a> to carve your name in the annals.'}}
   MC.innerHTML='<p class="eye">End of the dive</p><p class="sub">Depth reached: <span class="g" style="font-size:18px">'+sc+'</span></p>'+seeds+'<p class="saved" id="ab-st">'+diveMsg+'</p>'+
-    '<p class="lb">Deepest dives · everyone</p>'+lbHTML()+'<div><button class="btn ghost" id="ab-go">Again</button> <a class="btn" style="text-decoration:none;display:inline-block" href="'+HOME+'">Back to the island</a></div>';
+    '<p class="lb">Total depth · everyone</p>'+lbHTML()+'<div><button class="btn ghost" id="ab-go">Again</button> <a class="btn" style="text-decoration:none;display:inline-block" href="'+HOME+'">Back to the island</a></div>';
   $('ab-go').onclick=()=>{won=0;reset()};startIdle()}
 
 // ---------- input bind ----------
@@ -494,8 +494,9 @@ window.AbyssCloud={
  async me(){await authReady;return user?user.uid:null},
  async submit(score,avatar){await authReady;if(!user)return'guest';let nick='';try{const u=await getDoc(doc(db,'users',user.uid));nick=u.exists()&&u.data().nick||''}catch(e){}
   if(!nick)return'nonick';const ref=doc(db,'abyss',user.uid),cur=await getDoc(ref);score=Math.floor(score);
-  if(cur.exists()&&cur.data().score>=score){if(cur.data().nick!==nick)await setDoc(ref,{nick},{merge:true});return'lower'}
-  await setDoc(ref,{nick,score,avatar:String(avatar||'igor'),at:serverTimestamp()});return'ok'}};
+  // cumulative: every dive adds its depth to your total
+  const old=cur.exists()?Math.floor(+cur.data().score||0):0;
+  await setDoc(ref,{nick,score:old+score,avatar:String(avatar||'igor'),at:serverTimestamp()});return'ok'}};
 dispatchEvent(new Event('abysscloud'));
 </script>
 </body></html>
