@@ -152,6 +152,7 @@ html.touch #zoomB{top:calc(var(--hh,62px) + var(--evh,0px) + 14px)!important;tra
 @media (max-width:560px){header h1{display:none}#igB{padding:5px 8px 5px 6px}#igB svg{width:22px;height:15px}#helpB{width:32px;height:32px}}
 #chatB{display:flex;align-items:center;justify-content:center;padding:6px 9px}#chatB svg{width:22px;height:22px;display:block}@media (max-width:480px){#chatB{padding:5px 6px!important}#chatB svg{width:19px;height:19px}}
 </style>
+<script src="/pres.js?v=1" defer></script>
 </head><body>
 <div id="stage"></div>
 <header>
@@ -1193,7 +1194,7 @@ igor.position.set(0,0,-2.6);scene.add(igor);
 const mark=new THREE.Mesh(new THREE.RingGeometry(.25,.34,28).rotateX(-Math.PI/2),curve(new THREE.MeshBasicMaterial({color:'#efe4cf',transparent:true,opacity:0,depthWrite:false})));mark.position.y=.04;scene.add(mark);
 const IG={target:null,arrive:null,face:1,walk:0,idle:3,manual:false,jy:0,jv:0};
 function jump(){if(diving||IG.jy>.05||!started)return;IG.jv=5.6;IG.jy=.001;snd('jump');poke();hideHint()}const IN={x:0,z:0};
-let where='out';const ROOMS={};
+let where='out';window.__where=()=>where;const ROOMS={};
 function walkable(x,z){if(where==='out'&&RIDE){const ok=rideOk(x,z);if(ok!==null)return ok}if(where!=='out'){const Rm=ROOMS[where];if(Math.abs(x)>Rm.w/2-.7||z<-Rm.d/2+1.1||z>Rm.d/2-.3)return false;return!Rm.blocks.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3)}
  if(Math.hypot(x,z*1.12)>R-.6)return false;return!blocked.some(b=>{const d=Math.hypot(b.x-x,b.z-z);if(d>=b.r+.3)return false;const d0=Math.hypot(b.x-igor.position.x,b.z-igor.position.z);return!(d0<b.r+.3&&d>d0)})}
 function goTo(k,arg){const P=PLACES[k];if(!P)return;if(where!=='out'){exitRoom(true);}closeSheet();$('index').hidden=true;IG.target=P.pos.clone();IG.manual=true;IG.arrive=()=>P.open(arg);mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke();
@@ -2598,6 +2599,9 @@ const auth=getAuth(app),db=getFirestore(app);auth.useDeviceLanguage();
 let ready=false,timer=0,first=true,pendingNick='';
 const acct=()=>{try{localStorage.setItem('igortime_acct',JSON.stringify({name:C.user.nick||'',uid:C.user.uid}))}catch(e){}};
 const clean=S=>JSON.parse(JSON.stringify(S));
+/* the admins' list of accounts (accts/<uid>): nickname, email, how they sign in, when they joined, last visit */
+const acctsW=()=>{const u=auth.currentUser;if(!u||!C.user)return;const prov=u.providerData.some(p=>p.providerId==='google.com')?'google':u.providerData.some(p=>p.providerId==='password')?'password':'other';
+ setDoc(doc(db,'accts',u.uid),{nick:String(C.user.nick||'').slice(0,16),email:u.email||'',prov,made:Date.parse(u.metadata&&u.metadata.creationTime)||0,seen:serverTimestamp()}).catch(e=>console.warn('accts',e&&e.code||e))};
 const C={user:null,
  push(S){if(!C.user||!ready)return;clearTimeout(timer);const uid=C.user.uid;timer=setTimeout(()=>{const snap=clean(S),at=snap.at;snap.uid=uid;setDoc(doc(db,'users',uid),{...snap,name:C.user.nick||'',nick:C.user.nick||'',updated:serverTimestamp()}).then(()=>{const L=window.IgorSave.get();if(L&&!window._wiped){L.base=at;L.uid=uid;try{localStorage.setItem('igortime_v1',JSON.stringify(L))}catch(e){}}}).catch(e=>console.warn('save',e))},1500)},
  async google(){const p=new GoogleAuthProvider();try{await signInWithPopup(auth,p)}catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')return signInWithRedirect(auth,p);throw e}},
@@ -2606,16 +2610,17 @@ const C={user:null,
  async setNick(n){if(!C.user)return;const uid=C.user.uid;C.user.nick=C.user.name=n;acct();
   await setDoc(doc(db,'users',uid),{...clean(window.IgorSave.get()),name:n,nick:n,updated:serverTimestamp()});
   try{if(auth.currentUser)await updateProfile(auth.currentUser,{displayName:n})}catch(e){}
-  try{const a=await getDoc(doc(db,'abyss',uid));if(a.exists())await setDoc(doc(db,'abyss',uid),{nick:n},{merge:true})}catch(e){console.warn('abyss nick',e)}},
+  acctsW();
+ try{const a=await getDoc(doc(db,'abyss',uid));if(a.exists())await setDoc(doc(db,'abyss',uid),{nick:n},{merge:true})}catch(e){console.warn('abyss nick',e)}},
  reset:m=>sendPasswordResetEmail(auth,m),
  async signOut(){clearTimeout(timer);ready=false;await signOut(auth);window.IgorSave.reset()}};
 window.IgorCloud=C;
-{const s=document.createElement('script');s.src='/chat.js?v=2';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=3';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
   try{const s=await getDoc(doc(db,'users',u.uid));if(s.exists()){const d=s.data();if(d.nick)C.user.nick=d.nick;else if(d.name&&!google)C.user.nick=d.name;delete d.updated;delete d.name;delete d.nick;window.IgorSave.load(d,u.uid)}}catch(e){console.warn('load',e)}
   C.user.nick=String(C.user.nick||'').slice(0,16);C.user.name=C.user.nick;pendingNick='';
-  ready=true;C.push(window.IgorSave.get());acct()}
+  ready=true;C.push(window.IgorSave.get());acct();acctsW()}
  else{C.user=null;try{localStorage.removeItem('igortime_acct')}catch(e){}}
  window.IgorUI&&window.IgorUI.onAuth(!!u,first);first=false});
 </script>
