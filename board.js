@@ -30,8 +30,13 @@ function list(rows,mine){if(!rows.length)return`<p>${tt('Nobody yet: be the firs
 /* a little board inside an element: sends the score (if signed in), then shows the top 10 */
 export async function show(el,g,l,score,avatar,title){if(!el)return;let box=el.querySelector('.ibd');if(!box){box=document.createElement('div');box.className='ibd';el.appendChild(box)}
  box.innerHTML=`<h4>${esc(title||tt('Leaderboard · everyone','Classifica · tutti'))}</h4><p>${tt('Loading…','Carico…')}</p>`;
- let res='';try{if(score!=null)res=await submit(g,l,score,avatar)}catch(e){res='err'}
+ let res='';try{if(score!=null){res=await submit(g,l,score,avatar);if(g!=='total'&&g!=='island')submitTotal(null,avatar).catch(()=>{})}}catch(e){res='err'}
  const mine=await me();let rows=null;try{rows=await top(g,l)}catch(e){rows=null}
  const note=res==='guest'?tt('Sign in on the island to enter the leaderboard.','Accedi sull’isola per entrare in classifica.'):res==='nonick'?tt('Choose a nickname on the island to enter the leaderboard.','Scegli un nickname sull’isola per entrare in classifica.'):res==='err'?tt('Could not save your score right now.','Non riesco a salvare il punteggio adesso.'):'';
  box.innerHTML=`<h4>${esc(title||tt('Leaderboard · everyone','Classifica · tutti'))}</h4>`+(rows?list(rows,mine):`<p>${tt('The leaderboard is not reachable right now.','La classifica adesso non si raggiunge.')}</p>`)+(note?`<p>${note}</p>`:'')}
-window.IgorBoard={me,top,submit,show};
+/* the overall leaderboard: the sum of your records in every game and every level (the abyss counts its best dive) */
+const GAMES=['kitchen','window','bedroom','drums','pitchStairs','cadences','abyss'];
+export function totalOf(...sets){const best={};for(const sc of sets){if(!sc)continue;for(const g of GAMES){const o=sc[g];if(!o||typeof o!=='object')continue;for(const[l,v]of Object.entries(o)){const k=g+'/'+l,n=+v||0;if(!(best[k]>=n))best[k]=n}}}return Math.floor(Object.values(best).reduce((a,b)=>a+b,0))}
+export function totalLocal(){let S={},P={};try{S=JSON.parse(localStorage.getItem('igortime_v1'))||{}}catch(e){}try{P=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}return totalOf(S.scores,P.scores)}
+export async function submitTotal(score,avatar){return submit('total','all',score==null?totalLocal():score,avatar)}
+window.IgorBoard={me,top,submit,show,totalOf,totalLocal,submitTotal};
