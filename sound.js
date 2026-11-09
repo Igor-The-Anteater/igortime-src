@@ -10,6 +10,8 @@
 (()=>{
 const KEY='igortime_sound';
 let wanted=true;try{wanted=localStorage.getItem(KEY)!=='off'}catch(e){}
+let VOL=.8;try{const v=parseFloat(localStorage.getItem('igortime_volume'));if(v>=0&&v<=1)VOL=v}catch(e){}
+const gainNow=()=>wanted?VOL*VOL*1.25:0;
 let ac=null,out,sfxIn,ambIn,ambLP,WHITE,PINK,BROWN,A=null,T=0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),R=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(Math.random()*a.length)];
 
@@ -28,7 +30,7 @@ function loop(buf){const s=ac.createBufferSource();s.buffer=buf;s.loop=true;s.st
 const set=(p,v,tc=.35)=>p.setTargetAtTime(v,ac.currentTime,tc);
 
 function init(ctx){if(ac)return;try{ac=ctx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){ac=null;return}
- out=G(wanted?1:0);const comp=ac.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=12;comp.ratio.value=3.5;out.connect(comp);comp.connect(ac.destination);
+ out=G(gainNow());const comp=ac.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=12;comp.ratio.value=3.5;out.connect(comp);comp.connect(ac.destination);
  // the little sounds go through a soft lowpass, like in the Abyss
  sfxIn=G(.17);const slp=F('lowpass',3400,.7);sfxIn.connect(slp);slp.connect(out);
  ambIn=G(1);ambLP=F('lowpass',16000,.5);const ambHP=F('highpass',55,.6);ambIn.connect(ambHP);ambHP.connect(ambLP);ambLP.connect(out);
@@ -202,7 +204,9 @@ function unlock(){if(!wanted)return;if(!ac)init();if(ac&&ac.state==='suspended')
 document.addEventListener('click',e=>{if(!ac||!wanted)return;const b=e.target.closest('button,a,.lbl');if(!b||b.dataset.snd==='0')return;try{(b.classList.contains('main')||b.classList.contains('m')?SFX.tapMain:SFX.tap)()}catch(_){}},true);
 window.IgorSound={
  get on(){return wanted},
- set(v){wanted=!!v;try{localStorage.setItem(KEY,wanted?'on':'off')}catch(e){}if(wanted){if(!ac)init();if(ac&&ac.state==='suspended')ac.resume()}if(ac)out.gain.setTargetAtTime(wanted?1:0,ac.currentTime,.08)},
+ set(v){wanted=!!v;try{localStorage.setItem(KEY,wanted?'on':'off')}catch(e){}if(wanted){if(!ac)init();if(ac&&ac.state==='suspended')ac.resume()}if(ac)out.gain.setTargetAtTime(gainNow(),ac.currentTime,.08)},
+ get vol(){return VOL},
+ setVol(v){VOL=Math.max(0,Math.min(1,+v||0));try{localStorage.setItem('igortime_volume',String(VOL))}catch(e){}if(ac)out.gain.setTargetAtTime(gainNow(),ac.currentTime,.05)},
  toggle(){this.set(!wanted);return wanted},
  frame,
  sfx(name,arg){if(!ac||!wanted)return;const f=SFX[name];if(f)try{f(arg)}catch(e){}},
