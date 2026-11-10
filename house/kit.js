@@ -186,7 +186,7 @@ function panels(W,H){const tall=H>W*1.15;if(!tall)return{tall,P:[{x:0,y:0,w:W/2,
 window.IgorHouse={panels,paintAvatar,igorImg,igorReady:()=>igorOK,TAU,clamp,lerp,ease,rr,drawAnt,drawCurtain,drawRoom,ME,AVN};
 
 window.IgorGame=function(cfg){
- const N=cfg.rounds||8,MAXR=cfg.maxRound||125,MULT={easy:1,medium:2,extreme:3};if(cfg.outfit){ME.outfit=cfg.outfit;sprKey=''}
+ const N=cfg.rounds||8,MAXR=cfg.maxRound||125,CAP={easy:4,medium:7,extreme:10};if(cfg.outfit){ME.outfit=cfg.outfit;sprKey=''}
  const st=document.createElement('style');st.textContent=CSS;document.head.appendChild(st);
  const avBtns=Object.entries(AVN).map(([k,n])=>`<button type="button" data-av="${k}" aria-pressed="false"><canvas width="116" height="128"></canvas>${n}</button>`).join('');
  const lvBtns=Object.entries(cfg.levels).map(([k,l])=>`<button type="button" data-lv="${k}" aria-pressed="false">${l.name}</button>`).join('');
@@ -253,9 +253,9 @@ ${cfg.phones?'<p class="warn">🎧 Use headphones, and keep your volume fixed fo
   const tot=K.total,M=N*MAXR,nm=K.name();$('endlv').textContent=K.LV.name+' · your score';$('endsc').textContent=tot;
   $('endmsg').textContent=tot>=M*.9?(cfg.endTop||'Golden ears. '+nm+' is full and very grateful.'):tot>=M*.7?'Great ears! '+nm+' had a lovely meal.':tot>=M*.4?'Nice ears! '+nm+' had a tasty snack.':nm+' loved it! One more round and lunch is yours.';
   $('endbest').textContent=tot>best?'New personal best on '+K.LV.name+'!':'Your best on '+K.LV.name+': '+best;
-  const n=Math.round(tot/100*MULT[K.lv]);let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
+  const n=Math.min(CAP[K.lv],Math.round(tot/(N*MAXR)*CAP[K.lv]));let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
   p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const sc=p.scores[cfg.key]=p.scores[cfg.key]||{};if(!(sc[K.lv]>=tot))sc[K.lv]=tot;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}
-  $('endseeds').textContent=n?'+'+n+' tofu seed'+(n>1?'s':'')+' for '+nm+'’s field'+(MULT[K.lv]>1?' (×'+MULT[K.lv]+' on '+K.LV.name+')':'')+'. Collect them back on the island.':'';
+  $('endseeds').textContent=n?'+'+n+' tofu seed'+(n>1?'s':'')+' for '+nm+'’s field'+'. Collect them back on the island.':'';
   $('end').hidden=false;K.update();import('/board.js?v=3').then(B=>B.show(document.querySelector('#end .card'),cfg.key,K.lv,tot,ME&&ME.avatar)).catch(()=>{})}
  K.update=()=>{const L=$('listen');if(L){L.disabled=!K.canListen();const R=K.R;L.textContent=R&&R.played&&isFinite(R.left)?`▶ Listen (${Math.max(0,R.left)})`:'▶ Listen'}
   if(okB)okB.disabled=K.phase!=='guess';cfg.update&&cfg.update(K)};
@@ -271,8 +271,8 @@ ${cfg.phones?'<p class="warn">🎧 Use headphones, and keep your volume fixed fo
  function setAv(k){ME.avatar=k;sprKey='';document.querySelectorAll('.av button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.av===k));document.querySelectorAll('.nm').forEach(n=>n.textContent=AVN[k]);try{localStorage.setItem('igortime_houseAvatar',k)}catch(e){}}
  document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset.av));
  const al=$('acctline');
- if(ACCT){document.querySelector('.av').style.display='none';document.querySelectorAll('.nm').forEach(n=>n.textContent=AVN[ME.avatar]);al.textContent='Playing as '+(ACCT.name||'you')+' with your '+AVN[ME.avatar]+' · easy ×1, medium ×2, extreme ×3 tofu seeds'}
- else{setAv(ME.avatar);al.textContent='Tofu seeds won: easy ×1, medium ×2, extreme ×3'}
+ if(ACCT){document.querySelector('.av').style.display='none';document.querySelectorAll('.nm').forEach(n=>n.textContent=AVN[ME.avatar]);al.textContent='Playing as '+(ACCT.name||'you')+' with your '+AVN[ME.avatar]+' · easy up to 4, medium up to 7, extreme up to 10 tofu seeds'}
+ else{setAv(ME.avatar);al.textContent='Tofu seeds won: easy up to 4, medium up to 7, extreme up to 10'}
  function begin(){K.audio();if(K.AC.state==='suspended')K.AC.resume();cfg.onAudio&&!K._aud&&(cfg.onAudio(K),K._aud=1);
   K.round=0;K.total=0;$('sc').textContent=0;$('start').hidden=true;$('end').hidden=true;newRound()}
  $('go').onclick=begin;$('again').onclick=begin;$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;K.phase='menu';K.update()};
