@@ -4503,8 +4503,10 @@ function newUfo(v,forced){return{v:v||(Math.random()<.5?'m':'d'),st:'pending',at
 function forceEv(k,lead){if(VISIT)return false;ensureFarm();const F=FM(),t=Date.now();
  if(/^ufo/.test(k)){if(F.ufo)return false;if(!F.igs.length)return false;F.ufo=newUfo(k==='ufo:m'?'m':k==='ufo:d'?'d':null,1);fmDirty=true;save();return true}
  if(!EVK[k])return false;if(F.ev&&t<F.ev.end)F.evDone[F.ev.id]=1;
- F.fq=F.fq||[];F.fq.push({k,lead:lead|0,id:'f'+t+'_'+F.fq.length});fmDirty=true;save();fqTick();return true}
-function fqTick(){if(VISIT||!S.farm)return;const F=FM();if(!F.fq||!F.fq.length)return;if(!started||where!=='out'||T<2||CUT)return;
+ F.fq=F.fq||[];F.fq.push({k,lead:lead|0,id:'f'+t+'_'+F.fq.length,t});fmDirty=true;save();fqTick();return true}
+/* someone is really there: the last time Igor moved (keys, joystick, a tap) */
+const PAGE0=Date.now();let IGMOVE=0;{const lp={x:0,z:0,ok:0};updaters.push(()=>{const p=igor.position;if(lp.ok&&Math.hypot(p.x-lp.x,p.z-lp.z)>.02&&started&&!CUT)IGMOVE=Date.now();lp.x=p.x;lp.z=p.z;lp.ok=1})}
+function fqTick(){if(VISIT||!S.farm)return;const F=FM();if(!F.fq||!F.fq.length)return;if(!started||where!=='out'||T<2||CUT)return;if(!(IGMOVE>Math.max(F.fq[0].t||0,PAGE0)))return;
  if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden})||!sheet.hidden)return;const intro=$('intro');if(intro&&!intro.classList.contains('gone'))return;
  const q=F.fq.shift(),t=Date.now();if(!EVK[q.k])return;if(F.ev&&t<F.ev.end)F.evDone[F.ev.id]=1;const E=mkEv(q.k,t+Math.max(q.lead*MIN,EVK[q.k].lead?40000:3000),q.id);E.warn=t;E.forced=1;F.ev=E;fmDirty=true;simTo(t,true);try{renderBanner()}catch(e){}save()}
 window.IgorForce={ev:forceEv,list:[],global(L){this.list=L||[];gevTick()}};
@@ -4585,7 +4587,7 @@ function abduct(){const F=FM(),U=F.ufo;if(!U)return;for(const q of F.tasks)freeW
  let P=null;for(const[dx,dz]of[[2.4,-1.2],[-2.4,-1.2],[2.6,1.4],[-2.6,1.4],[0,-2.8],[3.4,0],[-3.4,0]]){const x=igor.position.x+dx,z=igor.position.z+dz;if(walkable(x,z)&&walkable(x+2.1,z)){P={x,z};break}}
  P=P||{x:igor.position.x+2,z:igor.position.z-1};U.mx=+P.x.toFixed(2);U.mz=+P.z.toFixed(2);fmDirty=true;save();fmRender()}
 /* who starts the scene: a pending Aliengor, as soon as you are on the island */
-updaters.push(()=>{if(CUT||VISIT||!S.farm)return;const F=FM(),U=F.ufo;if(!U||U.st!=='pending')return;if(!started||where!=='out'||T<4||PL)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden})||!sheet.hidden)return;const intro=$('intro');if(intro&&!intro.classList.contains('gone'))return;startCut()});
+updaters.push(()=>{if(CUT||VISIT||!S.farm)return;const F=FM(),U=F.ufo;if(!U||U.st!=='pending')return;if(!started||where!=='out'||T<4||PL)return;if(!(IGMOVE>Math.max(U.at||0,PAGE0)))return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden})||!sheet.hidden)return;const intro=$('intro');if(intro&&!intro.classList.contains('gone'))return;startCut()});
 
 /* --- the Igor in Black and his portal --- */
 const mibG=(()=>{const g=new THREE.Group(),pl=bigPlane('mib',1);g.add(pl);blob(g,.6);
@@ -4766,7 +4768,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261110-2310';let verNew=false,verAt=0;
+const IGVER='20261110-2320';let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,20000);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
