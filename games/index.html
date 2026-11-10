@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Igor’s games · Igor time</title>
-<meta name="description" content="All of Igor’s games on one page: Pitch Stairs, the kitchen, the bedroom, the window, the abyss, Cadences, the drums and the maestro’s interval lessons.">
+<meta name="description" content="All of Igor’s games on one page: Pitch Stairs, the kitchen, the bedroom, the window, the abyss, Cadences, the drums and the maestros’ interval lessons.">
 <link rel="canonical" href="https://igortime.com/games/">
 <script>try{localStorage.setItem('igortime_view','games');localStorage.setItem('igortime_home','/games/')}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,7 +75,7 @@ header h1 a{text-decoration:none}
 </section>
 <main class="grid" id="grid"></main>
 <section class="note">
- <p data-k="note" data-html>All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom and the window are in my house, Cadences, the drums and the maestro’s lessons in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.</p>
+ <p data-k="note" data-html>All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom and the window are in my house, Cadences, the drums and the maestros’ lessons in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.</p>
  <a class="pill" href="/" data-island><span style="font-size:22px">🏝</span><span data-k="toIsland">Take me to the island</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="#2b2018" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
 </section>
 
@@ -279,7 +279,7 @@ const GAMES=[
  {k:'abyss',url:'/abyss/',sc:'abyss',n:['The abyss','L’abisso'],w:['runner','runner'],d:['Dive deep: eat, jump, duck the jellyfish and beat the leviathans.','Tuffati: mangia, salta, abbassati sotto le meduse e batti i leviatani.'],at:['on the island · the well','sull’isola · il pozzo']},
  {k:'cad',url:'/cadences/',sc:'cadences',n:['Cadences','Cadenze'],w:['harmony','armonia'],d:['Write the last two chords in four voices: Igor checks your cadence.','Scrivi gli ultimi due accordi a quattro voci: Igor controlla la cadenza.'],at:['on the island · the music school','sull’isola · la scuola di musica']},
  {k:'drums',url:'/drums/',sc:'drums',n:['The drums','La batteria'],w:['rhythm','ritmo'],d:['Listen to a groove on four drums, then play it back: same rhythm, same drums.','Ascolta un ritmo su quattro pezzi, poi rifallo: stesso ritmo, stessi pezzi.'],at:['on the island · the music school','sull’isola · la scuola di musica']},
- {k:'iv',url:'/intervals/',sc:'intervals',n:['The maestro’s lessons','Le lezioni del maestro'],w:['intervals','intervalli'],d:['Maestro Wolfgang Amadigor trains your ears, step by step, with little songs to remember the intervals.','Il maestro Wolfgang Amadigor ti allena le orecchie, una tappa alla volta, con le canzoncine per ricordare gli intervalli.'],at:['on the island · the music school','sull’isola · la scuola di musica']}];
+ {k:'iv',url:'/intervals/',sc:'intervals',n:['The maestros’ lessons','Le lezioni dei maestri'],w:['intervals','intervalli'],d:['Maestro Wolfgang Amadigor and Maestra Sofia Gubaigorina train your ears, step by step, with little songs to remember the intervals.','I maestri Wolfgang Amadigor e Sofia Gubaigorina ti allenano le orecchie, una tappa alla volta, con le canzoncine per ricordare gli intervalli.'],at:['on the island · the music school','sull’isola · la scuola di musica']}];
 
 /* what is saved: the island keeps scores in igortime_v1, the games leave new ones in igortime_pending (the island collects them) */
 const J=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
@@ -296,7 +296,7 @@ function bestTxt(g){const o=bests().out[g.sc]||(g.sc==='intervals'?{}:null);if(!
 
 function render(){document.documentElement.lang=LANG;document.title=tt('Igor’s games · Igor time','I giochi di Igor · Igor time');
  const T={toIsland:['Take me to the island','Portami all’isola'],island:['Island','Isola'],h:['All my games!','Tutti i miei giochi!'],p:['Pick one and play. Every game gives tofu seeds: you plant them on my island.','Scegline uno e gioca. Ogni gioco dà semi di tofu: li pianti sulla mia isola.'],
-  note:['All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom and the window are in my house, Cadences, the drums and the maestro’s lessons in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.','Tutti questi giochi sono anche <strong>sulla mia isola</strong>: Pitch Stairs, la cucina, la camera e la finestra sono in casa mia, le Cadenze, la batteria e le lezioni del maestro nella scuola di musica e l’abisso giù nel pozzo. Sull’isola i semi diventano campi, formiche di tofu e Igorlets.']};
+  note:['All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom and the window are in my house, Cadences, the drums and the maestros’ lessons in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.','Tutti questi giochi sono anche <strong>sulla mia isola</strong>: Pitch Stairs, la cucina, la camera e la finestra sono in casa mia, le Cadenze, la batteria e le lezioni dei maestri nella scuola di musica e l’abisso giù nel pozzo. Sull’isola i semi diventano campi, formiche di tofu e Igorlets.']};
  document.querySelectorAll('[data-k]').forEach(el=>{const v=T[el.dataset.k];if(!v)return;if('html' in el.dataset)el.innerHTML=tt(...v);else el.textContent=tt(...v)});
  $('langB').innerHTML=FLAG[LANG];$('langB').setAttribute('aria-label',tt('Language: English. Switch to Italian','Lingua: italiano. Passa all’inglese'));$('langB').title=$('langB').getAttribute('aria-label');
  let A=null;A=J('igortime_acct');$('me').innerHTML=A&&A.uid?'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.2" fill="#2b2018"/><path d="M3.5 21c.8-4.6 4.2-7 8.5-7s7.7 2.4 8.5 7z" fill="#2b2018"/></svg>'+esc(A.name||tt('Me','Io')):`<span class="t">${esc(tt('Sign in / register','Accedi / registrati'))}</span><span class="s">${esc(tt('Sign in','Accedi'))}</span>`;
