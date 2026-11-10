@@ -3696,8 +3696,26 @@ const DSAY={fire:[['A little fire is nice in the evening.','Un fuocherello è be
  beach:[['Sun, sea and a deckchair.','Sole, mare e una sdraio.']],tele:[['I can see… the other side of the sea!','Vedo… l’altra parte del mare!'],['At night you can see the rings of a planet.','Di notte si vedono gli anelli di un pianeta.']],fount:[['Splish splash!','Splish splash!']],
  stage:[['A stage! Who plays first?','Un palco! Chi suona per primo?']],treeh:[['A secret hideout. Shh!','Un nascondiglio segreto. Shh!']],wheel:[['Round and round we go!','Gira gira gira!']],caro:[['Hold on to the little horses!','Tenetevi forte ai cavallini!']]};
 function decoTap(k){if(PL)return;const o=decoO[k];if(!o)return;const P=o.g.position.clone();const go=()=>{say(N(pick(DSAY[k])),2.6);if(k==='wheel'||k==='caro')o.spin=T+6;
-  if(VISIT)return;chips(P.clone().setY(k==='wheel'||k==='treeh'||k==='caro'?4.2:2.2),()=>[...(k==='fire'?[FIREX.was?{t:'💨 '+tt('Put it out','Spegni'),fn:()=>{fireOut();return true}}:{t:'🔥 '+tt('Light it','Accendi'),main:1,fn:()=>{fireLight();return true}}]:[]),{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'deco',id:k,fx:o.fx});return false}}],'deco'+k)};
+  if(VISIT)return;chips(P.clone().setY(k==='wheel'||k==='treeh'||k==='caro'?4.2:2.2),()=>[...(k==='wheel'?[{t:'🎡 '+tt('Take a ride','Sali sulla ruota'),main:1,fn:()=>{wheelRide();return true}}]:[]),...(k==='fire'?[FIREX.was?{t:'💨 '+tt('Put it out','Spegni'),fn:()=>{fireOut();return true}}:{t:'🔥 '+tt('Light it','Accendi'),main:1,fn:()=>{fireLight();return true}}]:[]),{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'deco',id:k,fx:o.fx});return false}}],'deco'+k)};
  if(igor.position.distanceTo(P)>DECO[k].r+2.4)walkNear(P.clone().setY(0),DECO[k].r+.9,go);else go()}
+
+/* Igor rides the Ferris wheel: one full turn in a cabin, the camera climbs with him and the island is seen from above.
+   Moving (arrows, joystick) or tapping the ground gets him off early. */
+let WR=null;
+function wheelRide(){const o=decoO.wheel;if(!o||WR||RIDE||VISIT)return;const B=decoLocal('wheel',0,0,DECO.wheel.r+.6);B.y=0;
+ walkNear(B,.5,()=>{const o=decoO.wheel;if(!o)return;const W=o.parts.W,P=o.parts.G;let ci=3,lo=1e9;for(const i of[3,5]){const w=new V3();P[i].getWorldPosition(w);if(w.y<lo){lo=w.y;ci=i}}
+  WR={ci,a0:W.rotation.z,B:B.clone(),k:0,said:0};IG.target=null;IG.arrive=null;hideChips();snd('pop',2);bubbleQ.length=0;bubbleT=0;say(tt('Up we go! Hold on tight!','Si sale! Tieniti forte!'),2.4)})}
+function wheelOff(early){if(!WR)return;const B=WR.B;WR=null;igor.position.set(B.x,0,B.z);IG.target=null;IG.arrive=null;camSnap=false;
+ bubbleQ.length=0;bubbleT=0;say(early?tt('Off I hop!','Scendo!'):pick(tt(['What a view! Again?','Wheee! I saw the whole island!'],['Che vista! Un altro giro?','Uiii! Ho visto tutta l’isola!'])),2.6)}
+const wrY=()=>{if(!WR||!decoO.wheel)return 0;const w=new V3();decoO.wheel.parts.G[WR.ci].getWorldPosition(w);return Math.max(0,w.y-.62)};
+{const _iu=igorUpdate;igorUpdate=function(t,dt){if(!WR)return _iu(t,dt);const o=decoO.wheel;
+  if(!o||where!=='out'||Math.hypot(IN.x,IN.z)>.12||IG.target){const early=!!o&&where==='out';if(!o||where!=='out'){WR=null;return _iu(t,dt)}wheelOff(early);return _iu(t,dt)}
+  o.spin=T+1;const W=o.parts.W,w=new V3();o.parts.G[WR.ci].getWorldPosition(w);igor.position.x=w.x;igor.position.z=w.z+.05;lastAct=T;IG.idle=5;
+  const turned=Math.abs(W.rotation.z-WR.a0);WR.k=Math.min(1,WR.k+dt*.5);if(turned>1.2&&!WR.said){WR.said=1;say(pick(tt(['Look! You can see the whole island!','How small everything looks from up here!'],['Guarda! Si vede tutta l’isola!','Com’è piccolo tutto da quassù!'])),3)}
+  _iu(t,dt);igPlane.scale.set(IG.face*.55,.55,1);if(turned>=TAU-.05)wheelOff(false)}}
+{const _ry=rideY;rideY=function(){return WR?wrY():_ry()}}
+{const _rc=rideCamY;rideCamY=function(){return WR?wrY()*.5:_rc()}}
+{const _ct=camTarget;camTarget=function(){const g=_ct();if(WR&&where==='out'){const k=WR.k*WR.k*(3-2*WR.k);g.x+=Math.sin(CAM.yaw)*7*k;g.z+=Math.cos(CAM.yaw)*7*k;g.y+=wrY()*.6+9*k;FOC.ex+=Math.hypot(9*k,7*k)}return g}}
 // build the placed ones at start and whenever the save changes
 {let key='';updaters.push((t,dt)=>{const F=S.farm;if(!F||!F.deco)return;const k2=JSON.stringify(F.deco);if(k2===key)return;key=k2;
  for(const k of DKEYS){const p=F.deco[k];if(p&&p.x!=null){if(decoO[k]){const o=decoO[k];if(o.g.position.x!==p.x||o.g.position.z!==p.z)decoMoveTo(k,p.x,p.z)}else decoBuild(k)}else if(decoO[k]){const o=decoO[k];world.remove(o.g);o.bk.r=0;o.fx[2]=0;o.L.el.remove();labels.splice(labels.indexOf(o.L),1);delete decoO[k]}}})}
