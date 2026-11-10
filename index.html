@@ -2901,15 +2901,28 @@ const camV=document.createElement('div');camV.id='camV';camV.hidden=true;camV.in
 #phT canvas{display:block;width:150px;height:110px;border-radius:2px;margin-bottom:6px;background:#9fd3e8}#phT b{color:#e0463c}`;document.head.appendChild(st)}
 const camF=document.createElement('div');camF.id='camF';document.body.appendChild(camF);
 let CAM_ON=false;
-function camMode(on){CAM_ON=!!on;camV.hidden=!CAM_ON;{const bx=camV.querySelector('.bx');bx.style.left='50%';bx.style.top='50%';bx.classList.remove('aim')}camB.classList.toggle('on',CAM_ON);if(CAM_ON){hideChips();camV.querySelector('span').textContent=tt('Tap an animal to take a photo','Tocca un animale per fotografarlo');say(tt('Click! Look for animals: fish in the sea, birds in the sky…','Clic! Cerca gli animali: pesci nel mare, uccelli in cielo…'),3)}}
+function camMode(on){CAM_ON=!!on;camV.hidden=!CAM_ON;{const bx=camV.querySelector('.bx');bx.style.left='50%';bx.style.top='50%';bx.classList.remove('aim')}camB.classList.toggle('on',CAM_ON);if(CAM_ON){hideChips();camV.querySelector('span').textContent=tt('Tap an animal or an Igorlet','Tocca un animale o un Igorlet');say(tt('Click! Look for animals: fish in the sea, birds in the sky…','Clic! Cerca gli animali: pesci nel mare, uccelli in cielo…'),3)}}
 camB.onclick=e=>{e.stopPropagation();if(VISIT&&!camOwned())return;camMode(!CAM_ON)};
 camV.querySelector('button').onclick=e=>{e.stopPropagation();camMode(false)};
 const camOwned=()=>{const H=VISIT&&_HOME?_HOME:S;return!!(H.farm&&H.farm.fun&&H.farm.fun.cam)};
 camV.addEventListener('click',e=>{if(e.target.closest('button')||camV._busy)return;const cx=e.clientX,cy=e.clientY,a=camAim(cx,cy),bx=camV.querySelector('.bx');
  bx.style.left=(a?a.x:cx)+'px';bx.style.top=(a?a.y:cy)+'px';bx.classList.add('aim');camV._busy=1;setTimeout(()=>{camV._busy=0;snapAt(a?a.x:cx,a?a.y:cy);setTimeout(()=>bx.classList.remove('aim'),400)},260)});
 // the viewfinder jumps onto the animal nearest to where you tapped
-function camAim(cx,cy){let best=null,bd=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;const x=(v.x*.5+.5)*innerWidth,y=(-v.y*.5+.5)*innerHeight,d=Math.hypot(x-cx,y-cy);if(d<bd){bd=d;best={x,y}}}return best}
-function snapAt(cx,cy){let best=null,bd=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;const d=Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy);if(d<bd){bd=d;best=a}}
+function camAim(cx,cy){let best=null,bd=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;const x=(v.x*.5+.5)*innerWidth,y=(-v.y*.5+.5)*innerHeight,d=Math.hypot(x-cx,y-cy);if(d<bd){bd=d;best={x,y}}}
+ const g=igAim(cx,cy);if(g&&g.d<bd)best={x:g.x,y:g.y};return best}
+// the Igorlets can be photographed too: each one has its own picture in the photo board
+function igAim(cx,cy){let best=null,bd=95;const wp=new V3();for(const[id,o]of igObjs){if(!isShown(o.grp))continue;o.grp.getWorldPosition(wp);wp.y+=IGH*.5;if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;
+  const x=(v.x*.5+.5)*innerWidth,y=(-v.y*.5+.5)*innerHeight,d=Math.hypot(x-cx,y-cy);if(d<bd){bd=d;best={id,x,y,d}}}return best}
+function phDrawIg(c,g,w,h){const q=c.getContext('2d'),gr=q.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#cfeefb');gr.addColorStop(1,'#9fd08a');q.fillStyle=gr;q.fillRect(0,0,w,h);
+ const im=igTex(g,'').image;if(im&&im.width){const s=Math.min(w/im.width,h*.92/im.height),iw=im.width*s,ih=im.height*s;q.drawImage(im,(w-iw)/2,h-ih-2,iw,ih)}}
+function igSnap(id){const g=igById(id);if(!g)return false;const o=igObjs.get(id);if(o)o.jump=.35;
+ let el=$('phT');if(!el){el=document.createElement('div');el.id='phT';document.body.appendChild(el)}let fresh=false;
+ if(!VISIT){const U=FUN();U.phI=U.phI||{};fresh=!U.phI[id];U.phI[id]=(U.phI[id]|0)+1;fmDirty=true}
+ el.innerHTML=`<canvas width="300" height="220"></canvas>${fresh?`<b>${tt('NEW!','NUOVO!')}</b> `:''}${esc(g.name)}`;phDrawIg(el.querySelector('canvas'),g,300,220);el.style.opacity=1;clearTimeout(phTT);phTT=setTimeout(()=>el.style.opacity=0,2600);
+ snd(fresh?'star':'pop',2);bubbleQ.length=0;bubbleT=0;say(pick(tt([`${g.name}: “Cheese!”`,`${g.name} strikes a pose!`,`${g.name}: “Did I come out well?”`],[`${g.name}: “Cheese!”`,`${g.name} si mette in posa!`,`${g.name}: “Sono venuto bene?”`])),2.6);return true}
+function snapAt(cx,cy){{const gi=igAim(cx,cy),aa=(()=>{let b=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;b=Math.min(b,Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy))}return b})();
+  if(gi&&gi.d<aa){snd('shutter');camF.style.transition='none';camF.style.opacity=.85;requestAnimationFrame(()=>{camF.style.transition='opacity .35s';camF.style.opacity=0});igSnap(gi.id);return}}
+ let best=null,bd=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;const d=Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy);if(d<bd){bd=d;best=a}}
  snd('shutter');camF.style.transition='none';camF.style.opacity=.85;requestAnimationFrame(()=>{camF.style.transition='opacity .35s';camF.style.opacity=0});
  if(!best){say(tt('Nothing there… try right on an animal!','Lì non c’è niente… prova proprio su un animale!'),2);return}
  const H=VISIT&&_HOME?_HOME:S,P=((H.farm.fun=H.farm.fun||{}).ph=H.farm.fun.ph||{}),sp=best.sp,S0=SPECIES[sp],fresh=!P[sp];P[sp]=(P[sp]|0)+1;const look=best.o.userData.look||null;(H.farm.fun.phL=H.farm.fun.phL||{})[sp]=look;
@@ -2958,8 +2971,9 @@ function photAsk(){if(VISIT)return;const F=FM();if(F.b.phot||F.pos.phot||PL)retu
  chips(spotOf('phot').add(new V3(0,2.4,0)),()=>[{t:'🖼 '+tt('Album','Album'),main:1,fn:()=>{album();return false}},{t:'🎵 '+tt('Animal choir','Coro degli animali'),fn:()=>{choirStart();return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'phot'});return false}}],'bphot')}}
 function album(sel){const P=PH(),n=photoN();const byC={};for(const k of SPKEYS)(byC[SPECIES[k].c]=byC[SPECIES[k].c]||[]).push(k);
  openSheet('album',`<h2>🖼 ${N(BLD.phot.N)}</h2><p class="shn">${n}/${SPKEYS.length} · ${tt('rare ones have stars','le rare hanno le stelle')}</p>${Object.entries(byC).map(([c,L])=>`<div class="k">${N(SPCLASS[c].N)}</div><div class="alg">${L.map(k=>{const o=P[k];return`<button type="button" data-al="${k}" class="${o?'':'no'}${sel===k?' on':''}" aria-label="${o?esc(N(SPECIES[k].N)):'?'}">${o?`<canvas width="120" height="90" data-pc="${k}"></canvas><small>${esc(N(SPECIES[k].N))}${o>1?' ×'+o:''}</small>`:'<b>?</b><small>'+'★'.repeat(SPECIES[k].r)+'</small>'}</button>`}).join('')}</div>`).join('')}
+ ${FM().igs.length?`<div class="k">Igorlets</div><div class="alg">${FM().igs.map(g=>{const o=(FUN().phI||{})[g.id];return`<button type="button" class="${o?'':'no'}" aria-label="${esc(g.name)}">${o?`<canvas width="120" height="90" data-pi="${g.id}"></canvas><small>${esc(g.name)}${o>1?' ×'+o:''}</small>`:`<b>?</b><small>${esc(g.name)}</small>`}</button>`}).join('')}</div>`:''}
  ${n>=3?`<div class="row" style="margin-top:10px"><button class="main" type="button" data-choir="1">🎵 ${tt('Animal choir','Coro degli animali')}</button></div>`:`<p class="shn">${tt('With 3 animals the animal choir starts: a game for your ears.','Con 3 animali comincia il coro degli animali: un gioco per le orecchie.')}</p>`}`);
- sb.querySelectorAll('canvas[data-pc]').forEach(c=>phDraw(c,c.dataset.pc,120,90,(FUN().phL||{})[c.dataset.pc]))}
+ sb.querySelectorAll('canvas[data-pc]').forEach(c=>phDraw(c,c.dataset.pc,120,90,(FUN().phL||{})[c.dataset.pc]));sb.querySelectorAll('canvas[data-pi]').forEach(c=>{const g=igById(+c.dataset.pi);if(g)phDrawIg(c,g,120,90)})}
 sb.addEventListener('click',e=>{if(sheetKind!=='album'&&sheetKind!=='choir')return;const b=e.target.closest('button');if(!b)return;
  if(b.dataset.choir){e.stopPropagation();choirStart();return}
  if(b.dataset.al&&sheetKind==='album'){e.stopPropagation();const k=b.dataset.al;if(PH()[k])animCall(k);return}
