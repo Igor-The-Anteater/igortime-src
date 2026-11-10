@@ -2,8 +2,8 @@
 <html lang="en"><head><script src="/lang.js?v=3"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Maestro Amadigor's lessons · Igor time</title>
-<meta name="description" content="Ear training for everyone in Igor's music school: Wolfgang Amadigor teaches the intervals step by step, with little songs to remember them.">
+<title>The maestros' lessons · Igor time</title>
+<meta name="description" content="Ear training for everyone in Igor's music school: Wolfgang Amadigor and Sofia Gubaigorina teach the intervals step by step, with little songs to remember them.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
 <style>
@@ -54,14 +54,14 @@ button.ex.on{background:#ffe08a}
 #endnew{font:600 18px/1.3 var(--toon);color:var(--glow)}
 </style>
 </head><body>
-<canvas id="c" aria-label="Igor's music school: Maestro Wolfgang Amadigor, with a powdered wig and a baton, stands next to a blackboard"></canvas>
+<canvas id="c" aria-label="Igor's music school: Maestro Wolfgang Amadigor, with a powdered wig and a baton, and Maestra Sofia Gubaigorina, with a dark bob and a red shawl, stand next to a blackboard"></canvas>
 <header><a class="igback" href="/">← Island</a><h1><a href="/"><em>Igor</em> time</a><span class="gm" id="gm"></span></h1><div id="stat"><span id="st1"></span><div id="dots"></div></div></header>
 <div id="bubble"></div>
 <div id="bar"></div>
 <div class="ov" id="start"><div class="card" id="startCard"></div></div>
 <div class="ov" id="end" hidden><div class="card" id="endCard"></div></div>
 <script src="/house/kit.js?v=4"></script>
-<script src="/intervals/wig.js?v=1"></script>
+<script src="/intervals/wig.js?v=2"></script>
 <script>
 (()=>{
 const H=IgorHouse,{TAU,clamp,lerp,ease,rr,drawAnt,paintAvatar,ME,AVN}=H,PAD=H.PAD||.24;
@@ -70,10 +70,10 @@ const OPEN=!!window.IV_OPEN; // previews: every stage can be tried
 const tt=(en,it)=>IT?it:en,T2=a=>a?(IT?a[1]:a[0]):'';
 const $=id=>document.getElementById(id);
 const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
-const MAESTRO='Wolfgang Amadigor';
+const MAESTRO='Wolfgang Amadigor',MAESTRA='Sofia Gubaigorina';
 try{const h=localStorage.getItem('igortime_home');if(h)document.querySelectorAll('a[href="/"]').forEach(a=>a.href=h)}catch(e){}
 if(IT)document.documentElement.lang='it';
-$('gm').textContent=' · '+tt('The maestro’s lessons','Le lezioni del maestro');
+$('gm').textContent=' · '+tt('The maestros’ lessons','Le lezioni dei maestri');
 
 /* ================= the intervals, and the little tricks to remember them ================= */
 const IV={
@@ -129,7 +129,8 @@ const HARM0=['m2','M2','m3','M3','P4','P5','P8'],HARM1=['m2','M2','m3','M3','P4'
 const S_=(en,it,ex)=>({say:[en,it],ex:ex||[]});
 const X={iv:(k,d,lab)=>({iv:k,d,lab}),mel:(m,lab)=>({mel:m,lab}),same:lab=>({same:1,lab}),st:(n,d,lab)=>({st:n,d,lab}),harm:(k,lab)=>({harm:k,lab})};
 const LES=[
- [S_(`Welcome to my school! I am <b>${MAESTRO}</b>, the music teacher. Here we train our ears, one little step at a time.`,`Benvenuto nella mia scuola! Sono <b>${MAESTRO}</b>, il maestro di musica. Qui alleniamo le orecchie, un passetto alla volta.`),
+ [S_(`Welcome to our school! I am <b>${MAESTRO}</b>, the music teacher.`,`Benvenuto nella nostra scuola! Io sono <b>${MAESTRO}</b>, il maestro di musica.`),
+  S_(`And I am <b>${MAESTRA}</b>. We teach together: here we train our ears, one little step at a time.`,`E io sono <b>${MAESTRA}</b>. Insegniamo insieme: qui alleniamo le orecchie, un passetto alla volta.`),
   S_('We start easy: I play two notes, one after the other. Are they the <b>same</b> or <b>different</b>?','Si comincia facile: suono due note, una dopo l’altra. Sono <b>uguali</b> o <b>diverse</b>?',[X.same(['Same','Uguali']),X.st(7,1,['Different','Diverse'])]),
   S_('You listen and choose. A mistake? No problem: we listen again together. Ready?','Tu ascolti e scegli. Sbagli? Nessun problema: le riascoltiamo insieme. Pronto?')],
  [S_('Now: does the second note go <b>up</b> or <b>down</b>? Think of Igor on the stairs.','Adesso: la seconda nota <b>sale</b> o <b>scende</b>? Pensa a Igor sulle scale.',[X.st(5,1,['Up','Sale']),X.st(5,-1,['Down','Scende'])]),
@@ -233,18 +234,20 @@ function labelOf(k,q){if(BIN[ST[SES.si].k]){const b=BIN[ST[SES.si].k].find(x=>x[
 /* ================= the scene ================= */
 const cv=$('c'),g=cv.getContext('2d');let W=0,Hh=0,DPR=1,T=0;
 const mspr=document.createElement('canvas'),mx=mspr.getContext('2d'),sspr=document.createElement('canvas'),sx=sspr.getContext('2d');
-const SW=420,SH=462;mspr.width=sspr.width=SW;mspr.height=sspr.height=Math.round(SH*(1+PAD));
+const fspr=document.createElement('canvas'),fx=fspr.getContext('2d');
+const SW=420,SH=462;mspr.width=sspr.width=fspr.width=SW;mspr.height=sspr.height=fspr.height=Math.round(SH*(1+PAD));
 let igOK=false;H.loadIgor(()=>{igOK=true});
-const BLm={next:1.5,start:-9},BLs={next:2.6,start:-9};
+const BLm={next:1.5,start:-9},BLs={next:2.6,start:-9},BLf={next:2,start:-9};
 function blinkK(B,t){if(t>B.next){B.start=t;B.next=t+(Math.random()<.2?.45:2.4+Math.random()*3.8)}const u=t-B.start;return u<0||u>.26?0:u<.07?u/.07:u<.12?1:1-(u-.12)/.14}
 let CONDUCT=0;function conduct(s){CONDUCT=Math.max(CONDUCT,T+s)}
 function paintMaestro(t){const k=blinkK(BLm,t);paintAvatar(mx,{avatar:'igor'},k,k,SW,mspr.height);const sc=Math.min(SW/663,mspr.height/(730*(1+PAD)));mx.setTransform(sc,0,0,sc,(SW-663*sc)/2,PAD*730*sc);
  IgorWig.wig(mx);const a=CONDUCT>t?Math.sin(t*7.5)*.38+.2:Math.sin(t*1.1)*.05;IgorWig.baton(mx,a);mx.setTransform(1,0,0,1,0,0)}
+function paintSofia(t){const k=blinkK(BLf,t);paintAvatar(fx,{avatar:'she'},k,k,SW,fspr.height);const sc=Math.min(SW/663,fspr.height/(730*(1+PAD)));fx.setTransform(sc,0,0,sc,(SW-663*sc)/2,PAD*730*sc);IgorWig.sofia(fx);fx.setTransform(1,0,0,1,0,0)}
 function paintStudent(t){const k=blinkK(BLs,t);paintAvatar(sx,ME,k,k*.9,SW,sspr.height)}
 let L={};// layout
 function layout(){const top=58,barH=$('bar').offsetHeight||140,sh=Math.max(120,Hh-top-barH),land=W>Hh*1.05;
- if(land){const mh=Math.min(sh*.86,W*.34);L={land,top,sh,m:{x:W*.2,y:top+sh*.5,h:mh},b:{x:W*.38,y:top+sh*.06,w:W*.58,h:sh*.66},s:{x:W*.86,y:top+sh*.84,h:Math.min(sh*.3,W*.12)}}}
- else{const bh=Math.min(sh*.5,W*.62);L={land,top,sh,b:{x:12,y:top+4,w:W-24,h:bh},m:{x:W*.27,y:top+bh+(sh-bh)*.52,h:Math.min((sh-bh)*.95,W*.55)},s:{x:W*.8,y:top+bh+(sh-bh)*.68,h:Math.min((sh-bh)*.55,W*.3)}}}}
+ if(land){const mh=Math.min(sh*.74,W*.21);L={land,top,sh,m:{x:W*.105,y:top+sh*.46,h:mh},f:{x:W*.285,y:top+sh*.58,h:mh*.95},b:{x:W*.38,y:top+sh*.06,w:W*.58,h:sh*.66},s:{x:W*.86,y:top+sh*.84,h:Math.min(sh*.3,W*.12)}}}
+ else{const bh=Math.min(sh*.5,W*.62);L={land,top,sh,b:{x:12,y:top+4,w:W-24,h:bh},m:{x:W*.2,y:top+bh+(sh-bh)*.52,h:Math.min((sh-bh)*.9,W*.4)},f:{x:W*.52,y:top+bh+(sh-bh)*.58,h:Math.min((sh-bh)*.82,W*.36)},s:{x:W*.84,y:top+bh+(sh-bh)*.7,h:Math.min((sh-bh)*.5,W*.26)}}}}
 function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;Hh=innerHeight;cv.width=W*DPR;cv.height=Hh*DPR;layout()}
 addEventListener('resize',()=>{resize();placeBubble()});
 function room(){const gr=g.createLinearGradient(0,0,0,Hh);gr.addColorStop(0,'#3a2d24');gr.addColorStop(.25,'#d9cfb8');gr.addColorStop(.7,'#cfc3a8');g.fillStyle=gr;g.fillRect(0,0,W,Hh);
@@ -282,16 +285,20 @@ function drawFig(spr,F,face){const w=F.h*SW/SH,by=F.y+Math.sin(T*1.6)*F.h*.012;g
 /* the ant prize: one hops into the student's mouth */
 let ANT=null;
 function frame(ts){const t=ts/1000,dt=Math.min(.05,t-(frame.l||t));frame.l=t;T+=dt;g.setTransform(DPR,0,0,DPR,0,0);room();board();
- if(igOK){paintMaestro(T);paintStudent(T)}
- drawFig(mspr,L.m,1);
+ if(igOK){paintMaestro(T);paintSofia(T);paintStudent(T)}
+ // the one who is talking hops a little
+ const hop=k=>SPK===k&&bubTxt?Math.abs(Math.sin(T*4))*L.m.h*.025:0;
+ drawFig(mspr,{...L.m,y:L.m.y-hop('a')},1);drawFig(fspr,{...L.f,y:L.f.y-hop('s')},1);
  const gulp=ANT&&ANT.t>.55&&ANT.t<.8?Math.sin((ANT.t-.55)/.25*Math.PI):0;const S=L.s;g.save();g.translate(S.x,S.y);g.scale(1+gulp*.07,1-gulp*.05);g.translate(-S.x,-S.y);drawFig(sspr,S,-1);g.restore();
  if(ANT){ANT.t+=dt;const u=clamp(ANT.t/.6,0,1),mxp=S.x-S.h*.32,myp=S.y+S.h*.42,x=lerp(ANT.x,mxp,u),y=lerp(ANT.y,myp,u)-Math.sin(u*Math.PI)*80;if(u<1)drawAnt(g,x,y,Math.max(.5,S.h/260),-.5+u,T,{});if(ANT.t>1)ANT=null}
  requestAnimationFrame(frame)}
 
 /* ================= the maestro talks ================= */
 const bub=$('bubble');let bubTxt='';
-function say(html){bubTxt=html;bub.innerHTML=html;bub.style.opacity=html?1:0;placeBubble()}
-function placeBubble(){if(!bubTxt)return;const M=L.m;if(!M)return;const bw=bub.offsetWidth,bh=bub.offsetHeight,headY=M.y-M.h*.5-M.h*PAD*.55;
+let SPK='a';
+/* who: 'a' = Amadigor, 's' = Sofia Gubaigorina; they take turns */
+function say(html,who){if(who)SPK=who;bubTxt=html;bub.innerHTML=html?`<small style="display:block;font-size:.68em;opacity:.65">${SPK==='s'?MAESTRA:MAESTRO}</small>`+html:'';bub.style.opacity=html?1:0;placeBubble()}
+function placeBubble(){if(!bubTxt)return;const M=SPK==='s'?L.f:L.m;if(!M)return;const bw=bub.offsetWidth,bh=bub.offsetHeight,headY=M.y-M.h*.5-M.h*PAD*.55;
  let x=L.land?M.x-bw*.25:M.x-M.h*.25,y=headY-bh-14;x=clamp(x,10,W-bw-10);
  if(!L.land){y=clamp(y,L.b.y+L.b.h+8,Hh);if(y+bh>M.y-M.h*.15){/* not enough room above the maestro: put the bubble over the board's lower edge */y=Math.max(64,L.b.y+L.b.h-bh*.6)}}
  else y=Math.max(64,y);
@@ -307,8 +314,8 @@ $('stat').onclick=()=>{if(SES&&SES.phase!=='end'){hush();openMap()}};
 
 function openMap(){SES=null;say('');setBar('');hdr();const cur=Math.min(PR.done,NS-1),fin=PR.done>=NS;
  const chips=ST.map((s,k)=>`<button data-st="${k}" class="${k<PR.done?'done':k===cur&&!fin?'cur':''}" ${k>PR.done&&!OPEN?'disabled':''}><span class="ic">${k>PR.done&&!OPEN?'🔒':s.ic}</span>${T2(s.name)}<small>${k<PR.done?'✓ '+tt('done','fatta'):k===cur&&!fin?tt('next','prossima'):tt('stage','tappa')+' '+(k+1)}</small></button>`).join('');
- $('startCard').innerHTML=`<h2>${tt('The <em>maestro’s</em> lessons','Le lezioni del <em>maestro</em>')}</h2>
- <p>${tt(`<b>${MAESTRO}</b> teaches you to recognise <b>intervals</b>: the distance between two notes. No music theory needed: we start very easy, and little songs help you remember. Every stage you pass opens the next one.`,`<b>${MAESTRO}</b> ti insegna a riconoscere gli <b>intervalli</b>: la distanza tra due note. Non serve sapere la musica: si parte facilissimo, e le canzoncine ti aiutano a ricordare. Ogni tappa superata apre la successiva.`)}</p>
+ $('startCard').innerHTML=`<h2>${tt('The <em>maestros’</em> lessons','Le lezioni dei <em>maestri</em>')}</h2>
+ <p>${tt(`<b>${MAESTRO}</b> and <b>${MAESTRA}</b> teach you to recognise <b>intervals</b>: the distance between two notes. No music theory needed: we start very easy, and little songs help you remember. Every stage you pass opens the next one.`,`<b>${MAESTRO}</b> e <b>${MAESTRA}</b> ti insegnano a riconoscere gli <b>intervalli</b>: la distanza tra due note. Non serve sapere la musica: si parte facilissimo, e le canzoncine ti aiutano a ricordare. Ogni tappa superata apre la successiva.`)}</p>
  <div class="map">${chips}</div>
  <p class="small">${tt(`${NQ} questions per stage · ${PASS} right to pass · the more you play a stage, the harder it gets`,`${NQ} domande per tappa · ${PASS} giuste per passare · più rigiochi una tappa, più diventa difficile`)}</p>
  <div class="row"><button class="main" id="go">${fin?tt('Play the big review','Rigioca il grande ripasso'):PR.done?tt('Continue · stage ','Continua · tappa ')+(cur+1):tt('Start the first lesson','Inizia la prima lezione')}</button></div>
@@ -323,21 +330,21 @@ function exampleBtns(ex){return ex.map((e,k)=>`<button class="ex" data-ex="${k}"
 function playEx(e){if(e.mel){playMel(e.mel);SES.demo=null;return}if(e.same){const a=ri(58,66);playPair(a,a);SES.demo={n:0,d:1};return}
  if(e.harm){const a=ri(55,62);playPair(a,a+IV[e.harm].s,{harm:true});SES.demo={n:IV[e.harm].s,d:1,ans:e.harm,harm:true};return}
  const n=e.st??IV[e.iv].s,d=e.d||1;const[a,b]=mkPair(n,d,0);playPair(a,b);SES.demo={n,d,ans:e.iv}}
-function lesson(k){const L_=LES[SES.si],s=L_[k];SES.phase='lesson';SES.step=k;hdr();say(T2(s.say));const last=k===L_.length-1;
+function lesson(k){const L_=LES[SES.si],s=L_[k];SES.phase='lesson';SES.step=k;hdr();say(T2(s.say),k%2?'s':'a');const last=k===L_.length-1;
  setBar(`<div class="row">${exampleBtns(s.ex)}</div><div class="row">${k?`<button id="back">‹</button>`:''}<button class="main" id="next">${last?tt('Let’s start! ▸','Iniziamo! ▸'):tt('Next ▸','Avanti ▸')}</button></div>`);
  bar.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{bar.querySelectorAll('.ex').forEach(x=>x.classList.remove('on'));b.classList.add('on');playEx(s.ex[+b.dataset.ex])});
  if(s.ex.length){const first=bar.querySelector('[data-ex="0"]');setTimeout(()=>{if(SES&&SES.phase==='lesson'&&SES.step===k){first.classList.add('on');playEx(s.ex[0])}},450)}else SES.demo=null;
  $('next').onclick=()=>{hush();last?question():lesson(k+1)};const bk=$('back');if(bk)bk.onclick=()=>{hush();lesson(k-1)}}
 function lessonShort(){SES.phase='lesson';hdr();const st=ST[SES.si],g_=giro(SES.si);
  const txt=g_>=2&&!ST[SES.si].all?tt('Again? Bravo! This time <b>no song hints</b> on the buttons: only your ears.','Di nuovo? Bravo! Stavolta <b>niente canzoncine</b> sui pulsanti: solo le tue orecchie.'):tt('Welcome back! This time it is a little harder: notes higher and lower, and new sounds.','Bentornato! Stavolta è un po’ più difficile: note più alte e più basse, e suoni nuovi.');
- say(txt);const all=LES[SES.si].flatMap(s=>s.ex);SES.demo=null;
+ say(txt,(PR.plays[SES.si]|0)%2?'a':'s');const all=LES[SES.si].flatMap(s=>s.ex);SES.demo=null;
  setBar(`<div class="row">${exampleBtns(all.slice(0,6))}</div><div class="row"><button id="les">${tt('The whole lesson','Tutta la lezione')}</button><button class="main" id="next">${tt('Let’s start! ▸','Iniziamo! ▸')}</button></div>`);
  bar.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{bar.querySelectorAll('.ex').forEach(x=>x.classList.remove('on'));b.classList.add('on');playEx(all[+b.dataset.ex])});
  $('next').onclick=()=>{hush();question()};$('les').onclick=()=>lesson(0)}
 
 const PRAISE=[['Bravissimo!','Bravissimo!'],['Wunderbar!','Wunderbar!'],['Golden ears!','Orecchio d’oro!'],['Exactly!','Esatto!'],['Perfect!','Perfetto!'],['Magnifique!','Magnifico!'],['Yes!','Sì!']];
 const SOFT=[['Almost!','Quasi!'],['So close!','Ci sei quasi!'],['Good try!','Bel tentativo!'],['Nearly there!','Manca poco!']];
-function question(){const q=gen(SES.si,SES.i);SES.q=q;SES.phase='q';SES.ansd=false;hdr();say(SES.i===0?tt('Listen…','Ascolta…'):pick([['Listen…','Ascolta…'],['Next one!','La prossima!'],['Here it comes…','Ecco…']].map(T2)));
+function question(){const q=gen(SES.si,SES.i);SES.q=q;SES.phase='q';SES.ansd=false;hdr();SPK=SES.i%2?'s':'a';say(SES.i===0?tt('Listen…','Ascolta…'):pick([['Listen…','Ascolta…'],['Next one!','La prossima!'],['Here it comes…','Ecco…']].map(T2)));
  const st=ST[SES.si],opts=BIN[st.k]?BIN[st.k].map(([k,ic,n])=>[k,`<span class="ic">${ic}</span>${T2(n)}`]):q.ch.map(k=>[k,ansBtn(k,q,SES.si)]);
  const cols=opts.length<=2?2:opts.length===4?(W<620?2:4):Math.min(opts.length,W<620?3:5);
  setBar(`<div class="row"><button id="rep">▶ ${tt('Listen again','Riascolta')}</button></div><div class="ans" style="--n:${cols}">${opts.map(([k,h],j)=>`<button data-a="${k}" title="${j+1}">${h}</button>`).join('')}</div>`);

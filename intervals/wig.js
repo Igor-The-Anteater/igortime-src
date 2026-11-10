@@ -24,5 +24,19 @@ function baton(c,a){a=a||0;c.save();c.translate(560,655);c.rotate(-.9+a);c.lineC
  c.strokeStyle=INK;c.lineWidth=13;c.beginPath();c.moveTo(0,0);c.lineTo(0,-210);c.stroke();
  c.strokeStyle='#fbfaf4';c.lineWidth=6;c.beginPath();c.moveTo(0,-6);c.lineTo(0,-206);c.stroke();
  c.fillStyle='#7a4a2a';c.strokeStyle=INK;c.lineWidth=5;c.beginPath();c.ellipse(0,-4,13,26,0,0,TAU);c.fill();c.stroke();c.restore()}
-window.IgorWig={wig,baton};
+
+// Sofia Gubaigorina (a Shigor): a dark bob with a fringe, and a warm patterned shawl under the chin
+function sofia(c){c.save();c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=6;
+ c.fillStyle='#2e2420';
+ c.beginPath();c.moveTo(40,150);c.bezierCurveTo(40,70,170,20,300,26);c.bezierCurveTo(390,30,450,80,468,150);
+ c.bezierCurveTo(452,170,432,170,418,160);c.bezierCurveTo(400,128,380,118,350,116);
+ c.bezierCurveTo(260,104,150,120,96,170);c.bezierCurveTo(90,210,86,240,70,262);c.bezierCurveTo(50,250,38,200,40,150);c.closePath();c.fill();c.stroke();
+ c.strokeStyle='rgba(255,255,255,.18)';c.lineWidth=5;for(let k=0;k<4;k++){c.beginPath();c.moveTo(110+k*70,60+k*4);c.quadraticCurveTo(160+k*70,48,210+k*66,58+k*6);c.stroke()}
+ // the shawl
+ c.translate(296,420);c.rotate(.3);c.strokeStyle=INK;c.lineWidth=6;
+ c.fillStyle='#b8322a';c.beginPath();c.moveTo(-110,-26);c.quadraticCurveTo(0,10,110,-26);c.lineTo(70,40);c.quadraticCurveTo(0,96,-70,40);c.closePath();c.fill();c.stroke();
+ c.fillStyle='#f1b46e';for(const[x,y]of[[-60,8],[-20,28],[20,28],[60,8],[0,58]]){c.beginPath();c.arc(x,y,7,0,TAU);c.fill()}
+ c.strokeStyle='#f1b46e';c.lineWidth=3;c.beginPath();c.moveTo(-100,-14);c.quadraticCurveTo(0,20,100,-14);c.stroke();
+ c.restore()}
+window.IgorWig={wig,baton,sofia};
 })();
