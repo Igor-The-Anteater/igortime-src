@@ -170,14 +170,25 @@ function userV(){const b=shell(),a=allAccounts().find(x=>x.uid===sel)||{uid:sel,
  <div style="display:flex;justify-content:flex-end;margin:8px 0 4px"><button class="go" data-a="send">${tt('Send','Manda')}</button></div>
  <h4>${tt('Messages sent','Messaggi mandati')}</h4><div id="admSent"><p class="mute">${tt('Loading…','Carico…')}</p></div>
  <h4>⚡ ${tt('An event only for this player','Un evento solo per questo giocatore')}</h4>${evForm('admU')}<div class="acts"><button class="go" data-a="evone">⚡ ${tt('Force it','Forzalo')}</button></div><p class="mute">${tt('It starts as soon as they are on the island (right away if they are there). It appears in the gifts list below.','Parte appena è sull’isola (subito, se c’è). Compare nell’elenco dei regali qui sotto.')}</p>
- <h4>🎁 ${tt('Gifts','Regali')}</h4><div id="admInv" class="mute">${tt('Loading…','Carico…')}</div>
+ <h4>🎁 ${tt('Gifts','Regali')}</h4><div id="admInv" class="mute">${tt('Loading…','Carico…')}</div><div id="admBk" class="mute"></div>
  <div class="gift"><select id="admGk"><option value="seeds">🌱 ${tt('Seeds','Semi')}</option><option value="ants">🧊 ${tt('Tofu ants','Formiche di tofu')}</option><option value="veh">🏆 ${tt('A prize (vehicle)','Un premio (mezzo)')}</option><option value="fuel">⛽ Tofuel</option><option value="deco">🧸 ${tt('A toy-store decoration','Una decorazione (negozio dei giocattoli)')}</option><option value="house">🏡 ${tt('Something for Igor’s house','Una personalizzazione della casa')}</option></select>
  <input id="admGn" type="number" min="1" max="100000" value="10" inputmode="numeric"><select id="admGv" hidden>${Object.keys(VEHS).map(k=>`<option value="${k}">${esc(vName(k))}</option>`).join('')}</select><select id="admGd" hidden>${Object.keys(DECOS).map(k=>`<option value="d:${k}">${esc(dName(k))}</option>`).join('')}</select><select id="admGh" hidden>${hOpts()}</select>
  <input id="admGm" type="text" maxlength="200" placeholder="${tt('Note for the player (optional)','Biglietto per il giocatore (facoltativo)')}"><button class="go" data-a="gift">${tt('Give','Regala')}</button></div>
  <p class="mute">${tt('It arrives on the island (right away if they are there). You can take back only what you gave, never what they earned, and never below zero.','Arriva sull’isola (subito, se ci sono). Si può ritirare solo quello che hai regalato, mai quello che hanno guadagnato, e mai sotto zero.')}</p>
  <div id="admGifts"></div>`;
- loadSent(sel).then(drawSent);loadGifts(sel).then(drawGifts);loadInv(sel).then(drawInv)}
-let GIFTS=[],INV=null;
+ loadSent(sel).then(drawSent);loadGifts(sel).then(drawGifts);loadInv(sel).then(drawInv);loadBk(sel).then(drawBk)}
+let GIFTS=[],INV=null,BKS=[];
+const BKW={day:['daily copy','copia del giorno'],unsynced:['changes not yet online, replaced','modifiche non ancora online, sostituite'],'cloud-replaced':['online island replaced by a device','isola online sostituita da un dispositivo'],'device-replaced':['device island replaced by the online one','isola di un dispositivo sostituita da quella online'],'restored-over':['replaced by a restore','sostituita da un ripristino'],'pre-restore':['before a restore','prima di un ripristino']};
+async function loadBk(uid){try{const s=await getDocs(query(collection(db,'users',uid,'bk'),orderBy('t','desc'),limit(40)));BKS=s.docs.map(d=>({id:d.id,...d.data()}))}catch(e){console.warn('bk',e);BKS=null}}
+function bkSum(b){let I=null;try{I=JSON.parse(b.d)}catch(e){}if(!I)return'';const F=I.farm||{},v=Object.keys(F.veh||{}),h=Object.keys(F.pos||{}).length;
+ return`🌱 ${I.seeds|0} · 🧊 ${(F.ants&&F.ants.t)|0} · ${tt('collected','raccolte')} ${F.total|0}${v.length?' · '+v.map(k=>esc(vName(k))+((F.veh[k].n|0)>1?' ×'+F.veh[k].n:'')).join(', '):''} · ${h} ${tt('places on the island','posti sull’isola')}`}
+function drawBk(){const e=$('admBk');if(!e)return;if(BKS===null){e.textContent=tt('Backups: I cannot read them.','Copie di sicurezza: non riesco a leggerle.');return}
+ if(!BKS.length){e.innerHTML=`<b>${tt('Backups','Copie di sicurezza')}</b>: ${tt('none yet (one is made every day they play).','ancora nessuna (se ne fa una ogni giorno in cui gioca).')}`;return}
+ e.innerHTML=`<b>${tt('Backups','Copie di sicurezza')}</b>`+BKS.map(b=>`<div style="margin:6px 0;padding:6px 0;border-top:1px solid rgba(0,0,0,.12)">${esc(fmtTime(b.t))} · ${esc(BKW[b.why]?tt(...BKW[b.why]):b.why)}<br><small>${bkSum(b)}</small><br><button data-a="restore" data-bk="${esc(b.id)}">${tt('Restore this one','Ripristina questa')}</button></div>`).join('')}
+async function restoreBk(uid,b){const ref=doc(db,'users',uid),cur=await getDoc(ref),now=Date.now(),c=cur.exists()?cur.data():null;
+ if(c){const k={...c};delete k.updated;await setDoc(doc(db,'users',uid,'bk','pre-restore-'+now),{why:'pre-restore',t:now,at:c.at||0,lv:(c.farm&&c.farm.total)|0,igv:c.igv||'',d:JSON.stringify(k),made:serverTimestamp()})}
+ const d=JSON.parse(b.d);delete d.updated;d.at=now;d.base=c&&c.at||0;d.rst=now;d.uid=uid;
+ await setDoc(ref,{...d,name:c&&c.name||d.name||'',nick:c&&c.nick||d.nick||'',updated:serverTimestamp()})}
 async function loadGifts(uid){try{const s=await getDocs(query(collection(db,'gifts',uid,'g'),orderBy('at','desc'),limit(50)));GIFTS=s.docs.map(d=>({id:d.id,...d.data(),at:ms(d.data().at)}))}catch(e){console.warn('gifts',e);GIFTS=[]}}
 async function loadInv(uid){try{const d=await getDoc(doc(db,'users',uid));INV=d.exists()?d.data():false}catch(e){console.warn('inv',e);INV=null}}
 function drawInv(){const e=$('admInv');if(!e)return;if(INV===null){e.textContent=tt('Cannot read their island.','Non riesco a leggere la sua isola.');return}if(INV===false){e.textContent=tt('No saved island yet.','Ancora nessuna isola salvata.');return}
@@ -211,6 +222,7 @@ async function onClick(e){const t=e.target.closest('[data-a],[data-tab],[data-f]
  if(a==='old'){t.disabled=true;await loadOld();return render()}
  if(a==='copy'){const x=allAccounts().find(v=>v.uid===sel);try{await navigator.clipboard.writeText(x.email);toast(tt('Copied','Copiata'))}catch(err){toast(x.email)}return}
  if(a==='block'){if(!t.dataset.sure){t.dataset.sure=1;t.textContent=tt('Tap again to block','Tocca ancora per bloccare');return}t.disabled=true;const x=allAccounts().find(v=>v.uid===sel)||{};await block(sel,x.nick);toast(tt('Blocked','Bloccato'));return render()}
+ if(a==='restore'){if(!t.dataset.sure){t.dataset.sure=1;t.textContent=tt('Tap again: their island goes back to this copy','Tocca ancora: la sua isola torna a questa copia');return}t.disabled=true;const b=(BKS||[]).find(x=>x.id===t.dataset.bk);if(!b)return;const u0=sel;await restoreBk(u0,b);toast(tt('Island restored','Isola ripristinata'));await loadInv(u0);drawInv();await loadBk(u0);drawBk();return}
  if(a==='unblock'){t.disabled=true;await unblock(sel);toast(tt('Unblocked','Sbloccato'));return render()}
  if(a==='gift'){const k0=$('admGk').value,k=k0==='deco'||k0==='house'||k0==='fuel'?'veh':k0,n=k==='veh'&&k0!=='fuel'?1:Math.floor(+$('admGn').value||0),v=k0==='fuel'?'fuel':k0==='deco'?$('admGd').value:k0==='house'?$('admGh').value:k==='veh'?$('admGv').value:'',m=($('admGm').value||'').trim().slice(0,200);
   if(n<1||n>100000)return toast(tt('Choose a number from 1 to 100000.','Scegli un numero da 1 a 100000.'));t.disabled=true;
