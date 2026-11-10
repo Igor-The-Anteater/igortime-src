@@ -2728,11 +2728,11 @@ function mkPeng(emp){const g=new THREE.Group(),blk=lam('#1f2328'),wh=lam('#f7f7f
 function isleIce(I,G){for(const[x,z,s]of[[32.5,24.5,1],[21.5,24.8,.85],[33.8,17.8,.9],[29.5,26.3,.75]])snowPine(G,x,z,s);
  const ig=new THREE.Group(),dome=new THREE.Mesh(new THREE.SphereGeometry(1.3,20,12,0,TAU,0,Math.PI/2),lam('#f4f9fd'));ig.add(dome);const tn=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,1,14,1,false,0,Math.PI),lam('#eaf2f8'));tn.rotation.z=Math.PI/2;tn.rotation.y=Math.PI/2;tn.position.set(0,.02,1.15);ig.add(tn);
  const dr=new THREE.Mesh(new THREE.CircleGeometry(.42,14,0,Math.PI),lam('#2b3a46'));dr.position.set(0,.02,1.66);ig.add(dr);for(let k=0;k<3;k++){const rg=new THREE.Mesh(new THREE.TorusGeometry(1.3*Math.cos(k*.45+.2),.02,4,30),lam('#cfdde8'));rg.rotation.x=Math.PI/2;rg.position.y=1.3*Math.sin(k*.45+.2);ig.add(rg)}
- ig.position.set(31,0,19.5);ig.rotation.y=-.9;blob(ig,1.5);G.add(ig);block(31,19.5,1.4);
+ ig.position.set(31,0,19.5);ig.rotation.y=-.9;blob(ig,1.5);G.add(ig);block(31,19.5,1.4);I.igloo=ig;
  const pond=new THREE.Mesh(new THREE.CircleGeometry(1,40).rotateX(-Math.PI/2),curve(new THREE.MeshLambertMaterial({color:'#bfe6f5',emissive:'#7fb6cc',emissiveIntensity:.25,transparent:true,opacity:.85})));pond.scale.set(3.4,1,2.6);pond.position.set(25.5,.08,21.8);G.add(pond);I.pond={x:25.5,z:21.8,rx:3.4,rz:2.6};
  for(let k=0;k<5;k++){const sb=new THREE.Mesh(new THREE.SphereGeometry(.28+rnd()*.15,10,8),lam('#ffffff'));sb.scale.set(1,.45,1);const a=rnd()*TAU,r=.55+rnd()*.3;sb.position.set(I.cx+Math.cos(a)*r*I.rx,.05,I.cz+Math.sin(a)*r*I.rz);G.add(sb)}
  // a little snowman, the penguins' friend
- {const sm=new THREE.Group(),w=lam('#ffffff');for(const[r,y]of[[.38,.36],[.27,.92],[.19,1.33]]){const b=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),w);b.position.y=y;sm.add(b)}const nz=new THREE.Mesh(new THREE.ConeGeometry(.04,.2,6),lam('#f29a2e'));nz.rotation.x=Math.PI/2;nz.position.set(0,1.33,.22);sm.add(nz);sm.position.set(22.6,0,23.4);G.add(sm);block(22.6,23.4,.45)}
+ {const sm=new THREE.Group(),w=lam('#ffffff');for(const[r,y]of[[.38,.36],[.27,.92],[.19,1.33]]){const b=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),w);b.position.y=y;sm.add(b)}const nz=new THREE.Mesh(new THREE.ConeGeometry(.04,.2,6),lam('#f29a2e'));nz.rotation.x=Math.PI/2;nz.position.set(0,1.33,.22);sm.add(nz);sm.position.set(22.6,0,23.4);G.add(sm);block(22.6,23.4,.45);I.snowman=sm}
  I.pengs=[];const emp=Math.random()<.35;for(let k=0;k<5;k++){const isE=emp&&k===4,g=mkPeng(isE),P=new V3(I.cx+(rnd()-.5)*8,0,I.cz+(rnd()-.5)*5);g.position.copy(P);G.add(g);I.pengs.push({g,goal:P.clone(),wait:rnd()*3,slide:0});animAdd(isE?'emperor':'penguin',g)}}
 function pengTick(I,dt){for(const p of I.pengs){const q=p.g.position,v=p.goal.clone().sub(q);v.y=0;const L=v.length();
   if(L<.1){if((p.wait-=dt)<=0){p.wait=2+Math.random()*5;const onP=Math.random()<.35;if(onP){const a=Math.random()*TAU;p.goal.set(I.pond.x+Math.cos(a)*I.pond.rx*.7,0,I.pond.z+Math.sin(a)*I.pond.rz*.7)}else for(let k=0;k<8;k++){const a=Math.random()*TAU,r=Math.sqrt(Math.random())*.8,x=I.cx+Math.cos(a)*r*I.rx,z=I.cz+Math.sin(a)*r*I.rz;if(!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.2)){p.goal.set(x,0,z);break}}}
@@ -2803,7 +2803,7 @@ function isleSand2(I,G){const W=lam('#9d7a50'),Wd=lam('#7a5a36'),straw=lam('#d9b
   for(const[x,c]of[[-.28,'#e0563c'],[0,'#f2c230'],[.28,'#4fb7a0']]){const d=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),glowM(c,.4));d.position.set(x,1.45,.71);g.add(d)}
   for(const x of[-1.25,1.25]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,1.5,6),Wd);t.position.set(x,.75,1.05);g.add(t);const cp=new THREE.Mesh(new THREE.CylinderGeometry(.1,.07,.22,8),straw2);cp.position.set(x,1.55,1.05);g.add(cp);
    const fl=new THREE.Mesh(new THREE.ConeGeometry(.09,.3,8),glowM('#ffb347',1.2));fl.position.set(x,1.78,1.05);g.add(fl);const h=halo('#ffb347',1.6,0);h.position.set(x,1.8,1.05);g.add(h);(I.torch=I.torch||[]).push({fl,h})}
-  blob(g,1.5);G.add(g);block(30.6,-21.2,1.15)}
+  blob(g,1.5);G.add(g);block(30.6,-21.2,1.15);I.bar=g}
  // hammock between the palm at (24.5,-24.2) and the new one at (22.2,-23.6): a sagging striped cloth on two ropes
  {const ax=24.5,az=-24.2,bx=22.2,bz=-23.6,L=Math.hypot(bx-ax,bz-az),g=new THREE.Group();g.position.set(ax,0,az);g.rotation.y=-Math.atan2(bz-az,bx-ax);
   const yAt=x=>1.35-.75*Math.sin(Math.PI*Math.min(1,Math.max(0,(x-.35)/(L-.7))));const N=12,x0=.35,x1=L-.35,cols=['#e8664a','#ffffff','#f6d34a','#ffffff','#4fb7a0'];
@@ -2815,17 +2815,17 @@ function isleSand2(I,G){const W=lam('#9d7a50'),Wd=lam('#7a5a36'),straw=lam('#d9b
   for(const[x,z]of[[-.4,-.4],[.4,-.4],[-.4,.4],[.4,.4]]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.5,8),sd2);t.position.set(x,.25,z);g.add(t);const c=new THREE.Mesh(new THREE.ConeGeometry(.15,.2,8),sd);c.position.set(x,.6,z);g.add(c)}
   const k=new THREE.Mesh(new THREE.CylinderGeometry(.2,.24,.45,8),sd2);k.position.y=.52;g.add(k);const fp=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.4,4),Wd);fp.position.y=.95;g.add(fp);
   const fg=new THREE.Mesh(new THREE.PlaneGeometry(.2,.12),lam('#e0463c',{side:THREE.DoubleSide}));fg.position.set(.1,1.08,0);g.add(fg);I.flag=fg;
-  const bk=new THREE.Mesh(new THREE.CylinderGeometry(.1,.08,.18,8),lam('#4fa3e0'));bk.position.set(.75,.09,.3);g.add(bk);g.rotation.y=.4;G.add(g);block(29,-17.6,.6)}
+  const bk=new THREE.Mesh(new THREE.CylinderGeometry(.1,.08,.18,8),lam('#4fa3e0'));bk.position.set(.75,.09,.3);g.add(bk);g.rotation.y=.4;G.add(g);block(29,-17.6,.6);I.castle=g}
  // a canoe pulled up on the sand
  {const g=new THREE.Group();g.position.set(28.5,0,-26.4);g.rotation.y=.25;const h=new THREE.Mesh(new THREE.SphereGeometry(.5,14,8,0,TAU,Math.PI/2,Math.PI/2),lam('#c0582f',{side:THREE.DoubleSide}));h.scale.set(3.2,.7,1);h.position.y=.3;g.add(h);
   const rim=new THREE.Mesh(new THREE.TorusGeometry(.5,.04,6,20),lam('#f2e6c8'));rim.scale.set(3.2,1,1);rim.rotation.x=Math.PI/2;rim.position.y=.3;g.add(rim);
-  const pd=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.5,5),Wd);pd.rotation.z=1.4;pd.position.set(.2,.42,.1);g.add(pd);const bl=new THREE.Mesh(new THREE.BoxGeometry(.3,.03,.16),Wd);bl.position.set(.95,.5,.1);g.add(bl);G.add(g);block(28.5,-26.4,.9)}
+  const pd=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.5,5),Wd);pd.rotation.z=1.4;pd.position.set(.2,.42,.1);g.add(pd);const bl=new THREE.Mesh(new THREE.BoxGeometry(.3,.03,.16),Wd);bl.position.set(.95,.5,.1);g.add(bl);G.add(g);block(28.5,-26.4,.9);I.canoe={g,pd,bl}}
  // half-buried treasure chest, with a glint of gold
  {const g=new THREE.Group();g.position.set(33.3,-.12,-22.7);g.rotation.y=-.6;g.rotation.z=.12;const bx=new THREE.Mesh(new THREE.BoxGeometry(.7,.42,.45),lam('#7a4a26'));bx.position.y=.21;g.add(bx);
   for(const x of[-.28,.28]){const st=new THREE.Mesh(new THREE.BoxGeometry(.06,.44,.47),lam('#c9a43a'));st.position.set(x,.21,0);g.add(st)}
   const lid=new THREE.Group();lid.position.set(0,.42,-.22);const ld=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.7,12,1,false,0,Math.PI),lam('#8a5530'));ld.rotation.z=Math.PI/2;ld.position.z=.22;lid.add(ld);lid.rotation.x=-.55;g.add(lid);
   for(let k=0;k<6;k++){const c=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.015,10),glowM('#f6c945',.5));c.position.set(-.2+k*.08,.43,(k%2)*.08-.04);c.rotation.x=.3;g.add(c)}
-  const h=halo('#ffe39a',.9,.35);h.position.y=.55;g.add(h);I.glint=h;G.add(g);block(33.3,-22.7,.5)}
+  const h=halo('#ffe39a',.9,.35);h.position.y=.55;g.add(h);I.glint=h;G.add(g);block(33.3,-22.7,.5);I.chest=g}
  // hibiscus bushes
  for(const[x,z]of[[20,-21.5],[32.6,-16.4],[26.4,-13.4]]){const g=new THREE.Group();g.position.set(x,0,z);for(let k=0;k<5;k++){const l=new THREE.Mesh(new THREE.SphereGeometry(.32,8,6),lam(k%2?'#3f8a3a':'#4f9a3e'));l.position.set(Math.cos(k*1.3)*.28,.28+(k%2)*.12,Math.sin(k*1.3)*.28);g.add(l)}
   for(let k=0;k<6;k++){const f=new THREE.Mesh(new THREE.SphereGeometry(.08,8,6),lam(k%3?'#f2557a':'#ffb03a'));f.scale.set(1,.5,1);const a=k*1.05;f.position.set(Math.cos(a)*.42,.42+(k%2)*.15,Math.sin(a)*.42);g.add(f)}
@@ -3933,6 +3933,118 @@ updaters.push((t,dt)=>{for(const k in decoO)decoO[k].riders=0;
   else{A.goal=s.p;const there=o.grp.position.distanceTo(new V3(s.p.x,o.grp.position.y,s.p.z))<.35;if(there&&s.y){o.grp.position.y=s.y;o._dy=1}else if(o._dy&&!there){o.grp.position.y=0;o._dy=0}
    if(there&&s.hop&&o.jump<=0&&Math.random()<dt*s.hop)o.jump=.5}
   const near=o._on||o.grp.position.distanceTo(new V3(s.p.x,o.grp.position.y,s.p.z))<.5;if(near&&s.ic){o.ic.visible=true;o.ic.material.map=iconTex[s.ic];o.ic.position.y=IGH+.25+Math.sin(t*2+o.ph)*.05}}});
+/* 10 Nov 2026: the Igorlets play with the things on the new islands. Sand island: they lie in the hammock (another one pushes),
+   get a drink at the tiki bar, admire the treasure, build the sandcastle, row the canoe on the sand, walk with the turtle.
+   Lake: they hop from lily pad to lily pad. Forest: they rest under the giant mushrooms, keep the snail company, chase the
+   singing fireflies. Ice: they slide on the frozen pond, hug the snowman, peek into the igloo, waddle behind the penguins.
+   When they get there they say something funny (if Igor is close by), and they say it again when you tap them. */
+const ISPOT={
+ sand:{ham:[1,{sleepy:6,lazy:6,shy:1.5}],push:[1,{sporty:2,keen:3}],bar:[3,{foodie:7,music:2,keen:2}],chest:[3,{explorer:7,keen:2,shy:1}],castle:[2,{keen:4,sporty:2,music:1}],canoe:[1,{sporty:5,explorer:3}],turtle:[1,{shy:5,sleepy:1.5}]},
+ lake:{pads:[4,{music:2,sporty:2}]},
+ forest:{mush:[3,{sleepy:3,lazy:3}],snail:[1,{shy:4,sleepy:2}],fly:[3,{music:6,explorer:2}]},
+ ice:{slide:[3,{sporty:6,keen:2,explorer:1}],snowman:[2,{shy:3,foodie:1,lazy:1}],igloo:[1,{explorer:4,shy:2}],peng:[2,{keen:3,music:2,sporty:1}]}};
+const ISAY={
+ ham:[['This is the life…','Swing… swing… zzz','Wake me up at sunset!','The palms are fanning me. What service!'],['Questa sì che è vita…','Dondolo… dondolo… zzz','Svegliatemi al tramonto!','Le palme mi fanno aria. Che servizio!']],
+ push:[['One, two… swing!','Higher? Hold on tight!','I push, you nap. Deal!'],['Uno, due… dondola!','Più in alto? Tieniti forte!','Io spingo, tu dormi. Affare fatto!']],
+ bar:[['A coconut juice with two straws, please!','Tofu and mango smoothie: my favourite!','With the little umbrella, please!','Cheers, little crabs!','On the house? How kind!'],['Un succo di cocco con due cannucce, grazie!','Frullato di tofu e mango: il mio preferito!','Con l’ombrellino, per favore!','Cin cin, granchietti!','Offre la casa? Che gentili!']],
+ chest:[['A pirate must have passed this way!','Gold coins… or chocolates?','Arrr! Let’s leave it here: it’s prettier to look at.','I wonder if there’s a map too…','It shines more than the stars!','Captain Igorlet’s treasure! (Just kidding.)'],['Un pirata deve essere passato da queste parti!','Monete d’oro… o cioccolatini?','Arrr! Lo lasciamo qui: è più bello da guardare.','Chissà se c’è anche una mappa…','Brilla più delle stelle!','Il tesoro del capitano Igorlet! (Scherzo.)']],
+ castle:[['It needs one more tower!','The castle of King Igor, lord of the tofu ants!','Watch out for the wave!'],['Ci vuole un’altra torre!','Il castello di re Igor, signore delle formiche di tofu!','Attenti all’onda!']],
+ canoe:[['Row, row… the canoe is still on the sand, but who cares!','Course: the horizon!','Captain Igorlet reporting!'],['Remo, remo… la canoa è ancora sulla sabbia, ma va bene lo stesso!','Rotta verso l’orizzonte!','Capitano Igorlet, a rapporto!']],
+ turtle:[['Slowly, slowly, Mrs Turtle!','A race? You win, that’s fine.','What a beautiful shell!'],['Piano piano, signora tartaruga!','Facciamo a gara? Vinci tu, va benissimo.','Che bel guscio!']],
+ pads:[['Ribbit! Now I speak frog.','From lily pad to lily pad!','Don’t get your feet wet… oops.'],['Cra cra! Ora parlo ranocchio.','Di ninfea in ninfea!','Non bagnatevi i piedi… ops.']],
+ mush:[['This mushroom is taller than Igor’s house!','A giant umbrella!','Shh… the mushrooms are sleeping.'],['Questo fungo è più alto della casa di Igor!','Un ombrello gigante!','Shh… i funghi dormono.']],
+ snail:[['The snail and I go at the same speed.','Where are you going, little snail? Ah, there. Take your time.'],['Io e la lumachina andiamo alla stessa velocità.','Dove vai, lumachina? Ah, lì. Con calma.']],
+ fly:[['A firefly winked at me!','They play! The fireflies play music!','Catch the note!'],['Una lucciola mi ha fatto l’occhiolino!','Suonano! Le lucciole suonano!','Acchiappa la nota!']],
+ slide:[['Wheeee!','Look, skating without skates!','I can’t stop! What fun!'],['Wiiiii!','Guarda, pattino senza pattini!','Non so frenare! Che bello!']],
+ snowman:[['I gave it a hug… a bit chilly.','Hi snowman! Do you need a scarf?','We have the same nose! Almost.'],['Gli ho dato un abbraccio… è un po’ freddino.','Ciao pupazzo! Ti serve una sciarpa?','Abbiamo lo stesso naso! Quasi.']],
+ igloo:[['Knock knock! Anybody home?','It’s warm inside the igloo! Strange, right?'],['Toc toc! C’è nessuno?','Dentro l’igloo fa caldo! Strano, no?']],
+ peng:[['I walk like the penguins!','Hey penguins, wait for me!','Left, right, left…'],['Cammino come i pinguini!','Ehi pinguini, aspettatemi!','Sinistra, destra, sinistra…']]};
+const ISLKIND=['sand','lake','forest','ice'],MUSH=[[-4.2,-33,1.5,0],[5.5,-29.5,1.05,1],[1.2,-36,1.1,1]];
+let islSayT=-99;
+const islLine=(s,i)=>{const L=tt(ISAY[s][0],ISAY[s][1]);return i!=null?L[i]:s==='chest'&&Math.random()<.4?L[0]:pick(L)};
+function islSay(o,s,i){const g=igById(o.id);if(!g||where!=='out'||T<islSayT||igor.position.distanceTo(o.grp.position)>11)return;islSayT=T+18;o.showT=T+4;
+ if(window.IgorSound&&started)IgorSound.ig('tap',{id:o.id,trait:g.trait,pan:0});say(`${g.name}: “${islLine(s,i)}”`,3.2)}
+const _iw=new V3();
+function islW(obj,x,z){obj.updateMatrixWorld();const v=obj.localToWorld(_iw.set(x,0,z));return new V3(v.x,0,v.z)}
+const HAML=Math.hypot(22.2-24.5,-23.6+24.2),hamSway=()=>Math.sin(T*1.3)*.2;
+// where the Igorlet goes (or is) for its spot; returns {p, y, ic, hop, pose, ctl}
+function islSpot(I,A,o,t,dt){const n=A.n||0;
+ switch(A.s){
+  case'ham':return{p:islW(I.hammock,HAML/2,A.st?hamSway():.9),y:.6+IGW*.2,ic:'z',pose:'lie'};
+  case'push':return{p:islW(I.hammock,HAML/2,.95),ic:'heart',hop:.5};
+  case'bar':{const p=islW(I.bar,[-.55,.05,.62][n%3],1.45);if(A.st&&!A.cup&&t-A.t0>1.6){A.cup=1;o.jump=.5;islSay(o,'bar')}return{p,ic:A.cup?'heart':'q',pose:A.cup?'cup':'',quiet:1}}
+  case'chest':return{p:islW(I.chest,[0,-.85,.85][n%3],[1,.62,.62][n%3]),ic:Math.sin(t*.9+o.ph)>0?'heart':'q',hop:.7};
+  case'castle':return{p:islW(I.castle,[-.1,.9][n%2],[.9,.5][n%2]),ic:'heart',pose:'work'};
+  case'canoe':return{p:islW(I.canoe.g,-.15,0),y:.16,pose:'row',ic:'heart'};
+  case'turtle':{const tu=I.turtle,d=tu.b.clone().sub(tu.a).normalize();return{p:tu.g.position.clone().add(new V3(-d.z*.75,0,d.x*.75)),ic:'heart'}}
+  case'pads':{if(A.pad==null){const fr=I.frogs.map(f=>f.pad);A.pad=I.pads.findIndex((p,i)=>!fr.includes(i)&&![...igObjs.values()].some(q=>q!==o&&q.act&&q.act.s==='pads'&&q.act.pad===i));if(A.pad<0)A.pad=0}
+   const pp=I.pads[A.pad].position,base=new V3(pp.x,0,pp.z);if(!A.st)return{p:base};
+   if(A.hop){A.hop.u+=dt/.55;const u=Math.min(1,A.hop.u),p=A.hop.a.clone().lerp(A.hop.b,u);const y=.08+Math.sin(u*Math.PI)*.5;if(u>=1)A.hop=null;return{p,y,ctl:1,quiet:1}}
+   if(!A.next)A.next=t+2+Math.random()*3;if(t>A.next){A.next=t+2.5+Math.random()*3.5;const fr=I.frogs.map(f=>f.pad),c=I.pads.map((p,i)=>i).filter(i=>i!==A.pad&&!fr.includes(i)&&I.pads[i].position.distanceTo(pp)<3.2);
+    if(c.length){const ni=pick(c),b=I.pads[ni].position;A.hop={a:base.clone(),b:new V3(b.x,0,b.z),u:0};A.pad=ni;const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0);o.face=(b.x-pp.x)*cr.x+(b.z-pp.z)*cr.z>0?1:-1;if(where==='out'&&igor.position.distanceTo(base)<9)snd('water')}}
+   return{p:base,y:.08,ctl:1,ic:'heart',quiet:1}}
+  case'mush':{const[x,z,s,gl]=MUSH[n%3];const tr=(igById(o.id)||{}).trait;return{p:new V3(x+.55*s,0,z+.4*s),ic:gl?'note':tr==='sleepy'||tr==='lazy'?'z':'heart',hop:gl?.4:0}}
+  case'snail':{const q=I.snail.position;return{p:new V3(q.x+.6,0,q.z+.35),ic:'heart'}}
+  case'fly':{if(A.f==null||t>A.fT){A.f=Math.floor(Math.random()*I.flies.length);A.fT=t+3+Math.random()*2.5;A.lit=0}const f=I.flies[A.f],q=f.g.position;
+   const p=new V3(q.x+.3,0,q.z+.2);if(!A.lit&&Math.hypot(o.grp.position.x-p.x,o.grp.position.z-p.z)<.45){A.lit=1;o.jump=.55;f.lit=1;if(where==='out'&&igor.position.distanceTo(p)<9)snd('glock',f.f)}return{p,ic:'note'}}
+  case'slide':{const P=I.pond;if(A.a==null)A.a=Math.random()*TAU;if(A.st)A.a+=dt*(.8+.15*n)*(n%2?-1:1);const p=new V3(P.x+Math.cos(A.a)*P.rx*.62,0,P.z+Math.sin(A.a)*P.rz*.62);
+   if(A.st){const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0),dx=-Math.sin(A.a)*(n%2?-1:1),dz=Math.cos(A.a)*(n%2?-1:1);o.face=dx*cr.x+dz*cr.z>0?1:-1}return{p,ctl:A.st?1:0,pose:'slide',ic:'heart',hop:.15}}
+  case'snowman':{const q=I.snowman.position;return{p:new V3(q.x+(n?-.6:.6),0,q.z+.25),ic:'heart',hop:.25}}
+  case'igloo':{const p=islW(I.igloo,0,2.05);if(A.st){const u=t-A.t0;A.hid=u>1.4&&u<8;if(u>8&&!A.out){A.out=1;o.jump=.5;islSay(o,'igloo',1)}}return{p,ic:A.hid?null:'q',quiet:1,say0:1}}
+  case'peng':{const pg=I.pengs[n%I.pengs.length].g,d=new V3(Math.sin(pg.rotation.y),0,Math.cos(pg.rotation.y));return{p:pg.position.clone().sub(d.multiplyScalar(.6)),pose:'waddle'}}}
+ return{p:new V3(I.cx,0,I.cz)}}
+function islCup(o){if(!o._cup){const g=new THREE.Group(),c=new THREE.Mesh(new THREE.SphereGeometry(.07,10,6,0,TAU,0,Math.PI*.6),lam('#6b4a2e'));c.rotation.x=Math.PI;c.position.y=.05;g.add(c);
+  const st=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.17,4),lam(pick(['#f25c78','#5cc2f2','#7fd35a'])));st.position.set(.025,.1,0);st.rotation.z=-.35;g.add(st);
+  const um=new THREE.Mesh(new THREE.ConeGeometry(.075,.045,8),lam(pick(['#f6d34a','#e88fb0','#4fb7a0'])));um.position.set(-.035,.16,0);um.rotation.z=.3;g.add(um);
+  g.position.set(IGW*.3,IGH*.34,.03);g.visible=false;o.pl.add(g);o._cup=g}return o._cup}
+function islOff(o){if(o._cup)o._cup.visible=false;o.pl.position.x=0;o.pl.position.z=0;o.grp.position.y=0;o._isl=0}
+// choosing: keeps the island ones going (they walk far), turns trips to the beach and the lake into a game, sometimes sends one to the forest or the ice
+{const _idl=idleDirector;idleDirector=function(list){const keep=list.filter(o=>o.act&&o.act.k==='isl'&&T<o.act.until),L=list.filter(o=>!keep.includes(o));_idl(L);
+ const taken={};for(const[,o]of igObjs){const A=o.act;if(A&&A.k==='isl')(taken[A.i+A.s]=taken[A.i+A.s]||[]).push(A.n||0)}
+ for(const o of L){const A=o.act;if(A&&/^(ride|wh|lead|rope|ball|ring|deco)$/.test(A.k))continue;const g=igById(o.id)||{},tr=g.trait;let i=-1;
+  if(A&&A.k==='beach')i=0;else if(A&&A.k==='lake')i=1;
+  else{const ex=tr==='explorer'||tr==='sporty',ord=[0,1,2,3].sort(()=>Math.random()-.5);for(const j of ord)if(ISLES[j].on&&Math.random()<(j>1?(ex?.1:.05):(ex?.05:.025))){i=j;break}}
+  if(i<0||!ISLES[i].on)continue;const I=ISLES[i],SP=ISPOT[ISLKIND[i]];
+  const C=Object.keys(SP).filter(s=>(taken[i+s]||[]).length<SP[s][0]&&(s!=='push'||(taken[i+'ham']||[]).length)&&(s!=='ham'&&s!=='push'||I.hammock)&&(s!=='turtle'||I.turtle)&&(s!=='canoe'||I.canoe));
+  if(!C.length)continue;let tot=0;const w=C.map(s=>{const v=s==='push'?3:SP[s][1][tr]||.8;tot+=v;return v});let r=Math.random()*tot,s=C[0];for(let k=0;k<C.length;k++){r-=w[k];if(r<=0){s=C[k];break}}
+  const tk=taken[i+s]=taken[i+s]||[];let n=0;while(tk.includes(n))n++;tk.push(n);
+  const d=o.grp.position.distanceTo(new V3(I.cx,0,I.cz));o.act={k:'isl',i,s,n,st:0,until:T+d/1.9*1.3+35+Math.random()*30,goal:new V3(I.cx,0,I.cz)}}}}
+// an island spot near the shore (the canoe, the treasure) can sit just outside the island's oval: walk in from the middle of the island,
+// and treat both ends of a walk on the same island as being on it
+{const _iv=isleVia;isleVia=function(tg,from){if(!tg)return tg;const p=from||igor.position;for(const I of ISLES){if(!I.on)continue;const ep=isleE1(I,p.x,p.z);
+ if(ep<1.03){if(isleE1(I,tg.x,tg.z)<1.03)return tg;if(ep>=.86){const k=.8/ep;return _iv(tg,new V3(I.cx+(p.x-I.cx)*k,0,I.cz+(p.z-I.cz)*k))}}}return _iv(tg,from)}}
+function islApp(I,p){const e=isleE1(I,p.x,p.z);if(e<=.8)return p;const k=.78/e;return new V3(I.cx+(p.x-I.cx)*k,0,I.cz+(p.z-I.cz)*k)}
+// every frame: walk there, then play
+updaters.push((t,dt)=>{let ham=0,canoe=0,chest=0;
+ for(const[,o]of igObjs){const A=o.act;
+  if(!A||A.k!=='isl'||o.mode!=='idle'){if(o._isl)islOff(o);continue}
+  const I=ISLES[A.i];if(!I||!I.on||T>A.until||where!=='out'&&0){islOff(o);o.act=null;continue}
+  o._isl=1;const s=islSpot(I,A,o,t,dt),P=o.grp.position;A.goal=s.p;
+  if(!A.st&&!A.ap){const ap=islApp(I,s.p);if(ap!==s.p){if(Math.hypot(P.x-ap.x,P.z-ap.z)<.5)A.ap=1;else A.goal=ap}else A.ap=1}
+  if(!A.st&&Math.hypot(P.x-s.p.x,P.z-s.p.z)<.4){A.st=1;A.t0=t;if(!s.quiet)islSay(o,A.s);else if(s.say0)islSay(o,A.s,0)}
+  if(A.st&&s.ctl){P.x=s.p.x;P.z=s.p.z}
+  const there=A.st&&Math.hypot(P.x-s.p.x,P.z-s.p.z)<.5;P.y=there&&s.y!=null?s.y:0;
+  if(A.s==='ham'&&there)ham=1;if(A.s==='canoe'&&there)canoe=1;if(A.s==='chest'&&there)chest=1;
+  if(there&&s.hop&&o.jump<=0&&Math.random()<dt*s.hop)o.jump=.5;
+  const cup=s.pose==='cup';if(cup||o._cup)islCup(o).visible=cup;
+  if(cup){o._cup.rotation.z=Math.max(0,Math.sin(t*1.1+o.ph))*.6;o._cup.position.y=IGH*.34+Math.max(0,Math.sin(t*1.1+o.ph))*.06}
+  o.pl.position.x=0;o.pl.position.z=0;
+  if(there&&s.pose==='lie'){const a=1.45,cr=new V3().setFromMatrixColumn(camera.matrixWorld,0),cu=new V3().setFromMatrixColumn(camera.matrixWorld,1);
+   o.pl.quaternion.copy(camera.quaternion);o.pl.rotateZ(a);o.pl.position.copy(cr.multiplyScalar(Math.sin(a)*IGH2/2)).add(cu.multiplyScalar(-Math.cos(a)*IGH2/2));}
+  else if(there&&s.pose==='work'){o.pl.rotateZ(Math.sin(t*9+o.ph)*.12);o.pl.position.y+=Math.abs(Math.sin(t*9+o.ph))*.07}
+  else if(there&&s.pose==='row'){o.pl.rotateZ(Math.sin(t*3)*.14)}
+  else if(s.pose==='slide'&&A.st){o.pl.rotateZ(-.18*o.face)}
+  else if(s.pose==='waddle'){o.pl.rotateZ(Math.sin(t*9+o.ph)*.15)}
+  if(A.s==='igloo'&&A.hid){o.grp.visible=false;o.L.hidden=true}
+  if(there&&s.ic&&!(A.s==='igloo'&&A.hid)){o.ic.visible=true;o.ic.material.map=iconTex[s.ic];o.ic.position.y=(s.pose==='lie'?.55:IGH+.25)+Math.sin(t*2+o.ph)*.05}}
+ const I0=ISLES[0];if(I0.G.visible&&where==='out'){
+  if(ham&&I0.hammock)for(const c of I0.hammock.children)c.position.z=hamSway()*Math.sin(Math.PI*Math.min(1,Math.max(0,c.position.x/HAML)));
+  if(I0.canoe){const C=I0.canoe;if(!C.piv){C.piv=new THREE.Group();C.piv.position.set(.2,.42,.1);C.g.add(C.piv);C.piv.attach(C.pd);C.piv.attach(C.bl)}C.piv.rotation.x=canoe?Math.sin(t*3)*.55:C.piv.rotation.x*.9}
+  if(chest&&I0.glint)I0.glint.material.opacity=.45+.35*Math.max(0,Math.sin(t*3))}});
+// tapping an Igorlet that is playing on an island: it tells you about it
+{const _it=igTap;igTap=function(id){const o=igObjs.get(id),A=o&&o.act;
+ if(!PL&&!VISIT&&A&&A.k==='isl'&&A.st&&o.mode==='idle'&&!A.hid&&!(whCall&&whCall.id===id)&&!hungry(id)&&!(ROPE.call&&ROPE.call.id===id)){const g=igById(id);if(g){o.showT=T+6;if(window.IgorSound&&started)IgorSound.ig('tap',{id,trait:g.trait,pan:0});bubbleQ.length=0;bubbleT=0;say(`${g.name}: “${islLine(A.s)}”`,3.2);islSayT=T+8;return}}
+ return _it(id)}}
 // a shell that left the collection is silent in the melodies
 {const _mp=melPlay;melPlay=function(m,how){if(!m||!m.ev)return _mp(m,how);const U=FUN();const ev=m.ev.map(([t,id])=>[t,id]);const keep=ev.filter(([,id])=>(U.col[id]|0)>0);if(!keep.length){melStop();return}
  melStop();const t0=ev[0][0];keep.forEach(([t,id])=>PLAYT.push(setTimeout(()=>{if(how==='mar'){let f=shellF(id);while(f<262)f*=2;while(f>1050)f/=2;snd('marimba',f)}else shPlay(id,sheetKind==='shplay')},t-t0)))}}
