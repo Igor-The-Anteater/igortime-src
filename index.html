@@ -4570,7 +4570,7 @@ function abduct(){const F=FM(),U=F.ufo;if(!U)return;for(const q of F.tasks)freeW
  let P=null;for(const[dx,dz]of[[2.4,-1.2],[-2.4,-1.2],[2.6,1.4],[-2.6,1.4],[0,-2.8],[3.4,0],[-3.4,0]]){const x=igor.position.x+dx,z=igor.position.z+dz;if(walkable(x,z)&&walkable(x+2.1,z)){P={x,z};break}}
  P=P||{x:igor.position.x+2,z:igor.position.z-1};U.mx=+P.x.toFixed(2);U.mz=+P.z.toFixed(2);fmDirty=true;save();fmRender()}
 /* who starts the scene: a pending Aliengor, as soon as you are on the island */
-updaters.push(()=>{if(CUT||VISIT||!S.farm)return;const F=FM(),U=F.ufo;if(!U||U.st!=='pending')return;if(!started||where!=='out'||T<4||PL)return;const intro=$('intro');if(intro&&!intro.classList.contains('gone'))return;startCut()});
+updaters.push(()=>{if(CUT||VISIT||!S.farm)return;const F=FM(),U=F.ufo;if(!U||U.st!=='pending')return;if(!started||where!=='out'||T<4||PL)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden})||!sheet.hidden)return;const intro=$('intro');if(intro&&!intro.classList.contains('gone'))return;startCut()});
 
 /* --- the Igor in Black and his portal --- */
 const mibG=(()=>{const g=new THREE.Group(),pl=bigPlane('mib',1);g.add(pl);blob(g,.6);
@@ -4795,7 +4795,7 @@ function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
 window.IgorCloud=C;
 /* events forced by the admins for everyone (gev/<id>): every island listens to the last ones */
 try{onSnapshot(query(collection(db,'gev'),orderBy('at','desc'),limit(10)),q=>{if(window.IgorForce)window.IgorForce.global(q.docs.map(d=>{const x=d.data();return{id:d.id,k:x.k,lead:x.lead|0,st:x.st,at:x.at&&x.at.toMillis?x.at.toMillis():0}}))},e=>console.warn('gev',e&&e.code||e))}catch(e){console.warn('gev',e)}
-{const s=document.createElement('script');s.src='/chat.js?v=10';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=11';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
