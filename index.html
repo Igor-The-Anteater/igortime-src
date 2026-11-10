@@ -769,6 +769,10 @@ window.IgorGift={
  apply(g){ensureFarm();const F=FM();F.gifts=F.gifts||{};if(F.gifts[g.id])return false;const n=Math.max(0,g.n|0),r={k:g.k,n,v:g.v||'',at:Date.now()};let txt='';
   const gp=F.gp=F.gp||{s:0,t:0,ls:-1,lt:-1};if(g.k==='seeds'){S.seeds=(S.seeds|0)+n;gp.s+=n;gp.ls=S.seeds;txt=tt(`+${n} ${n===1?'seed':'seeds'}`,`+${n} ${n===1?'seme':'semi'}`)}
   else if(g.k==='ants'){F.ants.t+=n;gp.t+=n;gp.lt=F.ants.t;txt=tt(`+${n} tofu ants`,`+${n} formiche di tofu`)}
+  else if(g.k==='veh'&&/^h\w+\.\d+$/.test(g.v||'')){const hk=hGiftKey(g.v);if(!hk)return false;const H=HSV();r.hk=hk;if(hOwn(hk))r.had=true;else H.own.push(hk);
+   txt=hGiftName(hk)+(r.had?tt(' (you already had it)',' (ce l’avevi già)'):'');if(!r.had)setTimeout(()=>say(tt('Try it: hammer 🔨 → Igor’s house.','Provala: martello 🔨 → Casa di Igor.'),3.5),4800)}
+  else if(g.k==='veh'&&/^d:/.test(g.v||'')){const k=g.v.slice(2),D=DECO[k];if(!D)return false;const M=DEC();r.d=k;if(M[k])r.had=true;else{M[k]={at:Date.now(),gift:1};r.place=1}
+   txt=`${D.ic} ${N(D.N)}`+(r.had?tt(' (you already had it)',' (ce l’avevi già)'):'');if(r.place)setTimeout(()=>say(tt('Tap the hammer 🔨 to put it where you like.','Tocca il martello 🔨 per metterlo dove vuoi.'),3.5),4800)}
   else if(g.k==='veh'&&VEH[g.v]){const V=VEH[g.v];if(F.veh[g.v]){const n=vehN(g.v);if(n<9){F.veh[g.v].n=n+1;F.veh[g.v].cs=F.veh[g.v].cs||[];F.veh[g.v].cs[n]=pick(VCOL.filter(c=>c!==F.veh[g.v].c));r.copy=true}else r.had=true}else F.veh[g.v]={c:V.c,n:1};txt=`${V.ic} ${N(V.N)}`+(r.copy?tt(' (one more!)',' (un altro!)'):r.had?tt(' (you already had it)',' (ce l’avevi già)'):'')}
   else return false;
   F.gifts[g.id]=r;fmDirty=true;save();fmRender();refresh();snd('buy');
@@ -777,6 +781,8 @@ window.IgorGift={
   const gp=F.gp=F.gp||{s:0,t:0,ls:-1,lt:-1};
   if(r.k==='seeds'){tk=Math.min(r.n,gp.s|0,Math.max(0,S.seeds|0));S.seeds=(S.seeds|0)-tk;gp.s-=tk;gp.ls=S.seeds}
   else if(r.k==='ants'){tk=Math.min(r.n,gp.t|0,Math.max(0,F.ants.t|0));F.ants.t-=tk;gp.t-=tk;gp.lt=F.ants.t}
+  else if(r.hk){const H=HSV();const i=H.own.indexOf(r.hk);if(!r.had&&i>=0){H.own.splice(i,1);tk=1;const c=H.c,ks=['st:'+c.st,...Object.keys(HPART).map(k=>k+':'+c[k]),...Object.keys(HCOL).map(k=>k+':'+c[k])];if(ks.some(k=>!hOwn(k))){H.c=HDEF();if(HPV&&!hp.hidden)HPV={...H.c}}}}
+  else if(r.d){const M=DEC();if(!r.had&&M[r.d]){if(PL&&PL.k==='deco'&&PL.id===r.d)endPlace();for(const[,o]of igObjs)if(o.act&&o.act.k==='deco'&&o.act.d===r.d)o.act=null;delete M[r.d];tk=1}}
   else if(r.k==='veh'&&r.copy&&F.veh[r.v]){const n=vehN(r.v);if(n>1){F.veh[r.v].n=n-1;tk=1}}
   else if(r.k==='veh'&&!r.had&&F.veh[r.v]){if(RIDE===r.v)dismount(true);for(const[,o]of igObjs)if(o.act&&o.act.k==='ride'&&o.act.v===r.v)o.act=null;
    const n=vehN(r.v);if(n>1)F.veh[r.v].n=n-1;else delete F.veh[r.v];tk=1}
@@ -1783,7 +1789,7 @@ const bar=document.createElement('div');bar.id='bar';bar.hidden=true;document.bo
 function closeBar(){bar.hidden=true;barKind=null;document.documentElement.classList.remove('baropen')}
 function openBar(kind){barKind=kind;hideChips();hideHint();renderBar();bar.hidden=false;document.documentElement.classList.add('baropen')}
 function renderBar(){const F=FM(),lv=lvlOf(),n=F.fields.length;let L=[];
- if(barKind==='build'){L.push({t:'🎨 '+tt('Igor’s house','Casa di Igor'),fn:()=>{closeBar();houseOpen()}});if(n<MAXF)L.push(lv<n+1?{t:`🌱 ${tt('Field','Campo')} 🔒 ${tt('lv.','liv.')} ${n+1}`,why:tt(`Field ${n+1}: level ${n+1} first!`,`Campo ${n+1}: prima il livello ${n+1}!`)}:{t:`🌱 ${tt('Field','Campo')} ${cst(FCOST[n])}`,fn:()=>openBar('field')});
+ if(barKind==='build'){for(const k of DKEYS){const m=(F.deco||{})[k];if(m&&m.x==null)L.push({t:`📍 ${DECO[k].ic} ${N(DECO[k].N)}`,main:1,fn:()=>{closeBar();startPlace({k:'deco',id:k})}})}L.push({t:'🎨 '+tt('Igor’s house','Casa di Igor'),fn:()=>{closeBar();houseOpen()}});if(n<MAXF)L.push(lv<n+1?{t:`🌱 ${tt('Field','Campo')} 🔒 ${tt('lv.','liv.')} ${n+1}`,why:tt(`Field ${n+1}: level ${n+1} first!`,`Campo ${n+1}: prima il livello ${n+1}!`)}:{t:`🌱 ${tt('Field','Campo')} ${cst(FCOST[n])}`,fn:()=>openBar('field')});
   for(const k of BKEYS){if(k==='pen'||F.b[k]||F.pos[k])continue;const U=BLD[k].up[1];L.push(lv<U.lv?{t:`${N(BLD[k].N)} 🔒 ${tt('lv.','liv.')} ${U.lv}`,why:LVFIRST(U.lv)}:{t:`${N(BLD[k].N)} ${cst(U.cost)}`,fn:()=>{startPlace({k:'build',key:k});say(N(BLD[k].what),2.6)}})}}
  else if(barKind==='field'){for(const[k,s]of Object.entries(SPC))L.push(lv<s.lv?{t:`${N(s.N)} 🔒 ${tt('lv.','liv.')} ${s.lv}`,why:LVFIRST(s.lv)}:{t:`${N(s.N)} <small>${s.seeds}${ICS} → ${s.yield}${ICA}</small>`,fn:()=>{if(fieldOk(k))startPlace({k:'field',sp:k})}});L.push({t:'‹',fn:()=>openBar('build')})}
  else if(barKind==='veh'){for(const k of VKEYS){const V=VEH[k];L.push(F.veh[k]?{t:`${V.ic} ${N(V.N)} ✓`,fn:()=>{mount(k);closeBar()}}:{t:`${V.ic} ${N(V.N)} ${cst(dual({t:V.cost}))}`,fn:()=>{buyVeh(k)}})}L.push({t:'‹',fn:()=>openBar('build')});if(!bar.hidden||1)say(tt('Rewards: save up tofu ants!','Premi: risparmia formiche di tofu!'),2.4)}
@@ -3737,6 +3743,10 @@ const HDEF=()=>({...HSTY.cottage.c,st:'cottage'});
 function HSV(){const F=FM();F.house=F.house||{c:HDEF(),own:[]};return F.house}
 const hOwn=k=>{if(k==='st:cottage'||k==='chim:none')return true;const m=k.match(/^(\w+):(.+)$/);if(!m)return false;if(HSTY.cottage.c[m[1]]===m[2])return true;const H=HSV();if(H.own.includes(k))return true;
  return m[1]!=='st'&&Object.keys(HSTY).some(s=>H.own.includes('st:'+s)&&HSTY[s].c[m[1]]===m[2])};
+/* admin gifts: v = 'h<part>.<index>' (style, part or colour) → own key 'part:value' */
+function hGiftKey(v){const m=String(v).match(/^h(\w+)\.(\d+)$/);if(!m)return null;const p=m[1],i=+m[2];let x;
+ if(p==='st')x=Object.keys(HSTY)[i];else if(HCOL[p])x=HCOL[p].L[i];else if(HPART[p])x=Object.keys(HPART[p].o)[i];return x==null?null:p+':'+x}
+function hGiftName(k){const[p,v]=k.split(/:(.+)/);if(p==='st')return`${HSTY[v].ic} ${N(HSTY[v].N)}`;if(HCOL[p])return`🎨 ${N(HCOL[p].N)}: ${tt('a new colour','un colore nuovo')}`;return`🏡 ${N(HPART[p].N)}: ${N(HPART[p].o[v][0])}`}
 const hPrice=k=>{const[p,v]=k.split(/:(.+)/);if(p==='st')return HSTY[v].t;if(HCOL[p])return HCOLT;const P=HPART[p];return P&&P.o[v]?P.o[v][1]:0};
 
 /* --- materials and textures (1 m tiles, tinted) --- */
@@ -3962,7 +3972,7 @@ function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
  unSave=onSnapshot(doc(db,'users',uid),s=>{if(!s.exists()||s.metadata.hasPendingWrites||!C.user||C.user.uid!==uid||!ready)return;const c=s.data(),L=window.IgorSave.get();
   if(!c.at||mine.has(c.at)||c.at===L.base||c.at===L.at)return;adopt(c)},e=>console.warn('follow',e&&e.code||e))}
 window.IgorCloud=C;
-{const s=document.createElement('script');s.src='/chat.js?v=7';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=8';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
