@@ -769,6 +769,7 @@ window.IgorGift={
  apply(g){ensureFarm();const F=FM();F.gifts=F.gifts||{};if(F.gifts[g.id])return false;const n=Math.max(0,g.n|0),r={k:g.k,n,v:g.v||'',at:Date.now()};let txt='';
   const gp=F.gp=F.gp||{s:0,t:0,ls:-1,lt:-1};if(g.k==='seeds'){S.seeds=(S.seeds|0)+n;gp.s+=n;gp.ls=S.seeds;txt=tt(`+${n} ${n===1?'seed':'seeds'}`,`+${n} ${n===1?'seme':'semi'}`)}
   else if(g.k==='ants'){F.ants.t+=n;gp.t+=n;gp.lt=F.ants.t;txt=tt(`+${n} tofu ants`,`+${n} formiche di tofu`)}
+  else if(g.k==='veh'&&g.v==='fuel'){const U=FUEL();U.n+=n;gp.f=(gp.f||0)+n;gp.lf=U.n;txt=`⛽ +${n} tofuel`;r.fuel=1}
   else if(g.k==='veh'&&/^h\w+\.\d+$/.test(g.v||'')){const hk=hGiftKey(g.v);if(!hk)return false;const H=HSV();r.hk=hk;if(hOwn(hk))r.had=true;else H.own.push(hk);
    txt=hGiftName(hk)+(r.had?tt(' (you already had it)',' (ce l’avevi già)'):'');if(!r.had)setTimeout(()=>say(tt('Try it: hammer 🔨 → Igor’s house.','Provala: martello 🔨 → Casa di Igor.'),3.5),4800)}
   else if(g.k==='veh'&&/^d:/.test(g.v||'')){const k=g.v.slice(2),D=DECO[k];if(!D)return false;const M=DEC();r.d=k;if(M[k])r.had=true;else{M[k]={at:Date.now(),gift:1};r.place=1}
@@ -781,6 +782,7 @@ window.IgorGift={
   const gp=F.gp=F.gp||{s:0,t:0,ls:-1,lt:-1};
   if(r.k==='seeds'){tk=Math.min(r.n,gp.s|0,Math.max(0,S.seeds|0));S.seeds=(S.seeds|0)-tk;gp.s-=tk;gp.ls=S.seeds}
   else if(r.k==='ants'){tk=Math.min(r.n,gp.t|0,Math.max(0,F.ants.t|0));F.ants.t-=tk;gp.t-=tk;gp.lt=F.ants.t}
+  else if(r.fuel){const U=FUEL();tk=Math.min(r.n,gp.f|0,Math.max(0,Math.floor(U.n)));U.n-=tk;gp.f=(gp.f||0)-tk;gp.lf=U.n}
   else if(r.hk){const H=HSV();const i=H.own.indexOf(r.hk);if(!r.had&&i>=0){H.own.splice(i,1);tk=1;const c=H.c,ks=['st:'+c.st,...Object.keys(HPART).map(k=>k+':'+c[k]),...Object.keys(HCOL).map(k=>k+':'+c[k])];if(ks.some(k=>!hOwn(k))){H.c=HDEF();if(HPV&&!hp.hidden)HPV={...H.c}}}}
   else if(r.d){const M=DEC();if(!r.had&&M[r.d]){if(PL&&PL.k==='deco'&&PL.id===r.d)endPlace();for(const[,o]of igObjs)if(o.act&&o.act.k==='deco'&&o.act.d===r.d)o.act=null;delete M[r.d];tk=1}}
   else if(r.k==='veh'&&r.copy&&F.veh[r.v]){const n=vehN(r.v);if(n>1){F.veh[r.v].n=n-1;tk=1}}
@@ -790,7 +792,7 @@ window.IgorGift={
   if(!quiet&&tk)say(tt('The admins took back a gift.','Gli amministratori hanno ritirato un regalo.'),3);return tk},
  has:id=>!!(FM()&&FM().gifts&&FM().gifts[id])};
 /* F.gp = gifted seeds/ants not spent yet: whatever is spent comes out of the gifts first, so taking a gift back never touches what the player earned */
-function giftSpend(){const F=FM();if(!F||!F.gp)return;const g=F.gp,s=S.seeds|0,a=(F.ants&&F.ants.t)|0;if(g.ls>=0&&s<g.ls)g.s=Math.max(0,g.s-(g.ls-s));if(g.lt>=0&&a<g.lt)g.t=Math.max(0,g.t-(g.lt-a));g.ls=s;g.lt=a}
+function giftSpend(){const F=FM();if(!F||!F.gp)return;const g=F.gp,s=S.seeds|0,a=(F.ants&&F.ants.t)|0;if(g.ls>=0&&s<g.ls)g.s=Math.max(0,g.s-(g.ls-s));if(g.lt>=0&&a<g.lt)g.t=Math.max(0,g.t-(g.lt-a));g.ls=s;g.lt=a;if(F.fuel&&g.f){const u=F.fuel.n;if(g.lf>=0&&u<g.lf)g.f=Math.max(0,g.f-(g.lf-u));g.lf=u}}
 /* ================= the island: field beds, buildings, Igorlets ================= */
 const soilM=lam('#7a5a40'),soilWet=lam('#5e4330'),soilLock=lam('#4c5e45',{transparent:true,opacity:.55}),soilWild=lam('#5d6b3c'),furM=lam('#4e3626'),weedM=lam('#4f7a3a'),stemM=lam('#6fa35a',{emissive:'#2d4a22',emissiveIntensity:.35}),leafM2=lam('#4f8d45');
 const flowerM={t:lam('#f4efe2',{emissive:'#555',emissiveIntensity:.2}),p:lam('#f6d34a'),c:lam('#ffffff')},fruitM={t:tofuM,p:lam('#e0463c',{emissive:'#5a1410',emissiveIntensity:.4}),c:lam('#f08a2c',{emissive:'#5a2a08',emissiveIntensity:.4})};
@@ -3501,14 +3503,29 @@ function mvLive(o){if(!o||!o.parent)return false;for(let p=o;p;p=p.parent)if(!p.
 function treeWhy(){return S.farm&&FM().b.nurs>=1?tt('A tree is in the way: tap it to move it first.','C’è un albero in mezzo: toccalo per spostarlo prima.'):tt('A tree is in the way. With a tree nursery we can move it!','C’è un albero in mezzo. Con il vivaio lo possiamo trapiantare!')}
 function mvShift(o,x,z){if(!o.userData.o0)o.userData.o0={x:o.position.x,z:o.position.z,par:o.parent};for(const b of blocked)if(b.x===o.position.x&&b.z===o.position.z){b.x=x;b.z=z}
  const home=o.userData.o0,back=home.x===x&&home.z===z,par=back?home.par:world;if(par&&o.parent!==par){o.parent.remove(o);par.add(o)}o.position.x=x;o.position.z=z}
-/* trees follow the soil: moved onto the sand island a tree becomes a palm, back on the big island it is a tree again */
-function treeSkin(tr){const t=tr.t;if(t.userData.pskin)return t.userData.pskin;const p=palmG();p.traverse(o=>{if(o.isMesh){const c=curve(o.material.clone());c.transparent=true;o.material=c;tr.ms.push(c)}});p.visible=false;t.add(p);t.userData.pskin=p;return p}
-const onSand=(x,z)=>{const I=ISLES[0];return I.on&&isleE1(I,x,z)<1.1};
+/* trees follow the soil: on the sand island a tree becomes a palm, on the lake island a weeping willow, in the firefly forest
+   a giant mushroom, on the ice island a snowy fir; back on the big island it is a tree again */
+function skinG(k){const g=new THREE.Group();
+ if(k==='sand')return palmG();
+ if(k==='lake'){const tr=new THREE.Mesh(new THREE.CylinderGeometry(.14,.24,1.9,7),lam('#6b5440'));tr.position.y=.95;g.add(tr);const lf=lam('#7fae5a'),lf2=lam('#6a9a4a');
+  const c=new THREE.Mesh(new THREE.SphereGeometry(1.05,14,10,0,TAU,0,Math.PI*.55),lf);c.scale.set(1.15,.7,1.15);c.position.y=2.1;c.userData.leaf=1;g.add(c);
+  for(let i=0;i<22;i++){const a=i/22*TAU+(i%2)*.1,r=.95+(i%3)*.12,h=1.1+(i%4)*.25,d=new THREE.Mesh(new THREE.CylinderGeometry(.07,.02,h,4),i%2?lf:lf2);d.position.set(Math.cos(a)*r,2.2-h/2,Math.sin(a)*r);d.rotation.z=Math.cos(a)*.12;d.rotation.x=-Math.sin(a)*.12;g.add(d)}return g}
+ if(k==='forest'){const gl=Math.random()<.4,st=new THREE.Mesh(new THREE.CylinderGeometry(.2,.3,1.6,10),lam('#efe6cf'));st.position.y=.8;g.add(st);
+  const cap=new THREE.Mesh(new THREE.SphereGeometry(1.15,18,10,0,TAU,0,Math.PI/2),gl?glowM('#5fb7e6',.35):lam(['#d8443a','#c9542f','#b8383a'][Math.floor(Math.random()*3)]));cap.scale.set(1,.55,1);cap.position.y=1.58;g.add(cap);
+  for(let i=0;i<8;i++){const d=new THREE.Mesh(new THREE.SphereGeometry(.1,6,5),lam(gl?'#e9f8ff':'#fff6e6'));const a=i/8*TAU+i*.7,r=.3+(i%3)*.22;d.position.set(Math.cos(a)*r*1.15,1.58+Math.sqrt(Math.max(0,1-r*r))*.6,Math.sin(a)*r*1.15);g.add(d)}return g}
+ if(k==='ice'){const tr=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,1,7),lam('#6b4a2e'));tr.position.y=.5;g.add(tr);
+  for(let i=0;i<3;i++){const c=new THREE.Mesh(new THREE.ConeGeometry(1.2-i*.3,1.25,12),lam('#2f5a46'));c.position.y=1.45+i*.72;g.add(c);const sn=new THREE.Mesh(new THREE.ConeGeometry(.75-i*.18,.55,12),lam('#f6fbff'));sn.position.y=1.85+i*.72;g.add(sn)}return g}
+ return g}
+function treeSkin(tr,k){const t=tr.t,S0=t.userData.skins=t.userData.skins||{};if(S0[k])return S0[k];const p=skinG(k);p.traverse(o=>{if(o.isMesh){const c=curve(o.material.clone());c.transparent=true;o.material=c;tr.ms.push(c)}});p.visible=false;t.add(p);S0[k]=p;return p}
+const soilOf=(x,z)=>{for(const I of ISLES)if(I.on&&isleE1(I,x,z)<1.1)return I.kind;return''};
+const SOILMSG={sand:['On the sand it turned into a palm! 🌴','Sulla sabbia è diventato una palma! 🌴'],lake:['By the lake it turned into a weeping willow!','Vicino al lago è diventato un salice piangente!'],
+ forest:['In the firefly forest it turned into a giant mushroom! 🍄','Nel bosco delle lucciole è diventato un fungo gigante! 🍄'],ice:['On the ice it turned into a snowy fir! ❄️','Sul ghiaccio è diventato un abete innevato! ❄️'],'':['Back on the grass it’s a tree again! 🌳','Di nuovo sull’erba: è tornato un albero! 🌳']};
 let mvTreeT=0;
 {let acc=9;updaters.push((t,dt)=>{if((acc+=dt)<.4)return;acc=0;if(!S.farm)return;let changed=null;
- trees.forEach(tr=>{const o=tr.t;if(!o.parent)return;const sand=onSand(o.position.x,o.position.z);if(sand===!!o.userData.palmOn)return;
-  const sk=sand?treeSkin(tr):o.userData.pskin;o.userData.palmOn=sand;for(const c of o.children){if(c===sk)c.visible=sand;else if(c.isMesh&&c.material===shadowMat)c.visible=true;else c.visible=!sand}if(Date.now()-mvTreeT<4000)changed=sand});
- if(changed!==null&&where==='out'){snd('pop',2);say(changed?tt('On the sand it turned into a palm! 🌴','Sulla sabbia è diventato una palma! 🌴'):tt('Back on the grass it’s a tree again! 🌳','Di nuovo sull’erba: è tornato un albero! 🌳'),2.8)}})}
+ trees.forEach(tr=>{const o=tr.t;if(!o.parent)return;const k=soilOf(o.position.x,o.position.z),was=o.userData.soil||'';if(k===was)return;
+  const sk=k?treeSkin(tr,k):null,all=Object.values(o.userData.skins||{});o.userData.soil=k;o.userData.palmOn=k==='sand';
+  for(const c of o.children){if(all.includes(c))c.visible=c===sk;else if(c.isMesh&&c.material===shadowMat)c.visible=true;else c.visible=!k}if(Date.now()-mvTreeT<4000)changed=k});
+ if(changed!==null&&where==='out'){snd('pop',2);say(tt(...SOILMSG[changed]),2.8)}})}
 function moveTreeTo(j,x,z){const tr=trees[j];if(!tr||!tr.t.parent)return;mvTreeT=Date.now();mvShift(tr.t,x,z)}
 function moveRockTo(j,x,z){const r=rocks[j];if(!r||!r.parent)return;mvShift(r,x,z)}
 function insMoveTo(k,x,z){const o=insO[k];if(!o)return;o.g.position.set(x,0,z);o.g.rotation.y=Math.atan2(-x,-z);o.L.pos.set(x,o.ly,z);o.fx[0]=x;o.fx[1]=z;o.bk.x=x;o.bk.z=z}
@@ -4046,7 +4063,7 @@ function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
  unSave=onSnapshot(doc(db,'users',uid),s=>{if(!s.exists()||s.metadata.hasPendingWrites||!C.user||C.user.uid!==uid||!ready)return;const c=s.data(),L=window.IgorSave.get();
   if(!c.at||mine.has(c.at)||c.at===L.base||c.at===L.at)return;adopt(c)},e=>console.warn('follow',e&&e.code||e))}
 window.IgorCloud=C;
-{const s=document.createElement('script');s.src='/chat.js?v=8';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=9';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
