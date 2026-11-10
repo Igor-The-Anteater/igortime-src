@@ -24,14 +24,14 @@ button:hover,button:focus-visible{border-color:var(--glow);color:var(--glow);out
 button.main{background:var(--bone);color:var(--abyss);border-color:var(--bone)}
 button.main:hover{background:#fff6e3;color:var(--abyss)}
 button:disabled{opacity:.35;cursor:default;border-color:rgba(219,231,234,.3);color:var(--ink)}
-.lbl{position:fixed;left:0;top:0;white-space:nowrap;font:600 23px/1 var(--toon);color:#2b2018;background:#f7ecd4;border:3px solid #2b2018;border-radius:16px;padding:7px 14px 8px;box-shadow:0 4px 0 #2b2018,0 10px 22px rgba(0,0,0,.35);will-change:transform;text-align:center;cursor:pointer;letter-spacing:.01em}
+.lbl{position:fixed;left:0;top:0;white-space:normal;width:max-content;max-width:min(320px,calc(100vw - 24px));box-sizing:border-box;font:600 23px/1.1 var(--toon);color:#2b2018;background:#f7ecd4;border:3px solid #2b2018;border-radius:16px;padding:7px 14px 8px;box-shadow:0 4px 0 #2b2018,0 10px 22px rgba(0,0,0,.35);will-change:transform;text-align:center;cursor:pointer;letter-spacing:.01em}
 .lbl::after{content:'';position:absolute;left:50%;bottom:-11px;width:14px;height:14px;background:#f7ecd4;border:3px solid #2b2018;border-top:0;border-left:0;transform:translateX(-50%) rotate(45deg);border-radius:0 0 4px 0}
-.lbl:hover{background:#fff5df;opacity:1}
+.lbl:hover{background:#fff5df;opacity:1}.lbl.mv::after{display:none}
 #labels .lbl{opacity:.6;transition:opacity .25s}#labels .lbl.nr{opacity:.85}#labels .lbl:hover{opacity:1}
 .lbl small{display:block;font:500 13px/1 var(--toon);color:#9a5d2c;margin-top:4px;letter-spacing:.02em}
 .lbl.plot{font-size:17px;padding:5px 11px 6px;border-width:2.5px;border-radius:13px;background:#e9f6d8}
 .lbl.plot small{font-size:11.5px}
-@media (max-width:560px){.lbl{font-size:18px;padding:5px 11px 6px;border-width:2.5px}.lbl small{font-size:11px}.lbl.plot{font-size:14px}}
+@media (max-width:560px){.lbl{font-size:18px;max-width:min(260px,calc(100vw - 24px));padding:5px 11px 6px;border-width:2.5px}.lbl small{font-size:11px}.lbl.plot{font-size:14px}}
 header{position:fixed;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 22px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(rgba(5,8,13,var(--hd,.9)) 40%,rgba(5,8,13,0));pointer-events:none}
 header>*{pointer-events:auto}
 header h1{margin:0;font:400 26px/1 var(--display);white-space:nowrap;flex:1}
@@ -86,7 +86,7 @@ button.link{border:0;padding:9px 4px;color:var(--dim);text-transform:none;letter
 #index li button:hover,#index li button:focus-visible{color:var(--warm)}
 #index li button[aria-pressed="true"]{color:var(--warm)}
 #index li small{color:var(--warm);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;margin-left:6px}
-#bubble{position:fixed;left:0;top:0;z-index:3;pointer-events:none;font:400 italic 18px/1.2 var(--display);color:var(--abyss);background:var(--bone);padding:9px 16px 10px;border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.35);white-space:nowrap;opacity:0;transition:opacity .4s}
+#bubble{position:fixed;left:0;top:0;z-index:3;pointer-events:none;font:400 italic 18px/1.2 var(--display);color:var(--abyss);background:var(--bone);padding:9px 16px 10px;border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.35);white-space:normal;width:max-content;max-width:min(360px,calc(100vw - 24px));box-sizing:border-box;overflow-wrap:break-word;opacity:0;transition:opacity .4s}@media (max-width:560px){#bubble{font-size:16px;padding:8px 13px 9px;max-width:calc(100vw - 24px)}}
 #bubble::after{content:'';position:absolute;left:var(--tx,20px);bottom:-13px;width:20px;height:15px;background:var(--bone);clip-path:polygon(0 0,100% 0,8% 100%)}
 #toast{position:fixed;z-index:7;left:50%;top:calc(var(--hh,62px) + 8px);transform:translateX(-50%);background:var(--bone);color:var(--abyss);font:400 italic 18px/1.2 var(--display);padding:10px 18px;border-radius:999px;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
 #hint{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font:500 14px/1.3 var(--toon);letter-spacing:.02em;color:var(--bone);text-shadow:0 1px 6px #000;pointer-events:none;transition:opacity .8s;text-align:center;width:max-content;max-width:calc(100vw - 32px)}
@@ -157,6 +157,12 @@ html.touch #zoomB{top:calc(var(--hh,62px) + var(--evh,0px) + 14px)!important;tra
 #helpC .x{position:absolute;top:8px;right:8px;width:30px;height:30px;padding:0;border-radius:50%;font-size:13px;color:#2b2018;background:#f7ecd4;border:2px solid #2b2018}
 @media (max-width:560px){header h1{display:none}#igB{padding:5px 8px 5px 6px}#igB svg{width:22px;height:15px}#helpB{width:32px;height:32px}}
 #chatB{display:flex;align-items:center;justify-content:center;padding:6px 9px}#chatB svg{width:22px;height:22px;display:block}@media (max-width:480px){#chatB{padding:5px 6px!important}#chatB svg{width:19px;height:19px}}
+/* 10 Nov 2026 (sera): smaller orb and games button; zoom, sound and weather folded in one menu */
+#orb{top:calc(var(--hh,62px) + var(--evh,0px) + 40px)}#orb .ball{width:34px;height:34px}#orb i{font-size:16px}#orb .tx{padding:3px 7px;border-radius:10px}#orb small{font-size:9.5px}#orb b{font-size:12px}
+#gamesB{top:calc(var(--hh,62px) + var(--evh,0px) + 82px);gap:6px}#gamesB .gi{width:30px;height:30px;border-radius:9px}#gamesB .gi svg{width:21px;height:21px}#gamesB .tx{padding:2px 7px;border-radius:9px}#gamesB small{font-size:9px}#gamesB b{font-size:11.5px}
+#orb{gap:6px}#todo{top:calc(var(--hh,62px) + var(--evh,0px) + 122px)}
+#zoomB:not(.open)>button:not(#zmT){display:none}#zoomB.open>button:not(#zmT){animation:zmIn .18s ease-out}@keyframes zmIn{from{opacity:0;transform:translateY(-6px) scale(.85)}to{opacity:1;transform:none}}
+#zmT{display:grid;place-items:center}#zoomB.open #zmT{background:#f6d34a}
 </style>
 <script src="/pres.js?v=1" defer></script>
 </head><body>
@@ -422,6 +428,20 @@ const PLACES={};const clickables=[];const hitMat=new THREE.MeshBasicMaterial({co
 let BUILD='out';
 function hit(obj,r,act,name,y=1){const m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),hitMat);m.position.y=y;m.userData={act,name,room:BUILD};obj.add(m);clickables.push(m);return m}
 const labels=[],LBLR=5;function label(text,sub,pos,onclick,near){const el=document.createElement('div');el.className='lbl';el.innerHTML=N(text)+(sub?`<small>${N(sub)}</small>`:'');el.onclick=onclick;$('labels').appendChild(el);const L={el,pos,room:BUILD,near:near||0,text,sub};labels.push(L);return L}
+/* 10 Nov 2026 (sera): labels and Igor's balloon never touch. Igor's balloon stays put; the label nearest to Igor goes next,
+   the others step above, below or beside what is already placed (smoothly), and are hidden if there is no room */
+function layoutLabels(LV,first){const G=8,top0=(window._hh||60)+(window._evh||0)+4,W=innerWidth,H=innerHeight,placed=[];
+ if(bubble.style.opacity==='1'){const r=bubble.getBoundingClientRect();if(r.width)placed.push({l:r.left,t:r.top,r:r.right,b:r.bottom+14})}
+ for(const id of['orb','gamesB','todo','lvB','pkB','zoomB']){const el=$(id);if(!el||el.style.display==='none'||el.hidden)continue;const r=el.getBoundingClientRect();if(r.width&&r.height&&getComputedStyle(el).visibility!=='hidden')placed.push({l:r.left,t:r.top,r:r.right,b:r.bottom})}
+ LV.sort((a,b)=>(a===first?-1:b===first?1:a._d-b._d));
+ const hit=(l,t,r,b)=>placed.some(q=>l<q.r+G&&r>q.l-G&&t<q.b+G&&b>q.t-G);
+ for(const L of LV){const w=L.el.offsetWidth,h=L.el.offsetHeight+12,x0=L._x,y0=L._y;const ok=(cx,by)=>cx-w/2>=4&&cx+w/2<=W-4&&by-h>=top0&&by<=H-4&&!hit(cx-w/2,by-h,cx+w/2,by);
+  let best=null,bd=1e9;const tryP=(cx,by)=>{if(!ok(cx,by))return;const d=Math.hypot(cx-x0,(by-y0)*1.2);if(d<bd){bd=d;best=[cx,by]}};
+  tryP(x0,y0);if(!best||bd>0)for(const q of placed){tryP(x0,q.t-G-1);tryP(x0,q.b+h+G+1);tryP(q.l-G-1-w/2,y0);tryP(q.r+G+1+w/2,y0);tryP(clamp(x0,w/2+4,W-w/2-4),q.t-G-1)}
+  if(!best){L.el.style.visibility='hidden';L._sx=null;continue}L.el.style.visibility='';
+  if(L._sx==null||Math.hypot(best[0]-L._sx,best[1]-L._sy)>140){L._sx=best[0];L._sy=best[1]}else{L._sx+=(best[0]-L._sx)*.35;L._sy+=(best[1]-L._sy)*.35}
+  const moved=Math.hypot(best[0]-x0,best[1]-y0)>3;if(L.el.classList.contains('mv')!==moved)L.el.classList.toggle('mv',moved);
+  placed.push({l:best[0]-w/2,t:best[1]-h,r:best[0]+w/2,b:best[1]});L.el.style.transform=`translate(-50%,-100%) translate(${L._sx}px,${L._sy}px)`}}
 function relabel(){for(const L of labels)if(Array.isArray(L.text)||Array.isArray(L.sub))L.el.innerHTML=N(L.text)+(L.sub?`<small>${N(L.sub)}</small>`:'')}
 /* things you can use glow: softly all the time, with a pulse when you arrive (then again every few seconds) */
 const GLOW={list:[],col:new THREE.Color('#ffc978')};
@@ -1732,7 +1752,7 @@ function chatter(){if(!started||bubbleT>0||T-lastAct<12)return;lastAct=T+Math.ra
 const pv=new V3();
 function placeBubble(){projC(pv.set(igor.position.x,IH+.75+rideY(),igor.position.z));const vis=pv.z<1&&bubbleT>0;bubble.style.opacity=vis?1:0;if(!vis)return;
  const sx=(pv.x*.5+.5)*innerWidth,sy=(-pv.y*.5+.5)*innerHeight,w=bubble.offsetWidth,h=bubble.offsetHeight;
- let L=clamp(sx-24,12,innerWidth-w-12),T2=clamp(sy-h-14,(window._hh||60)+6,innerHeight-h-12);[L,T2]=bubbleAvoid(L,T2,w,h);bubble.style.transform=`translate(${L}px,${T2}px)`;bubble.style.setProperty('--tx',clamp(sx-L-6,14,w-30)+'px')}
+ let L=clamp(sx-24,12,innerWidth-w-12),T2=clamp(sy-h-14,(window._hh||60)+6,innerHeight-h-12);[L,T2]=bubbleAvoid(L,T2,w,h);L=clamp(L,12,Math.max(12,innerWidth-w-12));T2=clamp(T2,6,Math.max(6,innerHeight-h-12));bubble.style.transform=`translate(${L}px,${T2}px)`;bubble.style.setProperty('--tx',clamp(sx-L-6,14,w-30)+'px')}
 let hintOn=true;function floatText(txt,pos){const el=document.createElement('div');el.textContent=txt;el.style.cssText='position:fixed;left:0;top:0;z-index:5;pointer-events:none;font:400 italic 26px/1 var(--display);color:var(--bone);text-shadow:0 1px 8px #000';document.body.appendChild(el);const p0=pos.clone();let a=0;
  const step=()=>{a+=1/60;projC(pv.set(p0.x,2+a*1.2,p0.z));el.style.transform=`translate(-50%,-100%) translate(${(pv.x*.5+.5)*innerWidth}px,${(-pv.y*.5+.5)*innerHeight}px)`;el.style.opacity=String(1-a);if(a<1)requestAnimationFrame(step);else el.remove()};step()}
 function hideHint(){if(hintOn){hintOn=false;$('hint').style.opacity=0}}
@@ -2031,7 +2051,7 @@ helpB.onclick=e=>{e.stopPropagation();if(helpC.hidden){renderHelp();helpC.hidden
 helpC.onclick=()=>{helpC.hidden=true};
 addEventListener('pointerdown',e=>{if(!helpC.hidden&&!helpC.contains(e.target)&&e.target!==helpB)helpC.hidden=true});
 const _hudFarm=hudFarm;hudFarm=function(){_hudFarm();hudIgs()};
-function ariaTexts(){const A=[['seeds',tt('Tofu seeds','Semi di tofu')],['ants',tt('Tofu ants','Formiche di tofu')],['vehB',tt('Ride','Guida')],['buildB',tt('Build','Costruisci')],['testB','Test']];for(const[id,t]of A){const el=$(id);if(el){el.setAttribute('aria-label',t);el.title=t}}const z=document.querySelectorAll('#zoomB button');if(z[0])z[0].setAttribute('aria-label',tt('Zoom in','Avvicina'));if(z[1])z[1].setAttribute('aria-label',tt('Zoom out','Allontana'))}ariaTexts();
+function ariaTexts(){const A=[['seeds',tt('Tofu seeds','Semi di tofu')],['ants',tt('Tofu ants','Formiche di tofu')],['vehB',tt('Ride','Guida')],['buildB',tt('Build','Costruisci')],['testB','Test']];for(const[id,t]of A){const el=$(id);if(el){el.setAttribute('aria-label',t);el.title=t}}const z=document.querySelectorAll('#zoomB button[data-z]');if(z[0])z[0].setAttribute('aria-label',tt('Zoom in','Avvicina'));if(z[1])z[1].setAttribute('aria-label',tt('Zoom out','Allontana'))}ariaTexts();
 const _farmRelabel=farmRelabel;farmRelabel=function(){_farmRelabel();renderOrb(false);hudIgs();renderLangB();ariaTexts();if(!helpC.hidden)renderHelp()};
 hudIgs();
 
@@ -2057,7 +2077,7 @@ function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igo
  <h2>${tt('Sky','Cielo')}</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">${tt('Random weather','Meteo casuale')}<small>${tt('Igor’s weather, same for everyone','il meteo di Igor, uguale per tutti')}</small></button></li><li><button data-sky="real">${tt('The weather where I am','Il meteo dove sono')}<small>${tt('uses your location','usa la tua posizione')}</small></button></li></ul>`}
 renderIdx();
 function setLang(l){if(l===LANG)return;LANG=l;bubbleQ.length=0;bubbleT=0;try{localStorage.setItem('igortime_lang',l)}catch(e){}document.documentElement.lang=l;applyLang();say(tt('Hello! I speak English now.','Ciao! Adesso parlo italiano.'),2.6)}
-function applyLang(){SIGNS.forEach(f=>f());if(typeof renderGmB==='function')renderGmB();if(typeof renderSndB==='function')renderSndB();renderIdx();skyStatus();relabel();staticTexts();refresh();if(typeof farmRelabel==='function')farmRelabel();if(!sheet.hidden&&sheetKind==='acct')openAccount();if(!sheet.hidden&&sheetKind==='dress')renderDress()}
+function applyLang(){SIGNS.forEach(f=>f());if(typeof renderGmB==='function')renderGmB();if(typeof renderSndB==='function')renderSndB();if(window._zmR)window._zmR();renderIdx();skyStatus();relabel();staticTexts();refresh();if(typeof farmRelabel==='function')farmRelabel();if(!sheet.hidden&&sheetKind==='acct')openAccount();if(!sheet.hidden&&sheetKind==='dress')renderDress()}
 function staticTexts(){$('index').setAttribute('aria-label',tt('Index','Indice'));document.querySelector('#sheet .x').setAttribute('aria-label',tt('Close','Chiudi'));if($('introIg'))$('introIg').setAttribute('aria-label',tt('Igor, a green anteater','Igor, un formichiere verde'));$('indexBtn').setAttribute('aria-label',tt('Index','Indice'));$('hint').textContent=document.documentElement.classList.contains('touch')?tt('Walk with the joystick · double-tap it to jump · tap a place · drag to turn','Cammina col joystick · doppio tocco per saltare · tocca un posto · trascina per girare'):tt('Walk with the arrows · space to jump · click a place · drag to turn','Cammina con le frecce · spazio per saltare · clicca un posto · trascina per girare');
  $('indexBtn').textContent=tt('Index','Indice');$('seeds').title=tt('Seeds: win them in the games','Semi: si vincono nei giochi');$('ants').title=tt('Ants in your pocket / how many you can keep','Formiche in tasca / quante ne puoi tenere');
  const I=$('intro');if(I){$('iH').innerHTML=tt('Hi, I’m <em>Igor</em>.','Ciao, sono <em>Igor</em>.');$('iAsk').textContent=tt('Where shall we go? Straight to my games, or to my island?','Dove andiamo? Direttamente ai miei giochi, o sulla mia isola?');
@@ -3354,6 +3374,13 @@ wxP.addEventListener('pointerdown',e=>e.stopPropagation());
 wxP.addEventListener('click',e=>{const b=e.target.closest('button[data-wx]');if(!b)return;e.stopPropagation();const m=b.dataset.wx;
  if(m===SKY.mode){wxP.hidden=true;return}skyMode(m);wxP.hidden=true;if(m==='island')setTimeout(()=>say(tt('Random weather! Who knows what tomorrow brings.','Meteo casuale! Chissà che tempo farà.'),2.6),300)});
 addEventListener('pointerdown',e=>{if(!wxP.hidden&&!wxP.contains(e.target)&&e.target!==wxB&&!wxB.contains(e.target))wxP.hidden=true});
+/* 10 Nov 2026 (sera): +, −, sound and weather hide inside one menu button; tap it to open, tap it again (or elsewhere) to close */
+const zmT=document.createElement('button');zmT.type='button';zmT.id='zmT';zb.insertBefore(zmT,zb.firstChild);
+const ZMIC='<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g stroke="#2b2018" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></g><g fill="#f7ecd4" stroke="#2b2018" stroke-width="2"><circle cx="9" cy="7" r="2.4"/><circle cx="15.5" cy="12" r="2.4"/><circle cx="7.5" cy="17" r="2.4"/></g></svg>';
+function renderZmT(){const o=zb.classList.contains('open');zmT.innerHTML=o?'<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="#2b2018" stroke-width="2.6" stroke-linecap="round"/></svg>':ZMIC;const t=o?tt('Close','Chiudi'):tt('Zoom, sound and weather','Zoom, suoni e meteo');zmT.setAttribute('aria-label',t);zmT.title=t;zmT.setAttribute('aria-expanded',String(o))}
+function zmOpen(o){zb.classList.toggle('open',o);if(!o){volP.hidden=true;wxP.hidden=true}renderZmT()}
+zmT.onclick=e=>{e.stopPropagation();zmOpen(!zb.classList.contains('open'))};renderZmT();window._zmR=renderZmT;
+addEventListener('pointerdown',e=>{if(zb.classList.contains('open')&&!zb.contains(e.target)&&!volP.contains(e.target)&&!wxP.contains(e.target))zmOpen(false)});
 addEventListener('resize',()=>{if(!wxP.hidden)placeWx()});
 {let acc=9;updaters.push((t,dt)=>{if((acc+=dt)<.5)return;acc=0;renderWxB();if(!wxP.hidden){const n=wxP.querySelector('.wn');if(n)n.textContent=`${tt('Now','Adesso')}: ${wxIcon()} ${N(WNAME[SKY.wName]||WNAME.clear)}`;wxP.querySelectorAll('[data-wx]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.wx===SKY.mode)))}})}
 
@@ -4311,8 +4338,8 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  if(shoot.t>=0){shoot.t+=dt;shoot.m.position.x+=dt*55;shoot.m.position.y-=dt*18;shoot.m.material.opacity=Math.sin(Math.min(shoot.t/1.1,1)*Math.PI)*.8;if(shoot.t>1.1){shoot.t=-1;shoot.m.material.opacity=0}}
  if(camSnap){camera.position.copy(camTarget());lookS.copy(lookTarget());camSnap=false}else{const f=1-Math.exp(-dt*3);camera.position.lerp(camTarget(),f);lookS.lerp(lookTarget(),f)}camera.lookAt(lookS.x,where==='out'?.9+rideCamY():1.1,lookS.z);
  // labels
- let lbN=null,lbD=1e9;for(const L of labels){projC(pv.copy(L.pos));const ld=Math.hypot(L.pos.x-igor.position.x,L.pos.z-igor.position.z),out=(L.room||'out')==='out',lr=out&&!L.far?Math.min(L.near||LBLR,LBLR):L.near;const vis=started&&!L.hidden&&(L.room||'out')===where&&(!lr||ld<lr*(portrait()?.8:1))&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis&&ld<lbD){lbD=ld;lbN=L}if(vis){const lx=clamp((pv.x*.5+.5)*innerWidth,L.el.offsetWidth/2+6,innerWidth-L.el.offsetWidth/2-6),ly=Math.max((-pv.y*.5+.5)*innerHeight,(window._hh||60)+(window._evh||0)+L.el.offsetHeight+4);L.el.style.transform=`translate(-50%,-100%) translate(${lx}px,${ly}px)`}}for(const L of labels){const on=L===lbN;if(L.el.classList.contains('nr')!==on)L.el.classList.toggle('nr',on)}
- if(bubbleT>0){bubbleT-=dt;bubbleS+=dt}else if(bubbleQ.length){const[q,s2]=bubbleQ.shift();bubble.textContent=q;bubbleT=s2;bubbleS=0;snd('say')}placeBubble();chatter();
+ let lbN=null,lbD=1e9;const LV=[];for(const L of labels){projC(pv.copy(L.pos));const ld=Math.hypot(L.pos.x-igor.position.x,L.pos.z-igor.position.z),out=(L.room||'out')==='out',lr=out&&!L.far?Math.min(L.near||LBLR,LBLR):L.near;const vis=started&&!L.hidden&&(L.room||'out')===where&&(!lr||ld<lr*(portrait()?.8:1))&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis&&ld<lbD){lbD=ld;lbN=L}if(vis){const lx=clamp((pv.x*.5+.5)*innerWidth,L.el.offsetWidth/2+6,innerWidth-L.el.offsetWidth/2-6),ly=Math.max((-pv.y*.5+.5)*innerHeight,(window._hh||60)+(window._evh||0)+L.el.offsetHeight+4);L._x=lx;L._y=ly;L._d=ld;LV.push(L)}else L._sx=null}for(const L of labels){const on=L===lbN;if(L.el.classList.contains('nr')!==on)L.el.classList.toggle('nr',on)}
+ if(bubbleT>0){bubbleT-=dt;bubbleS+=dt}else if(bubbleQ.length){const[q,s2]=bubbleQ.shift();bubble.textContent=q;bubbleT=s2;bubbleS=0;snd('say')}placeBubble();layoutLabels(LV,lbN);chatter();
  renderer.render(scene,camera);requestAnimationFrame(frame)}
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.fov=fovFor();camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);hh()});
 // back from a game: Igor is where you left him
