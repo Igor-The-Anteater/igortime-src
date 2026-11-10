@@ -213,6 +213,11 @@ const SFX={
   else{tone(f,f,1.6,{g:.36,at:.12,vib:f*.008,vibF:6});tone(f*2.01,f*2.01,1.2,{g:.06,at:.15});nz(.8,{f0:f*4,Q:10,g:.03,at:.2})}},
  shutter:()=>{nz(.03,{type:'highpass',f0:2500,g:.5});nz(.05,{f0:900,Q:1,g:.3,delay:.07});tone(1800,1200,.04,{g:.15,delay:.07,type:'square'})},
  frog:()=>{const f=R(150,210);for(let i=0;i<2;i++){tone(f*1.6,f,.11,{type:'square',g:.16,delay:i*.16,lp:900});nz(.05,{f0:500,Q:2,g:.06,delay:i*.16})}},
+ ufo:()=>{tone(150,190,4.2,{g:.22,type:'triangle',vib:14,vibF:6,at:1});tone(300,380,4.2,{g:.08,type:'sine',vib:20,vibF:6.5,at:1})},
+ beam:()=>{tone(300,1400,2.8,{g:.16,type:'sawtooth',lp:1800,vib:30,vibF:9,at:.4});nz(2.8,{f0:900,f1:3500,Q:1.5,g:.12,at:.4})},
+ whoosh:()=>{nz(1.1,{f0:400,f1:5000,Q:.8,g:.4,at:.05});tone(500,2400,.9,{g:.12,type:'triangle'})},
+ dtom:()=>{tone(210,95,.32,{g:.75,at:.002});nz(.04,{f0:900,Q:1,g:.18})},
+ dhat:()=>{nz(.07,{type:'highpass',f0:7000,Q:.7,g:.5,at:.001});nz(.03,{f0:10000,Q:1,g:.2})},
  marimba:f=>{f=f||523;tone(f,f,1.1,{g:.6,at:.003});tone(f*3.9,f*3.9,.18,{g:.16,at:.002});tone(f*9.2,f*9.2,.05,{g:.05,at:.001});nz(.02,{f0:1800,Q:1,g:.1})},
  wish:()=>{for(let i=0;i<8;i++){const f=st(1047,PENTA[i]);tone(f,f,.6,{g:.22,delay:i*.06,at:.003,pan:R(-.6,.6)})}tone(523,523,1.8,{g:.18,at:.3,type:'triangle'})},
 };
