@@ -1234,6 +1234,23 @@ const mark=new THREE.Mesh(new THREE.RingGeometry(.25,.34,28).rotateX(-Math.PI/2)
 const IG={target:null,arrive:null,face:1,walk:0,idle:3,manual:false,jy:0,jv:0};
 function jump(){if(diving||IG.jy>.05||!started)return;IG.jv=5.6;IG.jy=.001;snd('jump');poke();hideHint()}const IN={x:0,z:0};
 let where='out';window.__where=()=>where;const ROOMS={};
+/* Igor finds his way (A* on a grid over walkable): used when the straight line to where he's going is blocked */
+function lineOk(ax,az,bx,bz){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.2);for(let i=1;i<=n;i++){const u=i/n;if(!walkable(ax+(bx-ax)*u,az+(bz-az)*u))return false}return true}
+function findPath(from,to){const g=where==='out'?.45:.3,pad=where==='out'?7:2;
+ const x0=Math.min(from.x,to.x)-pad,z0=Math.min(from.z,to.z)-pad,W=Math.ceil((Math.abs(from.x-to.x)+2*pad)/g)+1,H=Math.ceil((Math.abs(from.z-to.z)+2*pad)/g)+1;if(W*H>60000)return null;
+ const id=(i,j)=>j*W+i,cx=i=>x0+i*g,cz=j=>z0+j*g,ok=new Int8Array(W*H),G=new Float32Array(W*H).fill(1e9),P=new Int32Array(W*H).fill(-1),done=new Uint8Array(W*H);
+ const m=.18,ok1=(i,j)=>{const k=id(i,j);if(!ok[k]){const x=cx(i),z=cz(j);ok[k]=walkable(x,z)&&walkable(x+m,z)&&walkable(x-m,z)&&walkable(x,z+m)&&walkable(x,z-m)?1:2}return ok[k]===1}; // a little margin, so Igor never brushes the edges
+ const si=Math.round((from.x-x0)/g),sj=Math.round((from.z-z0)/g),ti=Math.round((to.x-x0)/g),tj=Math.round((to.z-z0)/g);
+ // the goal may be inside something (a door, a building): aim for the nearest free cell
+ let gi=ti,gj=tj;if(!ok1(gi,gj)){let best=1e9;for(let r=1;r<8&&best===1e9;r++)for(let a=-r;a<=r;a++)for(const[i,j]of[[ti+a,tj-r],[ti+a,tj+r],[ti-r,tj+a],[ti+r,tj+a]]){if(i<0||j<0||i>=W||j>=H)continue;if(ok1(i,j)){const d=Math.hypot(i-ti,j-tj);if(d<best){best=d;gi=i;gj=j}}}if(best===1e9)return null}
+ const h=(i,j)=>Math.hypot(i-gi,j-gj),open=[[h(si,sj),si,sj]];G[id(si,sj)]=0;let it=0,found=false;
+ const N8=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]];
+ while(open.length&&it++<25000){let bi=0;for(let k=1;k<open.length;k++)if(open[k][0]<open[bi][0])bi=k;const[,i,j]=open[bi];open[bi]=open[open.length-1];open.pop();const k0=id(i,j);if(done[k0])continue;done[k0]=1;if(i===gi&&j===gj){found=true;break}
+  for(const[di,dj,c]of N8){const ni=i+di,nj=j+dj;if(ni<0||nj<0||ni>=W||nj>=H)continue;if(!ok1(ni,nj))continue;if(di&&dj&&(!ok1(i+di,j)||!ok1(i,j+dj)))continue;const nk=id(ni,nj),ng=G[k0]+c;if(ng<G[nk]){G[nk]=ng;P[nk]=k0;open.push([ng+h(ni,nj),ni,nj])}}}
+ if(!found)return null;const pts=[];for(let k=id(gi,gj);k>=0&&k!==id(si,sj);k=P[k])pts.push(new V3(cx(k%W),0,cz(Math.floor(k/W))));pts.reverse();
+ if(gi!==ti||gj!==tj)pts.push(new V3(to.x,0,to.z));else if(pts.length)pts[pts.length-1]=new V3(to.x,0,to.z);
+ // straighten: keep only the corners
+ const out=[];let a=new V3(from.x,0,from.z);for(let k=0;k<pts.length;k++){const nx=pts[k+1];if(!nx||!lineOk(a.x,a.z,nx.x,nx.z)){out.push(pts[k]);a=pts[k]}}return out}
 function walkable(x,z){if(where==='out'&&RIDE){const ok=rideOk(x,z);if(ok!==null)return ok}if(where!=='out'){const Rm=ROOMS[where];if(Math.abs(x)>Rm.w/2-.7||z<-Rm.d/2+1.1||z>Rm.d/2-.3)return false;return!Rm.blocks.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3)}
  if(Math.hypot(x,z*1.12)>R-.6&&!isleLand(x,z))return false;return!blocked.some(b=>{const d=Math.hypot(b.x-x,b.z-z);if(d>=b.r+.3)return false;const d0=Math.hypot(b.x-igor.position.x,b.z-igor.position.z);return!(d0<b.r+.3&&d>d0)})}
 function goTo(k,arg){const P=PLACES[k];if(!P)return;if(where!=='out'){exitRoom(true);}closeSheet();$('index').hidden=true;IG.target=P.pos.clone();IG.manual=true;IG.arrive=()=>P.open(arg);mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke();
@@ -1249,10 +1266,11 @@ function igorUpdate(t,dt){blink(t);let moving=false;
   const mx=ix*Math.cos(y)+iz*Math.sin(y),mz=-ix*Math.sin(y)+iz*Math.cos(y),sp=4.4*rideSp()*k*dt;const nx=igor.position.x+mx*sp,nz=igor.position.z+mz*sp;
   if(walkable(nx,nz)){igor.position.x=nx;igor.position.z=nz}else if(walkable(nx,igor.position.z))igor.position.x=nx;else if(walkable(igor.position.x,nz))igor.position.z=nz;
   if(Math.abs(ix)>.2)IG.face=ix>0?1:-1;moving=true;IG.walk+=dt*10*k;hideHint();poke()}
- else if(IG.target){const TG=where==='out'?isleVia(IG.target):IG.target;if(TG!==IG.target&&IG.tgw!==TG){IG.tgw=TG;IG.best=1e9;IG.bestT=T}const v=TG.clone().sub(igor.position);v.y=0;const L=v.length();
-  if(L<.15&&TG!==IG.target){IG.best=1e9;IG.bestT=T}else if(L<.15){IG.target=null;if(IG.arrive){const f=IG.arrive;IG.arrive=null;f()}}
+ else if(IG.target){const DS=where==='out'?isleVia(IG.target):IG.target;if(IG.pathFor!==DS){IG.pathFor=DS;IG.path=lineOk(igor.position.x,igor.position.z,DS.x,DS.z)?null:findPath(igor.position,DS);if(IG.path&&IG.path.length)IG.path[IG.path.length-1]=DS}
+  const TG=IG.path&&IG.path.length?IG.path[0]:DS;if(TG!==IG.target&&IG.tgw!==TG){IG.tgw=TG;IG.best=1e9;IG.bestT=T}const v=TG.clone().sub(igor.position);v.y=0;const L=v.length();
+  if(L<.15&&TG!==IG.target){if(IG.path&&IG.path[0]===TG){IG.path.shift();if(!IG.path.length)IG.path=null}IG.best=1e9;IG.bestT=T}else if(L<.15){IG.target=null;IG.path=null;IG.pathFor=null;if(IG.arrive){const f=IG.arrive;IG.arrive=null;f()}}
   else{v.divideScalar(L);const sp=Math.min(L,4.2*rideSp()*dt);const nx=igor.position.x+v.x*sp,nz=igor.position.z+v.z*sp;
-   if(IG.tgRef!==IG.target){IG.tgRef=IG.target;IG.best=L;IG.bestT=T;IG.side=0}if(L<IG.best-.25){IG.best=L;IG.bestT=T}let moved=false;if(walkable(nx,nz)){igor.position.x=nx;igor.position.z=nz;moved=true}else{const sd=IG.side||(Math.random()<.5?1:-1);for(const a of[.5,1,1.5,2,2.5]){for(const s0 of[sd,-sd]){const aa=a*s0,c=Math.cos(aa),s1=Math.sin(aa),dx=v.x*c-v.z*s1,dz=v.x*s1+v.z*c,x=igor.position.x+dx*sp,z=igor.position.z+dz*sp;if(walkable(x,z)){igor.position.x=x;igor.position.z=z;IG.side=s0;moved=true;break}}if(moved)break}}if(!moved||T-IG.bestT>5){const f=L<1.6?IG.arrive:null;IG.target=null;IG.arrive=null;IG.side=0;if(f)f()}
+   if(IG.tgRef!==IG.target){IG.tgRef=IG.target;IG.best=L;IG.bestT=T;IG.side=0}if(L<IG.best-.25){IG.best=L;IG.bestT=T}let moved=false;if(walkable(nx,nz)){igor.position.x=nx;igor.position.z=nz;moved=true}else{const sd=IG.side||(Math.random()<.5?1:-1);for(const a of[.5,1,1.5,2,2.5]){for(const s0 of[sd,-sd]){const aa=a*s0,c=Math.cos(aa),s1=Math.sin(aa),dx=v.x*c-v.z*s1,dz=v.x*s1+v.z*c,x=igor.position.x+dx*sp,z=igor.position.z+dz*sp;if(walkable(x,z)){igor.position.x=x;igor.position.z=z;IG.side=s0;moved=true;break}}if(moved)break}}if(!moved||T-IG.bestT>5){const Lf=Math.hypot(IG.target.x-igor.position.x,IG.target.z-igor.position.z),f=Lf<1.6?IG.arrive:null;IG.target=null;IG.arrive=null;IG.side=0;IG.path=null;IG.pathFor=null;if(f)f()}
    const camRight=new V3().setFromMatrixColumn(camera.matrixWorld,0);const d=v.dot(camRight);if(Math.abs(d)>.25)IG.face=d>0?1:-1;moving=true;IG.walk+=dt*10}}
  else if(started&&!reduce&&where==='out'&&T-lastAct>8){IG.idle-=dt;if(IG.idle<=0&&sheet.hidden){IG.idle=6+Math.random()*7;IG.manual=false;for(let k=0;k<12;k++){const a=Math.random()*TAU,r=1+Math.random()*2.2,x=igor.position.x+Math.cos(a)*r,z=igor.position.z+Math.sin(a)*r;if(walkable(x,z)&&Math.hypot(x,z+3)<6){IG.target=new V3(x,0,z);IG.arrive=null;break}}}}
  igPlane.position.y=.02+(moving?Math.abs(Math.sin(IG.walk))*.16:Math.sin(t*2)*.03);
@@ -2454,7 +2472,7 @@ const photoN=()=>Object.keys(PH()).filter(k=>SPECIES[k]).length;
 const isShown=o=>{for(let q=o;q;q=q.parent){if(!q.visible)return false;if(q===scene)return true}return false};
 
 /* ---------- levels 9 to 16 ---------- */
-LVX.push(1700,2200,2700,3200,3700,4200,4700,5200);
+LVX.push(1700,2300,3000,3800,4700,5700,6800,8000); // the step keeps growing: +500, +600, +700…
 LVNEW.push(['Level 9: well done!','Livello 9: bravissimi!'],['Level 10!','Livello 10!'],['Level 11!','Livello 11!'],['Level 12: the firefly forest!','Livello 12: il bosco delle lucciole!'],['Level 13!','Livello 13!'],['Level 14!','Livello 14!'],['Level 15!','Livello 15!'],['Level 16: the ice island!','Livello 16: l’isola di ghiaccio!']);
 
 /* ---------- the firefly forest (level 12) ---------- */
@@ -2702,12 +2720,12 @@ updaters.push(()=>{const own=camOwned();camB.hidden=!own||where!=='out';if(CAM_O
 // buying the camera: a little table in the prize shop
 function camBuy(){if(VISIT)return;const U=FUN();if(U.cam){say(tt('You already have the camera: 📷 next to the vehicles!','Hai già la macchina fotografica: 📷 accanto ai mezzi!'),2.6);return}
  if(!pay({t:CAMCOST}))return say(NEED({t:CAMCOST}),2.6);U.cam=1;fmDirty=true;save();snd('buy');bubbleQ.length=0;bubbleT=0;say(tt('A camera! Tap 📷 (next to the vehicles) and photograph the animals: each new one goes into the photo board.','Una macchina fotografica! Tocca 📷 (accanto ai mezzi) e fotografa gli animali: ogni animale nuovo finisce nella bacheca delle foto.'),5)}
-setTimeout(()=>{const Rm=ROOMS.prizes;if(!Rm)return;const g=Rm.g,B0=BUILD;BUILD='prizes';const tb=new THREE.Group();tb.position.set(-5.6,0,3);g.add(tb);
+setTimeout(()=>{const Rm=ROOMS.prizes;if(!Rm)return;const g=Rm.g,B0=BUILD;BUILD='prizes';const tb=new THREE.Group();tb.position.set(7.15,0,-.7);tb.rotation.y=-Math.PI/2;g.add(tb);
  const top=new THREE.Mesh(new THREE.BoxGeometry(1.2,.08,.8),lam('#8a5f3c'));top.position.y=.9;tb.add(top);for(const[x,z]of[[-.5,-.3],[.5,-.3],[-.5,.3],[.5,.3]]){const lg=new THREE.Mesh(new THREE.BoxGeometry(.08,.9,.08),lam('#6b4a2e'));lg.position.set(x,.45,z);tb.add(lg)}
  const cam=new THREE.Group(),bd=new THREE.Mesh(new THREE.BoxGeometry(.5,.32,.22),lam('#2b2b2b'));cam.add(bd);const ln=new THREE.Mesh(new THREE.CylinderGeometry(.11,.12,.14,16),lam('#4a4a4a'));ln.rotation.x=Math.PI/2;ln.position.z=.16;cam.add(ln);const gl=new THREE.Mesh(new THREE.CircleGeometry(.08,16),lam('#6fb6e6'));gl.position.z=.235;cam.add(gl);
- const fl=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,.1),lam('#f2c230'));fl.position.set(.15,.19,0);cam.add(fl);cam.position.y=1.12;cam.rotation.y=.5;tb.add(cam);Rm.blocks.push({x:-5.6,z:3,r:.8});
- const go=()=>walkIn(new V3(-5.6,0,3.9),()=>{chips(new V3(-5.6,1.9,3),()=>FUN().cam?[{t:'📷 ✓ '+tt('Yours!','È tua!'),fn:()=>false}]:[{t:`📷 ${tt('Camera','Macchina fotografica')} ${cst({t:CAMCOST})}`,main:pocket()>=CAMCOST,fn:()=>{camBuy();return false}}],'cambuy')});
- hit(tb,.8,go,'shop-cam',1);const L=label(['Camera','Macchina fotografica'],'',new V3(-5.6,1.75,3),go,0);L.el.classList.add('plot');updaters.push(()=>{const s=FUN().cam?'✓':`${CAMCOST} ${tt('ants','formiche')}`,h=`📷 ${N(['Camera','Macchina fotografica'])}<small>${s}</small>`;if(L.el.innerHTML!==h)L.el.innerHTML=h});BUILD=B0},0);
+ const fl=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,.1),lam('#f2c230'));fl.position.set(.15,.19,0);cam.add(fl);cam.position.y=1.12;cam.rotation.y=.5;tb.add(cam);Rm.blocks.push({x:7.15,z:-.7,r:.75});
+ const go=()=>walkIn(new V3(5.95,0,-.7),()=>{chips(new V3(7.15,1.9,-.7),()=>FUN().cam?[{t:'📷 ✓ '+tt('Yours!','È tua!'),fn:()=>false}]:[{t:`📷 ${tt('Camera','Macchina fotografica')} ${cst({t:CAMCOST})}`,main:pocket()>=CAMCOST,fn:()=>{camBuy();return false}}],'cambuy')});
+ hit(tb,.8,go,'shop-cam',1);const L=label(['Camera','Macchina fotografica'],'',new V3(7.15,1.75,-.7),go,0);L.el.classList.add('plot');updaters.push(()=>{const s=FUN().cam?'✓':`${CAMCOST} ${tt('ants','formiche')}`,h=`📷 ${N(['Camera','Macchina fotografica'])}<small>${s}</small>`;if(L.el.innerHTML!==h)L.el.innerHTML=h});BUILD=B0},0);
 
 /* ---------- the photo board (a building) and the animal choir ---------- */
 BLD.phot={N:['Photo board','Bacheca delle foto'],what:['A board for the photos of the animals you meet.','Una bacheca per le foto degli animali che incontri.'],up:[null,{lv:1,cost:{t:10},min:8,gives:['room for all the animals','posto per tutti gli animali']}]};
@@ -2898,7 +2916,7 @@ function vehCopies(t,dt){const F=FM();for(const k of VKEYS){const n=vehN(k);for(
   else{o.g.position.copy(parkOf(k,j));o.g.position.y=VEH[k].kind==='water'?-.5+Math.sin(t*1.2+j)*.04:0;o.g.rotation.y=VANG[k]!=null?VANG[k]:-.4}for(const s2 of o.spin)s2.o.rotation[s2.ax]+=dt*s2.v*(fl?1:0)}}}
 
 /* ---------- the prize shop: walk in, every vehicle on its own little stand ---------- */
-{const Rm=room('prizes',{w:13.5,d:8,floor:'#b98f62',floorLine:'#7a5a3a',wall:'#f6ead2',wall2:'#f3dcc9',motif:'rgba(224,70,60,.16)',wain:'#a8463c',wainD:'#8f3a31',trim:'#5a2a22'}),g=Rm.g;BUILD='prizes';
+{const Rm=room('prizes',{w:16,d:8,floor:'#b98f62',floorLine:'#7a5a3a',wall:'#f6ead2',wall2:'#f3dcc9',motif:'rgba(224,70,60,.16)',wain:'#a8463c',wainD:'#8f3a31',trim:'#5a2a22'}),g=Rm.g;BUILD='prizes';
  const sc=document.createElement('canvas');sc.width=512;sc.height=96;const scD=()=>{const q=sc.getContext('2d');q.fillStyle='#2b2018';q.fillRect(0,0,512,96);q.fillStyle='#f6d34a';q.font='600 54px Fredoka, sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(tt('★ PRIZES ★','★ PREMI ★'),256,52)};scD();
  const scT=new THREE.CanvasTexture(sc);SIGNS.push(()=>{scD();scT.needsUpdate=true});const sign=new THREE.Mesh(new THREE.PlaneGeometry(3.2,.6),new THREE.MeshBasicMaterial({map:scT}));sign.position.set(0,2.25,-3.83);g.add(sign);
  {const st=document.createElement('canvas');st.width=256;st.height=32;const q=st.getContext('2d');for(let k=0;k<16;k++){q.fillStyle=k%2?'#ffffff':'#e0463c';q.fillRect(k*16,0,16,32)}const aw=new THREE.Mesh(new THREE.BoxGeometry(11,.1,.7),texM(new THREE.CanvasTexture(st)));aw.position.set(0,3.1,-3.75);aw.rotation.x=.35;g.add(aw)}
