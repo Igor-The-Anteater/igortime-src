@@ -446,6 +446,7 @@ function woodTex(base,line,w=256,h=256,n=8,vertical=false){const c=document.crea
   for(let q=0;q<2;q++){const a=Math.random()*(vertical?h:w);g.fillStyle=line;if(vertical)g.fillRect(o,a,w/n,1.5);else g.fillRect(a,o,1.5,h/n)}}
  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t}
 const texM=(t,o={})=>curve(new THREE.MeshLambertMaterial({map:t,...o}));
+let HOUSE=null;
 {const t=new THREE.Group();t.position.set(0,0,-7.1);PLACES.house={pos:new V3(0,0,-4.45),obj:t,open:()=>enterRoom('house'),name:'Igor’s house'};
  const W=4.4,D=3.6,H=2.2,a=.66,ov=.38;
  const plaster=lam('#e8dcc2'),plasterD=lam('#e3d4b6',{side:THREE.DoubleSide}),beamM=lam('#6a4630'),stone=lam('#8f8a80'),stoneD=lam('#77726a');
@@ -504,16 +505,17 @@ const texM=(t,o={})=>curve(new THREE.MeshLambertMaterial({map:t,...o}));
    const lf=new THREE.Mesh(new THREE.SphereGeometry(.08,6,5),lam('#4f8a4a'));lf.position.set(-.37+k*.135,-.44,.17);w.add(lf)}
   const wh=halo('#f1b46e',1.9,.26);wh.position.set(0,0,.3);w.add(wh)}
  windowAt(-1.35,1.35,D/2+.05,0);windowAt(1.35,1.35,D/2+.05,0);windowAt(W/2+.05,1.35,.3,Math.PI/2);windowAt(-W/2-.05,1.35,.3,-Math.PI/2);
+ HOUSE={t,n:t.children.length,ridgeY,G:null,smk:{x:1.15,y:ridgeY+.9,z:-.8,on:1}};
  // lights and smoke
  const pl=new THREE.PointLight('#f1b46e',1.5,8,2);pl.position.set(0,1.3,D/2+1);t.add(pl);
  const n=24,sm=[];for(let i=0;i<n;i++){const s=halo('#9aa6b2',.6,.0);s.material.blending=THREE.NormalBlending;t.add(s);sm.push({s,u:i/n})}
- updaters.push((tt,dt)=>{for(const o of sm){o.u=(o.u+dt*.06)%1;o.s.position.set(1.15+Math.sin(o.u*5+tt*.3)*.4*o.u+o.u*1.2,ridgeY+.9+o.u*3.2,-.8);const k=o.u;o.s.scale.setScalar(.5+k*1.6);o.s.material.opacity=.16*(1-k)*Math.min(1,k*6)}});
+ updaters.push((tt,dt)=>{for(const o of sm){o.u=(o.u+dt*.06)%1;const M0=HOUSE.smk;o.s.position.set(M0.x+Math.sin(o.u*5+tt*.3)*.4*o.u+o.u*1.2,M0.y+o.u*3.2,M0.z);const k=o.u;o.s.scale.setScalar(.5+k*1.6);o.s.material.opacity=M0.on?.16*(1-k)*Math.min(1,k*6):0}});
  // bushes and a stepping-stone path
  const bushM=[lam('#3f7a4c'),lam('#4b8a55'),lam('#36704a')];
  for(const[bx,bz,bs]of[[-2.75,1.95,.55],[2.75,1.95,.6],[-2.8,-.4,.5],[2.85,-.6,.55],[-1.9,2.3,.38],[1.95,2.3,.4]]){const b=new THREE.Mesh(new THREE.SphereGeometry(bs,14,10),bushM[Math.floor(rnd()*3)]);b.scale.y=.8;b.position.set(bx,bs*.6,bz);t.add(b);block(bx,-7.1+bz,bs*.9);
   for(let k=0;k<3;k++){const f=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),lam(flowerCols[Math.floor(rnd()*5)]));f.position.set(bx+(rnd()-.5)*bs,bs*.9+rnd()*.2,bz+bs*.6);t.add(f)}}
  for(let k=0;k<4;k++){const ps=new THREE.Mesh(new THREE.CylinderGeometry(.28,.3,.06,10),stone);ps.position.set((k%2?.12:-.12),.03,D/2+.95+k*.62);ps.scale.z=.8;t.add(ps)}
- blob(t,3,.9);scene.add(t);block(0,-7.1,2.38);hit(t,2.4,()=>goTo('house'),'house',1.3);glowObj(t,'out',0,-4.5,.35,9,.8);
+ blob(t,3,.9);scene.add(t);block(0,-7.1,2.38);hit(t,2.4,()=>goTo('house'),'house',1.3);HOUSE.G=glowObj(t,'out',0,-4.5,.35,9,.8);
  label(['Igor’s house','La casa di Igor'],['walk in the door','entra dalla porta'],new V3(0,5.3,-7.1),()=>goTo('house'));
  zone('out',0,-4.5,.75,()=>enterRoom('house'),'house door')}
 lantern(-1.55,-4.75);lantern(1.75,-4.6);
@@ -1777,7 +1779,7 @@ const bar=document.createElement('div');bar.id='bar';bar.hidden=true;document.bo
 function closeBar(){bar.hidden=true;barKind=null;document.documentElement.classList.remove('baropen')}
 function openBar(kind){barKind=kind;hideChips();hideHint();renderBar();bar.hidden=false;document.documentElement.classList.add('baropen')}
 function renderBar(){const F=FM(),lv=lvlOf(),n=F.fields.length;let L=[];
- if(barKind==='build'){if(n<MAXF)L.push(lv<n+1?{t:`🌱 ${tt('Field','Campo')} 🔒 ${tt('lv.','liv.')} ${n+1}`,why:tt(`Field ${n+1}: level ${n+1} first!`,`Campo ${n+1}: prima il livello ${n+1}!`)}:{t:`🌱 ${tt('Field','Campo')} ${cst(FCOST[n])}`,fn:()=>openBar('field')});
+ if(barKind==='build'){L.push({t:'🎨 '+tt('Igor’s house','Casa di Igor'),fn:()=>{closeBar();houseOpen()}});if(n<MAXF)L.push(lv<n+1?{t:`🌱 ${tt('Field','Campo')} 🔒 ${tt('lv.','liv.')} ${n+1}`,why:tt(`Field ${n+1}: level ${n+1} first!`,`Campo ${n+1}: prima il livello ${n+1}!`)}:{t:`🌱 ${tt('Field','Campo')} ${cst(FCOST[n])}`,fn:()=>openBar('field')});
   for(const k of BKEYS){if(k==='pen'||F.b[k]||F.pos[k])continue;const U=BLD[k].up[1];L.push(lv<U.lv?{t:`${N(BLD[k].N)} 🔒 ${tt('lv.','liv.')} ${U.lv}`,why:LVFIRST(U.lv)}:{t:`${N(BLD[k].N)} ${cst(U.cost)}`,fn:()=>{startPlace({k:'build',key:k});say(N(BLD[k].what),2.6)}})}}
  else if(barKind==='field'){for(const[k,s]of Object.entries(SPC))L.push(lv<s.lv?{t:`${N(s.N)} 🔒 ${tt('lv.','liv.')} ${s.lv}`,why:LVFIRST(s.lv)}:{t:`${N(s.N)} <small>${s.seeds}${ICS} → ${s.yield}${ICA}</small>`,fn:()=>{if(fieldOk(k))startPlace({k:'field',sp:k})}});L.push({t:'‹',fn:()=>openBar('build')})}
  else if(barKind==='veh'){for(const k of VKEYS){const V=VEH[k];L.push(F.veh[k]?{t:`${V.ic} ${N(V.N)} ✓`,fn:()=>{mount(k);closeBar()}}:{t:`${V.ic} ${N(V.N)} ${cst(dual({t:V.cost}))}`,fn:()=>{buyVeh(k)}})}L.push({t:'‹',fn:()=>openBar('build')});if(!bar.hidden||1)say(tt('Rewards: save up tofu ants!','Premi: risparmia formiche di tofu!'),2.4)}
@@ -3523,7 +3525,7 @@ sb.addEventListener('click',e=>{if(sheetKind!=='toys')return;const b=e.target.cl
 {const _bt=bldTap;bldTap=function(k){if(k!=='toys')return _bt(k);const F=FM(),bt=F.tasks.find(q=>q.k==='build'&&q.b==='toys');if(bt||PL||!F.b.toys)return _bt(k);
  if(VISIT){say(tt('The Toy Store: only its owner can shop here.','Il negozio dei giocattoli: qui compra solo chi abita l’isola.'),2.6);return}
  if(igor.position.distanceTo(spotOf('toys'))>5){IG.target=spotOf('toys').add(new V3(0,0,SPOTR.toys+1));IG.arrive=null;IG.manual=true}
- chips(spotOf('toys').add(new V3(0,2.6,0)),()=>[{t:'🧸 '+tt('Shop','Compra'),main:1,fn:()=>{toysSheet();return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'toys'});return false}}],'btoys');say(tt('So many things for the island!','Quante cose per l’isola!'),2)}}
+ chips(spotOf('toys').add(new V3(0,2.6,0)),()=>[{t:'🧸 '+tt('Shop','Compra'),main:1,fn:()=>{toysSheet();return false}},{t:'🎨 '+tt('Igor’s house','Casa di Igor'),fn:()=>{houseOpen();return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'toys'});return false}}],'btoys');say(tt('So many things for the island!','Quante cose per l’isola!'),2)}}
 
 /* --- the 3D decorations: each builder fills a group and returns its moving parts --- */
 const dM=c=>lam(c),dE=(c,i)=>lam(c,{emissive:c,emissiveIntensity:i});
@@ -3641,6 +3643,152 @@ updaters.push((t,dt)=>{for(const k in decoO)decoO[k].riders=0;
 // a shell that left the collection is silent in the melodies
 {const _mp=melPlay;melPlay=function(m,how){if(!m||!m.ev)return _mp(m,how);const U=FUN();const ev=m.ev.map(([t,id])=>[t,id]);const keep=ev.filter(([,id])=>(U.col[id]|0)>0);if(!keep.length){melStop();return}
  melStop();const t0=ev[0][0];keep.forEach(([t,id])=>PLAYT.push(setTimeout(()=>{if(how==='mar'){let f=shellF(id);while(f<262)f*=2;while(f>1050)f/=2;snd('marimba',f)}else shPlay(id,sheetKind==='shplay')},t-t0)))}}
+
+/* ================= 10 Nov 2026: Igor's house, made your own: parts, colours and whole styles. Try for free, pay to keep ================= */
+const HSTY={
+ cottage:{N:['Cottage','Cottage'],ic:'🏡',lv:1,t:0,c:{shape:'box',wall:'plaster',beams:1,wcol:'#e8dcc2',roof:'tiles',rcol:'#b4553f',win:'shutters',door:'round',dcol:'#5e8a6a',chim:'stone'}},
+ cabin:{N:['Log cabin','Baita'],ic:'🪵',lv:2,t:300,c:{shape:'box',wall:'wood',beams:0,wcol:'#8a5a3a',roof:'shingle',rcol:'#6b4a2e',win:'shutters',door:'square',dcol:'#6a4630',chim:'stone'}},
+ brick:{N:['Brick house','Casa di mattoni'],ic:'🧱',lv:2,t:300,c:{shape:'box',wall:'brick',beams:0,wcol:'#a8513c',roof:'tiles',rcol:'#7c3528',win:'arch',door:'square',dcol:'#2f4f6a',chim:'brick'}},
+ modern:{N:['Modern','Moderna'],ic:'🔲',lv:3,t:350,c:{shape:'box',wall:'smooth',beams:0,wcol:'#f2f2ee',roof:'flat',rcol:'#3d4148',win:'modern',door:'square',dcol:'#2b2b2e',chim:'pipe'}},
+ victorian:{N:['Victorian','Vittoriana'],ic:'🎩',lv:4,t:450,c:{shape:'box',wall:'wood',beams:0,wcol:'#b9a3d6',roof:'slate',rcol:'#4a4a5a',win:'bay',door:'double',dcol:'#7a2e3e',chim:'brick'}},
+ gothic:{N:['Gothic','Gotica'],ic:'🦇',lv:4,t:450,c:{shape:'box',wall:'stone',beams:0,wcol:'#8a8590',roof:'steep',rcol:'#3a3442',win:'gothic',door:'gothic',dcol:'#3b2a3e',chim:'stone'}},
+ mush:{N:['Mushroom house','Casa fungo'],ic:'🍄',lv:6,t:600,c:{shape:'mush',wall:'plaster',beams:0,wcol:'#f3ead8',roof:'tiles',rcol:'#d8402f',win:'round',door:'round',dcol:'#8a5a3a',chim:'none'}},
+ light:{N:['Lighthouse','Casa faro'],ic:'🗼',lv:8,t:800,c:{shape:'tower',wall:'plaster',beams:0,wcol:'#ffffff',roof:'tiles',rcol:'#d8402f',win:'round',door:'square',dcol:'#2f4f6a',chim:'none'}}};
+const HPART={
+ wall:{N:['Walls','Muri'],box:1,o:{plaster:[['Plaster','Intonaco'],0],brick:[['Bricks','Mattoni'],80],wood:[['Wood','Legno'],70],stone:[['Stone','Pietra'],90],smooth:[['Smooth','Liscio'],60]}},
+ roof:{N:['Roof','Tetto'],box:1,o:{tiles:[['Tiles','Tegole'],0],slate:[['Slate','Ardesia'],80],shingle:[['Wood shingles','Scandole'],60],thatch:[['Thatch','Paglia'],60],flat:[['Flat','Piatto'],70],steep:[['Steep','Aguzzo'],90]}},
+ win:{N:['Windows','Finestre'],o:{shutters:[['Shutters','Con le persiane'],0],round:[['Round','Tonde'],40],arch:[['Arched','Ad arco'],50],gothic:[['Gothic','Gotiche'],70],bay:[['Bay','Bovindo'],90],modern:[['Big panes','Vetrate'],80]}},
+ door:{N:['Door','Porta'],o:{round:[['Round top','Tonda'],0],square:[['Square','Squadrata'],30],gothic:[['Pointed','A sesto acuto'],50],double:[['Double','Doppia'],60]}},
+ chim:{N:['Chimney','Comignolo'],box:1,o:{stone:[['Stone','Pietra'],0],brick:[['Bricks','Mattoni'],30],crooked:[['Crooked','Storto'],25],pipe:[['Metal pipe','Tubo'],35],none:[['None','Nessuno'],0]}}};
+const HCOL={wcol:{N:['Walls','Muri'],L:['#e8dcc2','#f2f2ee','#f6d38c','#f4c2d6','#b9d6ea','#bfe3ad','#b9a3d6','#a8513c','#8a5a3a','#8a8590']},rcol:{N:['Roof','Tetto'],L:['#b4553f','#7c3528','#d8402f','#4a4a5a','#3a3442','#6b4a2e','#3d6b8a','#4f7f46','#c98a2a','#e9e2d0']},dcol:{N:['Door','Porta'],L:['#5e8a6a','#2f4f6a','#7a2e3e','#2b2b2e','#6a4630','#8a5a3a','#e0a800','#e88fb0','#4fb7a0','#ffffff']}};
+const HCOLT=15;
+const HDEF=()=>({...HSTY.cottage.c,st:'cottage'});
+function HSV(){const F=FM();F.house=F.house||{c:HDEF(),own:[]};return F.house}
+const hOwn=k=>{if(k==='st:cottage'||k==='chim:none')return true;const m=k.match(/^(\w+):(.+)$/);if(!m)return false;if(HSTY.cottage.c[m[1]]===m[2])return true;const H=HSV();if(H.own.includes(k))return true;
+ return m[1]!=='st'&&Object.keys(HSTY).some(s=>H.own.includes('st:'+s)&&HSTY[s].c[m[1]]===m[2])};
+const hPrice=k=>{const[p,v]=k.split(/:(.+)/);if(p==='st')return HSTY[v].t;if(HCOL[p])return HCOLT;const P=HPART[p];return P&&P.o[v]?P.o[v][1]:0};
+
+/* --- materials and textures (1 m tiles, tinted) --- */
+const hTexC={};
+function hTex(kind,col){const key=kind+col;if(hTexC[key])return hTexC[key];const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');const base=new THREE.Color(col),dk=base.clone().multiplyScalar(.72),lt=base.clone().lerp(new THREE.Color('#ffffff'),.12);
+ g.fillStyle='#'+base.getHexString();g.fillRect(0,0,128,128);
+ if(kind==='brick'){g.fillStyle='#'+dk.clone().lerp(new THREE.Color('#e9e2d0'),.55).getHexString();for(let r=0;r<8;r++){g.fillRect(0,r*16,128,2);const o=r%2?0:32;for(let x=o;x<=128;x+=64)g.fillRect(x,r*16,2,16)}
+  for(let r=0;r<8;r++)for(let x=(r%2?0:32);x<128;x+=64){g.fillStyle='#'+(Math.random()<.5?dk:lt).getHexString();g.globalAlpha=.25;g.fillRect(x+3,r*16+3,58,11);g.globalAlpha=1}}
+ else if(kind==='wood'){for(let r=0;r<6;r++){g.fillStyle='#'+dk.getHexString();g.fillRect(0,r*21.3,128,3);g.globalAlpha=.18;g.fillStyle='#'+lt.getHexString();g.fillRect(0,r*21.3+5,128,5);g.globalAlpha=1}}
+ else if(kind==='stone'){g.strokeStyle='#'+dk.getHexString();g.lineWidth=3;for(let r=0;r<4;r++){let x=r%2?-14:0;while(x<128){const w=26+((x*7+r*13)%20);g.globalAlpha=.25;g.fillStyle='#'+((x+r)%3?lt:dk).getHexString();g.fillRect(x+2,r*32+2,w-4,28);g.globalAlpha=1;g.strokeRect(x+1.5,r*32+1.5,w-3,29);x+=w}}}
+ else if(kind==='slate'){g.fillStyle='#'+dk.getHexString();for(let r=0;r<6;r++){g.fillRect(0,r*21.3,128,2);for(let x=(r%2?0:16);x<128;x+=32)g.fillRect(x,r*21.3,2,21)}}
+ const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;hTexC[key]=t;return t}
+function hMat(kind,col,w,h){if(kind==='plaster'||kind==='smooth')return lam(col);const t=hTex(kind,col).clone();t.needsUpdate=true;t.repeat.set(w*(kind==='brick'?.9:kind==='stone'?.8:1),h*(kind==='wood'?1.2:1));return texM(t)}
+function hRand(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* --- the parts --- */
+function hWin(type,c,glass,frameM,shut,R){const w=new THREE.Group();
+ if(type==='shutters'){const pane=new THREE.Mesh(new THREE.PlaneGeometry(.78,.72),glass);w.add(pane);const fr=new THREE.Mesh(new THREE.BoxGeometry(.92,.86,.06),frameM);fr.position.z=-.035;w.add(fr);
+  for(const r of[0,1]){const m=new THREE.Mesh(new THREE.BoxGeometry(r?.05:.8,r?.74:.05,.04),frameM);m.position.z=.02;w.add(m)}
+  for(const sx of[-1,1]){const st=new THREE.Mesh(new THREE.RoundedBoxGeometry(.32,.86,.05,1,.02),shut);st.position.set(sx*.64,0,0);st.rotation.y=sx*.25;w.add(st)}
+  const bx=new THREE.Mesh(new THREE.RoundedBoxGeometry(.98,.2,.24,1,.04),lam('#8a5a3a'));bx.position.set(0,-.53,.12);w.add(bx);for(let k=0;k<7;k++){const f=new THREE.Mesh(new THREE.SphereGeometry(.07+R()*.03,8,6),lam(['#ff8ab6','#f6d34a','#ffffff','#b48ce6','#ff9e5e'][k%5]));f.position.set(-.4+k*.135,-.38,.12);w.add(f)}}
+ else if(type==='round'){const p=new THREE.Mesh(new THREE.CircleGeometry(.38,24),glass);w.add(p);const ring=new THREE.Mesh(new THREE.TorusGeometry(.4,.07,8,28),frameM);w.add(ring);for(const r of[0,Math.PI/2]){const m=new THREE.Mesh(new THREE.BoxGeometry(.78,.04,.03),frameM);m.rotation.z=r;m.position.z=.02;w.add(m)}}
+ else if(type==='arch'||type==='gothic'){const s=new THREE.Shape(),hw=.38,h=.5;s.moveTo(-hw,-.42);s.lineTo(hw,-.42);s.lineTo(hw,h-.42);if(type==='arch')s.absarc(0,h-.42,hw,0,Math.PI,false);else{s.quadraticCurveTo(hw,h-.42+.35,0,h-.42+.55);s.quadraticCurveTo(-hw,h-.42+.35,-hw,h-.42)}s.lineTo(-hw,-.42);
+  const p=new THREE.Mesh(new THREE.ShapeGeometry(s),glass);p.position.z=.01;w.add(p);const fr=new THREE.Mesh(new THREE.ExtrudeGeometry(s,{depth:.05,bevelEnabled:true,bevelSize:.07,bevelThickness:.02,bevelSegments:1}),frameM);fr.position.z=-.06;w.add(fr);
+  const m=new THREE.Mesh(new THREE.BoxGeometry(.04,type==='gothic'?1:.9,.03),frameM);m.position.set(0,type==='gothic'?.08:.04,.03);w.add(m);const sill=new THREE.Mesh(new THREE.BoxGeometry(.95,.08,.18),frameM);sill.position.set(0,-.47,.08);w.add(sill)}
+ else if(type==='bay'){const b=new THREE.Group();for(const[x,ry]of[[-.48,.6],[0,0],[.48,-.6]]){const p=new THREE.Mesh(new THREE.PlaneGeometry(.42,.78),glass);p.position.set(x,0,ry?.17:.3);p.rotation.y=ry;b.add(p);const f=new THREE.Mesh(new THREE.BoxGeometry(.06,.86,.06),frameM);f.position.set(x+(x?(x>0?.21:-.21):.21),0,ry?.2:.32);b.add(f)}
+  const top=new THREE.Mesh(new THREE.CylinderGeometry(.78,.7,.14,6,1,false,0,Math.PI),c.roofM||frameM);top.rotation.y=-Math.PI/2;top.position.set(0,.5,0);b.add(top);const bot=top.clone();bot.position.y=-.5;b.add(bot);w.add(b)}
+ else if(type==='modern'){const p=new THREE.Mesh(new THREE.PlaneGeometry(1.15,1),glass);w.add(p);const fr=new THREE.Mesh(new THREE.BoxGeometry(1.22,1.07,.04),lam('#2b2b2e'));fr.position.z=-.03;w.add(fr);const m=new THREE.Mesh(new THREE.BoxGeometry(.03,1,.03),lam('#2b2b2e'));m.position.set(.2,0,.02);w.add(m)}
+ const wh=halo('#f1b46e',1.9,.22);wh.position.set(0,0,.3);w.add(wh);return w}
+function hDoor(type,dM,frameM,glass,stoneM){const dg=new THREE.Group(),dW=type==='double'?1.15:.92,dH=1.45;
+ const shape=(hw,hh,ex)=>{const s=new THREE.Shape();s.moveTo(-hw,0);s.lineTo(hw,0);if(type==='round'){s.lineTo(hw,hh-hw);s.absarc(0,hh-hw,hw,0,Math.PI,false)}else if(type==='gothic'){s.lineTo(hw,hh-.45-ex);s.quadraticCurveTo(hw,hh-.1,0,hh+.15+ex*.5);s.quadraticCurveTo(-hw,hh-.1,-hw,hh-.45-ex)}else{s.lineTo(hw,hh);s.lineTo(-hw,hh)}s.lineTo(-hw,0);return s};
+ const dm=new THREE.Mesh(new THREE.ExtrudeGeometry(shape(dW/2,dH,0),{depth:.08,bevelEnabled:false}),dM);dg.add(dm);
+ const fr=shape(dW/2+.12,dH+.1,.08);fr.holes.push(shape(dW/2,dH,0));const fm=new THREE.Mesh(new THREE.ExtrudeGeometry(fr,{depth:.12,bevelEnabled:false}),frameM);fm.position.z=-.02;dg.add(fm);
+ if(type==='double'){const ln=new THREE.Mesh(new THREE.BoxGeometry(.03,dH-.05,.02),frameM);ln.position.set(0,dH/2,.09);dg.add(ln);for(const x of[-.12,.12]){const k=new THREE.Mesh(new THREE.SphereGeometry(.045,10,8),lam('#e2b84f'));k.position.set(x,.72,.12);dg.add(k)}
+  const tr=new THREE.Mesh(new THREE.PlaneGeometry(dW,.28),glass);tr.position.set(0,dH+.28,.09);dg.add(tr);const tf=new THREE.Mesh(new THREE.BoxGeometry(dW+.24,.07,.1),frameM);tf.position.set(0,dH+.46,.06);dg.add(tf)}
+ else{const k=new THREE.Mesh(new THREE.SphereGeometry(.055,12,10),lam('#e2b84f'));k.position.set(.3,.68,.12);dg.add(k);const dw=new THREE.Mesh(type==='square'?new THREE.PlaneGeometry(.4,.3):new THREE.CircleGeometry(.17,20),glass);dw.position.set(0,dH-.42,.09);dg.add(dw)}
+ const step=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.5,.16,.55,2,.05),stoneM);step.position.set(0,-.34,.3);dg.add(step);return dg}
+function hChim(type,y0,stoneM){const g=new THREE.Group();let top=1.4;
+ if(type==='stone'||type==='brick'){const m=type==='brick'?hMat('brick','#a8513c',.6,1.5):stoneM;const ch=new THREE.Mesh(new THREE.BoxGeometry(.55,1.5,.55),m);ch.position.y=.0;g.add(ch);const cap=new THREE.Mesh(new THREE.BoxGeometry(.7,.12,.7),lam('#77726a'));cap.position.y=.78;g.add(cap);top=.9}
+ else if(type==='crooked'){const a=new THREE.Mesh(new THREE.BoxGeometry(.5,1.1,.5),stoneM);a.rotation.z=.14;g.add(a);const b=new THREE.Mesh(new THREE.BoxGeometry(.45,.6,.45),stoneM);b.position.set(-.12,.78,0);b.rotation.z=-.22;g.add(b);const cap=new THREE.Mesh(new THREE.BoxGeometry(.6,.1,.6),lam('#77726a'));cap.position.set(-.2,1.1,0);cap.rotation.z=-.22;g.add(cap);top=1.2}
+ else if(type==='pipe'){const p=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,1.6,12),lam('#9aa3a8'));g.add(p);const c=new THREE.Mesh(new THREE.ConeGeometry(.24,.2,12),lam('#6f777c'));c.position.y=.95;g.add(c);top=1}
+ else{g.visible=false;top=-99}g.position.set(1.15,y0,-.8);return{g,top:y0+top}}
+function hRoofRows(g,L,RD,c,kind,R){const col=new THREE.Color(c.rcol),A=lam('#'+col.getHexString()),B=lam('#'+col.clone().multiplyScalar(.85).getHexString());
+ const slab=new THREE.Mesh(new THREE.BoxGeometry(L,.12,RD),lam('#'+col.clone().multiplyScalar(.7).getHexString()));g.add(slab);
+ if(kind==='thatch'){const th=new THREE.Mesh(new THREE.RoundedBoxGeometry(L+.1,.38,RD+.1,3,.15),lam('#'+new THREE.Color(c.rcol).lerp(new THREE.Color('#d9b45a'),.6).getHexString()));th.position.y=.2;g.add(th);for(let r=0;r<5;r++){const l=new THREE.Mesh(new THREE.BoxGeometry(.04,.06,RD+.12),lam('#a8843a'));l.position.set(-L/2+(r+.5)*L/5,.4,0);g.add(l)}return}
+ const n=kind==='slate'?9:7,th=kind==='slate'?.06:.1;for(let r=0;r<n;r++){const row=new THREE.Group(),cols=kind==='shingle'?11:9;for(let q=0;q<cols;q++){const tl=new THREE.Mesh(new THREE.RoundedBoxGeometry(L/n+.12,th,RD/cols+.01,1,th*.35),(q+r)%3?A:B);tl.position.set(0,0,-RD/2+(q+.5)*RD/cols);tl.rotation.x=(R()-.5)*.04;row.add(tl)}
+  row.position.set(-L/2+(r+.5)*L/n,.09+(r%2)*.02,0);row.rotation.z=-.05;g.add(row)}}
+function hBuild(c){const R=hRand(4242),g=new THREE.Group();const W=4.4,D=3.6,H=2.2;
+ const frameM=lam(c.shape==='box'&&c.wall==='smooth'?'#2b2b2e':'#efe4d0'),glass=glowM('#f6c27a',.75),shut=lam(new THREE.Color(c.dcol).lerp(new THREE.Color('#ffffff'),.1).getStyle()),dM=lam(c.dcol),stoneM=lam('#8f8a80'),beamM=lam('#6a4630');
+ let ridgeY=H,chimInfo=null;const winsAt=[];let doorZ=D/2+.02;
+ if(c.shape==='box'){const base=new THREE.Mesh(new THREE.RoundedBoxGeometry(W+.3,.42,D+.3,2,.08),stoneM);base.position.y=.21;g.add(base);
+  const wh=H-.4;for(const[w,x,z,ry]of[[W,0,D/2,0],[W,0,-D/2,Math.PI],[D,W/2,0,Math.PI/2],[D,-W/2,0,-Math.PI/2]]){const p=new THREE.Mesh(new THREE.PlaneGeometry(w,wh),hMat(c.wall,c.wcol,w,wh));p.position.set(x,.4+wh/2,z);p.rotation.y=ry;g.add(p)}
+  const top=new THREE.Mesh(new THREE.BoxGeometry(W,.05,D),lam(c.wcol));top.position.y=H;g.add(top);
+  if(c.beams){for(const sx of[-1,1])for(const sz of[-1,1]){const pst=new THREE.Mesh(new THREE.BoxGeometry(.2,wh,.2),beamM);pst.position.set(sx*(W/2-.04),.4+wh/2,sz*(D/2-.04));g.add(pst)}for(const sz of[-1,1]){const bm=new THREE.Mesh(new THREE.BoxGeometry(W+.12,.18,.16),beamM);bm.position.set(0,H-.05,sz*(D/2+.01));g.add(bm)}}
+  else if(c.wall==='wood'){for(const sx of[-1,1])for(const sz of[-1,1]){const pst=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,wh+.1,8),lam(new THREE.Color(c.wcol).multiplyScalar(.75).getStyle()));pst.position.set(sx*(W/2),.4+wh/2,sz*(D/2));g.add(pst)}}
+  if(c.roof==='flat'){const sl=new THREE.Mesh(new THREE.BoxGeometry(W+.5,.22,D+.5),lam(c.rcol));sl.position.y=H+.11;g.add(sl);const pp=new THREE.Mesh(new THREE.BoxGeometry(W+.5,.18,.12),lam(c.rcol));for(const z of[-1,1]){const q=pp.clone();q.position.set(0,H+.3,z*(D/2+.19));g.add(q)}
+   const pl=new THREE.Mesh(new THREE.BoxGeometry(1.4,.6,1.2),lam(c.wcol));pl.position.set(-.9,H+.52,-.6);g.add(pl);ridgeY=H+.25}
+  else{const a=c.roof==='steep'?.98:.66,ov=.38,gh=(W/2)*Math.tan(a);const sh=new THREE.Shape();sh.moveTo(-W/2,0);sh.lineTo(W/2,0);sh.lineTo(0,gh);sh.closePath();
+   for(const sz of[-1,1]){const gm=new THREE.Mesh(new THREE.ShapeGeometry(sh),hMat(c.wall,c.wcol,1,1));gm.material.side=THREE.DoubleSide;gm.position.set(0,H,sz*D/2);g.add(gm);if(c.beams){const kp=new THREE.Mesh(new THREE.BoxGeometry(.14,gh-.1,.1),beamM);kp.position.set(0,H+(gh-.1)/2,sz*(D/2+.03));g.add(kp)}}
+   {const rw=hWin(c.win==='modern'||c.win==='bay'||c.win==='shutters'?'round':c.win,c,glass,frameM,shut,R);rw.scale.setScalar(.75);rw.position.set(0,H+gh*.42,D/2+.06);g.add(rw)}
+   const L=(W/2+ov)/Math.cos(a),RD=D+.7;ridgeY=H+gh;const kind=c.roof==='steep'?'slate':c.roof;
+   for(const sgn of[-1,1]){const rg=new THREE.Group();hRoofRows(rg,L,RD,c,kind,R);rg.rotation.z=-sgn*a;rg.position.set(sgn*(W/2+ov)/2,ridgeY-((W/2+ov)/2)*Math.tan(a)+.08,0);if(sgn<0)rg.scale.x=-1;g.add(rg)}
+   const rc=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,RD+.06,10),lam(new THREE.Color(c.rcol).multiplyScalar(.7).getStyle()));rc.rotation.x=Math.PI/2;rc.position.set(0,ridgeY+.16,0);g.add(rc);
+   if(c.roof==='steep'){for(const sx of[-1,1])for(const sz of[-1,1]){const sp=new THREE.Mesh(new THREE.ConeGeometry(.12,.7,6),lam(c.rcol));sp.position.set(sx*(W/2+.05),H+.35,sz*(D/2+.05));g.add(sp)}const fin=new THREE.Mesh(new THREE.ConeGeometry(.1,.6,6),lam('#2b2b2e'));fin.position.set(0,ridgeY+.55,D/2+.3);g.add(fin)}}
+  chimInfo=hChim(c.chim,c.roof==='flat'?H+.8:ridgeY-.2,stoneM);g.add(chimInfo.g);
+  const wy=1.35;winsAt.push([-1.35,wy,D/2+.05,0],[1.35,wy,D/2+.05,0],[W/2+.05,wy,.3,Math.PI/2],[-W/2-.05,wy,.3,-Math.PI/2])}
+ else if(c.shape==='mush'){const r=1.95,h=2.5;const st=new THREE.Mesh(new THREE.CylinderGeometry(r*.92,r,h,28),lam(c.wcol));st.position.y=h/2;g.add(st);
+  const cap=new THREE.Mesh(new THREE.SphereGeometry(2.9,32,16,0,Math.PI*2,0,Math.PI/2),lam(c.rcol));cap.scale.y=.68;cap.position.y=h-.1;g.add(cap);const und=new THREE.Mesh(new THREE.CircleGeometry(2.9,32).rotateX(Math.PI/2),lam(new THREE.Color(c.wcol).multiplyScalar(.85).getStyle()));und.position.y=h-.1;g.add(und);
+  for(let k=0;k<14;k++){const th=R()*Math.PI*2,ph=.25+R()*1.1,sp=new THREE.Mesh(new THREE.SphereGeometry(.18+R()*.15,10,6),lam('#ffffff'));sp.scale.y=.35;const x=Math.cos(th)*Math.sin(ph)*2.9,y=Math.cos(ph)*2.9*.68,z=Math.sin(th)*Math.sin(ph)*2.9;sp.position.set(x*1.01,h-.1+y*1.01,z*1.01);sp.lookAt(0,h-.1,0);g.add(sp)}
+  ridgeY=h+1.9;doorZ=r+.02;for(const[a,y]of[[.9,1.35],[-.9,1.35],[Math.PI/2,1.3],[-Math.PI/2,1.3]])winsAt.push([Math.sin(a)*(r-.02),y,Math.cos(a)*(r-.02),a])}
+ else if(c.shape==='tower'){const r=1.75,h=4.6,col2=c.rcol;for(let k=0;k<4;k++){const s=new THREE.Mesh(new THREE.CylinderGeometry(r*(1-.06*(k+1)/4),r*(1-.06*k/4),h/4,28),lam(k%2?col2:c.wcol));s.position.y=h/8+k*h/4;g.add(s)}
+  const gal=new THREE.Mesh(new THREE.CylinderGeometry(r*.95+.3,r*.95+.3,.12,28),lam('#3d4148'));gal.position.y=h+.06;g.add(gal);for(let k=0;k<16;k++){const a=k/16*Math.PI*2,p=new THREE.Mesh(new THREE.BoxGeometry(.04,.5,.04),lam('#3d4148'));p.position.set(Math.cos(a)*(r*.95+.25),h+.37,Math.sin(a)*(r*.95+.25));g.add(p)}
+  const rl=new THREE.Mesh(new THREE.TorusGeometry(r*.95+.25,.03,6,32),lam('#3d4148'));rl.rotation.x=Math.PI/2;rl.position.y=h+.62;g.add(rl);
+  const lamp=new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,1,16,1,true),glowM('#fff1c4',.9));lamp.position.y=h+.62;g.add(lamp);g.userData.lamp=lamp;const cone=new THREE.Mesh(new THREE.ConeGeometry(1.05,.9,16),lam(col2));cone.position.y=h+1.55;g.add(cone);
+  const beam=new THREE.Mesh(new THREE.ConeGeometry(1.4,9,16,1,true),new THREE.MeshBasicMaterial({color:'#fff6cf',transparent:true,opacity:.12,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));beam.rotation.z=Math.PI/2;beam.position.set(4.6,0,0);const bg=new THREE.Group();bg.position.y=h+.62;bg.add(beam);g.add(bg);g.userData.beam=bg;
+  const hut=new THREE.Mesh(new THREE.CylinderGeometry(r+.35,r+.4,.4,28),stoneM);hut.position.y=.2;g.add(hut);ridgeY=h+2;doorZ=r+.02;
+  for(const[a,y]of[[.75,1.4],[-.75,1.4],[0,2.9],[Math.PI/2,2.2],[-Math.PI/2,2.2],[2.4,3.4]])winsAt.push([Math.sin(a)*(r-.08),y,Math.cos(a)*(r-.08),a])}
+ for(const[x,y,z,ry]of winsAt){const w=hWin(c.win,c,glass,frameM,shut,R);w.position.set(x,y,z);w.rotation.y=ry;if(c.shape!=='box')w.scale.setScalar(.85);g.add(w)}
+ const dg=hDoor(c.door,dM,frameM,glass,stoneM);dg.position.set(0,c.shape==='box'?.42:.12,doorZ);g.add(dg);
+ g.userData.smoke=chimInfo&&chimInfo.top>0?{x:1.15,y:chimInfo.top,z:-.8}:null;return g}
+
+/* --- swap the house: the original cottage stays as it was; any change builds a new house --- */
+let hCur=null,hKey='';
+function hApply(c){const key=JSON.stringify(c);if(key===hKey)return;hKey=key;const T0=HOUSE.t,def=JSON.stringify(c)===JSON.stringify(HDEF());
+ if(hCur){T0.remove(hCur);hCur=null}T0.children.slice(0,HOUSE.n).forEach(o=>o.visible=def);
+ if(!def){hCur=hBuild(c);T0.add(hCur);const sm=hCur.userData.smoke;HOUSE.smk=sm?{x:sm.x,y:sm.y+.15,z:sm.z,on:1}:{on:0}}else HOUSE.smk={x:1.15,y:HOUSE.ridgeY+.9,z:-.8,on:1};
+ const G=HOUSE.G;if(G){const ms=new Map();T0.traverse(o=>{if(!o.isMesh||!o.visible||o.material===hitMat||o.material===shadowMat)return;const arr=Array.isArray(o.material),L=arr?o.material:[o.material];const out=L.map(m=>{if(!m||!m.emissive)return m;if(!ms.has(m))ms.set(m,curve(m.clone()));return ms.get(m)});o.material=arr?out:out[0]});G.mats=[...ms.values()].map(m=>({m,e:m.emissive.clone().multiplyScalar(m.emissiveIntensity)}))}}
+updaters.push((t,dt)=>{if(!S.farm)return;const c=HPV||HSV().c;hApply(c);if(hCur&&hCur.userData.beam){const n=SKY.nk;hCur.userData.beam.visible=n>.3;hCur.userData.beam.rotation.y+=dt*.6;hCur.userData.lamp.material.emissiveIntensity=.4+n*.8}});
+
+/* --- the panel: tabs, options, live preview; pay to keep --- */
+let HPV=null,HTAB='st';
+const hp=document.createElement('div');hp.id='hcP';hp.hidden=true;document.body.appendChild(hp);
+{const st=document.createElement('style');st.textContent=`#hcP{position:fixed;z-index:7;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100vw - 16px));max-height:46vh;display:flex;flex-direction:column;background:rgba(30,24,20,.93);color:#f7ecd4;border:2px solid #f7ecd4;border-radius:16px;box-shadow:0 4px 0 #0006;font:500 14px Fredoka,sans-serif}
+#hcP[hidden]{display:none}#hcP button{text-transform:none;letter-spacing:0}#hcP .ht{display:flex;gap:4px;overflow-x:auto;padding:8px 8px 4px;scrollbar-width:none}#hcP .ht button{flex:none;border:2px solid #f7ecd466;background:none;color:#f7ecd4;border-radius:999px;padding:4px 10px;font:600 13px Fredoka,sans-serif;cursor:pointer}#hcP .ht button.on{background:#f7ecd4;color:#2b2018}
+#hcP .ho{flex:1;overflow-y:auto;padding:4px 8px 6px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}#hcP .ho button{border:2px solid #f7ecd455;background:rgba(255,255,255,.06);color:#f7ecd4;border-radius:12px;padding:6px 9px;font:500 13px Fredoka,sans-serif;cursor:pointer;text-align:left}#hcP .ho button.on{border-color:#f6d34a;background:rgba(246,211,74,.18)}#hcP .ho button[disabled]{opacity:.4}
+#hcP .ho button small{display:block;font-size:11px;opacity:.8}#hcP .ho .sw{width:34px;height:34px;padding:0;border-radius:50%}#hcP .ho .sw.on{box-shadow:0 0 0 3px #f6d34a}#hcP .ho .k{width:100%;font-size:12px;opacity:.75;margin-top:2px}
+#hcP .hf{display:flex;gap:8px;align-items:center;padding:6px 8px 8px;border-top:1px solid #f7ecd433}#hcP .hf span{flex:1;font-size:13px}#hcP .hf button{border:2px solid #2b2018;border-radius:12px;padding:7px 12px;font:600 14px Fredoka,sans-serif;cursor:pointer;background:#fff7e6;color:#2b2018}#hcP .hf button.m{background:#9be38a}#hcP .hf .cs{color:#f7ecd4}`;document.head.appendChild(st)}
+function hDiff(){const H=HSV(),P=HPV||H.c,keys=[];if(P.st&&P.st!==H.c.st&&!hOwn('st:'+P.st))keys.push('st:'+P.st);
+ for(const p of Object.keys(HPART)){if(P.shape!=='box'&&HPART[p].box)continue;const k=p+':'+P[p];if(P[p]!==H.c[p]&&!hOwn(k)&&!(P.st&&HSTY[P.st].c[p]===P[p]&&keys.includes('st:'+P.st)))keys.push(k)}
+ for(const p of Object.keys(HCOL)){const k=p+':'+P[p];if(P[p]!==H.c[p]&&!hOwn(k)&&!(P.st&&HSTY[P.st].c[p]===P[p]&&keys.includes('st:'+P.st)))keys.push(k)}return keys}
+function hCost(keys){const t=keys.reduce((a,k)=>a+hPrice(k),0);return t?{t,s:SEEDF(t)}:{}}
+function hRender(){const P=HPV,lv=lvlOf();const tabs=[['st',tt('Styles','Stili')],...Object.entries(HPART).map(([k,v])=>[k,N(v.N)]),['col',tt('Colours','Colori')]];
+ let o='';const pr=k=>hOwn(k)?'✓':`${hPrice(k)} ${ICA}`;
+ if(HTAB==='st')o=Object.entries(HSTY).map(([k,s])=>`<button type="button" data-hs="${k}" class="${P.st===k?'on':''}" ${lv<s.lv?'disabled':''}>${s.ic} ${N(s.N)}<small>${lv<s.lv?`🔒 ${tt('lv.','liv.')} ${s.lv}`:pr('st:'+k)}</small></button>`).join('');
+ else if(HTAB==='col')o=Object.entries(HCOL).map(([p,C])=>`<div class="k">${N(C.N)}</div>`+C.L.map(c=>`<button type="button" class="sw ${P[p]===c?'on':''}" data-hc="${p}" data-v="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')).join('');
+ else{const H0=HPART[HTAB];if(H0.box&&P.shape!=='box')o=`<div class="k">${tt('Not for this house: pick a box-shaped style.','Non per questa casa: scegli uno stile a casetta.')}</div>`;
+  else o=Object.entries(H0.o).map(([v,[n]])=>`<button type="button" data-hp="${HTAB}" data-v="${v}" class="${P[HTAB]===v?'on':''}">${N(n)}<small>${pr(HTAB+':'+v)}</small></button>`).join('')}
+ const keys=hDiff(),c=hCost(keys);
+ hp.innerHTML=`<div class="ht">${tabs.map(([k,n])=>`<button type="button" data-ht="${k}" class="${HTAB===k?'on':''}">${n}</button>`).join('')}</div><div class="ho">${o}</div>
+ <div class="hf"><span>${keys.length?`${tt('To keep it','Per tenerla')}: ${cst(c)}`:tt('Try anything: you only pay what you keep.','Prova quello che vuoi: paghi solo ciò che tieni.')}</span><button type="button" data-hx="1">${keys.length?'↺ '+tt('Undo','Annulla'):'✕'}</button>${keys.length?`<button type="button" class="m" data-hk="1">✓ ${tt('Keep','Tieni')}</button>`:''}</div>`}
+function houseOpen(){if(VISIT)return visitNo();if(where!=='out')exitRoom(true);closeSheet();hideChips();HPV={...HSV().c};HTAB='st';hRender();hp.hidden=false;
+ IG.target=new V3(0,0,-1.2);IG.arrive=()=>{CAM.yaw=0};IG.manual=false;CAM.yaw=0;say(tt('What shall we change? Try freely!','Cosa cambiamo? Prova pure!'),2.6)}
+function houseClose(){HPV=null;hp.hidden=true;hRender&&0}
+hp.addEventListener('pointerdown',e=>e.stopPropagation());
+hp.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();const d=b.dataset;
+ if(d.ht){HTAB=d.ht;hRender();return}
+ if(d.hs){const s=HSTY[d.hs];HPV={...s.c,st:d.hs};snd('pop');hRender();return}
+ if(d.hp){HPV={...HPV,[d.hp]:d.v};snd('pop');hRender();return}
+ if(d.hc){HPV={...HPV,[d.hc]:d.v};snd('pop');hRender();return}
+ if(d.hx){if(hDiff().length){HPV={...HSV().c};hRender();say(tt('Back as it was.','Tornata com’era.'),1.8)}else houseClose();return}
+ if(d.hk){const keys=hDiff(),c=hCost(keys);if(!pay(c))return say(NEED(c),2.8);const H=HSV();for(const k of keys)if(!H.own.includes(k))H.own.push(k);H.c={...HPV};fmDirty=true;save();hudFarm&&hudFarm();snd('build');
+  say(pick(tt(['The Igorlets did it in no time. Beautiful!','Ta-dah! A brand new house!'],['Gli Igorlets ci hanno messo un attimo. Bellissima!','Ta-dah! Una casa tutta nuova!'])),3);hRender();return}});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!hp.hidden)houseClose()});
 
 /* ================= sound (sound.js): nature around Igor, footsteps, the Igorlets ================= */
 function snd(n,a){if(window.IgorSound&&started)IgorSound.sfx(n,a)}
