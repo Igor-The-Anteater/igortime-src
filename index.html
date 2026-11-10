@@ -1127,14 +1127,18 @@ function rideOk(x,z){if(!RIDE)return null;const V=VEH[RIDE],r=Math.hypot(x,z*1.1
 function vehPaint(k){const o=VO[k];if(o)o.paint.color.set(FM().veh[k].c)}
 function riderOf(k,j=0){for(const[,o]of igObjs)if(o.act&&o.act.k==='ride'&&o.act.v===k&&(o.act.j||0)===j)return o;return null}
 const vehN=k=>{const v=FM().veh[k];return v?Math.max(1,v.n|0):0},vehMax=()=>Math.min(9,FM().igs.length+1);
-function parkOf(k,j){const P=VPARK[k].clone();if(!j)return P;const V=VEH[k];if(V.kind==='water'){const a=(VANG[k]||JET_A)+(j%2?1:-1)*Math.ceil(j/2)*.12;return wpos(a)}
+function vSpot(k){const F=S.farm,p=F&&F.vpos&&F.vpos[k];return p&&VEH[k].kind!=='water'?new V3(p.x,0,p.z):VPARK[k]}
+function parkOf(k,j){const P=(j?VPARK[k]:vSpot(k)).clone();if(!j)return P;const V=VEH[k];if(V.kind==='water'){const a=(VANG[k]||JET_A)+(j%2?1:-1)*Math.ceil(j/2)*.12;return wpos(a)}
  if(V.kind==='air')return P.add(new V3((k==='plane'?2.9:-2.5)*Math.ceil(j/2)*(j%2?1:.6),0,(j%2?0:-2.2)));return P.add(new V3(.3*j,0,1.15*j))}
 function mount(k){const F=FM();if(!F.veh[k])return;if(where!=='out')exitRoom(true);if(RIDE)dismount(true);const r=riderOf(k,0);if(r)r.act=null;RIDE=k;const V=VEH[k];snd('mount');
  if(V.kind==='water'){igor.position.copy(VPARK[k]);camSnap=true;say(k==='raft'?tt('All aboard the raft! Slowly, slowly…','Tutti sulla zattera! Piano piano…'):k==='row'?tt('Row, row, row your boat!','Remiamo, remiamo!'):tt('Ahoy! Full speed around the island.','Ahoy! A tutto motore intorno all’isola.'),3)}
  else if(V.kind==='air'){rideH=0;say(tt('Up we go!','Si vola!'),2.4)}else say(RIDE==='bike'?tt('Ring ring! Off we go.','Drin drin! Si parte.'):pick(tt(['Vroom!','Let’s go!'],['Brum brum!','Andiamo!'])),2);IG.target=null;IG.arrive=null}
-function dismount(quiet){if(!RIDE)return;bubbleQ.length=0;bubbleT=0;const V=VEH[RIDE];RIDE=null;rideH=0;
+function dismount(quiet){if(!RIDE)return;bubbleQ.length=0;bubbleT=0;const V=VEH[RIDE],vk=RIDE;RIDE=null;rideH=0;
  if(V.kind==='water'){igor.position.set(-9.4,0,4.6);camSnap=true}
- else if(V.kind==='air'&&!walkable(igor.position.x,igor.position.z)){igor.position.set(0,0,-2.6);camSnap=true}
+ else if(V.kind==='air'&&!walkable(igor.position.x,igor.position.z)){const P=igor.position;let q=null;for(let r=.6;r<9&&!q;r+=.6)for(let k=0;k<16;k++){const x=P.x+Math.cos(k/16*TAU)*r,z=P.z+Math.sin(k/16*TAU)*r;if(walkable(x,z)){q={x,z};break}}if(q)igor.position.set(q.x,0,q.z);else igor.position.set(0,0,-2.6);camSnap=true}
+ if(V.kind!=='water'&&!VISIT){const P=igor.position,sx=-Math.sin(igHead),sz=Math.cos(igHead),d=V.kind==='air'?2:1.3;let spot=null;
+  for(const m of[1,-1,1.6,-1.6]){const x=P.x+sx*d*m,z=P.z+sz*d*m;if(walkable(x,z)){spot={x,z};break}}if(!spot)spot={x:P.x,z:P.z};
+  const F=FM();F.vpos=F.vpos||{};F.vpos[vk]={x:+spot.x.toFixed(2),z:+spot.z.toFixed(2),a:+(-igHead).toFixed(2)};fmDirty=true}
  IG.target=null;IG.arrive=null;if(!quiet)say(tt('Back on my feet.','Di nuovo a piedi.'),1.8)}
 function ridePath(A,t){const V=VEH[A.v],C=VC[V.kind],P0=parkOf(A.v,A.j||0),ez=V.kind==='water'?1/1.12:1,r=Math.hypot(P0.x-C.x,(P0.z-C.z)/ez),a0=Math.atan2((P0.z-C.z)/ez,P0.x-C.x),w=V.sp*1.6/r,u=(t-A.t0)*w,laps=V.kind==='air'?1:2;
  if(u>=TAU*laps)return null;const a=a0+u*A.dir;const x=C.x+Math.cos(a)*r,z=C.z+Math.sin(a)*r*ez,dur=TAU*laps/w,el=t-A.t0;
@@ -1148,7 +1152,7 @@ updaters.push((t,dt)=>{const F=FM();
  const dx=igor.position.x-lastIg.x,dz=igor.position.z-lastIg.z;if(Math.hypot(dx,dz)>.002)igHead=Math.atan2(dz,dx);lastIg.copy(igor.position);
  for(const k of VKEYS){if(!F.veh[k]){if(VO[k])VO[k].g.visible=false;continue}if(!VO[k]){VO[k]=mkVeh(k);world.add(VO[k].g);vehPaint(k);const B0=BUILD;BUILD='out';hit(VO[k].g,1.1,()=>vehPark(k),'veh',.6);BUILD=B0}const o=VO[k],g=o.g;g.visible=true;let flying=false;
   if(RIDE===k){g.position.set(igor.position.x,(VEH[k].kind==='water'?-.5:0)+(VEH[k].kind==='air'?rideH:0),igor.position.z);g.rotation.y=-igHead;flying=VEH[k].kind==='air'}
-  else{const rd=riderOf(k);if(rd&&rd.ride){g.position.copy(rd.ride.pos);g.position.y=rd.ride.y;g.rotation.y=-rd.ride.head;flying=VEH[k].kind==='air'&&rd.ride.y>.1}else{g.position.copy(VPARK[k]);g.position.y=VEH[k].kind==='water'?-.5+Math.sin(t*1.2)*.04:0;g.rotation.y=VANG[k]!=null?VANG[k]:-.4}}
+  else{const rd=riderOf(k);if(rd&&rd.ride){g.position.copy(rd.ride.pos);g.position.y=rd.ride.y;g.rotation.y=-rd.ride.head;flying=VEH[k].kind==='air'&&rd.ride.y>.1}else{const vp=S.farm&&S.farm.vpos&&S.farm.vpos[k];g.position.copy(vSpot(k));g.position.y=VEH[k].kind==='water'?-.5+Math.sin(t*1.2)*.04:0;g.rotation.y=vp&&VEH[k].kind!=='water'?vp.a:VANG[k]!=null?VANG[k]:-.4}}
   for(const s of o.spin)s.o.rotation[s.ax]+=dt*s.v*(flying||RIDE===k?1:0)}});
 /* --- the old music school: worn, but standing --- */
 {const t=new THREE.Group();t.position.set(-13.5,0,-6);t.rotation.y=1.15;PLACES.school={pos:new V3(-10.88,0,-4.82),open:()=>enterRoom('school'),name:'Music school'};
@@ -1931,7 +1935,7 @@ function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igo
  <h2>${tt('Games','Giochi')}</h2><ul><li><button data-i="gamesPage">${tt('The games page','La pagina dei giochi')}<small>${tt('all seven','tutti e sette')}</small></button></li><li><button data-i="stairs">Pitch Stairs<small>${tt('house','casa')}</small></button></li><li><button data-i="cad">${tt('Cadences','Cadenze')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="drums">${tt('The drums','La batteria')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="w">${tt('The window','La finestra')}<small>${tt('house','casa')}</small></button></li><li><button data-i="k">${tt('The kitchen','La cucina')}<small>${tt('house','casa')}</small></button></li><li><button data-i="b">${tt('The bedroom','La camera')}<small>${tt('house','casa')}</small></button></li></ul>
  <h2>Chat</h2><ul><li><button data-i="chat">${tt('Chat with friends','Chatta con gli amici')}<small>14+</small></button></li></ul>
  <h2>${tt('Language','Lingua')}</h2><ul><li><button data-lang="en" aria-pressed="${LANG==='en'}">English</button></li><li><button data-lang="it" aria-pressed="${LANG==='it'}">Italiano</button></li></ul>
- <h2>${tt('Sky','Cielo')}</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">${tt('Igor’s weather','Il meteo di Igor')}<small>${tt('same for everyone','uguale per tutti')}</small></button></li><li><button data-sky="real">${tt('The sky where I am','Il cielo dove sono')}<small>${tt('uses your location','usa la tua posizione')}</small></button></li></ul>`}
+ <h2>${tt('Sky','Cielo')}</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">${tt('Random weather','Meteo casuale')}<small>${tt('Igor’s weather, same for everyone','il meteo di Igor, uguale per tutti')}</small></button></li><li><button data-sky="real">${tt('The weather where I am','Il meteo dove sono')}<small>${tt('uses your location','usa la tua posizione')}</small></button></li></ul>`}
 renderIdx();
 function setLang(l){if(l===LANG)return;LANG=l;bubbleQ.length=0;bubbleT=0;try{localStorage.setItem('igortime_lang',l)}catch(e){}document.documentElement.lang=l;applyLang();say(tt('Hello! I speak English now.','Ciao! Adesso parlo italiano.'),2.6)}
 function applyLang(){SIGNS.forEach(f=>f());if(typeof renderGmB==='function')renderGmB();if(typeof renderSndB==='function')renderSndB();renderIdx();skyStatus();relabel();staticTexts();refresh();if(typeof farmRelabel==='function')farmRelabel();if(!sheet.hidden&&sheetKind==='acct')openAccount();if(!sheet.hidden&&sheetKind==='dress')renderDress()}
@@ -2351,11 +2355,55 @@ const INSK=Object.fromEntries(INS.map(I=>[I.k,I]));
 const insOn=I=>lvlOf()>=I.lv;
 const insNote=(I,i)=>{const m=I.m+I.s[i];return NNAME[m%12][LANG==='it'?1:0]};
 const insF=(I,i,c)=>440*Math.pow(2,(I.m+I.s[i]-69+(c||0)/100)/12);
-function MAR(){const U=FUN();if(!U.mar){U.mar={off:[0,0,0,0,0,0,0,0],sl:[0,0,0,0,0,0,0,0],next:Date.now()+60*60e3/FUNFAST,pos:null};U.mar.off[2+Math.floor(Math.random()*4)]=(Math.random()<.5?-1:1)*(35+Math.random()*30);fmDirty=true}return U.mar}
+function MAR(){const U=FUN();if(!U.mar){U.mar={off:[0,0,0,0,0,0,0,0],sl:[0,0,0,0,0,0,0,0],next:Date.now()+60*60e3/FUNFAST,pos:null};U.mar.off[2+Math.floor(Math.random()*4)]=(Math.random()<.5?-1:1)*(45+Math.random()*35);fmDirty=true}return U.mar}
 let insFresh=[];
 function insS(k){if(k==='mar')return MAR();const U=FUN();U.ins=U.ins||{};let M=U.ins[k];
- if(!M){M=U.ins[k]={off:[0,0,0,0,0,0,0,0],sl:[0,0,0,0,0,0,0,0],next:Date.now()+(25+Math.random()*35)*60e3/FUNFAST,pos:null};M.off[1+Math.floor(Math.random()*6)]=(Math.random()<.5?-1:1)*(35+Math.random()*30);fmDirty=true;insFresh.push(k)}return M}
+ if(!M){M=U.ins[k]={off:[0,0,0,0,0,0,0,0],sl:[0,0,0,0,0,0,0,0],next:Date.now()+(25+Math.random()*35)*60e3/FUNFAST,pos:null};M.off[1+Math.floor(Math.random()*6)]=(Math.random()<.5?-1:1)*(45+Math.random()*35);fmDirty=true;insFresh.push(k)}return M}
 const insOut=k=>insS(k).off.filter(c=>c).length;
+const INSTOL=28; // ± cents accepted as in tune (was 15)
+/* 10 Nov 2026: every instrument's tuning panel looks like the instrument (bars, tines, strings, tubes, a pan, pipes, glasses) */
+function insBarsHTML(I,M,sel){const k=I.k;return I.s.map((s,i)=>{const off=!!M.off[i],cls=`${off?'off':''}${i===sel?' on':''}`,nm=insNote(I,i),q=off?'<i>?</i>':'';
+ let st='',sh='';
+ if(k==='mar')st=`height:${84-i*5}px`,sh=`<span class="sh" style="background:linear-gradient(${I.bar[0]},${I.bar[1]})"></span>`;
+ else if(k==='glk')st=`height:${70-i*4}px`,sh='<span class="sh"><b></b></span>';
+ else if(k==='kal')st=`height:${128-i*9}px`,sh='<span class="sh"></span>';
+ else if(k==='hrp')st=`height:${150-i*12}px`,sh=`<span class="sh${i%3===0?' red':''}"></span>`;
+ else if(k==='tub')st=`height:${150-i*10}px`,sh='<span class="sh"><b></b></span>';
+ else if(k==='pan'){const a=-Math.PI/2+i/8*Math.PI*2,r=34,sz=46-i*2;st=`left:calc(${50+Math.cos(a)*r}% - ${sz/2}px);top:calc(${50+Math.sin(a)*r}% - ${sz*.75/2}px);width:${sz}px;height:${sz*.75}px`;sh='<span class="sh"></span>'}
+ else if(k==='flt')st=`height:${138-i*11}px`,sh='<span class="sh"></span>';
+ else if(k==='gls')st='height:84px',sh=`<span class="sh"><b style="height:${74-i*7}%"></b></span>`;
+ return`<button type="button" data-mb="${i}" class="${cls}" style="${st}" aria-label="${nm}${off?' ?':''}">${sh}<em>${nm}</em>${q}</button>`}).join('')}
+{const st=document.createElement('style');st.textContent=`
+.mbars.ik{position:relative;padding:10px 8px 8px;border-radius:14px}
+.mbars.ik button{background:none!important;border:0!important;box-shadow:none!important;outline:0!important;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.mbars.ik button .sh{position:relative;display:block;width:100%;flex:1;border:2px solid #2b2018;box-sizing:border-box}
+.mbars.ik button em{font:600 12px Fredoka,sans-serif;font-style:normal;color:#f7ecd4;margin-top:3px;white-space:nowrap}
+.mbars.ik button.off .sh{border-color:#ff7a5a;box-shadow:0 0 0 3px #ff7a5a66}.mbars.ik button.on .sh{box-shadow:0 0 0 3px #fff3b0}
+.mbars.ik i{top:-8px;right:-4px;z-index:2}
+/* marimba: wooden bars (as before) */
+.mbars.ik.ik-mar button .sh{border-radius:8px}
+/* metallophone: silver bars with a pin */
+.mbars.ik.ik-glk{background:#6a4a30}.mbars.ik.ik-glk button .sh{border-radius:4px;background:linear-gradient(#f4f7f9,#b9c3cb 70%,#8f9aa3)}.mbars.ik.ik-glk button .sh b{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#555}
+/* kalimba: metal tongues hanging from a bridge, rounded tips, on a wooden box */
+.mbars.ik.ik-kal{background:linear-gradient(#d6a26a,#a8743e);align-items:flex-start!important;padding-top:20px!important}
+.mbars.ik.ik-kal::before{content:'';position:absolute;left:6%;right:6%;top:12px;height:9px;border-radius:5px;background:linear-gradient(#e9edf0,#9aa3a8);border:2px solid #2b2018;z-index:1}
+.mbars.ik.ik-kal button{width:9%!important;justify-content:flex-start!important}.mbars.ik.ik-kal button .sh{border-radius:3px 3px 999px 999px;background:linear-gradient(90deg,#aab3b9,#f1f4f6 45%,#c3cad0)}.mbars.ik.ik-kal button em{color:#2b2018}
+/* harp: strings, red ones like the 3D harp, on a golden frame */
+.mbars.ik.ik-hrp{background:linear-gradient(#3b2a1c,#2b2018);border:3px solid #c9a96a}.mbars.ik.ik-hrp button .sh{width:4px!important;flex:1;border:0!important;border-radius:2px;background:#f3e6c4}.mbars.ik.ik-hrp button .sh.red{background:#e0463c}
+.mbars.ik.ik-hrp button{width:11%!important}.mbars.ik.ik-hrp button.off .sh{box-shadow:0 0 0 3px #ff7a5a}.mbars.ik.ik-hrp button.on .sh{box-shadow:0 0 0 3px #fff3b0}
+/* tubular bells: golden tubes hanging from a bar */
+.mbars.ik.ik-tub{align-items:flex-start!important;padding-top:18px!important;background:#2f2620}.mbars.ik.ik-tub::before{content:'';position:absolute;left:4%;right:4%;top:8px;height:8px;border-radius:3px;background:#6b4a2e;border:2px solid #2b2018}
+.mbars.ik.ik-tub button{width:9%!important;justify-content:flex-start!important}.mbars.ik.ik-tub button .sh{border-radius:2px 2px 6px 6px;background:linear-gradient(90deg,#b88a2a,#f6dc8a 40%,#e3c05e 60%,#a07624)}.mbars.ik.ik-tub button .sh b{position:absolute;left:-3px;right:-3px;top:-4px;height:7px;border-radius:2px;background:#9a7a2a;border:2px solid #2b2018}
+/* steel pan: notes as dimples around a round pan */
+.mbars.ik.ik-pan{width:240px;height:240px;margin:12px auto!important;border-radius:50%!important;background:radial-gradient(circle,#e6ebef,#b9c1c7 70%,#8f9aa3);border:5px solid #3d4148;display:block!important;padding:0!important}
+.mbars.ik.ik-pan button{position:absolute;padding:0}.mbars.ik.ik-pan button .sh{border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffffff,#cfd6dc 70%)}.mbars.ik.ik-pan button em{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;color:#2b2018;font-size:11px}
+/* pan flute: bamboo pipes tied together */
+.mbars.ik.ik-flt{align-items:flex-start!important;background:#2f3a2a}.mbars.ik.ik-flt::after{content:'';position:absolute;left:6%;right:6%;top:32px;height:10px;background:#7a3a2a;border:2px solid #2b2018;border-radius:3px}
+.mbars.ik.ik-flt button{width:10%!important;margin:0 -1px;justify-content:flex-start!important}.mbars.ik.ik-flt button .sh{border-radius:4px 4px 3px 3px;background:linear-gradient(90deg,#b39648,#ecd895 45%,#c9ad5c)}.mbars.ik.ik-flt button .sh::before{content:'';position:absolute;left:18%;right:18%;top:3px;height:7px;border-radius:50%;background:#3a2a1a}
+/* musical glasses: glasses with water, less water = higher */
+.mbars.ik.ik-gls{background:#efe4cf}.mbars.ik.ik-gls button .sh{border-radius:4px 4px 14px 14px;background:rgba(233,248,255,.55)}.mbars.ik.ik-gls button .sh b{position:absolute;left:0;right:0;bottom:0;border-radius:0 0 12px 12px;background:#5fb6dc}.mbars.ik.ik-gls button em{color:#2b2018}
+`;document.head.appendChild(st)}
+
 function insSpot(I){const F=FM();for(let k=0;k<60;k++){const a=I.a+(k%2?1:-1)*Math.ceil(k/2)*.12,r=I.r-(k>30?1.2:0),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;
   if(blocked.some(q=>q.r&&Math.hypot(q.x-x,q.z-z)<q.r+1.3))continue;if(FIXB.some(([a2,b2,c2])=>Math.hypot(x-a2,z-b2)<c2+1.6))continue;if(F.fields.some(f=>Math.hypot(f.x-x,f.z-z)<2.2))continue;
   if(BKEYS.some(b=>F.pos[b]&&Math.hypot(spotOf(b).x-x,spotOf(b).z-z)<SPOTR[b]+1.6))continue;if(Math.hypot(x-SHOPV.x,z-SHOPV.z)<3.2)continue;if(Math.hypot(x-POOL.x,z-POOL.z)<3.5)continue;return{x,z}}
@@ -2412,7 +2460,7 @@ function marTick(t,dt){if(!S.farm)return;const tn=Date.now();
  if(!insAnn&&insFresh.length&&started&&where==='out'&&T>4){insAnn=true;const L=insFresh.filter(k=>k!=='mar').map(k=>N(INSK[k].N).toLowerCase());insFresh=[];if(L.length){const msg=L.length>2?tt(`${L.length} new instruments to tune on the island: look for them!`,`Sull’isola ci sono ${L.length} strumenti nuovi da accordare: cercali!`):L.length>1?tt(`New instruments to tune: ${L[0]} and ${L[1]}!`,`Strumenti nuovi da accordare: ${L[0]} e ${L[1]}!`):tt(`A new instrument to tune on the island: ${L[0]}!`,`Un nuovo strumento da accordare sull’isola: ${L[0]}!`);setTimeout(()=>say(msg,3.6),3800)}}
  if(insAnn&&insFresh.length){insAnn=false}
  if((insAcc+=dt)<1)return;insAcc=0;let said=false;
- for(const I of INS){if(!insOn(I))continue;const M=insS(I.k);let k=0,added=0;while(tn>=M.next&&k++<6){const ok=M.off.map((c,i)=>c?-1:i).filter(i=>i>=0);if(insOut(I.k)<3&&ok.length){const i=pick(ok);M.off[i]=(Math.random()<.5?-1:1)*(25+Math.random()*50);M.sl[i]=0;added++}M.next+=60*60e3/FUNFAST}
+ for(const I of INS){if(!insOn(I))continue;const M=insS(I.k);let k=0,added=0;while(tn>=M.next&&k++<6){const ok=M.off.map((c,i)=>c||M.off[i-1]||M.off[i+1]?-1:i).filter(i=>i>=0);if(insOut(I.k)<3&&ok.length){const i=pick(ok);M.off[i]=(Math.random()<.5?-1:1)*(45+Math.random()*40);M.sl[i]=0;added++}M.next+=60*60e3/FUNFAST}
   if(M.next<tn)M.next=tn+60*60e3/FUNFAST;if(added){fmDirty=true;if(!said&&started&&where==='out'&&T>5){said=true;const o=insO[I.k];if(o&&o.g.position.distanceTo(igor.position)<16)insPlay(I.k,0);setTimeout(()=>say(tt(`Listen… the ${N(I.N).toLowerCase()} is out of tune!`,`Senti… ${N(I.N)}: una nota si è scordata!`),3.4),400)}}}}
 function insPlay(k,i){const I=INSK[k],M=insS(k);snd(I.snd,insF(I,i,(M.off[i]||0)+(M.off[i]?M.sl[i]:0)))}
 let INSEL='mar',insSel=-1,insTry=0,insLast=0;
@@ -2421,19 +2469,19 @@ function insTap(k){if(PL)return;const I=INSK[k];if(!I||!insOn(I))return;const o=
  if(where!=='out')exitRoom(true);if(igor.position.distanceTo(P)>2.8)walkNear(P,1.7,go);else go()}
 function marTap(){insTap('mar')}
 function insSheet(){const I=INSK[INSEL],M=insS(INSEL),n=insOut(INSEL),k=insSel,pn=N(I.part);
- const bars=I.s.map((s,i)=>`<button type="button" data-mb="${i}" class="${M.off[i]?'off':''}${i===k?' on':''}" style="height:${84-i*5}px;background:linear-gradient(${I.bar[0]},${I.bar[1]});color:${I.ink}">${insNote(I,i)}${M.off[i]?'<i>?</i>':''}</button>`).join('');
+ const bars=insBarsHTML(I,M,k);
  const ctl=k>=0&&M.off[k]?`<div class="mctl"><p>${cap1(pn)} <b>${insNote(I,k)}</b>: ${tt('slide until it sounds right with the others.','sposta lo slider finché suona giusta con le altre.')}</p>
  <div class="msl"><span>${tt('lower','più giù')}</span><input type="range" min="-100" max="100" step="1" value="${M.sl[k]}" data-ms="${k}" aria-label="${tt('Tune','Intona')}"><span>${tt('higher','più su')}</span></div>
  <div class="mbt"><button type="button" data-mp="one">▶ ${tt('The note','La nota')}</button><button type="button" data-mp="nb">▶ ${tt('With its neighbours','Con le vicine')}</button><button type="button" data-mp="ok" class="m">✓ ${tt('In tune!','Intonata!')}</button></div></div>`
  :`<div class="mctl"><p>${n?tt('Tap one marked “?”.','Tocca quella con il “?”.'):tt('Everything is in tune. Tap to play! Every hour one note goes out of tune again.','È tutto intonato. Tocca per suonare! Ogni ora una nota si scorda di nuovo.')}</p>${!n&&INSEL==='mar'&&MEL().length?`<div class="mbt"><button type="button" data-marmel="1" class="m">▶ ${tt('One of your melodies','Una tua melodia')}</button></div>`:''}</div>`;
- openSheet('mar',`<h2>${N(I.N)}</h2><p class="shn">${n?`${n} ${tt(n>1?'notes out of tune':'note out of tune',n>1?'note stonate':'nota stonata')}`:tt('In tune ♪','Intonato ♪')}</p><div class="mbars">${bars}</div>${ctl}${VISIT?'':`<div class="mbt" style="margin-top:10px"><button type="button" data-insmv="1">↔ ${tt('Move','Sposta')}</button></div>`}`)}
+ openSheet('mar',`<h2>${N(I.N)}</h2><p class="shn">${n?`${n} ${tt(n>1?'notes out of tune':'note out of tune',n>1?'note stonate':'nota stonata')}`:tt('In tune ♪','Intonato ♪')}</p><div class="mbars ik ik-${INSEL}">${bars}</div>${ctl}${VISIT?'':`<div class="mbt" style="margin-top:10px"><button type="button" data-insmv="1">↔ ${tt('Move','Sposta')}</button></div>`}`)}
 const marSheet=insSheet;
 sb.addEventListener('click',e=>{if(e.target.closest('button[data-insmv]')){e.stopPropagation();const k=INSEL,o=insO[k];if(!o||VISIT)return;closeSheet();startPlace({k:'ins',ik:k,fx:o.fx});return}const b=e.target.closest('button[data-mb],button[data-mp]');if(!b)return;e.stopPropagation();const M=insS(INSEL);
  if(b.dataset.mb!=null){const i=+b.dataset.mb;insPlay(INSEL,i);if(M.off[i]&&i!==insSel){insSel=i;insTry=0;insSheet()}return}
  const k=insSel;if(k<0||!M.off[k])return;const p=b.dataset.mp;
  if(p==='one')insPlay(INSEL,k);
  else if(p==='nb'){const a=Math.max(0,k-1),c=Math.min(7,k+1),seq=k===0?[0,1,2,1,0]:k===7?[7,6,5,6,7]:[a,k,c,k];seq.forEach((i,j)=>setTimeout(()=>insPlay(INSEL,i),j*330))}
- else if(p==='ok'){const err=M.off[k]+M.sl[k];if(Math.abs(err)<=15){M.off[k]=0;M.sl[k]=0;S.seeds=(S.seeds|0)+1;if(VISIT)visitTuned(INSEL,k);fmDirty=true;hudFarm();snd('seeds',3);const sd=$('seeds');sd.classList.remove('pop');void sd.offsetWidth;sd.classList.add('pop');bubbleQ.length=0;bubbleT=0;
+ else if(p==='ok'){const err=M.off[k]+M.sl[k];if(Math.abs(err)<=INSTOL){M.off[k]=0;M.sl[k]=0;S.seeds=(S.seeds|0)+1;if(VISIT)visitTuned(INSEL,k);fmDirty=true;hudFarm();snd('seeds',3);const sd=$('seeds');sd.classList.remove('pop');void sd.offsetWidth;sd.classList.add('pop');bubbleQ.length=0;bubbleT=0;
    if(!insOut(INSEL)){const I=INSK[INSEL];say(tt(`The ${N(I.N).toLowerCase()} is in tune again! Listen… (+1 seed)`,`${N(I.N)}: di nuovo intonato! Ascolta… (+1 seme)`),3.4);insSel=-1;insSheet();const kk=INSEL;setTimeout(()=>{closeSheet();insTune(kk)},700)}
    else{say(tt('In tune! +1 seed. Another one is still out.','Intonata! +1 seme. Ce n’è ancora una stonata.'),3);insSel=M.off.findIndex(c=>c);insTry=0;insSheet()}}
   else{insTry++;bubbleQ.length=0;bubbleT=0;say(insTry>=2?(err>0?tt('Almost: still a little high.','Quasi: è ancora un po’ alta.'):tt('Almost: still a little low.','Quasi: è ancora un po’ bassa.')):tt('Not yet… listen with its neighbours.','Non ancora… ascoltala con le vicine.'),2.6)}}});
@@ -3021,13 +3069,39 @@ function renderVol(){const S0=window.IgorSound,on=!S0||S0.on,m=S0&&S0.mix||{nat:
  for(const[k,ic,lb]of MIXK){const v=Math.round(m[k]*100);h+=`<label for="vm_${k}">${ic} ${lb()}</label><input id="vm_${k}" data-k="${k}" type="range" min="0" max="100" step="1" value="${v}" aria-label="${lb()}"><span>${v}%</span>`}
  volP.innerHTML=h;volP.classList.toggle('off',!on)}
 function placeVol(){const r=sndB.getBoundingClientRect();let top=Math.round(r.top+r.height/2-volP.offsetHeight/2);top=Math.max(6,Math.min(innerHeight-volP.offsetHeight-6,top));volP.style.top=top+'px';volP.style.right=Math.round(innerWidth-r.left+8)+'px'}
-sndB.onclick=e=>{e.stopPropagation();if(!volP.hidden){volP.hidden=true;return}renderVol();volP.hidden=false;placeVol()};
+sndB.onclick=e=>{e.stopPropagation();wxP.hidden=true;if(!volP.hidden){volP.hidden=true;return}renderVol();volP.hidden=false;placeVol()};
 volP.addEventListener('pointerdown',e=>e.stopPropagation());
 volP.addEventListener('input',e=>{const r=e.target.closest('input[data-k]');if(!r||!window.IgorSound||!IgorSound.setMix)return;IgorSound.setMix(r.dataset.k,+r.value/100);if(!IgorSound.on&&+r.value>0){IgorSound.set(true);renderSndB();volP.classList.remove('off');volP.querySelector('button').textContent='🔊'}r.nextElementSibling.textContent=r.value+'%'});
 volP.addEventListener('change',e=>{const r=e.target.closest('input[data-k]');if(r&&r.dataset.k==='ig')snd('bell',880)}); // island and weather are heard live
 volP.addEventListener('click',e=>{const b=e.target.closest('button[data-vm]');if(!b||!window.IgorSound)return;e.stopPropagation();IgorSound.set(!IgorSound.on);if(IgorSound.on&&!(IgorSound.vol>0))IgorSound.setVol(.6);renderSndB();renderVol()});
 addEventListener('pointerdown',e=>{if(!volP.hidden&&!volP.contains(e.target)&&e.target!==sndB&&!sndB.contains(e.target))volP.hidden=true});
 addEventListener('resize',()=>{if(!volP.hidden)placeVol()});
+/* 10 Nov 2026: the weather choice on the island itself (it was only in Index → Sky): a button under the speaker,
+   showing the weather now; tap it to pick random weather (Igor's, the same for everyone) or the weather where you are */
+const wxB=document.createElement('button');wxB.type='button';wxB.id='wxB';zb.appendChild(wxB);
+const wxP=document.createElement('div');wxP.id='wxP';wxP.hidden=true;document.body.appendChild(wxP);
+{const st=document.createElement('style');st.textContent=`#wxB{font:400 21px/1 sans-serif!important}
+#wxP{position:fixed;z-index:6;width:min(260px,calc(100vw - 90px));padding:9px 11px;background:rgba(247,236,212,.97);border:2px solid #2b2018;border-radius:14px;box-shadow:0 3px 0 #2b2018;font:600 13px/1.25 var(--toon);color:#2b2018}
+#wxP[hidden]{display:none}#wxP b{display:block;font-size:14px;margin-bottom:2px}#wxP .wn{font-weight:500;font-size:12px;opacity:.8;margin-bottom:7px}
+#wxP button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;margin-top:6px;border:2px solid #2b2018;border-radius:11px;background:#fff7e6;padding:6px 9px;font:600 14px/1.15 var(--toon);color:#2b2018;cursor:pointer;text-transform:none;letter-spacing:0}
+#wxP button small{display:block;font-weight:500;font-size:11.5px;opacity:.75}#wxP button[aria-pressed="true"]{background:#f6d34a}#wxP button i{font-style:normal;font-size:19px}`;document.head.appendChild(st)}
+const WXI={clear:'☀️',cloudy:'☁️',fog:'🌫️',rain:'🌧️',storm:'⛈️',snow:'❄️',hail:'🌨️'};
+const wxIcon=()=>SKY.wName==='clear'&&SKY.nk>.5?'🌙':WXI[SKY.wName]||'☀️';
+let wxLast='';
+function renderWxB(){const ic=wxIcon(),k=ic+SKY.mode+LANG;if(k===wxLast)return;wxLast=k;wxB.textContent=ic;const t=tt('Weather: tap to choose','Meteo: tocca per scegliere');wxB.setAttribute('aria-label',t);wxB.title=t}
+function renderWx(){const real=SKY.mode==='real';
+ wxP.innerHTML=`<b>${tt('Weather','Meteo')}</b><div class="wn">${tt('Now','Adesso')}: ${wxIcon()} ${N(WNAME[SKY.wName]||WNAME.clear)}</div>
+ <button type="button" data-wx="island" aria-pressed="${!real}"><i>🎲</i><span>${tt('Random weather','Meteo casuale')}<small>${tt('Igor’s weather: sun, clouds, rain… it changes every 3 hours','Il meteo di Igor: sole, nuvole, pioggia… cambia ogni 3 ore')}</small></span></button>
+ <button type="button" data-wx="real" aria-pressed="${real}"><i>📍</i><span>${tt('The weather where I am','Il meteo dove sono')}<small>${tt('the real sky outside your window','il cielo vero fuori dalla tua finestra')}</small></span></button>`}
+function placeWx(){const r=wxB.getBoundingClientRect();let top=Math.round(r.top+r.height/2-wxP.offsetHeight/2);top=Math.max(6,Math.min(innerHeight-wxP.offsetHeight-6,top));wxP.style.top=top+'px';wxP.style.right=Math.round(innerWidth-r.left+8)+'px'}
+wxB.onclick=e=>{e.stopPropagation();volP.hidden=true;if(!wxP.hidden){wxP.hidden=true;return}renderWx();wxP.hidden=false;placeWx()};
+wxP.addEventListener('pointerdown',e=>e.stopPropagation());
+wxP.addEventListener('click',e=>{const b=e.target.closest('button[data-wx]');if(!b)return;e.stopPropagation();const m=b.dataset.wx;
+ if(m===SKY.mode){wxP.hidden=true;return}skyMode(m);wxP.hidden=true;if(m==='island')setTimeout(()=>say(tt('Random weather! Who knows what tomorrow brings.','Meteo casuale! Chissà che tempo farà.'),2.6),300)});
+addEventListener('pointerdown',e=>{if(!wxP.hidden&&!wxP.contains(e.target)&&e.target!==wxB&&!wxB.contains(e.target))wxP.hidden=true});
+addEventListener('resize',()=>{if(!wxP.hidden)placeWx()});
+{let acc=9;updaters.push((t,dt)=>{if((acc+=dt)<.5)return;acc=0;renderWxB();if(!wxP.hidden){const n=wxP.querySelector('.wn');if(n)n.textContent=`${tt('Now','Adesso')}: ${wxIcon()} ${N(WNAME[SKY.wName]||WNAME.clear)}`;wxP.querySelectorAll('[data-wx]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.wx===SKY.mode)))}})}
+
 
 /* ================= 9 Nov 2026 (evening): lazy and keen Igorlets, the rope challenge =================
    lazy: 3 leaves, sometimes dozes off at work (Z over its head, a line in the to-do list); a treat may wake it, not always;
