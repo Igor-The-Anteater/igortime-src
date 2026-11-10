@@ -1049,7 +1049,7 @@ let wtLast=-9;function worldTick(t){const F=FM(),tn=Date.now(),lv=lvlOf(),full=t
   if(o.sign.el.innerHTML!==s)o.sign.el.innerHTML=s;o.sign.hidden=false}
  if(!full)return;birds.position.copy(fieldsMid());
  for(const k of BKEYS){const B=BOBJ[k],l=F.b[k],bt=F.tasks.find(q=>q.k==='build'&&q.b===k);
-  const P=spotOf(k);B.g.visible=!!l||!!bt;if(B.g.position.x!==P.x||B.g.position.z!==P.z){B.g.position.copy(P);B.blk.x=P.x;B.blk.z=P.z;B.lbl.pos.copy(P).add(new V3(0,k==='pen'?2.2:2.9,0))}
+  const P=spotOf(k);B.g.visible=(!!l||!!bt)&&where==='out';if(B.g.position.x!==P.x||B.g.position.z!==P.z){B.g.position.copy(P);B.blk.x=P.x;B.blk.z=P.z;B.lbl.pos.copy(P).add(new V3(0,k==='pen'?2.2:2.9,0))}
   if(B.lvl!==l){B.lvl=l;B.parts.forEach((p,j)=>p.visible=j<l);B.blk.r=l&&k!=='pen'?SPOTR[k]*.75:0}
   B.site.visible=!!bt;B.lbl.hidden=!l&&!bt;
   if(bt){const s=`${N(BLD[k].N)}<small>${tt('building','cantiere')} · ${Math.floor(100*bt.done/bt.dur)}%</small>`;if(B.lbl.el.innerHTML!==s)B.lbl.el.innerHTML=s;B.lbl.el.dataset.l=''}else if(B.lbl.el.dataset.l!==l+LANG){B.lbl.el.dataset.l=l+LANG;B.lbl.el.innerHTML=N(BLD[k].N)+(l>1?`<small>${tt('level','livello')} ${l}</small>`:'')}}
@@ -1473,7 +1473,7 @@ function station(Rm,key,{name,sub,pos,stand,obj,act,r=1.3,y=1,zr}){BUILD=key;obj
 function walkIn(P,then){closeSheet();$('index').hidden=true;IG.target=P.clone();IG.arrive=then;IG.manual=true;mark.position.set(P.x,.04,P.z);mark.material.opacity=.8;poke();if(igor.position.distanceTo(P)<.3){IG.target=null;IG.arrive=null;then&&then()}}
 function syncZones(){for(const Z of zones)Z.in=Math.hypot(igor.position.x-Z.x,igor.position.z-Z.z)<Z.r}
 function enterRoom(k){const Rm=ROOMS[k];if(!Rm||where===k)return;snd('door');closeSheet();where=k;world.visible=false;Rm.g.visible=true;igor.position.copy(Rm.entry);IG.target=null;IG.arrive=null;CURV.value=0;
- scene.background=BG_IN;scene.fog=null;hemi.intensity=.55;moonL.intensity=.25;moonL.color.set('#dfe6ff');skyRoom();camSnap=true;syncZones();say(k==='house'?pick(tt(['Welcome to my house!','Make yourself at home.'],['Benvenuto a casa mia!','Fai come se fossi a casa tua.'])):k==='prizes'?tt('The prize shop! Walk to a vehicle to look at it.','Il negozietto dei premi! Avvicinati a un mezzo per guardarlo.'):tt('Shh… walk to the piano.','Shh… vai al pianoforte.'),3)}
+ scene.background=BG_IN;scene.fog=null;hemi.intensity=.55;moonL.intensity=.25;moonL.color.set('#dfe6ff');skyRoom();camSnap=true;syncZones();say(k==='house'?pick(tt(['Welcome to my house!','Make yourself at home.'],['Benvenuto a casa mia!','Fai come se fossi a casa tua.'])):k==='prizes'?tt('The prize shop! Walk to a vehicle to look at it.','Il negozietto dei premi! Avvicinati a un mezzo per guardarlo.'):k==='toys'?tt('The Toy Store! Walk to a toy to look at it.','Il negozio dei giocattoli! Avvicinati a un oggetto per guardarlo.'):tt('Shh… walk to the piano.','Shh… vai al pianoforte.'),3)}
 function exitRoom(quiet){const k=where;if(k==='out')return;snd('door');ROOMS[k].g.visible=false;world.visible=true;where='out';CURV.value=K;hemi.intensity=.9;moonL.intensity=.8;scene.background=BG_OUT;scene.fog=new THREE.Fog(NIGHT,28,66);
  const P=PLACES[k];igor.position.copy(P.pos).add(k==='school'?new V3(.85,0,.4):new V3(0,0,.95));IG.target=null;IG.arrive=null;camSnap=true;syncZones();if(!quiet)say(pick(tt(['Fresh air!','Back outside.'],['Aria fresca!','Di nuovo fuori.'])),1.8)}
 let camSnap=false;
@@ -3424,7 +3424,7 @@ window.IgorVisit={go:visitGo};
 function mvLive(o){if(!o||!o.parent)return false;for(let p=o;p;p=p.parent)if(!p.visible)return false;return true}
 function treeWhy(){return S.farm&&FM().b.nurs>=1?tt('A tree is in the way: tap it to move it first.','C’è un albero in mezzo: toccalo per spostarlo prima.'):tt('A tree is in the way. With a tree nursery we can move it!','C’è un albero in mezzo. Con il vivaio lo possiamo trapiantare!')}
 function mvShift(o,x,z){if(!o.userData.o0)o.userData.o0={x:o.position.x,z:o.position.z,par:o.parent};for(const b of blocked)if(b.x===o.position.x&&b.z===o.position.z){b.x=x;b.z=z}
- const home=o.userData.o0,back=home.x===x&&home.z===z,par=back?home.par:scene;if(par&&o.parent!==par){o.parent.remove(o);par.add(o)}o.position.x=x;o.position.z=z}
+ const home=o.userData.o0,back=home.x===x&&home.z===z,par=back?home.par:world;if(par&&o.parent!==par){o.parent.remove(o);par.add(o)}o.position.x=x;o.position.z=z}
 function moveTreeTo(j,x,z){const tr=trees[j];if(!tr||!tr.t.parent)return;mvShift(tr.t,x,z)}
 function moveRockTo(j,x,z){const r=rocks[j];if(!r||!r.parent)return;mvShift(r,x,z)}
 function insMoveTo(k,x,z){const o=insO[k];if(!o)return;o.g.position.set(x,0,z);o.g.rotation.y=Math.atan2(-x,-z);o.L.pos.set(x,o.ly,z);o.fx[0]=x;o.fx[1]=z;o.bk.x=x;o.bk.z=z}
@@ -3475,15 +3475,7 @@ for(const T0 of Object.values(TOOLS))for(const L of T0.lv)if(L.cost.t&&!L.cost.s
 BLD.toys={N:['Toy Store','Negozio dei giocattoli'],what:['Things to make the island yours: the Igorlets play with them too.','Cose per rendere l’isola tua: ci giocano anche gli Igorlets.'],up:[null,{lv:2,cost:{t:30,s:SEEDF(30)},min:15,gives:['the decorations','le decorazioni']}]};
 BKEYS.push('toys');SPOTR.toys=1.4;
 updaters.push(()=>{const F=S.farm;if(F&&F.b&&F.b.toys==null)F.b.toys=0;if(F&&!F.deco)F.deco={}});
-mkBuilding('toys',[p=>{const wall=lam('#f6e2b8'),wd=lam('#6a4c34');const b=new THREE.Mesh(new THREE.RoundedBoxGeometry(2,1.4,1.4,2,.06),wall);b.position.y=.7;p.add(b);
- const st=document.createElement('canvas');st.width=128;st.height=32;{const q=st.getContext('2d');const C=['#e0463c','#f6d34a','#4f9ad8','#7fbf5a'];for(let k=0;k<8;k++){q.fillStyle=C[k%4];q.fillRect(k*16,0,16,32)}}
- const aw=new THREE.Mesh(new THREE.BoxGeometry(2.3,.08,.8),texM(new THREE.CanvasTexture(st)));aw.position.set(0,1.42,.88);aw.rotation.x=.35;p.add(aw);
- const roof=new THREE.Mesh(new THREE.ConeGeometry(1.55,.8,4),lam('#a8463c'));roof.position.y=1.8;roof.rotation.y=Math.PI/4;roof.scale.z=.75;p.add(roof);
- const win=new THREE.Mesh(new THREE.PlaneGeometry(1.3,.5),glowM('#f6d38c',.55));win.position.set(.2,.95,.71);p.add(win);const dr=new THREE.Mesh(new THREE.PlaneGeometry(.42,.8),lam('#6a4c34'));dr.position.set(-.68,.4,.71);p.add(dr);
- for(let k=0;k<4;k++){const c=['#e0463c','#4f9ad8','#f6d34a','#7fbf5a'][k],bl=new THREE.Mesh(new THREE.BoxGeometry(.16,.16,.16),lam(c));bl.position.set(-.15+k*.22,.82+(k%2)*.12,.66);bl.rotation.y=k;p.add(bl)}
- const bal=new THREE.Mesh(new THREE.SphereGeometry(.18,12,10),lam('#e0463c'));bal.position.set(1.15,1.9,.5);p.add(bal);const bs=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,1.2,4),lam('#444'));bs.position.set(1.12,1.25,.5);p.add(bs);
- const sc=document.createElement('canvas');sc.width=256;sc.height=64;{const q=sc.getContext('2d');q.fillStyle='#2b2018';q.fillRect(0,0,256,64);q.font='40px serif';q.textAlign='center';q.textBaseline='middle';q.fillText('🧸 🪀 🎈',128,34)}
- const sg=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.35),curve(new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc)})));sg.position.set(0,1.6,.75);p.add(sg)}]);
+
 
 /* --- the ten decorations --- */
 const DECO={
@@ -3524,8 +3516,7 @@ sb.addEventListener('click',e=>{if(sheetKind!=='toys')return;const b=e.target.cl
 .dci button{flex:none;min-width:84px;font:600 13px Fredoka,sans-serif;border:2px solid #2b2018;border-radius:11px;padding:6px 8px;background:#fff7e6;color:#2b2018;cursor:pointer;text-transform:none;letter-spacing:0}.dci button.m{background:#9be38a}.dci button:disabled{opacity:.5;cursor:default}.dci button small{display:inline;font-size:9px;opacity:.8}.dci .cs{white-space:nowrap}`;document.head.appendChild(st)}
 {const _bt=bldTap;bldTap=function(k){if(k!=='toys')return _bt(k);const F=FM(),bt=F.tasks.find(q=>q.k==='build'&&q.b==='toys');if(bt||PL||!F.b.toys)return _bt(k);
  if(VISIT){say(tt('The Toy Store: only its owner can shop here.','Il negozio dei giocattoli: qui compra solo chi abita l’isola.'),2.6);return}
- if(igor.position.distanceTo(spotOf('toys'))>5){IG.target=spotOf('toys').add(new V3(0,0,SPOTR.toys+1));IG.arrive=null;IG.manual=true}
- chips(spotOf('toys').add(new V3(0,2.6,0)),()=>[{t:'🧸 '+tt('Shop','Compra'),main:1,fn:()=>{toysSheet();return false}},{t:'🎨 '+tt('Igor’s house','Casa di Igor'),fn:()=>{houseOpen();return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'toys'});return false}}],'btoys');say(tt('So many things for the island!','Quante cose per l’isola!'),2)}}
+ const D=PLACES.toys.pos;walkNear(D,.4,()=>chips(spotOf('toys').add(new V3(0,2.8,0)),()=>[{t:'🚪 '+tt('Go in','Entra'),main:1,fn:()=>{enterRoom('toys');return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'toys'});return false}}],'btoys'))}}
 
 /* --- the 3D decorations: each builder fills a group and returns its moving parts --- */
 const dM=c=>lam(c),dE=(c,i)=>lam(c,{emissive:c,emissiveIntensity:i});
@@ -3644,6 +3635,71 @@ updaters.push((t,dt)=>{for(const k in decoO)decoO[k].riders=0;
 {const _mp=melPlay;melPlay=function(m,how){if(!m||!m.ev)return _mp(m,how);const U=FUN();const ev=m.ev.map(([t,id])=>[t,id]);const keep=ev.filter(([,id])=>(U.col[id]|0)>0);if(!keep.length){melStop();return}
  melStop();const t0=ev[0][0];keep.forEach(([t,id])=>PLAYT.push(setTimeout(()=>{if(how==='mar'){let f=shellF(id);while(f<262)f*=2;while(f>1050)f/=2;snd('marimba',f)}else shPlay(id,sheetKind==='shplay')},t-t0)))}}
 
+mkBuilding('toys',[p=>{const wall=lam('#bfe0f2'),trimM=lam('#ffffff'),wd=lam('#6a4c34'),glass=glowM('#fff1c4',.55);
+ // a pastel shop with white trim, two display windows full of toys, a round-window door
+ const b=new THREE.Mesh(new THREE.RoundedBoxGeometry(2.6,1.55,1.7,3,.1),wall);b.position.y=.78;p.add(b);
+ const base=new THREE.Mesh(new THREE.BoxGeometry(2.75,.16,1.85),lam('#e9e2d0'));base.position.y=.08;p.add(base);
+ const cor=new THREE.Mesh(new THREE.BoxGeometry(2.72,.12,1.82),trimM);cor.position.y=1.58;p.add(cor);
+ // roof: a gable made of big toy blocks in four colours
+ const C=['#e0463c','#f6d34a','#4f9ad8','#7fbf5a'];for(let r=0;r<4;r++)for(let q=0;q<5;q++){const w=2.7-r*.62;if(w<.3)continue;const bl=new THREE.Mesh(new THREE.RoundedBoxGeometry(w/5-.02,.2,.42,2,.04),lam(C[(q+r)%4]));bl.position.set(-w/2+(q+.5)*w/5,1.74+r*.2,0);p.add(bl);
+  for(const z of[-.43,.43]){const b2=bl.clone();b2.position.z=z;p.add(b2)}}
+ // a pinwheel on top that spins
+ const pole=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.7,6),trimM);pole.position.set(0,2.75,0);p.add(pole);
+ const pw=new THREE.Group();pw.position.set(0,3.1,.05);for(let k=0;k<4;k++){const bl=new THREE.Mesh(new THREE.ConeGeometry(.22,.36,3),lam(C[k]));bl.rotation.z=k*Math.PI/2;bl.position.set(Math.cos(k*Math.PI/2+Math.PI/4)*.15,Math.sin(k*Math.PI/2+Math.PI/4)*.15,0);bl.scale.z=.2;pw.add(bl)}p.add(pw);p.userData.pw=pw;
+ // scalloped striped awning
+ for(let k=0;k<9;k++){const s=new THREE.Mesh(new THREE.BoxGeometry(.3,.06,.62),lam(k%2?'#ffffff':'#e88fb0'));s.position.set(-1.2+k*.3,1.42,1.08);s.rotation.x=.38;p.add(s);
+  const sc=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,.05,12,1,false,0,Math.PI),lam(k%2?'#ffffff':'#e88fb0'));sc.rotation.set(Math.PI/2,0,Math.PI);sc.position.set(-1.2+k*.3,1.31,1.37);p.add(sc)}
+ // two display windows with toys inside
+ for(const x of[-.78,.78]){const fr=new THREE.Mesh(new THREE.BoxGeometry(.82,.72,.06),trimM);fr.position.set(x,.82,.86);p.add(fr);const gl=new THREE.Mesh(new THREE.PlaneGeometry(.7,.6),glass);gl.position.set(x,.82,.9);p.add(gl);
+  const sill=new THREE.Mesh(new THREE.BoxGeometry(.9,.06,.2),trimM);sill.position.set(x,.43,.95);p.add(sill)}
+ {const tb=new THREE.Group();const bm=lam('#b07a4c');const body=new THREE.Mesh(new THREE.SphereGeometry(.13,12,10),bm);body.position.y=.12;tb.add(body);const hd=new THREE.Mesh(new THREE.SphereGeometry(.1,12,10),bm);hd.position.y=.3;tb.add(hd);for(const x of[-.07,.07]){const e=new THREE.Mesh(new THREE.SphereGeometry(.04,8,6),bm);e.position.set(x,.39,0);tb.add(e)}tb.position.set(-.85,.5,.93);p.add(tb)}
+ for(let k=0;k<3;k++){const bl=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.12),lam(C[k]));bl.position.set(.6+k*.14,.52+(k===1?.13:0),.93);bl.rotation.y=k*.4;p.add(bl)}
+ // the door: rounded, with a little round window and a sign hanging next to it
+ {const dg=new THREE.Group();const s=new THREE.Shape();s.moveTo(-.24,0);s.lineTo(.24,0);s.lineTo(.24,.62);s.absarc(0,.62,.24,0,Math.PI,false);s.lineTo(-.24,0);
+  const d=new THREE.Mesh(new THREE.ExtrudeGeometry(s,{depth:.05,bevelEnabled:false}),lam('#e0463c'));dg.add(d);const w=new THREE.Mesh(new THREE.CircleGeometry(.09,16),glass);w.position.set(0,.66,.06);dg.add(w);const k=new THREE.Mesh(new THREE.SphereGeometry(.03,8,6),lam('#f6d34a'));k.position.set(.15,.38,.07);dg.add(k);dg.position.set(0,.16,.85);p.add(dg)}
+ const sc=document.createElement('canvas');sc.width=512;sc.height=128;const scDraw=()=>{const q=sc.getContext('2d');q.clearRect(0,0,512,128);q.fillStyle='#ffffff';q.beginPath();q.roundRect(6,6,500,116,40);q.fill();q.lineWidth=10;q.strokeStyle='#4f9ad8';q.stroke();
+  const txt=tt('TOY STORE','GIOCATTOLI');q.font='700 64px Fredoka, sans-serif';q.textAlign='center';q.textBaseline='middle';[...txt].forEach((ch,i)=>{q.fillStyle=C[i%4];q.fillText(ch,256+(i-(txt.length-1)/2)*36,68)})};scDraw();
+ const sgT=new THREE.CanvasTexture(sc);SIGNS.push(()=>{scDraw();sgT.needsUpdate=true});const sg=new THREE.Mesh(new THREE.PlaneGeometry(1.7,.42),curve(new THREE.MeshBasicMaterial({map:sgT,transparent:true})));sg.position.set(0,1.95,.68);p.add(sg);
+ // balloons tied to the corner
+ const bals=[];for(let k=0;k<3;k++){const bal=new THREE.Mesh(new THREE.SphereGeometry(.16,12,10),lam(C[k],{emissive:C[k],emissiveIntensity:.15}));bal.scale.y=1.2;bal.position.set(1.42+k*.12,1.9+k*.22,.75-k*.1);p.add(bal);bals.push(bal);const st=new THREE.Mesh(new THREE.CylinderGeometry(.005,.005,1.6+k*.22,4),lam('#444'));st.position.set(1.36+k*.06,1.05+k*.11,.8-k*.05);st.rotation.z=-(.06+k*.04);p.add(st)}p.userData.bals=bals}]);
+updaters.push((t,dt)=>{const B=BOBJ.toys;if(!B)return;const P=B.parts[0];if(!P||!P.userData.pw)return;P.userData.pw.rotation.z+=dt*1.6;P.userData.bals.forEach((b,i)=>b.position.y=1.9+i*.22+Math.sin(t*1.3+i)*.05)});
+
+/* --- inside: a shop with the ten decorations on pedestals, like the prize shop --- */
+PLACES.toys={get pos(){return spotOf('toys').add(new V3(0,0,SPOTR.toys+.35))},open:()=>enterRoom('toys'),name:'Toy Store'};
+const _toyD={};
+{const Rm=room('toys',{w:16,d:8,floor:'#c9a27a',floorLine:'#8a6a48',wall:'#e6f3fa',wall2:'#d6ebf6',motif:'rgba(79,154,216,.18)',wain:'#4f9ad8',wainD:'#3d7fb8',trim:'#2f4f6a'}),g=Rm.g;BUILD='toys';
+ const sc=document.createElement('canvas');sc.width=512;sc.height=96;const scD=()=>{const q=sc.getContext('2d');q.fillStyle='#2f4f6a';q.fillRect(0,0,512,96);q.font='600 54px Fredoka, sans-serif';q.textAlign='center';q.textBaseline='middle';const txt=tt('★ TOY STORE ★','★ GIOCATTOLI ★'),C=['#e0463c','#f6d34a','#7fe3ef','#9be38a'];
+  const w=q.measureText(txt).width;let x=256-w/2;q.textAlign='left';[...txt].forEach((ch,i)=>{q.fillStyle=C[i%4];q.fillText(ch,x,52);x+=q.measureText(ch).width})};scD();
+ const scT=new THREE.CanvasTexture(sc);SIGNS.push(()=>{scD();scT.needsUpdate=true});const sign=new THREE.Mesh(new THREE.PlaneGeometry(3.6,.62),new THREE.MeshBasicMaterial({map:scT}));sign.position.set(0,2.25,-3.83);g.add(sign);
+ {const st=document.createElement('canvas');st.width=256;st.height=32;const q=st.getContext('2d');for(let k=0;k<16;k++){q.fillStyle=k%2?'#ffffff':'#e88fb0';q.fillRect(k*16,0,16,32)}const aw=new THREE.Mesh(new THREE.BoxGeometry(11,.1,.7),texM(new THREE.CanvasTexture(st)));aw.position.set(0,3.1,-3.75);aw.rotation.x=.35;g.add(aw)}
+ // bunting across the ceiling
+ {const C=['#e0463c','#f6d34a','#4f9ad8','#7fbf5a','#e88fb0'];for(let k=0;k<22;k++){const u=k/21,x=-7.4+u*14.8,y=2.95-Math.sin(u*Math.PI)*.35,f=new THREE.Mesh(new THREE.ConeGeometry(.12,.26,3),lam(C[k%5]));f.rotation.x=Math.PI;f.position.set(x,y,-.6);g.add(f)}}
+ const SL={fire:[-5.2,.7],lights:[-2.6,.7],totem:[0,.7],beach:[2.6,.7],tele:[5.2,.7],fount:[-5.2,-2.1],stage:[-2.6,-2.1],treeh:[0,-2.1],wheel:[2.6,-2.1],caro:[5.2,-2.1]},SC={fire:.62,lights:.62,totem:.58,beach:.55,tele:.85,fount:.6,stage:.48,treeh:.38,wheel:.36,caro:.42};
+ const pedM=lam('#ffffff'),rimC=['#e0463c','#f6d34a','#4f9ad8','#7fbf5a','#e88fb0'];
+ DKEYS.forEach((k,i)=>{const[x,z]=SL[k],G=new THREE.Group();G.position.set(x,0,z);g.add(G);const ped=new THREE.Mesh(new THREE.CylinderGeometry(1,1.05,.22,28),pedM);ped.position.y=.11;G.add(ped);
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(1.02,.05,6,28),lam(rimC[i%5]));rim.rotation.x=Math.PI/2;rim.position.y=.22;G.add(rim);
+  const M=new THREE.Group();M.position.y=.22;M.scale.setScalar(SC[k]);const parts=DECO3D[k](M)||{};G.add(M);const hl=halo('#fff1c4',2.4,.25,true);hl.position.y=2.2;G.add(hl);Rm.blocks.push({x,z,r:1});
+  const stand=new V3(x,0,z+1.45),go=()=>walkIn(stand,()=>toyChips(k));hit(G,1.1,go,'toy-'+k,.7);const L=label(DECO[k].N,'',new V3(x,z>0?1.75:2.25,z),go,0);L.el.classList.add('plot');
+  _toyD[k]={G,M,parts,L}});
+ // the house atelier: an easel with a little house painting, by the door
+ {const E=new THREE.Group();E.position.set(-6.9,0,2.4);E.rotation.y=.5;g.add(E);const wd=lam('#8a5a3a');for(const[x,r]of[[-.35,.12],[.35,-.12]]){const l=new THREE.Mesh(new THREE.BoxGeometry(.06,1.8,.06),wd);l.position.set(x,.9,0);l.rotation.z=r;E.add(l)}
+  const bl=new THREE.Mesh(new THREE.BoxGeometry(.06,1.6,.06),wd);bl.position.set(0,.8,-.35);bl.rotation.x=-.25;E.add(bl);const ledge=new THREE.Mesh(new THREE.BoxGeometry(.9,.05,.12),wd);ledge.position.set(0,.85,.06);E.add(ledge);
+  const c=document.createElement('canvas');c.width=192;c.height=192;{const q=c.getContext('2d');q.fillStyle='#fdf6e8';q.fillRect(0,0,192,192);q.fillStyle='#b9d6ea';q.fillRect(0,0,192,110);q.fillStyle='#8cc63f';q.fillRect(0,140,192,52);q.fillStyle='#e8dcc2';q.fillRect(50,80,92,70);q.fillStyle='#b4553f';q.beginPath();q.moveTo(36,84);q.lineTo(96,34);q.lineTo(156,84);q.fill();q.fillStyle='#5e8a6a';q.fillRect(84,112,24,38);q.fillStyle='#f6c27a';q.fillRect(58,96,18,16);q.fillRect(116,96,18,16);q.font='34px serif';q.fillText('🎨',140,40)}
+  const cv=new THREE.Mesh(new THREE.PlaneGeometry(.85,.85),lam('#ffffff',{map:new THREE.CanvasTexture(c)}));cv.position.set(0,1.3,.08);cv.rotation.x=-.12;E.add(cv);
+  Rm.blocks.push({x:-6.9,z:2.4,r:.6});const go=()=>walkIn(new V3(-6.1,0,2.9),()=>{exitRoom(true);houseOpen()});hit(E,.8,go,'toy-house',1.2);
+  const L=label(['Igor’s house','La casa di Igor'],['colours, windows, styles…','colori, finestre, stili…'],new V3(-6.9,2.45,2.4),go,0);L.el.classList.add('plot')}
+ BUILD='out';
+ updaters.push((t,dt)=>{if(where!=='toys')return;const M=S.farm&&S.farm.deco||{};DKEYS.forEach((k,i)=>{const D=_toyD[k];D.M.rotation.y=t*.3+i;const P=D.parts;if(k==='wheel')P.W.rotation.z+=dt*.3,P.G.forEach(c=>c.rotation.z=-P.W.rotation.z);if(k==='caro')P.R0.rotation.y+=dt*.6;
+  const m=M[k],sub=m?(m.x!=null?'✓':tt('to place','da piazzare')):lvlOf()<DECO[k].lv?`🔒 ${tt('lv.','liv.')} ${DECO[k].lv}`:DECO[k].cost.sh?`${DECO[k].cost.sh} 🐚 ★★+`:`${DECO[k].cost.t} ${tt('ants','formiche')} · ${DECO[k].cost.s} ${tt('seeds','semi')}`,h=`${DECO[k].ic} ${N(DECO[k].N)}<small>${sub}</small>`;if(D.h!==h){D.h=h;D.L.el.innerHTML=h}})})}
+function toyChips(k){if(VISIT){visitNo();return}const D=DECO[k],T0=_toyD[k],m=DEC()[k];say(N(D.what),3);
+ chips(T0.G.position.clone().add(new V3(0,1.9,.6)),()=>{const m=DEC()[k],L=[];
+  if(!m)L.push(lvlOf()<D.lv?{t:`🔒 ${tt('lv.','liv.')} ${D.lv}`,off:1,why:LVFIRST(D.lv)}:{t:`${D.ic} ${tt('Buy','Compra')} ${decoCost(k)}`,main:decoCan(k),fn:()=>{decoBuy(k);return false}});
+  else if(m.x==null)L.push({t:'📍 '+tt('Place it','Piazzalo'),main:1,fn:()=>{startPlace({k:'deco',id:k});return false}});
+  else{L.push({t:'👀 '+tt('Go and see','Vai a vederlo'),main:1,fn:()=>{exitRoom(true);walkNear(new V3(m.x,0,m.z),D.r+.9,()=>decoTap(k));return false}});L.push({t:'↔ '+tt('Move','Sposta'),fn:()=>{const o=decoO[k];startPlace({k:'deco',id:k,fx:o&&o.fx});return false}})}
+  return L},'toy'+k)}
+
+// buildings made after the world group was gathered live in the scene: hide them indoors
+updaters.push(()=>{const F=S.farm;if(!F)return;for(const k of BKEYS){const B=BOBJ[k];if(!B)continue;const v=where==='out'&&(!!F.b[k]||F.tasks.some(q=>q.k==='build'&&q.b===k));if(B.g.visible!==v)B.g.visible=v}});
 /* ================= 10 Nov 2026: Igor's house, made your own: parts, colours and whole styles. Try for free, pay to keep ================= */
 const HSTY={
  cottage:{N:['Cottage','Cottage'],ic:'🏡',lv:1,t:0,c:{shape:'box',wall:'plaster',beams:1,wcol:'#e8dcc2',roof:'tiles',rcol:'#b4553f',win:'shutters',door:'round',dcol:'#5e8a6a',chim:'stone'}},
