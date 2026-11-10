@@ -3268,7 +3268,7 @@ updaters.push((t,dt)=>{
   if(left<=0){ROPE.state='go';ROPE.th=0}return}
  const prev=ROPE.th;ROPE.th+=dt*TAU/ROPE.per;ropeG.spin.rotation.x=ROPE.th;
  const k0=Math.floor((prev-Math.PI)/TAU),k1=Math.floor((ROPE.th-Math.PI)/TAU);
- if(k1>k0){/* the rope is under Igor's feet now */if(IG.jy>.16){ROPE.n++;if(window.IgorSound&&started)IgorSound.sfx('tap');if(ROPE.n%3===0)ROPE.per=Math.max(.62,ROPE.per*.96);o.jump=.25}else{ropeEnd();return}}
+ if(k1>k0){/* the rope is under Igor's feet now */if(IG.jy>.16){ROPE.n++;if(window.IgorSound&&started)IgorSound.sfx('tap');ROPE.per=Math.max(.36,ROPE.per*(ROPE.n<20?.985:.975));/* faster and faster: a little at every jump, a bit more after 20 */o.jump=.25}else{ropeEnd();return}}
  ropeUI.innerHTML=`🪢 <b>${ROPE.n}</b><small>${tt('record','record')} ${ROPE.best}</small>`});
 
 /* ================= 9 Nov 2026 (evening): tofuel =================
