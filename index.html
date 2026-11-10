@@ -1067,7 +1067,7 @@ const FIXB=[[15.8,-5.2,1.8],[0,-7.1,2.9],[0,-4.3,1.1],[-10,-9.5,2.9],[-8.7,-7.1,
 const ghM=curve(new THREE.MeshBasicMaterial({color:'#9be38a',transparent:true,opacity:.38,depthWrite:false})),ghL=curve(new THREE.MeshBasicMaterial({color:'#9be38a',transparent:true,opacity:.95,depthWrite:false}));
 const ghost=(()=>{const g=new THREE.Group();const sq=new THREE.Mesh(new THREE.BoxGeometry(1,.12,1),ghM);sq.position.y=.07;g.add(sq);const ring=new THREE.Mesh(new THREE.RingGeometry(.93,1,48).rotateX(-Math.PI/2),ghL);ring.position.y=.1;g.add(ring);g.visible=false;scene.add(g);return{g,sq,ring}})();
 let PL=null;
-const plR=P=>P.k==='field'||P.k==='movefield'?1.05:P.k==='tree'?Math.max(.55,.62*trees[P.j].t.scale.x):P.k==='rock'?Math.max(.4,.5*rocks[P.j].scale.x):P.k==='ins'?1.4:P.k==='deco'?DECO[P.id].r:SPOTR[P.key];
+const plR=P=>P.k==='field'||P.k==='movefield'?1.05:P.k==='tree'?Math.max(.55,.62*trees[P.j].t.scale.x):P.k==='rock'?Math.max(.4,.5*rocks[P.j].scale.x):P.k==='ins'?1.4:P.k==='deco'?DECO[P.id].r:P.k==='souv'?.45:SPOTR[P.key];
 function startPlace(P){if(where!=='out')exitRoom(true);hideChips();closeBar();PL={...P,r:plR(P),x:null,z:null,ok:false,cuts:{t:[],r:[]}};ghost.g.visible=true;const f=PL.k.includes('field'),w=f?1.7:PL.r*1.5;ghost.sq.scale.set(w,1,w);ghost.ring.scale.setScalar(f?1.2:PL.r);
  say(tt('Walk me to a free spot.','Portami in un posto libero.'),3)}
 function placeCheck(x,z){const F=FM(),r=PL.r;if(Math.hypot(x,z*1.12)>R-1.5-r&&!isleIn(x,z,1.5+r))return tt('Too close to the sea.','Troppo vicino al mare.');
@@ -1077,7 +1077,7 @@ function placeCheck(x,z){const F=FM(),r=PL.r;if(Math.hypot(x,z*1.12)>R-1.5-r&&!i
  return''}
 function placeTick(){if(!PL)return;const dx=lookS.x-camera.position.x,dz=lookS.z-camera.position.z,L=Math.hypot(dx,dz)||1;const fx=dx/L,fz=dz/L,sd=PL.r+1.5;let x=igor.position.x-fz*sd+fx*.4,z=igor.position.z+fx*sd+fz*.4;x=Math.round(x*4)/4;z=Math.round(z*4)/4;
  if(x===PL.x&&z===PL.z)return;PL.x=x;PL.z=z;PL.why=placeCheck(x,z);PL.ok=!PL.why;PL.cuts={t:[],r:[]};
- {const mv=PL.k==='tree'||PL.k==='rock'||PL.k==='ins';let tIn=false,rIn=false;trees.forEach((tr,j)=>{if(PL.k==='tree'&&PL.j===j)return;if(mvLive(tr.t)&&Math.hypot(tr.t.position.x-x,tr.t.position.z-z)<PL.r+.75)tIn=true});
+ {const mv=PL.k==='tree'||PL.k==='rock'||PL.k==='ins'||PL.k==='souv';let tIn=false,rIn=false;trees.forEach((tr,j)=>{if(PL.k==='tree'&&PL.j===j)return;if(mvLive(tr.t)&&Math.hypot(tr.t.position.x-x,tr.t.position.z-z)<PL.r+.75)tIn=true});
   rocks.forEach((rk,j)=>{if(PL.k==='rock'&&PL.j===j)return;if(mvLive(rk)&&Math.hypot(rk.position.x-x,rk.position.z-z)<PL.r+.45){if(mv)rIn=true;else PL.cuts.r.push(j)}});
   if(PL.ok&&tIn){PL.ok=false;PL.why=treeWhy()}else if(PL.ok&&rIn){PL.ok=false;PL.why=tt('A rock is in the way.','C’è un sasso in mezzo.')}}
  const c=PL.ok?'#9be38a':'#ff7a6a';ghM.color.set(c);ghL.color.set(c);ghost.g.position.set(x,0,z);placeChips()}
@@ -1090,6 +1090,7 @@ function placeConfirm(){if(!PL)return;if(!PL.ok)return say(PL.why,2);const F=FM(
  else if(PL.k==='tree'){F.tmv=F.tmv||{};F.tmv[PL.j]={x,z};moveTreeTo(PL.j,x,z);snd('pop');say(pick(tt(['Transplanted! It will grow happily here.','There! A new home for the tree.'],['Trapiantato! Qui crescerà contento.','Ecco! Una casa nuova per l’albero.'])),2.4)}
  else if(PL.k==='rock'){F.rmv=F.rmv||{};F.rmv[PL.j]={x,z};moveRockTo(PL.j,x,z);snd('thud');say(tt('Rolled all the way here!','Rotolato fin qui!'),1.8)}
  else if(PL.k==='deco'){decoPlace(PL.id,x,z)}
+ else if(PL.k==='souv'){const sv=F.souv&&F.souv[PL.j];if(sv){sv.x=+x.toFixed(2);sv.z=+z.toFixed(2)}snd('pop');say(tt('There! A good spot for it.','Ecco! Qui sta bene.'),2)}
  else if(PL.k==='ins'){const M=insS(PL.ik);M.pos={x,z};insMoveTo(PL.ik,x,z);insPlay(PL.ik,0);say(tt('Moved! It sounds good here too.','Spostato! Anche qui suona bene.'),2)}
  endPlace();fmDirty=true;simTo(Date.now(),true);save();fmRender()}
 function endPlace(){PL=null;ghost.g.visible=false;hideChips()}
@@ -3334,7 +3335,7 @@ function souvMesh(t,s){const g=new THREE.Group(),m=c=>lam(c);
  return g}
 function souvTap(j){const F=FM(),s=F.souv&&F.souv[j];if(!s)return;const o=SOUV[s.t]||SOUV.flower,d=new Date(s.at||Date.now()).toLocaleDateString(LANG==='it'?'it-IT':'en-GB',{day:'numeric',month:'long'});
  bubbleQ.length=0;bubbleT=0;say(tt(`${cap1(an(o))} left by ${s.by||'a friend'} on ${d}.`,`${cap1(an(o))} lasciato da ${s.by||'un amico'} il ${d}.`),3.4);if(VISIT)return;
- chips(new V3(s.x,1,s.z),()=>[{t:tt('Keep it','Tienilo'),main:1,fn:()=>false},{t:tt('Put it away','Mettilo via'),fn:()=>{F.souv.splice(j,1);fmDirty=true;save();return false}}],'souv'+j)}
+ chips(new V3(s.x,1,s.z),()=>[{t:tt('Keep it','Tienilo'),main:1,fn:()=>false},...(VISIT?[]:[{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'souv',j});return false}}]),{t:tt('Put it away','Mettilo via'),fn:()=>{F.souv.splice(j,1);fmDirty=true;save();return false}}],'souv'+j)}
 updaters.push(()=>{if(!S.farm)return;const L=FM().souv||[],keys=new Set(L.map((s,j)=>`${j}|${s.t}|${s.x}|${s.z}`+(s.av?'|av':'')));
  for(const[k,o]of souvObjs)if(!keys.has(k)){world.remove(o);const i=clickables.indexOf(o.userData.hit);if(i>=0)clickables.splice(i,1);souvObjs.delete(k)}
  L.forEach((s,j)=>{const k=`${j}|${s.t}|${s.x}|${s.z}`+(s.av?'|av':'');if(souvObjs.has(k)){const b=souvObjs.get(k).userData.bb;if(b){b.pl.quaternion.copy(camera.quaternion);b.pl.parent&&b.pl.quaternion.premultiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,-souvObjs.get(k).rotation.y,0)));if(!b.ok&&igorOK){b.ok=true;b.mat.map=igTex(b.G0,'');b.mat.needsUpdate=true}}return}const B0=BUILD;BUILD='out';const g=souvMesh(s.t,s);g.position.set(s.x,0,s.z);g.scale.setScalar(1.6);g.rotation.y=(j*1.7)%TAU;world.add(g);g.userData.hit=hit(g,.4,()=>souvTap(j),'souv',.3);BUILD=B0;souvObjs.set(k,g)})});
