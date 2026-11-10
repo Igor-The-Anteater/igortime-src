@@ -1922,10 +1922,10 @@ hudIgs();
 function vehShop(){if(PL)return;goTo('prizes');return;say(tt('Prizes! Save up tofu ants.','Premi! Metti da parte formiche di tofu.'),2.6);
  chips(SHOPV.clone().add(new V3(0,2.2,0)),()=>{const F=FM();return VKEYS.map(k=>{const V=VEH[k];return F.veh[k]?{t:`${V.ic} ${N(V.N)} ✓`,fn:()=>{mount(k);return false}}:{t:`${V.ic} ${N(V.N)} ${cst(dual({t:V.cost}))}`,main:F.ants.t>=V.cost,fn:()=>{buyVeh(k);return true}}})},'shopv')}
 function vehChips(){chips(igor.position.clone().add(new V3(0,2.4,0)),()=>{const F=FM(),L=[],own=VKEYS.filter(k=>F.veh[k]);
- if(CH.more==='col'){const k=RIDE||own[0];if(!k)return[];for(const c of VCOL)L.push({t:`<span class="sw" style="background:${c}"></span>`,main:F.veh[k].c===c,fn:()=>{F.veh[k].c=c;fmDirty=true;vehPaint(k);return true}});L.push({t:'‹',fn:()=>{CH.more=false;return true}});return L}
+ if(CH.more==='col'){const k=RIDE;if(!k||!F.veh[k])return[];for(const c of VCOL)L.push({t:`<span class="sw" style="background:${c}"></span>`,main:F.veh[k].c===c,fn:()=>{F.veh[k].c=c;fmDirty=true;vehPaint(k);return true}});L.push({t:'‹',fn:()=>{CH.more=false;return true}});return L}
  for(const k of own)L.push({t:`${VEH[k].ic} ${N(VEH[k].N)}`,main:RIDE===k,fn:()=>{mount(k);return false}});
  if(RIDE)L.push({t:'🚶 '+tt('On foot','A piedi'),fn:()=>{dismount();return false}});
- if(!VISIT)L.push({t:'🎨 '+tt('Colour','Colore')+(RIDE?'':` · ${N(VEH[own[0]].N)}`),fn:()=>{CH.more='col';return true}});return L},'veh',1)}
+ if(!VISIT&&RIDE)L.push({t:`🎨 ${tt('Colour','Colore')} · ${N(VEH[RIDE].N)}`,fn:()=>{CH.more='col';return true}});return L},'veh',1)}
 $('vehB').onclick=()=>{if(PL||!VKEYS.some(k=>FM().veh[k]))return;closeBar();if(CH&&CH.key==='veh'){hideChips();return}vehChips();say(RIDE?tt('Where to?','Dove andiamo?'):tt('Hop on!','Sali!'),1.8)};
 updaters.push(()=>{const own=VKEYS.some(k=>FM().veh[k]);$('vehB').hidden=!own;$('vehB').textContent=RIDE?VEH[RIDE].ic:own?VEH[VKEYS.filter(k=>FM().veh[k]).pop()].ic:'🚲';if(CH&&CH.key==='veh')CH.pos.set(igor.position.x,2.4+rideY(),igor.position.z)});
 if(TESTING)window.__farm={screen:()=>[...igObjs].map(([id,o])=>{const v=projC(o.grp.position.clone().add(new V3(0,.4,0)));return[id,Math.round((v.x*.5+.5)*innerWidth),Math.round((-v.y*.5+.5)*innerHeight),o.grp.visible]}),acts:()=>[...igObjs].map(([id,o])=>[id,o.act&&o.act.k,o.act&&o.act.v,!!o.ride]),tex:id=>{const g=igById(id);return g?igTex(g,'').image.toDataURL():null},blk:()=>blocked.map(b=>[+b.x.toFixed(2),+b.z.toFixed(2),+b.r.toFixed(2)]),ask:()=>proposeGame(),fpos:()=>FM().fields.map((f,i)=>{const v=projC(fieldPos(i).add(new V3(0,.15,0)));return[Math.round((v.x*.5+.5)*innerWidth),Math.round((-v.y*.5+.5)*innerHeight)]}),dbg:()=>({ig:[+igor.position.x.toFixed(1),+igor.position.z.toFixed(1)],tg:IG.target?[+IG.target.x.toFixed(1),+IG.target.z.toFixed(1)]:null,d:+igor.position.distanceTo(SHOPV).toFixed(1),chips:$('chips').hidden?null:[...$('chips').querySelectorAll('button')].map(b=>b.textContent.trim()),houses:houseObjs.filter(H=>H.h.visible).length,igs:FM().igs.length})};
@@ -3578,10 +3578,12 @@ const decoO={};
 const FIREX={sput:0,puff:0};
 const fireWet=()=>SKY.W.rain>.25||SKY.W.storm>.3||SKY.W.hail>.3;
 const fireLit=()=>{const U=FUN();return (+U.fire||0)>Date.now()};
-function fireState(){if(FIREX.sput>T)return Math.max(0,(FIREX.sput-T)/1.6);if(!fireLit())return 0;if(fireWet()){FUN().fire=0;fmDirty=true;FIREX.puff=T+2;if(where==='out'&&decoO.fire&&decoO.fire.g.position.distanceTo(igor.position)<14)say(tt('The rain put the fire out.','La pioggia ha spento il fuoco.'),2.4);return 0}return 1}
-function fireLight(){snd('pop');if(fireWet()){FIREX.sput=T+1.6;FIREX.puff=T+3.6;setTimeout(()=>say(tt('Pfff… it’s raining: the fire went out straight away.','Pfff… piove: il fuoco si è spento subito.'),2.8),900);return}
+function fireState(){if(FIREX.sput>T)return Math.max(0,(FIREX.sput-T)/1.6);if(SKY.nk<.15)FIREX.offNight=false;
+ const want=fireLit()||(SKY.nk>.15&&!FIREX.offNight);if(want&&fireWet()){if(FIREX.was){FIREX.was=false;FUN().fire=0;fmDirty=true;FIREX.puff=T+2;if(where==='out'&&decoO.fire&&decoO.fire.g.position.distanceTo(igor.position)<14)say(tt('The rain put the fire out.','La pioggia ha spento il fuoco.'),2.4)}return 0}
+ FIREX.was=want;return want?1:0}
+function fireLight(){snd('pop');FIREX.offNight=false;if(fireWet()){FIREX.sput=T+1.6;FIREX.puff=T+3.6;setTimeout(()=>say(tt('Pfff… it’s raining: the fire went out straight away.','Pfff… piove: il fuoco si è spento subito.'),2.8),900);return}
  FUN().fire=Date.now()+60*60e3;fmDirty=true;save();say(pick(tt(['A nice little fire!','Crackle crackle… cosy!'],['Che bel fuocherello!','Crepita… che tepore!'])),2.4)}
-function fireOut(){FUN().fire=0;fmDirty=true;save();FIREX.puff=T+2;say(tt('Out it goes.','Spento.'),1.6)}
+function fireOut(){FUN().fire=0;if(SKY.nk>.15)FIREX.offNight=true;FIREX.was=false;fmDirty=true;save();FIREX.puff=T+2;say(tt('Out it goes.','Spento.'),1.6)}
 function decoBuild(k){const p=DEC()[k];if(!p||p.x==null)return null;if(decoO[k])return decoO[k];const D=DECO[k],g=new THREE.Group();g.position.set(p.x,0,p.z);g.rotation.y=Math.atan2(-p.x,-p.z);
  const parts=DECO3D[k](g)||{};world.add(g);blob(g,D.r,.9);const fx=[p.x,p.z,D.r*.85];FIXB.push(fx);block(p.x,p.z,D.r*.7);const bk=blocked[blocked.length-1];
  const B0=BUILD;BUILD='out';hit(g,Math.min(1.4,D.r*.8),()=>decoTap(k),'deco-'+k,.8);const L=label(N(D.N),'',new V3(p.x,k==='wheel'||k==='treeh'||k==='caro'?4.8:k==='totem'?3.3:2.4,p.z),()=>decoTap(k),5);L.el.classList.add('plot');BUILD=B0;
@@ -3593,7 +3595,7 @@ const DSAY={fire:[['A little fire is nice in the evening.','Un fuocherello è be
  beach:[['Sun, sea and a deckchair.','Sole, mare e una sdraio.']],tele:[['I can see… the other side of the sea!','Vedo… l’altra parte del mare!'],['At night you can see the rings of a planet.','Di notte si vedono gli anelli di un pianeta.']],fount:[['Splish splash!','Splish splash!']],
  stage:[['A stage! Who plays first?','Un palco! Chi suona per primo?']],treeh:[['A secret hideout. Shh!','Un nascondiglio segreto. Shh!']],wheel:[['Round and round we go!','Gira gira gira!']],caro:[['Hold on to the little horses!','Tenetevi forte ai cavallini!']]};
 function decoTap(k){if(PL)return;const o=decoO[k];if(!o)return;const P=o.g.position.clone();const go=()=>{say(N(pick(DSAY[k])),2.6);if(k==='wheel'||k==='caro')o.spin=T+6;
-  if(VISIT)return;chips(P.clone().setY(k==='wheel'||k==='treeh'||k==='caro'?4.2:2.2),()=>[...(k==='fire'?[fireLit()?{t:'💨 '+tt('Put it out','Spegni'),fn:()=>{fireOut();return true}}:{t:'🔥 '+tt('Light it','Accendi'),main:1,fn:()=>{fireLight();return true}}]:[]),{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'deco',id:k,fx:o.fx});return false}}],'deco'+k)};
+  if(VISIT)return;chips(P.clone().setY(k==='wheel'||k==='treeh'||k==='caro'?4.2:2.2),()=>[...(k==='fire'?[FIREX.was?{t:'💨 '+tt('Put it out','Spegni'),fn:()=>{fireOut();return true}}:{t:'🔥 '+tt('Light it','Accendi'),main:1,fn:()=>{fireLight();return true}}]:[]),{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'deco',id:k,fx:o.fx});return false}}],'deco'+k)};
  if(igor.position.distanceTo(P)>DECO[k].r+2.4)walkNear(P.clone().setY(0),DECO[k].r+.9,go);else go()}
 // build the placed ones at start and whenever the save changes
 {let key='';updaters.push((t,dt)=>{const F=S.farm;if(!F||!F.deco)return;const k2=JSON.stringify(F.deco);if(k2===key)return;key=k2;
