@@ -97,7 +97,7 @@ function adminButton(){if($('admB'))return;const ref=$('chatB')||$('me');if(!ref
 function makePanel(){panel=document.createElement('aside');panel.id='adm';panel.className='igs';panel.hidden=true;panel.setAttribute('aria-label',tt('Admin','Amministrazione'));document.body.appendChild(panel);
  ['keydown','keyup','keypress'].forEach(k=>panel.addEventListener(k,e=>e.stopPropagation()));
  ['pointerdown','wheel','touchstart'].forEach(k=>panel.addEventListener(k,e=>e.stopPropagation(),{passive:true}));
- panel.addEventListener('click',onClick);panel.addEventListener('change',e=>{if(e.target.id==='admGk'){const v=e.target.value==='veh';$('admGn').hidden=v;$('admGv').hidden=!v}});
+ panel.addEventListener('click',onClick);panel.addEventListener('change',e=>{if(e.target.id==='admGk'){const k=e.target.value;$('admGn').hidden=k==='veh'||k==='deco';$('admGv').hidden=k!=='veh';$('admGd').hidden=k!=='deco';$('admGh').hidden=k!=='house';$('admGn').hidden=k!=='seeds'&&k!=='ants'}});
  panel.addEventListener('input',e=>{if(e.target.id==='admQ'){q=e.target.value.trim().toLowerCase();drawList()}})}
 function toast(t){const e=panel.querySelector('.toast');if(!e)return;e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2600)}
 function shell(){panel.innerHTML=`<div class="top"><h3>🛡 ${tt('Admin','Amministrazione')}</h3><button data-a="reload" title="${tt('Refresh','Aggiorna')}" aria-label="${tt('Refresh','Aggiorna')}">↻</button><button data-a="close" aria-label="${tt('Close','Chiudi')}">×</button></div>
@@ -157,8 +157,8 @@ function userV(){const b=shell(),a=allAccounts().find(x=>x.uid===sel)||{uid:sel,
  <div style="display:flex;justify-content:flex-end;margin:8px 0 4px"><button class="go" data-a="send">${tt('Send','Manda')}</button></div>
  <h4>${tt('Messages sent','Messaggi mandati')}</h4><div id="admSent"><p class="mute">${tt('Loading…','Carico…')}</p></div>
  <h4>🎁 ${tt('Gifts','Regali')}</h4><div id="admInv" class="mute">${tt('Loading…','Carico…')}</div>
- <div class="gift"><select id="admGk"><option value="seeds">🌱 ${tt('Seeds','Semi')}</option><option value="ants">🧊 ${tt('Tofu ants','Formiche di tofu')}</option><option value="veh">🏆 ${tt('A prize (vehicle)','Un premio (mezzo)')}</option></select>
- <input id="admGn" type="number" min="1" max="100000" value="10" inputmode="numeric"><select id="admGv" hidden>${Object.keys(VEHS).map(k=>`<option value="${k}">${esc(vName(k))}</option>`).join('')}</select>
+ <div class="gift"><select id="admGk"><option value="seeds">🌱 ${tt('Seeds','Semi')}</option><option value="ants">🧊 ${tt('Tofu ants','Formiche di tofu')}</option><option value="veh">🏆 ${tt('A prize (vehicle)','Un premio (mezzo)')}</option><option value="deco">🧸 ${tt('A toy-store decoration','Una decorazione (negozio dei giocattoli)')}</option><option value="house">🏡 ${tt('Something for Igor’s house','Una personalizzazione della casa')}</option></select>
+ <input id="admGn" type="number" min="1" max="100000" value="10" inputmode="numeric"><select id="admGv" hidden>${Object.keys(VEHS).map(k=>`<option value="${k}">${esc(vName(k))}</option>`).join('')}</select><select id="admGd" hidden>${Object.keys(DECOS).map(k=>`<option value="d:${k}">${esc(dName(k))}</option>`).join('')}</select><select id="admGh" hidden>${hOpts()}</select>
  <input id="admGm" type="text" maxlength="200" placeholder="${tt('Note for the player (optional)','Biglietto per il giocatore (facoltativo)')}"><button class="go" data-a="gift">${tt('Give','Regala')}</button></div>
  <p class="mute">${tt('It arrives on the island (right away if they are there). You can take back only what you gave, never what they earned, and never below zero.','Arriva sull’isola (subito, se ci sono). Si può ritirare solo quello che hai regalato, mai quello che hanno guadagnato, e mai sotto zero.')}</p>
  <div id="admGifts"></div>`;
@@ -167,7 +167,7 @@ let GIFTS=[],INV=null;
 async function loadGifts(uid){try{const s=await getDocs(query(collection(db,'gifts',uid,'g'),orderBy('at','desc'),limit(50)));GIFTS=s.docs.map(d=>({id:d.id,...d.data(),at:ms(d.data().at)}))}catch(e){console.warn('gifts',e);GIFTS=[]}}
 async function loadInv(uid){try{const d=await getDoc(doc(db,'users',uid));INV=d.exists()?d.data():false}catch(e){console.warn('inv',e);INV=null}}
 function drawInv(){const e=$('admInv');if(!e)return;if(INV===null){e.textContent=tt('Cannot read their island.','Non riesco a leggere la sua isola.');return}if(INV===false){e.textContent=tt('No saved island yet.','Ancora nessuna isola salvata.');return}
- const F=INV.farm||{},v=Object.keys(F.veh||{});e.innerHTML=`${tt('Now on the island','Adesso sull’isola')}: 🌱 <b>${INV.seeds|0}</b> · 🧊 <b>${(F.ants&&F.ants.t)|0}</b> ${tt('in the pocket','in tasca')} · ${tt('collected','raccolte')} ${F.total|0}${v.length?' · '+v.map(k=>esc(vName(k))+((F.veh[k].n|0)>1?' ×'+F.veh[k].n:'')).join(', '):''}<br><small>${tt('(as of their last save)','(al loro ultimo salvataggio)')}</small>`}
+ const F=INV.farm||{},v=Object.keys(F.veh||{});e.innerHTML=`${tt('Now on the island','Adesso sull’isola')}: 🌱 <b>${INV.seeds|0}</b> · 🧊 <b>${(F.ants&&F.ants.t)|0}</b> ${tt('in the pocket','in tasca')} · ${tt('collected','raccolte')} ${F.total|0}${v.length?' · '+v.map(k=>esc(vName(k))+((F.veh[k].n|0)>1?' ×'+F.veh[k].n:'')).join(', '):''}${Object.keys(F.deco||{}).filter(k=>DECOS[k]).length?' · '+Object.keys(F.deco).filter(k=>DECOS[k]).map(k=>esc(dName(k))+(F.deco[k].x==null?' ('+tt('not placed','da piazzare')+')':'')).join(', '):''}<br><small>${tt('(as of their last save)','(al loro ultimo salvataggio)')}</small>`}
 function giftLabel(g){return g.k==='seeds'?`🌱 ${g.n} ${tt('seeds','semi')}`:g.k==='ants'?`🧊 ${g.n} ${tt('tofu ants','formiche di tofu')}`:esc(vName(g.v))}
 function giftNote(g){if(g.st!=='gone')return'';if(g.k==='veh')return g.tk?'':` (${tt('they had bought it: kept','l’aveva comprato: resta')})`;return(g.tk|0)<g.n?` (${tt('taken','tolti')} ${g.tk|0} ${tt('of','su')} ${g.n})`:''}
 function drawGifts(){const e=$('admGifts');if(!e)return;if(!GIFTS.length){e.innerHTML=`<p class="mute">${tt('No gifts yet.','Ancora nessun regalo.')}</p>`;return}
@@ -191,7 +191,7 @@ async function onClick(e){const t=e.target.closest('[data-a],[data-tab],[data-f]
  if(a==='copy'){const x=allAccounts().find(v=>v.uid===sel);try{await navigator.clipboard.writeText(x.email);toast(tt('Copied','Copiata'))}catch(err){toast(x.email)}return}
  if(a==='block'){if(!t.dataset.sure){t.dataset.sure=1;t.textContent=tt('Tap again to block','Tocca ancora per bloccare');return}t.disabled=true;const x=allAccounts().find(v=>v.uid===sel)||{};await block(sel,x.nick);toast(tt('Blocked','Bloccato'));return render()}
  if(a==='unblock'){t.disabled=true;await unblock(sel);toast(tt('Unblocked','Sbloccato'));return render()}
- if(a==='gift'){const k=$('admGk').value,n=k==='veh'?1:Math.floor(+$('admGn').value||0),v=k==='veh'?$('admGv').value:'',m=($('admGm').value||'').trim().slice(0,200);
+ if(a==='gift'){const k0=$('admGk').value,k=k0==='deco'||k0==='house'?'veh':k0,n=k==='veh'?1:Math.floor(+$('admGn').value||0),v=k0==='deco'?$('admGd').value:k0==='house'?$('admGh').value:k==='veh'?$('admGv').value:'',m=($('admGm').value||'').trim().slice(0,200);
   if(n<1||n>100000)return toast(tt('Choose a number from 1 to 100000.','Scegli un numero da 1 a 100000.'));t.disabled=true;
   await setDoc(doc(collection(db,'gifts',sel,'g')),{k,n,v,msg:m,by:ME.uid,byNick:ME.nick||'',at:serverTimestamp(),st:'new',tk:0});$('admGm').value='';toast(tt('Gift sent! 🎁','Regalo mandato! 🎁'));t.disabled=false;await loadGifts(sel);return drawGifts()}
  if(a==='ungift'){const g=GIFTS.find(x=>x.id===t.dataset.id);if(!g)return;if(!t.dataset.sure){t.dataset.sure=1;t.textContent=tt('Tap again','Tocca ancora');return}t.disabled=true;
@@ -202,7 +202,20 @@ async function onClick(e){const t=e.target.closest('[data-a],[data-tab],[data-f]
 function open(){if(!panel)makePanel();panel.hidden=false;sfx('open');render();reload();clearInterval(presT);presT=setInterval(async()=>{if(panel.hidden)return;await loadPres();if(!sel&&view==='online')render()},30000)}
 function close(){if(panel)panel.hidden=true;clearInterval(presT)}
 const VEHS={scooter:['🛴','Scooter','Monopattino'],bike:['🚲','Bike','Bici'],moto:['🏍','Motorbike','Moto'],tractor:['🚜','Tractor','Trattore'],car:['🚗','Car','Auto'],boat:['⛵','Boat','Barchetta'],heli:['🚁','Helicopter','Elicottero'],plane:['✈','Plane','Aeroplano']};
-const vName=k=>VEHS[k]?VEHS[k][0]+' '+tt(VEHS[k][1],VEHS[k][2]):k;
+const DECOS={fire:['🔥','Campfire','Falò'],lights:['💡','Lights and flowerbeds','Lucine e aiuole'],totem:['🗿','Igor totem','Totem di Igor'],beach:['⛱️','Beach kit','Kit da spiaggia'],tele:['🔭','Telescope','Telescopio'],fount:['⛲','Fountain','Fontana'],stage:['🎤','Music stage','Palco della musica'],treeh:['🛖','Tree house','Casetta sull’albero'],wheel:['🎡','Ferris wheel','Ruota panoramica'],caro:['🎠','Carousel','Giostra']};
+const dName=k=>DECOS[k]?DECOS[k][0]+' '+tt(DECOS[k][1],DECOS[k][2]):k;
+/* house customisations: v = 'h<part>.<index>' (same order as HSTY / HPART / HCOL in index.html) */
+const HG=[['st',['🏡','House style','Stile della casa'],[['🏡 Cottage','🏡 Cottage'],['🪵 Log cabin','🪵 Baita'],['🧱 Brick house','🧱 Casa di mattoni'],['🔲 Modern','🔲 Moderna'],['🎩 Victorian','🎩 Vittoriana'],['🦇 Gothic','🦇 Gotica'],['🍄 Mushroom house','🍄 Casa fungo'],['🗼 Lighthouse','🗼 Casa faro']]],
+ ['wall',['🧱','Walls','Muri'],[['Plaster','Intonaco'],['Bricks','Mattoni'],['Wood','Legno'],['Stone','Pietra'],['Smooth','Liscio']]],
+ ['roof',['🏠','Roof','Tetto'],[['Tiles','Tegole'],['Slate','Ardesia'],['Wood shingles','Scandole'],['Thatch','Paglia'],['Flat','Piatto'],['Steep','Aguzzo']]],
+ ['win',['🪟','Windows','Finestre'],[['Shutters','Con le persiane'],['Round','Tonde'],['Arched','Ad arco'],['Gothic','Gotiche'],['Bay','Bovindo'],['Big panes','Vetrate']]],
+ ['door',['🚪','Door','Porta'],[['Round top','Tonda'],['Square','Squadrata'],['Pointed','A sesto acuto'],['Double','Doppia']]],
+ ['chim',['🏭','Chimney','Comignolo'],[['Stone','Pietra'],['Bricks','Mattoni'],['Crooked','Storto'],['Metal pipe','Tubo'],['None','Nessuno']]]];
+const HGC=[['wcol',['Walls colour','Colore dei muri'],['#e8dcc2','#f2f2ee','#f6d38c','#f4c2d6','#b9d6ea','#bfe3ad','#b9a3d6','#a8513c','#8a5a3a','#8a8590']],['rcol',['Roof colour','Colore del tetto'],['#b4553f','#7c3528','#d8402f','#4a4a5a','#3a3442','#6b4a2e','#3d6b8a','#4f7f46','#c98a2a','#e9e2d0']],['dcol',['Door colour','Colore della porta'],['#5e8a6a','#2f4f6a','#7a2e3e','#2b2b2e','#6a4630','#8a5a3a','#e0a800','#e88fb0','#4fb7a0','#ffffff']]];
+const hName=v=>{const m=String(v).match(/^h(\w+)\.(\d+)$/);if(!m)return v;const i=+m[2],P=HG.find(x=>x[0]===m[1]);if(P)return m[1]==='st'?tt(P[2][i][0],P[2][i][1]):`${P[1][0]} ${tt(P[1][1],P[1][2])}: ${tt(P[2][i][0],P[2][i][1])}`;const C=HGC.find(x=>x[0]===m[1]);return C?`🎨 ${tt(C[1][0],C[1][1])} ${C[2][i]}`:v};
+const hOpts=()=>HG.map(([p,n,L])=>`<optgroup label="${n[0]} ${esc(tt(n[1],n[2]))}">${L.map((o,i)=>(p==='st'&&!i)||(p!=='st'&&!i)?'':`<option value="h${p}.${i}">${esc(tt(o[0],o[1]))}</option>`).join('')}</optgroup>`).join('')+HGC.map(([p,n,L])=>`<optgroup label="🎨 ${esc(tt(n[0],n[1]))}">${L.map((c,i)=>i?`<option value="h${p}.${i}" style="background:${c}">■ ${c}</option>`:'').join('')}</optgroup>`).join('');
+/* a toy-store decoration travels as a prize with v = 'd:<key>' (same Firestore rule as the vehicles) */
+const vName=k=>/^h\w+\.\d+$/.test(k)?hName(k):/^d:/.test(k)?dName(k.slice(2)):VEHS[k]?VEHS[k][0]+' '+tt(VEHS[k][1],VEHS[k][2]):k;
 const ADMINS=['suJRvYnJ8TZsrtggf88oxTCgKI42','vKhCdacBFoOn8al4qCMz9VioWle2'];
 
 export function init(u){ME=u&&u.uid?u:null;inbox();gifts();
