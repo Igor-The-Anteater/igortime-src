@@ -994,7 +994,10 @@ function idleDirector(list){const F=FM();idleT=8+Math.random()*6;ballO.a=ballO.c
   else if(r<.45)o.act={k:'sea',goal:new V3(-9.4+Math.random()*.8,0,4.8+Math.random()*.6)}
   else if(r<.58&&where==='out'&&igor.position.distanceTo(spotOf('pen'))<8)o.act={k:'wave'}
   else{const base=tr==='shy'&&o.hi!=null?houseObjs[o.hi%HOUSEP.length].door():P;let x,z,ok=false;for(let k=0;k<10&&!ok;k++){const a=Math.random()*TAU,rr=(tr==='shy'?.6:1.5)+Math.random()*(tr==='shy'?1.2:tr==='sporty'?7:4);x=base.x+Math.cos(a)*rr;z=base.z+Math.sin(a)*rr;ok=walkable(x,z)}o.act={k:'wander',goal:new V3(x,0,z)}}}}
-function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>.3||SKY.W.hail>.3,night=SKY.nk>.85,snow=SKY.cover>.5;snowman.visible=snow;if(snow)snowman.position.copy(spotOf('pen')).add(new V3(2.6,0,1.6));
+/* 10 Nov 2026: the Igorlets sleep by the clock, from midnight to 7:30 (the visitor's time, or ?hour=), not when the sky gets dark:
+   in winter it is dark at five, and they stay up playing under the street lamps */
+function igSleep(){let h=SKY.over.hour;if(h==null){const d=new Date();h=d.getHours()+d.getMinutes()/60}h=((h%24)+24)%24;return h<7.5}
+function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>.3||SKY.W.hail>.3,night=igSleep(),snow=SKY.cover>.5;snowman.visible=snow;if(snow)snowman.position.copy(spotOf('pen')).add(new V3(2.6,0,1.6));
  const idle=[];const seen=new Set();
  F.igs.forEach((g,i)=>{const o=igObj(g);seen.add(g.id);const q=g.task&&F.tasks.find(x=>x.id===g.task);let hat='',mode='idle';o.ic.visible=false;const wOut=window._wishOut&&window._wishOut.id===g.id&&T<window._wishOut.until;
   if(q){const S0=siteOf(q),k=q.w.indexOf(g.id);o.goal.copy(S0).add(q.k==='build'?new V3(k?-.9:.9,0,1.1):q.k==='scare'?new V3(-1.5,0,2.2):new V3(.62,0,1.22));hat=hatOf(q.k);mode='work';o.act=null}
@@ -2286,7 +2289,7 @@ bells.addEventListener('pointerdown',e=>e.stopPropagation());
 bells.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();if(b.dataset.b!=null){whBell(+b.dataset.b);return}if(b.dataset.w==='x'){whEnd();return}if(b.dataset.w==='again'&&WH.st==='play')whPlay()});
 let whNext=fT(75),whCall=null;
 function whTick(t){if(WH.st)return;if(whCall){const o=igObjs.get(whCall.id);if(!o||o.mode!=='idle'||T-whCall.t>fT(80)||!o.act||o.act.k!=='wh'){if(o&&o.act&&o.act.k==='wh')o.act=null;whCall=null;whNext=T+fT(60)}return}
- if(T<whNext||!funOK()||SKY.nk>.85)return;const cand=[...igObjs.values()].filter(o=>o.mode==='idle'&&o.grp.visible&&!(o.act&&o.act.k==='ride'));
+ if(T<whNext||!funOK()||igSleep())return;const cand=[...igObjs.values()].filter(o=>o.mode==='idle'&&o.grp.visible&&!(o.act&&o.act.k==='ride'));
  if(!cand.length){whNext=T+fT(20);return}const o=pick(cand);o.act={k:'wh',goal:o.grp.position.clone()};whCall={id:o.id,t:T};
  const g=igById(o.id);setTimeout(()=>{if(whCall&&whCall.id===o.id)say(tt(`${g.name} wants to sing with you: tap it!`,`${g.name} vuole cantare con te: toccalo!`),3)},2500)}
 
@@ -2429,7 +2432,7 @@ function wishOf(id){const U=FUN();return U.wish&&U.wish[id]||null}
 let wishT=0;
 function wishTick(){if((wishT-=1/60)>0)return;wishT=1;const U=FUN(),F=FM(),tn=Date.now();U.wish=U.wish||{};U.wnext=U.wnext||{};U.fr=U.fr||{};
  for(const g of F.igs){if(U.wish[g.id])continue;if(U.wnext[g.id]==null){U.wnext[g.id]=tn+(1+Math.random()*3)*60e3/FUNFAST;fmDirty=true;continue}
-  if(tn<U.wnext[g.id]||SKY.nk>.85)continue;const dup=Object.values(U.col).some(n=>n>1);
+  if(tn<U.wnext[g.id]||igSleep())continue;const dup=Object.values(U.col).some(n=>n>1);
   const K=['fruit','ant','sea','jump',...(dup?['shell','shell']:[]),...(g.trait==='foodie'?['fruit','ant']:[]),...(g.trait==='sporty'?['jump']:[]),...(g.trait==='explorer'?['sea']:[])];
   U.wish[g.id]={k:pick(K),t0:tn};fmDirty=true;if(started&&where==='out'&&igObjs.get(g.id)&&igObjs.get(g.id).grp.position.distanceTo(igor.position)<10)setTimeout(()=>{const o=igObjs.get(g.id);if(o)o.jump=.4},200)}
  for(const id of Object.keys(U.wish))if(!igById(+id))delete U.wish[id]}
@@ -3401,7 +3404,7 @@ const ropeG=(()=>{const outer=new THREE.Group(),spin=new THREE.Group(),pts=[];fo
  outer.visible=false;scene.add(outer);return{outer,spin}})();
 function ropeSpot(){const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0);cr.y=0;cr.normalize();const ok=P=>[-1.9,0,1.9].every(d=>walkable(P.x+cr.x*d,P.z+cr.z*d));
  const P=igor.position.clone();P.y=0;if(ok(P))return P;const Q=penFront().add(new V3(0,0,1.4));return ok(Q)?Q:P}
-function ropeInvite(){window.__ri=[ROPE.on,!!ROPE.call,VISIT,!!PL,RIDE,started,where,SKY.nk,SKY.W.rain,sheet.hidden,!!CH];if(ROPE.on||ROPE.call||VISIT||PL||RIDE||!started||where!=='out'||SKY.nk>.6||SKY.W.rain>.35||!sheet.hidden||CH)return;
+function ropeInvite(){window.__ri=[ROPE.on,!!ROPE.call,VISIT,!!PL,RIDE,started,where,SKY.nk,SKY.W.rain,sheet.hidden,!!CH];if(ROPE.on||ROPE.call||VISIT||PL||RIDE||!started||where!=='out'||igSleep()||SKY.W.rain>.35||!sheet.hidden||CH)return;
  const F=FM(),c=F.igs.filter(g=>g.trait==='sporty'&&!g.task&&!g.rest&&igObjs.get(g.id)&&!(igObjs.get(g.id).act&&igObjs.get(g.id).act.k==='ride'));if(!c.length)return;
  const g=pick(c),o=igObjs.get(g.id);o.act={k:'rope',goal:igor.position.clone().add(new V3(1.1,0,.7))};ROPE.call={id:g.id,t:T}}
 function ropeAsk(id){const g=igById(id),o=igObjs.get(id);if(!g||!o)return;bubbleQ.length=0;bubbleT=0;say(tt(`${g.name}: “Jump rope challenge? Bet I can turn it faster than you can jump!”`,`${g.name}: “Sfida alla corda? Scommetto che giro più veloce di quanto salti!”`),3.4);
