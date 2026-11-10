@@ -3574,6 +3574,14 @@ const DECO3D={
   const B=[];for(const x of[-1.35,1.35]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.03,.04,1.5,6),dM('#2a2a2c'));p.position.set(x,.75,-.2);g.add(p)}
   for(let k=0;k<11;k++){const u=k/10,x=-1.35+u*2.7,y=1.45-Math.sin(u*Math.PI)*.35,b=new THREE.Mesh(new THREE.SphereGeometry(.05,6,4),dE(['#f6d34a','#e0463c','#7fe3ef','#9be38a'][k%4],.1));b.position.set(x,y,-.2);g.add(b);B.push(b)}return{B}}};
 const decoO={};
+/* the campfire: Igor lights it; it burns for an hour (real time); rain puts it out at once */
+const FIREX={sput:0,puff:0};
+const fireWet=()=>SKY.W.rain>.25||SKY.W.storm>.3||SKY.W.hail>.3;
+const fireLit=()=>{const U=FUN();return (+U.fire||0)>Date.now()};
+function fireState(){if(FIREX.sput>T)return Math.max(0,(FIREX.sput-T)/1.6);if(!fireLit())return 0;if(fireWet()){FUN().fire=0;fmDirty=true;FIREX.puff=T+2;if(where==='out'&&decoO.fire&&decoO.fire.g.position.distanceTo(igor.position)<14)say(tt('The rain put the fire out.','La pioggia ha spento il fuoco.'),2.4);return 0}return 1}
+function fireLight(){snd('pop');if(fireWet()){FIREX.sput=T+1.6;FIREX.puff=T+3.6;setTimeout(()=>say(tt('Pfff… it’s raining: the fire went out straight away.','Pfff… piove: il fuoco si è spento subito.'),2.8),900);return}
+ FUN().fire=Date.now()+60*60e3;fmDirty=true;save();say(pick(tt(['A nice little fire!','Crackle crackle… cosy!'],['Che bel fuocherello!','Crepita… che tepore!'])),2.4)}
+function fireOut(){FUN().fire=0;fmDirty=true;save();FIREX.puff=T+2;say(tt('Out it goes.','Spento.'),1.6)}
 function decoBuild(k){const p=DEC()[k];if(!p||p.x==null)return null;if(decoO[k])return decoO[k];const D=DECO[k],g=new THREE.Group();g.position.set(p.x,0,p.z);g.rotation.y=Math.atan2(-p.x,-p.z);
  const parts=DECO3D[k](g)||{};world.add(g);blob(g,D.r,.9);const fx=[p.x,p.z,D.r*.85];FIXB.push(fx);block(p.x,p.z,D.r*.7);const bk=blocked[blocked.length-1];
  const B0=BUILD;BUILD='out';hit(g,Math.min(1.4,D.r*.8),()=>decoTap(k),'deco-'+k,.8);const L=label(N(D.N),'',new V3(p.x,k==='wheel'||k==='treeh'||k==='caro'?4.8:k==='totem'?3.3:2.4,p.z),()=>decoTap(k),5);L.el.classList.add('plot');BUILD=B0;
@@ -3585,14 +3593,15 @@ const DSAY={fire:[['A little fire is nice in the evening.','Un fuocherello è be
  beach:[['Sun, sea and a deckchair.','Sole, mare e una sdraio.']],tele:[['I can see… the other side of the sea!','Vedo… l’altra parte del mare!'],['At night you can see the rings of a planet.','Di notte si vedono gli anelli di un pianeta.']],fount:[['Splish splash!','Splish splash!']],
  stage:[['A stage! Who plays first?','Un palco! Chi suona per primo?']],treeh:[['A secret hideout. Shh!','Un nascondiglio segreto. Shh!']],wheel:[['Round and round we go!','Gira gira gira!']],caro:[['Hold on to the little horses!','Tenetevi forte ai cavallini!']]};
 function decoTap(k){if(PL)return;const o=decoO[k];if(!o)return;const P=o.g.position.clone();const go=()=>{say(N(pick(DSAY[k])),2.6);if(k==='wheel'||k==='caro')o.spin=T+6;
-  if(VISIT)return;chips(P.clone().setY(k==='wheel'||k==='treeh'||k==='caro'?4.2:2.2),()=>[{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'deco',id:k,fx:o.fx});return false}}],'deco'+k)};
+  if(VISIT)return;chips(P.clone().setY(k==='wheel'||k==='treeh'||k==='caro'?4.2:2.2),()=>[...(k==='fire'?[fireLit()?{t:'💨 '+tt('Put it out','Spegni'),fn:()=>{fireOut();return true}}:{t:'🔥 '+tt('Light it','Accendi'),main:1,fn:()=>{fireLight();return true}}]:[]),{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'deco',id:k,fx:o.fx});return false}}],'deco'+k)};
  if(igor.position.distanceTo(P)>DECO[k].r+2.4)walkNear(P.clone().setY(0),DECO[k].r+.9,go);else go()}
 // build the placed ones at start and whenever the save changes
 {let key='';updaters.push((t,dt)=>{const F=S.farm;if(!F||!F.deco)return;const k2=JSON.stringify(F.deco);if(k2===key)return;key=k2;
  for(const k of DKEYS){const p=F.deco[k];if(p&&p.x!=null){if(decoO[k]){const o=decoO[k];if(o.g.position.x!==p.x||o.g.position.z!==p.z)decoMoveTo(k,p.x,p.z)}else decoBuild(k)}else if(decoO[k]){const o=decoO[k];world.remove(o.g);o.bk.r=0;o.fx[2]=0;o.L.el.remove();labels.splice(labels.indexOf(o.L),1);delete decoO[k]}}})}
 // animations
 updaters.push((t,dt)=>{const night=SKY.nk;for(const k in decoO){const o=decoO[k],P=o.parts;
- if(k==='fire'){const on=night>.15;P.F.forEach((f,i)=>{f.visible=on;f.scale.set(1,.8+.3*Math.abs(Math.sin(t*7+i*2)),1)});P.h.material.opacity=on?.4+.12*Math.sin(t*9):0}
+ if(k==='fire'){const st=fireState(),on=st>0;P.F.forEach((f,i)=>{f.visible=on;f.scale.set(st,(.8+.3*Math.abs(Math.sin(t*7+i*2)))*st,st)});P.h.material.opacity=on?(.4+.12*Math.sin(t*9))*st:0;
+  if(!o.smk){o.smk=halo('#9aa6b2',1.2,0);o.smk.material.blending=THREE.NormalBlending;o.g.add(o.smk)}const sp=FIREX.puff>T?(FIREX.puff-T)/2:0;o.smk.position.y=.6+(1-sp)*1.2;o.smk.material.opacity=sp*.55;o.smk.scale.setScalar(1+(1-sp)*1.5)}
  else if(k==='lights'){P.B.forEach((b,i)=>b.material.emissiveIntensity=night>.35?.7+.3*Math.sin(t*2+i):.08)}
  else if(k==='totem'){P.star.rotation.y+=dt*1.5;P.H.forEach((h,i)=>h.rotation.y=Math.sin(t*.8+i)*.25)}
  else if(k==='stage'){P.L.forEach((b,i)=>b.material.emissiveIntensity=.5+.5*Math.sin(t*4+i*1.3))}
