@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><script src="/lang.js?v=2"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>The abyss · Igor time</title><meta name="description" content="Igor dives into the abyss: eat the pale creatures, jump the red ones, duck the jellyfish, and beat the leviathans."><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#04070c;color:#dbe7ea;min-height:100vh}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="en"><head><script src="/lang.js?v=3"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>The abyss · Igor time</title><meta name="description" content="Igor dives into the abyss: eat the pale creatures, jump the red ones, duck the jellyfish, and beat the leviathans."><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#04070c;color:#dbe7ea;min-height:100vh}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <header id="top"><a id="back" href="/">← Igor’s island</a><h1><em>The</em> abyss</h1><span id="acct"></span></header>
 <div id="ab">
   <canvas id="ab-c" width="600" height="300"></canvas>
@@ -446,7 +446,7 @@ function submitDive(sc){const A=window.AbyssCloud;if(!A){addEventListener('abyss
 let ACCT=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'))}catch(e){}
 const HOME=(()=>{try{return localStorage.getItem('igortime_home')||'/'}catch(e){return '/'}})();$('back').href=HOME;
 if(ACCT&&ACCT.name)$('acct').textContent='Playing as '+ACCT.name;else if(ACCT)$('acct').textContent='Playing with your account';
-function reward(sc){const n=Math.min(12,Math.floor(sc/150));if(!n)return 0;let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
+function reward(sc){const n=Math.min(10,Math.floor(sc/200));if(!n)return 0;let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
  p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.abyss=p.scores.abyss||{};if(!(g.best>=sc))g.best=sc;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n}
 let won=0;
 function avHTML(){if(ACCT)return '<p class="sub">Diving as <b>'+esc(ACCT.name||'you')+'</b> with your <span class="g">'+AVN[AVK]+'</span></p>';
@@ -457,13 +457,13 @@ function showStart(){mode='ready';playing=false;M.style.display='flex';
    '<p class="sub"><span class="g">A</span> tongue: catch the pale creatures &nbsp;·&nbsp; <span class="g">S</span> jump over the <span class="r">red ones</span><br>'+
    '<span class="g">D</span> (hold, max 2s) duck under the <span class="r">jellyfish</span> &nbsp;·&nbsp; <span class="y">★</span> golden lure: 4s to eat the red ones too<br>'+
    'Now and then a heart gives back a life (max 5). At 700 points, then every 1500, a <b>leviathan</b> rises: when its shield drops, <span class="g">shoot</span> your prey with <span class="g">␣</span>.<br>'+
-   '<span class="y">Every 150 points = 1 tofu seed</span> for the field.</p>'+
+   '<span class="y">Every 200 points = 1 tofu seed (up to 10)</span> for the field.</p>'+
    avHTML()+'<p class="lb">Total depth · everyone</p>'+lbHTML()+
    '<button class="btn" id="ab-go">Dive in</button> <a class="btn ghost" style="text-decoration:none;display:inline-block" href="'+HOME+'">Back to the island</a>';
   $('ab-go').onclick=()=>{won=0;reset()};MC.querySelectorAll('[data-av]').forEach(b=>b.onclick=()=>{setAvatar(b.dataset.av);showStart()});avPreviews();startIdle()}
 function showOver(){mode='dead';M.style.display='flex';const sc=score();
   if(!savedThis&&won===0)won=reward(sc)||-1;
-  const seeds=won>0?'<p class="seeds">+'+won+' tofu seed'+(won>1?'s':'')+' for Igor’s field. Collect them back on the island.</p>':'<p class="seeds" style="color:#7f949b">150 points give a tofu seed: dive deeper next time.</p>';
+  const seeds=won>0?'<p class="seeds">+'+won+' tofu seed'+(won>1?'s':'')+' for Igor’s field. Collect them back on the island.</p>':'<p class="seeds" style="color:#7f949b">200 points give a tofu seed: dive deeper next time.</p>';
   if(!savedThis){savedThis=true;lb.forEach(e=>delete e._me);if(sc>0){lb.push({n:(ACCT&&ACCT.name)||'you',s:sc,_me:1});lb.sort((a,b)=>b.s-a.s);lb=lb.slice(0,20);saveLB()}
    if(ACCT){diveMsg='carving your depth into the annals…';if(sc>0)submitDive(sc);else diveMsg='No depth to carve this time.'}
    else{const best=Math.max(0,...lb.map(e=>e.s));diveMsg='Your best on this device: <span class="g">'+best+'</span>. <a href="'+HOME+'" style="color:inherit">Sign in on the island</a> to carve your name in the annals.'}}
