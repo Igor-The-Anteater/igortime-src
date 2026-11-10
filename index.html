@@ -1284,12 +1284,21 @@ function goTo(k,arg){const P=PLACES[k];if(!P)return;if(where!=='out'){exitRoom(t
 const _cv=new V3(),_up=new V3();function igBring(){const d0=-pv.copy(igor.position).applyMatrix4(camera.matrixWorldInverse).z;if(!(d0>1))return;_cv.copy(camera.position).sub(igor.position);const Ld=_cv.length();_cv.divideScalar(Ld);
  const off=Math.min(1.2,Ld*.09),d1=d0-off,F=FOC.value,c=CURV.value,dl=c*((Math.max(0,d0-F))**2-(Math.max(0,d1-F))**2);_up.setFromMatrixColumn(camera.matrixWorld,1);
  const by=igPlane.position.y;igPlane.position.copy(_cv).multiplyScalar(off).addScaledVector(_up,-dl);igPlane.position.y+=by;const k=d1/d0;igPlane.scale.x*=k;igPlane.scale.y*=k}
+/* 10 Nov 2026: steering with arrows / joystick slides around obstacles instead of stopping dead: if the straight step is blocked,
+   try the direction turned a little to one side or the other (up to 80°), keeping the same side for a moment so it doesn't wobble */
+function slideMove(mx,mz,sp){const P=igor.position;if(walkable(P.x+mx*sp,P.z+mz*sp)){P.x+=mx*sp;P.z+=mz*sp;IG.mside=0;return true}
+ let side=IG.mside&&T-IG.msT<.6?IG.mside:0;
+ if(!side){let best=null,bd=1e9;for(const b of(where==='out'?blocked:ROOMS[where].blocks)){const d=Math.hypot(b.x-P.x-mx*.6,b.z-P.z-mz*.6)-b.r;if(d<bd){bd=d;best=b}}
+  side=best?((best.x-P.x)*mz-(best.z-P.z)*mx>0?1:-1):1}
+ for(const deg of[20,35,50,65,80,90])for(const sd of[side,-side]){const a=deg*Math.PI/180*sd,c=Math.cos(a),s2=Math.sin(a),dx=mx*c-mz*s2,dz=mx*s2+mz*c,k=sp*Math.max(.45,c);
+  if(walkable(P.x+dx*k,P.z+dz*k)){P.x+=dx*k;P.z+=dz*k;IG.mside=sd;IG.msT=T;return true}}
+ if(walkable(P.x+mx*sp,P.z)){P.x+=mx*sp;return true}if(walkable(P.x,P.z+mz*sp)){P.z+=mz*sp;return true}return false}
 function igorUpdate(t,dt){blink(t);let moving=false;
  if(diving){igPlane.quaternion.copy(camera.quaternion);igPlane.scale.set(IG.face,1,1);return}
  const il=Math.hypot(IN.x,IN.z);
  if(il>.12&&started){IG.target=null;IG.arrive=null;IG.manual=true;const y=CAM.yaw,k=Math.min(1,il),ix=IN.x/il,iz=IN.z/il;
   const mx=ix*Math.cos(y)+iz*Math.sin(y),mz=-ix*Math.sin(y)+iz*Math.cos(y),sp=4.4*rideSp()*k*dt;const nx=igor.position.x+mx*sp,nz=igor.position.z+mz*sp;
-  if(walkable(nx,nz)){igor.position.x=nx;igor.position.z=nz}else if(walkable(nx,igor.position.z))igor.position.x=nx;else if(walkable(igor.position.x,nz))igor.position.z=nz;
+  slideMove(mx,mz,sp);
   if(Math.abs(ix)>.2)IG.face=ix>0?1:-1;moving=true;IG.walk+=dt*10*k;hideHint();poke()}
  else if(IG.target){const DS=where==='out'?isleVia(IG.target):IG.target;if(IG.pathFor!==DS){IG.pathFor=DS;IG.path=lineOk(igor.position.x,igor.position.z,DS.x,DS.z)?null:findPath(igor.position,DS);if(IG.path&&IG.path.length)IG.path[IG.path.length-1]=DS}
   const TG=IG.path&&IG.path.length?IG.path[0]:DS;if(TG!==IG.target&&IG.tgw!==TG){IG.tgw=TG;IG.best=1e9;IG.bestT=T}const v=TG.clone().sub(igor.position);v.y=0;const L=v.length();
