@@ -183,7 +183,9 @@ button:disabled{opacity:.35;cursor:default}button:focus-visible{outline:2px soli
 /* two panels: side by side on wide screens, one above the other on tall ones (phones) */
 function panels(W,H){const tall=H>W*1.15;if(!tall)return{tall,P:[{x:0,y:0,w:W/2,h:H},{x:W/2,y:0,w:W/2,h:H}]};
  const y0=58,y1=H-74,h=(y1-y0)/2;return{tall,P:[{x:0,y:y0,w:W,h},{x:0,y:y0+h,w:W,h}]}}
-window.IgorHouse={panels,paintAvatar,igorImg,igorReady:()=>igorOK,TAU,clamp,lerp,ease,rr,drawAnt,drawCurtain,drawRoom,ME,AVN};
+/* for pages that draw Igor without IgorGame (the interval lessons): load the picture once */
+function loadIgor(cb){if(igorOK){cb&&cb();return}igorImg.addEventListener('load',()=>{igorOK=true;sprKey='';cb&&cb()},{once:true});if(!igorImg.src)igorImg.src=IGOR_SRC}
+window.IgorHouse={panels,paintAvatar,igorImg,igorReady:()=>igorOK,loadIgor,PAD,TAU,clamp,lerp,ease,rr,drawAnt,drawCurtain,drawRoom,ME,AVN};
 
 window.IgorGame=function(cfg){
  const N=cfg.rounds||8,MAXR=cfg.maxRound||125,CAP={easy:4,medium:7,extreme:10};if(cfg.outfit){ME.outfit=cfg.outfit;sprKey=''}
