@@ -723,7 +723,7 @@ function endEv(E,t){if(E.k==='storm'&&E.nf>0&&E.cov===E.nf){S.seeds+=3;note(tt('
  if(E.k==='stray'&&!E.taken)note(tt('The stray Igorlet left.','L’Igorlet randagio se n’è andato.'))}
 
 /* --- player actions --- */
-const NEED=c=>tt(`Need ${costTxt(c)}.`,`Servono ${costTxt(c)}.`);
+const NEED=c=>tt(`Need ${costTxt(c)}.`,`Servono ${costTxt(c)}.`)+(c&&c.s&&(S.seeds|0)<c.s?' '+tt('Play a game to win seeds!','Fai un gioco per vincere semi!'):'');
 function sowCost(f){return{s:SPC[f.sp].seeds}}
 function order(i,k,mine){const F=FM(),f=F.fields[i];if(!f)return;
  if(k!=='replant'&&F.tasks.some(q=>q.f===i&&q.k===k&&!q.heat))return say(tt('Already on the list.','È già in lista.'),2);
@@ -756,7 +756,7 @@ function toggleGh(i){const F=FM(),f=F.fields[i],used=F.fields.filter(o=>o.gh).le
 function hire(){const F=FM(),n=F.igs.length,c=HIRE[n+1];if(n>=igCap())return say(tt('The village is full: 12 Igorlets!','Il villaggio è al completo: 12 Igorlets!'),2.6);if(!pay({s:c}))return say(NEED({s:c}),2.4);
  const g=newIg(n);g.id=Math.max(0,...F.igs.map(x=>x.id))+1;F.igs.push(g);say(tt(`Welcome, ${g.name}! Its little house is ready in the village.`,`Benvenuto, ${g.name}! La sua casetta è già pronta nel villaggio.`),3.2);if(window.IgorSound&&started)IgorSound.ig('happy',{id:g.id,trait:g.trait});save();fmRender()}
 function buyVeh(k,more){const F=FM(),V=VEH[k],own=F.veh[k];if(own&&!more)return;const n=vehN(k);if(own&&n>=vehMax())return say(tt('One each is enough: more Igorlets, more vehicles!','Uno a testa basta: più Igorlets, più mezzi!'),2.8);
- if(!pay({t:V.cost}))return say(NEED({t:V.cost}),2.6);if(own){own.n=n+1;own.cs=own.cs||[];own.cs[n]=pick(VCOL.filter(c=>c!==own.c))}else F.veh[k]={c:V.c,n:1};snd('buy');fmDirty=true;
+ if(!pay(dual({t:V.cost})))return say(NEED(dual({t:V.cost})),2.6);if(own){own.n=n+1;own.cs=own.cs||[];own.cs[n]=pick(VCOL.filter(c=>c!==own.c))}else F.veh[k]={c:V.c,n:1};snd('buy');fmDirty=true;
  say(own?tt(`Another ${N(V.N).toLowerCase()} for the Igorlets! Now there are ${n+1}.`,`${N(V.N)} per gli Igorlets! Adesso ce ne sono ${n+1}.`):tt(`A ${N(V.N).toLowerCase()}! Tap ${V.ic} to hop on.`,`${N(V.N)}! Tocca ${V.ic} per salire.`),3.2);save();fmRender()}
 function buyToy(k){const F=FM();if(F.toys[k])return;if(!pay({s:TOYS[k].s}))return say(NEED({s:TOYS[k].s}),2.4);F.toys[k]=1;say(tt(`A ${N(TOYS[k].N).toLowerCase()} for the yard!`,`${N(TOYS[k].N)} per il cortile!`),2.4);save();fmRender()}
 /* gifts from the admins (staff.js): seeds, tofu ants, a vehicle; F.gifts[id] remembers each one so it is applied once and only what was given can be taken back */
@@ -1065,7 +1065,7 @@ const FIXB=[[15.8,-5.2,1.8],[0,-7.1,2.9],[0,-4.3,1.1],[-10,-9.5,2.9],[-8.7,-7.1,
 const ghM=curve(new THREE.MeshBasicMaterial({color:'#9be38a',transparent:true,opacity:.38,depthWrite:false})),ghL=curve(new THREE.MeshBasicMaterial({color:'#9be38a',transparent:true,opacity:.95,depthWrite:false}));
 const ghost=(()=>{const g=new THREE.Group();const sq=new THREE.Mesh(new THREE.BoxGeometry(1,.12,1),ghM);sq.position.y=.07;g.add(sq);const ring=new THREE.Mesh(new THREE.RingGeometry(.93,1,48).rotateX(-Math.PI/2),ghL);ring.position.y=.1;g.add(ring);g.visible=false;scene.add(g);return{g,sq,ring}})();
 let PL=null;
-const plR=P=>P.k==='field'||P.k==='movefield'?1.05:P.k==='tree'?Math.max(.55,.62*trees[P.j].t.scale.x):P.k==='rock'?Math.max(.4,.5*rocks[P.j].scale.x):P.k==='ins'?1.4:SPOTR[P.key];
+const plR=P=>P.k==='field'||P.k==='movefield'?1.05:P.k==='tree'?Math.max(.55,.62*trees[P.j].t.scale.x):P.k==='rock'?Math.max(.4,.5*rocks[P.j].scale.x):P.k==='ins'?1.4:P.k==='deco'?DECO[P.id].r:SPOTR[P.key];
 function startPlace(P){if(where!=='out')exitRoom(true);hideChips();closeBar();PL={...P,r:plR(P),x:null,z:null,ok:false,cuts:{t:[],r:[]}};ghost.g.visible=true;const f=PL.k.includes('field'),w=f?1.7:PL.r*1.5;ghost.sq.scale.set(w,1,w);ghost.ring.scale.setScalar(f?1.2:PL.r);
  say(tt('Walk me to a free spot.','Portami in un posto libero.'),3)}
 function placeCheck(x,z){const F=FM(),r=PL.r;if(Math.hypot(x,z*1.12)>R-1.5-r&&!isleIn(x,z,1.5+r))return tt('Too close to the sea.','Troppo vicino al mare.');
@@ -1087,6 +1087,7 @@ function placeConfirm(){if(!PL)return;if(!PL.ok)return say(PL.why,2);const F=FM(
  else if(PL.k==='move'){F.pos[PL.key]={x,z};say(tt('Moved!','Spostato!'),1.8)}
  else if(PL.k==='tree'){F.tmv=F.tmv||{};F.tmv[PL.j]={x,z};moveTreeTo(PL.j,x,z);snd('pop');say(pick(tt(['Transplanted! It will grow happily here.','There! A new home for the tree.'],['Trapiantato! Qui crescerà contento.','Ecco! Una casa nuova per l’albero.'])),2.4)}
  else if(PL.k==='rock'){F.rmv=F.rmv||{};F.rmv[PL.j]={x,z};moveRockTo(PL.j,x,z);snd('thud');say(tt('Rolled all the way here!','Rotolato fin qui!'),1.8)}
+ else if(PL.k==='deco'){decoPlace(PL.id,x,z)}
  else if(PL.k==='ins'){const M=insS(PL.ik);M.pos={x,z};insMoveTo(PL.ik,x,z);insPlay(PL.ik,0);say(tt('Moved! It sounds good here too.','Spostato! Anche qui suona bene.'),2)}
  endPlace();fmDirty=true;simTo(Date.now(),true);save();fmRender()}
 function endPlace(){PL=null;ghost.g.visible=false;hideChips()}
@@ -1779,7 +1780,7 @@ function renderBar(){const F=FM(),lv=lvlOf(),n=F.fields.length;let L=[];
  if(barKind==='build'){if(n<MAXF)L.push(lv<n+1?{t:`🌱 ${tt('Field','Campo')} 🔒 ${tt('lv.','liv.')} ${n+1}`,why:tt(`Field ${n+1}: level ${n+1} first!`,`Campo ${n+1}: prima il livello ${n+1}!`)}:{t:`🌱 ${tt('Field','Campo')} ${cst(FCOST[n])}`,fn:()=>openBar('field')});
   for(const k of BKEYS){if(k==='pen'||F.b[k]||F.pos[k])continue;const U=BLD[k].up[1];L.push(lv<U.lv?{t:`${N(BLD[k].N)} 🔒 ${tt('lv.','liv.')} ${U.lv}`,why:LVFIRST(U.lv)}:{t:`${N(BLD[k].N)} ${cst(U.cost)}`,fn:()=>{startPlace({k:'build',key:k});say(N(BLD[k].what),2.6)}})}}
  else if(barKind==='field'){for(const[k,s]of Object.entries(SPC))L.push(lv<s.lv?{t:`${N(s.N)} 🔒 ${tt('lv.','liv.')} ${s.lv}`,why:LVFIRST(s.lv)}:{t:`${N(s.N)} <small>${s.seeds}${ICS} → ${s.yield}${ICA}</small>`,fn:()=>{if(fieldOk(k))startPlace({k:'field',sp:k})}});L.push({t:'‹',fn:()=>openBar('build')})}
- else if(barKind==='veh'){for(const k of VKEYS){const V=VEH[k];L.push(F.veh[k]?{t:`${V.ic} ${N(V.N)} ✓`,fn:()=>{mount(k);closeBar()}}:{t:`${V.ic} ${N(V.N)} ${cst({t:V.cost})}`,fn:()=>{buyVeh(k)}})}L.push({t:'‹',fn:()=>openBar('build')});if(!bar.hidden||1)say(tt('Rewards: save up tofu ants!','Premi: risparmia formiche di tofu!'),2.4)}
+ else if(barKind==='veh'){for(const k of VKEYS){const V=VEH[k];L.push(F.veh[k]?{t:`${V.ic} ${N(V.N)} ✓`,fn:()=>{mount(k);closeBar()}}:{t:`${V.ic} ${N(V.N)} ${cst(dual({t:V.cost}))}`,fn:()=>{buyVeh(k)}})}L.push({t:'‹',fn:()=>openBar('build')});if(!bar.hidden||1)say(tt('Rewards: save up tofu ants!','Premi: risparmia formiche di tofu!'),2.4)}
  else if(barKind==='test'){const sure=Date.now()-(window._rz||0)<5000;L=[{t:sure?'↺ '+tt('Sure? Tap again','Sicuro? Tocca ancora'):'↺ '+tt('Start over','Ricomincia da zero'),main:sure,fn:()=>{if(!sure){window._rz=Date.now();openBar('test');return}window._wiped=true;try{for(const k of Object.keys(localStorage))if(k.startsWith('igortime_')&&k!=='igortime_lang')localStorage.removeItem(k)}catch(e){}location.reload()}},{t:'+10 🌱',fn:()=>{S.seeds+=10;save();hudFarm()}},{t:'+100 🐜',fn:()=>{F.ants.t+=100;save();hudFarm()}},{t:'+3000 🐜',fn:()=>{F.ants.t+=3000;F.b.store=Math.max(F.b.store,5);save();hudFarm()}},{t:tt('Level','Livello')+' +1',fn:()=>{const l=lvlOf();if(l<8)F.total=LVX[l];save()}},{t:tt('+1 hour','+1 ora'),fn:()=>{timeWarp(HOUR);save();toast(tt('+1 hour','+1 ora'))}},
   ...Object.keys(EVK).map(k=>({t:N(EVK[k].N),fn:()=>{const D=EVK[k],t=Date.now();F.ev=mkEv(k,t+Math.max(D.lead*MIN,1000),'test'+t);F.ev.warn=t;simTo(t,true);save();closeBar();renderBanner()}})),
   {t:FAST>1?tt('Real time','Tempo vero'):tt('Time ×60','Tempo ×60'),fn:()=>{try{localStorage.setItem('igortime_fast',FAST>1?'1':'60')}catch(e){}simTo(Date.now(),false);saveLocal();location.reload()}},
@@ -1917,7 +1918,7 @@ const _farmRelabel=farmRelabel;farmRelabel=function(){_farmRelabel();renderOrb(f
 hudIgs();
 
 function vehShop(){if(PL)return;goTo('prizes');return;say(tt('Prizes! Save up tofu ants.','Premi! Metti da parte formiche di tofu.'),2.6);
- chips(SHOPV.clone().add(new V3(0,2.2,0)),()=>{const F=FM();return VKEYS.map(k=>{const V=VEH[k];return F.veh[k]?{t:`${V.ic} ${N(V.N)} ✓`,fn:()=>{mount(k);return false}}:{t:`${V.ic} ${N(V.N)} ${cst({t:V.cost})}`,main:F.ants.t>=V.cost,fn:()=>{buyVeh(k);return true}}})},'shopv')}
+ chips(SHOPV.clone().add(new V3(0,2.2,0)),()=>{const F=FM();return VKEYS.map(k=>{const V=VEH[k];return F.veh[k]?{t:`${V.ic} ${N(V.N)} ✓`,fn:()=>{mount(k);return false}}:{t:`${V.ic} ${N(V.N)} ${cst(dual({t:V.cost}))}`,main:F.ants.t>=V.cost,fn:()=>{buyVeh(k);return true}}})},'shopv')}
 function vehChips(){chips(igor.position.clone().add(new V3(0,2.4,0)),()=>{const F=FM(),L=[],own=VKEYS.filter(k=>F.veh[k]);
  if(CH.more==='col'){const k=RIDE||own[0];if(!k)return[];for(const c of VCOL)L.push({t:`<span class="sw" style="background:${c}"></span>`,main:F.veh[k].c===c,fn:()=>{F.veh[k].c=c;fmDirty=true;vehPaint(k);return true}});L.push({t:'‹',fn:()=>{CH.more=false;return true}});return L}
  for(const k of own)L.push({t:`${VEH[k].ic} ${N(VEH[k].N)}`,main:RIDE===k,fn:()=>{mount(k);return false}});
@@ -2773,13 +2774,13 @@ let phTT=0;function phToast(sp,fresh){let el=$('phT');if(!el){el=document.create
 updaters.push(()=>{const own=camOwned();camB.hidden=!own||where!=='out';if(CAM_ON&&(where!=='out'||!own))camMode(false)});
 // buying the camera: a little table in the prize shop
 function camBuy(){if(VISIT)return;const U=FUN();if(U.cam){say(tt('You already have the camera: 📷 next to the vehicles!','Hai già la macchina fotografica: 📷 accanto ai mezzi!'),2.6);return}
- if(!pay({t:CAMCOST}))return say(NEED({t:CAMCOST}),2.6);U.cam=1;fmDirty=true;save();snd('buy');bubbleQ.length=0;bubbleT=0;say(tt('A camera! Tap 📷 (next to the vehicles) and photograph the animals: each new one goes into the photo board.','Una macchina fotografica! Tocca 📷 (accanto ai mezzi) e fotografa gli animali: ogni animale nuovo finisce nella bacheca delle foto.'),5)}
+ if(!pay(dual({t:CAMCOST})))return say(NEED(dual({t:CAMCOST})),2.6);U.cam=1;fmDirty=true;save();snd('buy');bubbleQ.length=0;bubbleT=0;say(tt('A camera! Tap 📷 (next to the vehicles) and photograph the animals: each new one goes into the photo board.','Una macchina fotografica! Tocca 📷 (accanto ai mezzi) e fotografa gli animali: ogni animale nuovo finisce nella bacheca delle foto.'),5)}
 setTimeout(()=>{const Rm=ROOMS.prizes;if(!Rm)return;const g=Rm.g,B0=BUILD;BUILD='prizes';const tb=new THREE.Group();tb.position.set(7.15,0,-.7);tb.rotation.y=-Math.PI/2;g.add(tb);
  const top=new THREE.Mesh(new THREE.BoxGeometry(1.2,.08,.8),lam('#8a5f3c'));top.position.y=.9;tb.add(top);for(const[x,z]of[[-.5,-.3],[.5,-.3],[-.5,.3],[.5,.3]]){const lg=new THREE.Mesh(new THREE.BoxGeometry(.08,.9,.08),lam('#6b4a2e'));lg.position.set(x,.45,z);tb.add(lg)}
  const cam=new THREE.Group(),bd=new THREE.Mesh(new THREE.BoxGeometry(.5,.32,.22),lam('#2b2b2b'));cam.add(bd);const ln=new THREE.Mesh(new THREE.CylinderGeometry(.11,.12,.14,16),lam('#4a4a4a'));ln.rotation.x=Math.PI/2;ln.position.z=.16;cam.add(ln);const gl=new THREE.Mesh(new THREE.CircleGeometry(.08,16),lam('#6fb6e6'));gl.position.z=.235;cam.add(gl);
  const fl=new THREE.Mesh(new THREE.BoxGeometry(.12,.06,.1),lam('#f2c230'));fl.position.set(.15,.19,0);cam.add(fl);cam.position.y=1.12;cam.rotation.y=.5;tb.add(cam);Rm.blocks.push({x:7.15,z:-.7,r:.75});
- const go=()=>walkIn(new V3(5.95,0,-.7),()=>{chips(new V3(7.15,1.9,-.7),()=>FUN().cam?[{t:'📷 ✓ '+tt('Yours!','È tua!'),fn:()=>false}]:[{t:`📷 ${tt('Camera','Macchina fotografica')} ${cst({t:CAMCOST})}`,main:pocket()>=CAMCOST,fn:()=>{camBuy();return false}}],'cambuy')});
- hit(tb,.8,go,'shop-cam',1);const L=label(['Camera','Macchina fotografica'],'',new V3(7.15,1.75,-.7),go,0);L.el.classList.add('plot');updaters.push(()=>{const s=FUN().cam?'✓':`${CAMCOST} ${tt('ants','formiche')}`,h=`📷 ${N(['Camera','Macchina fotografica'])}<small>${s}</small>`;if(L.el.innerHTML!==h)L.el.innerHTML=h});BUILD=B0},0);
+ const go=()=>walkIn(new V3(5.95,0,-.7),()=>{chips(new V3(7.15,1.9,-.7),()=>FUN().cam?[{t:'📷 ✓ '+tt('Yours!','È tua!'),fn:()=>false}]:[{t:`📷 ${tt('Camera','Macchina fotografica')} ${cst(dual({t:CAMCOST}))}`,main:canPay(dual({t:CAMCOST})),fn:()=>{camBuy();return false}}],'cambuy')});
+ hit(tb,.8,go,'shop-cam',1);const L=label(['Camera','Macchina fotografica'],'',new V3(7.15,1.75,-.7),go,0);L.el.classList.add('plot');updaters.push(()=>{const s=FUN().cam?'✓':`${CAMCOST} ${tt('ants','formiche')} · ${SEEDF(CAMCOST)} ${tt('seeds','semi')}`,h=`📷 ${N(['Camera','Macchina fotografica'])}<small>${s}</small>`;if(L.el.innerHTML!==h)L.el.innerHTML=h});BUILD=B0},0);
 
 /* ---------- the photo board (a building) and the animal choir ---------- */
 BLD.phot={N:['Photo board','Bacheca delle foto'],what:['A board for the photos of the animals you meet.','Una bacheca per le foto degli animali che incontri.'],up:[null,{lv:1,cost:{t:10},min:8,gives:['room for all the animals','posto per tutti gli animali']}]};
@@ -2918,7 +2919,7 @@ function todoItems(){const F=FM(),U=FUN(),tn=Date.now(),L=[],add=(k,ic,t,go)=>{i
   add('bc',nb&&!ns?'🍾':'🐚',ns&&nb?tt(`Shells and a bottle on the beach`,`Conchiglie e una bottiglia in spiaggia`):ns?(ns>1?tt(`${ns} shells on the beach`,`${ns} conchiglie in spiaggia`):tt('A shell on the beach','Una conchiglia in spiaggia')):tt('A bottle on the beach','Una bottiglia in spiaggia'),()=>{const it=near();if(it)walkNear(new V3(it.x,0,it.z),.55,()=>{const j=FUN().beach.indexOf(it);if(j>=0)beachTake(j)})})}
  const n=F.fields.length;if(n<MAXF&&lv>=n+1&&canPay(FCOST[n]))add('nf','🌱',tt('A new field','Un campo nuovo'),()=>{openBar('field');say(tt('Which field?','Che campo facciamo?'),2)});
  for(const k of BKEYS){if(k==='pen'||F.b[k]||F.pos[k])continue;const U1=BLD[k].up[1];if(lv>=U1.lv&&canPay(U1.cost)){add('bd'+k,'🔨',tt(`Build: ${N(BLD[k].N).toLowerCase()}`,`Costruisci: ${N(BLD[k].N).toLowerCase()}`),()=>{startPlace({k:'build',key:k});say(N(BLD[k].what),2.6)});break}}
- {const v=VKEYS.find(k=>!F.veh[k]&&pocket()>=VEH[k].cost);if(v)add('v'+v,'🏆',tt(`You can buy: ${N(VEH[v].N).toLowerCase()}`,`Puoi comprare: ${N(VEH[v].N).toLowerCase()}`),()=>goTo('prizes'))}
+ {const v=VKEYS.find(k=>!F.veh[k]&&canPay(dual({t:VEH[k].cost})));if(v)add('v'+v,'🏆',tt(`You can buy: ${N(VEH[v].N).toLowerCase()}`,`Puoi comprare: ${N(VEH[v].N).toLowerCase()}`),()=>goTo('prizes'))}
  {const ni=F.igs.length;if(ni<igCap()&&(S.seeds|0)>=HIRE[ni+1])add('hire','🏠',tt('A new Igorlet','Un nuovo Igorlet'),()=>bldTap('pen'))}
  {const ty=Object.keys(TOYS).find(k=>!F.toys[k]&&(S.seeds|0)>=TOYS[k].s);if(ty)add('toy','🎾',tt(`A ${N(TOYS[ty].N).toLowerCase()} for the Igorlets`,`${N(TOYS[ty].N)} per gli Igorlets`),()=>{bldTap('pen');setTimeout(()=>{if(CH&&CH.key==='bpen'){CH.more='toys';renderChips()}},60)})}
  for(let j=0;L.length<3&&j<3;j++){const D=ORB[(todoGame+j)%ORB.length];add('gm'+D.k,'🎮',tt(`Play: ${N(D.n)} · seeds`,`Gioca: ${N(D.n)} · semi`),()=>D.go())}
@@ -2982,13 +2983,13 @@ function vehCopies(t,dt){const F=FM();for(const k of VKEYS){const n=vehN(k);for(
   _shopD[k]={o,G,L,c:null}}
  BUILD='out';
  updaters.push((t,dt)=>{if(where!=='prizes')return;const F=FM();for(const k of VKEYS){const D=_shopD[k];if(!D)continue;D.o.g.rotation.y=t*.35+VKEYS.indexOf(k);const own=F.veh[k],c=own?own.c:VEH[k].c;if(D.c!==c){D.c=c;D.o.paint.color.set(c)}
-   for(const s2 of D.o.spin)s2.o.rotation[s2.ax]+=dt*s2.v*.15;const n=vehN(k),sub=n?(n>1?`✓ ×${n}`:'✓'):`${VEH[k].cost} ${tt('ants','formiche')}`,h=`${VEH[k].ic} ${N(VEH[k].N)}<small>${sub}</small>`;if(D.h!==h){D.h=h;D.L.el.innerHTML=h}}})}
+   for(const s2 of D.o.spin)s2.o.rotation[s2.ax]+=dt*s2.v*.15;const n=vehN(k),sub=n?(n>1?`✓ ×${n}`:'✓'):`${VEH[k].cost} ${tt('ants','formiche')} · ${SEEDF(VEH[k].cost)} ${tt('seeds','semi')}`,h=`${VEH[k].ic} ${N(VEH[k].N)}<small>${sub}</small>`;if(D.h!==h){D.h=h;D.L.el.innerHTML=h}}})}
 function shopChips(k){if(VISIT){visitNo();return}const V=VEH[k],n=vehN(k),D=_shopD[k];say(n?tt(`Your ${N(V.N).toLowerCase()}${n>1?` (×${n})`:''}. More copies for the Igorlets?`,`${N(V.N)}${n>1?` (×${n})`:''}: è tuo! Ne vuoi altri per gli Igorlets?`):tt(`${N(V.N)}: ${V.cost} tofu ants.`,`${N(V.N)}: ${V.cost} formiche di tofu.`),2.8);
  chips(D.G.position.clone().add(new V3(0,1.9,.6)),()=>{const F=FM(),n=vehN(k),L=[];
   if(CH.more==='col'){for(const c of VCOL)L.push({t:`<span class="sw" style="background:${c}"></span>`,main:F.veh[k]&&F.veh[k].c===c,fn:()=>{F.veh[k].c=c;fmDirty=true;vehPaint(k);return true}});L.push({t:'‹',fn:()=>{CH.more=false;return true}});return L}
-  if(!n)L.push({t:`${V.ic} ${tt('Buy','Compra')} ${cst({t:V.cost})}`,main:pocket()>=V.cost,fn:()=>{buyVeh(k);return true}});
+  if(!n)L.push({t:`${V.ic} ${tt('Buy','Compra')} ${cst(dual({t:V.cost}))}`,main:canPay(dual({t:V.cost})),fn:()=>{buyVeh(k);return true}});
   else{L.push({t:`${V.ic} ${tt('Hop on','Sali')}`,main:1,fn:()=>{mount(k);return false}});
-   L.push(n<vehMax()?{t:`+1 ${tt('for the Igorlets','per gli Igorlets')} ${cst({t:V.cost})}`,fn:()=>{buyVeh(k,1);return true}}:{t:`×${n}`,off:1,why:tt('One each is enough: more Igorlets, more vehicles!','Uno a testa basta: più Igorlets, più mezzi!')});
+   L.push(n<vehMax()?{t:`+1 ${tt('for the Igorlets','per gli Igorlets')} ${cst(dual({t:V.cost}))}`,fn:()=>{buyVeh(k,1);return true}}:{t:`×${n}`,off:1,why:tt('One each is enough: more Igorlets, more vehicles!','Uno a testa basta: più Igorlets, più mezzi!')});
    L.push({t:'🎨 '+tt('Colour','Colore'),fn:()=>{CH.more='col';return true}})}
   return L},'shop'+k,1)}
 
@@ -3459,6 +3460,187 @@ mkBuilding('nurs',[p=>{const wd=lam('#8a6a48'),wd2=lam('#6a4c34'),pot=lam('#b864
  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,1.1,6),wd2);pole.position.set(.95,.55,-.75);p.add(pole);const c=document.createElement('canvas');c.width=128;c.height=96;{const g=c.getContext('2d');g.fillStyle='#efe1c2';g.fillRect(0,0,128,96);g.strokeStyle='#6a4c34';g.lineWidth=6;g.strokeRect(3,3,122,90);g.font='58px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('🌱',64,50)}
  const sg=new THREE.Mesh(new THREE.PlaneGeometry(.5,.38),curve(new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c)})));sg.position.set(.95,1.18,-.72);p.add(sg)}]);
 {let prev=null;updaters.push(()=>{const F=S.farm;if(!F||!F.b)return;const v=F.b.nurs|0;if(prev===0&&v>=1&&started&&!VISIT)setTimeout(()=>say(tt('The tree nursery is ready! Now tap a tree and I’ll plant it wherever you like.','Il vivaio è pronto! Ora tocca un albero e lo ripianto dove vuoi.'),4),600);prev=v})}
+
+/* ================= 10 Nov 2026: the Toy Store and the island decorations; prices in tofu ants also cost a few seeds ================= */
+/* --- two currencies: whatever costs tofu ants also costs a few seeds (games!). Tarps, snacks, tofuel and scarecrows stay ants only --- */
+const SEEDF=t=>t>0?Math.max(1,Math.round(1+.9*Math.log2(t/10))):0;
+const dual=c=>c&&c.t&&!c.s?{...c,s:SEEDF(c.t)}:c;
+for(const k of Object.keys(BLD))for(const U of BLD[k].up||[])if(U&&U.cost&&U.cost.t&&!U.cost.s)U.cost.s=SEEDF(U.cost.t);
+for(const c of FCOST)if(c&&c.t&&!c.s)c.s=SEEDF(c.t);
+for(const T0 of Object.values(TOOLS))for(const L of T0.lv)if(L.cost.t&&!L.cost.s)L.cost.s=SEEDF(L.cost.t);
+
+/* --- the shop: a building (hammer), tap it for the catalogue --- */
+BLD.toys={N:['Toy Store','Negozio dei giocattoli'],what:['Things to make the island yours: the Igorlets play with them too.','Cose per rendere l’isola tua: ci giocano anche gli Igorlets.'],up:[null,{lv:2,cost:{t:30,s:SEEDF(30)},min:15,gives:['the decorations','le decorazioni']}]};
+BKEYS.push('toys');SPOTR.toys=1.4;
+updaters.push(()=>{const F=S.farm;if(F&&F.b&&F.b.toys==null)F.b.toys=0;if(F&&!F.deco)F.deco={}});
+mkBuilding('toys',[p=>{const wall=lam('#f6e2b8'),wd=lam('#6a4c34');const b=new THREE.Mesh(new THREE.RoundedBoxGeometry(2,1.4,1.4,2,.06),wall);b.position.y=.7;p.add(b);
+ const st=document.createElement('canvas');st.width=128;st.height=32;{const q=st.getContext('2d');const C=['#e0463c','#f6d34a','#4f9ad8','#7fbf5a'];for(let k=0;k<8;k++){q.fillStyle=C[k%4];q.fillRect(k*16,0,16,32)}}
+ const aw=new THREE.Mesh(new THREE.BoxGeometry(2.3,.08,.8),texM(new THREE.CanvasTexture(st)));aw.position.set(0,1.42,.88);aw.rotation.x=.35;p.add(aw);
+ const roof=new THREE.Mesh(new THREE.ConeGeometry(1.55,.8,4),lam('#a8463c'));roof.position.y=1.8;roof.rotation.y=Math.PI/4;roof.scale.z=.75;p.add(roof);
+ const win=new THREE.Mesh(new THREE.PlaneGeometry(1.3,.5),glowM('#f6d38c',.55));win.position.set(.2,.95,.71);p.add(win);const dr=new THREE.Mesh(new THREE.PlaneGeometry(.42,.8),lam('#6a4c34'));dr.position.set(-.68,.4,.71);p.add(dr);
+ for(let k=0;k<4;k++){const c=['#e0463c','#4f9ad8','#f6d34a','#7fbf5a'][k],bl=new THREE.Mesh(new THREE.BoxGeometry(.16,.16,.16),lam(c));bl.position.set(-.15+k*.22,.82+(k%2)*.12,.66);bl.rotation.y=k;p.add(bl)}
+ const bal=new THREE.Mesh(new THREE.SphereGeometry(.18,12,10),lam('#e0463c'));bal.position.set(1.15,1.9,.5);p.add(bal);const bs=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,1.2,4),lam('#444'));bs.position.set(1.12,1.25,.5);p.add(bs);
+ const sc=document.createElement('canvas');sc.width=256;sc.height=64;{const q=sc.getContext('2d');q.fillStyle='#2b2018';q.fillRect(0,0,256,64);q.font='40px serif';q.textAlign='center';q.textBaseline='middle';q.fillText('🧸 🪀 🎈',128,34)}
+ const sg=new THREE.Mesh(new THREE.PlaneGeometry(1.4,.35),curve(new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc)})));sg.position.set(0,1.6,.75);p.add(sg)}]);
+
+/* --- the ten decorations --- */
+const DECO={
+ fire:{N:['Campfire','Falò'],ic:'🔥',lv:1,cost:{t:40},r:1.3,cap:4,what:['Logs to sit on, a little fire in the evening.','Tronchi per sedersi, un fuocherello la sera.']},
+ lights:{N:['Lights and flowerbeds','Lucine e aiuole'],ic:'💡',lv:1,cost:{t:25},r:1.4,cap:2,what:['Flowers, and little lights that glow at night.','Fiori, e lucine che si accendono la sera.']},
+ totem:{N:['Igor totem','Totem di Igor'],ic:'🗿',lv:2,cost:{t:60},r:.8,cap:4,what:['Four Igor dolls, one on top of the other. The Igorlets dance around it.','Quattro bambole di Igor una sopra l’altra. Gli Igorlets ci ballano intorno.']},
+ beach:{N:['Beach kit','Kit da spiaggia'],ic:'⛱️',lv:2,cost:{t:90},r:1.5,cap:3,what:['Umbrella, deckchair, towel and ball. Best by the sea.','Ombrellone, sdraio, asciugamano e pallone. Meglio vicino al mare.']},
+ tele:{N:['Telescope','Telescopio'],ic:'🔭',lv:1,cost:{sh:2},r:.8,cap:2,what:['To look at the stars and far away.','Per guardare le stelle e lontano.']},
+ fount:{N:['Fountain','Fontana'],ic:'⛲',lv:3,cost:{t:150},r:1.3,cap:3,what:['Splashing water, cool on hot days.','Acqua che zampilla, fresca nei giorni caldi.']},
+ stage:{N:['Music stage','Palco della musica'],ic:'🎤',lv:4,cost:{t:220},r:1.8,cap:4,what:['The musicians play, the others listen.','I musicisti suonano, gli altri ascoltano.']},
+ treeh:{N:['Tree house','Casetta sull’albero'],ic:'🛖',lv:5,cost:{t:300},r:1.4,cap:2,what:['A hideout up in the leaves.','Un nascondiglio tra le foglie.']},
+ wheel:{N:['Ferris wheel','Ruota panoramica'],ic:'🎡',lv:1,cost:{sh:5},r:2,cap:4,what:['Round and round, with the whole island below.','Gira gira, con tutta l’isola sotto.']},
+ caro:{N:['Carousel','Giostra'],ic:'🎠',lv:6,cost:{t:450},r:1.9,cap:4,what:['Little horses going round and round.','Cavallini che girano e girano.']}};
+const DKEYS=Object.keys(DECO);
+for(const k of DKEYS)if(DECO[k].cost.t)DECO[k].cost.s=SEEDF(DECO[k].cost.t);
+const DEC=()=>{const F=FM();F.deco=F.deco||{};return F.deco};
+/* shells: uncommon or rarer; duplicates go first, then a shell leaves the collection (and goes missing again) */
+const shOK=x=>x.ti>=1;
+function shellsHave(){const U=FUN();return SHELLS.filter(shOK).reduce((a,x)=>a+(U.col[x.id]|0),0)}
+function shellsPay(n){const U=FUN(),L=SHELLS.filter(shOK).slice().sort((a,b)=>a.ti-b.ti);let left=n;const lost=[];
+ for(const x of L){while(left&&(U.col[x.id]|0)>1){U.col[x.id]--;left--}}
+ for(const x of L){if(left&&(U.col[x.id]|0)===1){U.col[x.id]=0;left--;lost.push(x)}}
+ caseDirty=true;fmDirty=true;return lost}
+const decoCost=k=>{const c=DECO[k].cost;return c.sh?`<span class="cs">${c.sh} 🐚<small>★★+</small></span>`:cst(c)};
+const decoCan=k=>{const c=DECO[k].cost;return c.sh?shellsHave()>=c.sh:canPay(c)};
+function decoBuy(k){if(VISIT)return visitNo();const D=DECO[k],c=D.cost,M=DEC();if(M[k])return;if(lvlOf()<D.lv)return say(LVFIRST(D.lv),2.6);
+ if(c.sh){const have=shellsHave();if(have<c.sh)return say(tt(`You need ${c.sh} uncommon or rarer shells (you have ${have}). Look on the beach!`,`Servono ${c.sh} conchiglie non comuni o più rare (ne hai ${have}). Cercale in spiaggia!`),3.2);
+  const lost=shellsPay(c.sh);if(lost.length)setTimeout(()=>say(tt(`${lost.map(x=>N(x.N)).join(', ')} left the display case: you can find ${lost.length>1?'them':'it'} again on the beach.`,`${lost.map(x=>N(x.N)).join(', ')}: ${lost.length>1?'sono uscite':'è uscita'} dall’espositore. ${lost.length>1?'Le':'La'} ritroverai in spiaggia.`),4),2600)}
+ else if(!pay(c))return say(NEED(c),2.6);
+ M[k]={at:Date.now()};snd('buy');fmDirty=true;save();closeSheet();startPlace({k:'deco',id:k});say(tt(`${N(D.N)}! Walk me to where you want it.`,`${N(D.N)}! Portami dove lo vuoi mettere.`),3)}
+function toysSheet(){const M=DEC(),lv=lvlOf();
+ openSheet('toys',`<h2>🧸 ${N(BLD.toys.N)}</h2><p class="shn">${tt('Buy, then walk Igor to the spot. The Igorlets will play with everything.','Compra, poi porta Igor nel posto giusto. Gli Igorlets ci giocheranno.')}</p><div class="dcl">${DKEYS.map(k=>{const D=DECO[k],m=M[k];
+  const st=m?(m.x!=null?`<button type="button" data-dgo="${k}">✓ ${tt('Go there','Vai')}</button>`:`<button type="button" class="m" data-dpl="${k}">📍 ${tt('Place it','Piazzalo')}</button>`):lv<D.lv?`<button type="button" disabled>🔒 ${tt('lv.','liv.')} ${D.lv}</button>`:`<button type="button" class="${decoCan(k)?'m':''}" data-dbuy="${k}">${decoCost(k)}</button>`;
+  return`<div class="dci"><i>${D.ic}</i><div><b>${N(D.N)}</b><small>${N(D.what)}</small></div>${st}</div>`}).join('')}</div>`)}
+sb.addEventListener('click',e=>{if(sheetKind!=='toys')return;const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ if(d.dbuy){e.stopPropagation();decoBuy(d.dbuy)}else if(d.dpl){e.stopPropagation();closeSheet();startPlace({k:'deco',id:d.dpl})}else if(d.dgo){e.stopPropagation();const p=DEC()[d.dgo];closeSheet();walkNear(new V3(p.x,0,p.z),DECO[d.dgo].r+.8,()=>decoTap(d.dgo))}});
+{const st=document.createElement('style');st.textContent=`.dcl{display:flex;flex-direction:column;gap:8px;margin-top:8px}.dci{display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:12px;background:rgba(255,255,255,.07)}.dci i{font-style:normal;font-size:28px;width:36px;text-align:center}.dci div{flex:1;min-width:0}.dci b{display:block;font-size:15px}.dci small{display:block;font-size:12px;opacity:.75;line-height:1.3}
+.dci button{flex:none;min-width:84px;font:600 13px Fredoka,sans-serif;border:2px solid #2b2018;border-radius:11px;padding:6px 8px;background:#fff7e6;color:#2b2018;cursor:pointer;text-transform:none;letter-spacing:0}.dci button.m{background:#9be38a}.dci button:disabled{opacity:.5;cursor:default}.dci button small{display:inline;font-size:9px;opacity:.8}.dci .cs{white-space:nowrap}`;document.head.appendChild(st)}
+{const _bt=bldTap;bldTap=function(k){if(k!=='toys')return _bt(k);const F=FM(),bt=F.tasks.find(q=>q.k==='build'&&q.b==='toys');if(bt||PL||!F.b.toys)return _bt(k);
+ if(VISIT){say(tt('The Toy Store: only its owner can shop here.','Il negozio dei giocattoli: qui compra solo chi abita l’isola.'),2.6);return}
+ if(igor.position.distanceTo(spotOf('toys'))>5){IG.target=spotOf('toys').add(new V3(0,0,SPOTR.toys+1));IG.arrive=null;IG.manual=true}
+ chips(spotOf('toys').add(new V3(0,2.6,0)),()=>[{t:'🧸 '+tt('Shop','Compra'),main:1,fn:()=>{toysSheet();return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'toys'});return false}}],'btoys');say(tt('So many things for the island!','Quante cose per l’isola!'),2)}}
+
+/* --- the 3D decorations: each builder fills a group and returns its moving parts --- */
+const dM=c=>lam(c),dE=(c,i)=>lam(c,{emissive:c,emissiveIntensity:i});
+function dollHead(g,y,c,s){const h=new THREE.Group();const b=new THREE.Mesh(new THREE.SphereGeometry(.32,16,12),dM(c));b.scale.set(1,.85,.95);h.add(b);const sn=new THREE.Mesh(new THREE.CylinderGeometry(.06,.12,.42,10),dM(c));sn.rotation.x=Math.PI/2;sn.rotation.z=.2;sn.position.set(.08,-.05,.36);h.add(sn);
+ for(const x of[-.12,.12]){const e=new THREE.Mesh(new THREE.SphereGeometry(.08,10,8),dM('#ffffff'));e.position.set(x,.1,.26);h.add(e);const p=new THREE.Mesh(new THREE.SphereGeometry(.04,8,6),dM('#1d1d1d'));p.position.set(x,.1,.33);h.add(p)}
+ const ear=new THREE.Mesh(new THREE.ConeGeometry(.08,.22,8),dM(c));ear.position.set(-.18,.33,0);ear.rotation.z=.4;h.add(ear);h.position.y=y;h.scale.setScalar(s);g.add(h);return h}
+const DECO3D={
+ totem(g){const post=new THREE.Mesh(new THREE.CylinderGeometry(.12,.16,.3,10),woodB);post.position.y=.15;g.add(post);const H=[];const C=['#8cc63f','#4fb7a0','#f2c94c','#e88fb0'];for(let k=0;k<4;k++)H.push(dollHead(g,.55+k*.56,C[k],1-k*.08));
+  const star=new THREE.Mesh(new THREE.OctahedronGeometry(.14,0),dE('#f6d34a',.5));star.position.y=2.75;g.add(star);return{H,star}},
+ beach(g){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,2,6),dM('#eeeeee'));pole.position.set(-.5,1,-.2);pole.rotation.z=.1;g.add(pole);
+  for(let k=0;k<8;k++){const sl=new THREE.Mesh(new THREE.ConeGeometry(1.15,.45,3,1,true,k/8*TAU,TAU/8),lam(k%2?'#ffffff':'#e0463c',{side:THREE.DoubleSide}));sl.position.set(-.6,2.05,-.2);g.add(sl)}
+  const ch=new THREE.Group();const seat=new THREE.Mesh(new THREE.BoxGeometry(.55,.05,.75),dM('#4f9ad8'));seat.position.set(0,.3,0);seat.rotation.x=-.1;ch.add(seat);const back=new THREE.Mesh(new THREE.BoxGeometry(.55,.05,.6),dM('#ffffff'));back.position.set(0,.55,-.42);back.rotation.x=-1.1;ch.add(back);
+  for(const sx of[-.25,.25])for(const sz of[-.3,.3]){const l=new THREE.Mesh(new THREE.BoxGeometry(.04,.3,.04),woodB);l.position.set(sx,.15,sz);ch.add(l)}ch.position.set(.35,0,.15);g.add(ch);
+  const tw=new THREE.Mesh(new THREE.BoxGeometry(.7,.02,1.2),dM('#f6d34a'));tw.position.set(-.55,.03,.85);g.add(tw);const stp=new THREE.Mesh(new THREE.BoxGeometry(.7,.021,.12),dM('#e0463c'));stp.position.set(-.55,.035,.85);g.add(stp);
+  const ball=new THREE.Mesh(new THREE.SphereGeometry(.17,12,10),dM('#ffffff'));ball.position.set(.9,.17,.9);g.add(ball);for(const[c,a]of[['#e0463c',0],['#4f9ad8',2.1],['#f6d34a',4.2]]){const s=new THREE.Mesh(new THREE.SphereGeometry(.172,12,10,a,1,0,Math.PI),dM(c));s.position.copy(ball.position);g.add(s)}
+  const bk=new THREE.Mesh(new THREE.CylinderGeometry(.12,.09,.2,10),dM('#f28a1c'));bk.position.set(-1.1,.1,.4);g.add(bk);return{ball}},
+ stage(g){const pl=new THREE.Mesh(new THREE.BoxGeometry(2.6,.35,1.5),woodA);pl.position.set(0,.175,-.3);g.add(pl);const fr=new THREE.Mesh(new THREE.BoxGeometry(2.6,.06,1.5),woodB);fr.position.set(0,.37,-.3);g.add(fr);
+  const back=new THREE.Mesh(new THREE.BoxGeometry(2.6,1.8,.12),dM('#7a3a5a'));back.position.set(0,1.25,-1.05);g.add(back);const arch=new THREE.Mesh(new THREE.TorusGeometry(1.3,.08,8,24,Math.PI),dM('#f6d34a'));arch.position.set(0,1.6,-1);g.add(arch);
+  for(const x of[-1.15,1.15]){const sp=new THREE.Mesh(new THREE.BoxGeometry(.32,.5,.3),dM('#2b2b2e'));sp.position.set(x,.62,-.75);g.add(sp);const cone=new THREE.Mesh(new THREE.CircleGeometry(.1,12),dM('#888'));cone.position.set(x,.66,-.59);g.add(cone)}
+  const L=[];for(let k=0;k<6;k++){const b=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),dE(['#e0463c','#f6d34a','#4f9ad8','#7fbf5a','#e88fb0','#f28a1c'][k],.8));b.position.set(-1.1+k*.44,2.25+Math.sin(k)*.05,-.98);g.add(b);L.push(b)}
+  const mic=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.9,5),dM('#333'));mic.position.set(.5,.8,-.2);g.add(mic);const mh=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),dM('#555'));mh.position.set(.5,1.27,-.2);g.add(mh);return{L}},
+ fire(g){for(let k=0;k<9;k++){const a=k/9*TAU,s=new THREE.Mesh(new THREE.DodecahedronGeometry(.12,0),lam('#8a877f',{flatShading:true}));s.position.set(Math.cos(a)*.38,.06,Math.sin(a)*.38);g.add(s)}
+  for(let k=0;k<3;k++){const l=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,.6,7),woodB);l.rotation.z=Math.PI/2;l.rotation.y=k*1.05;l.position.y=.1;g.add(l)}
+  const F=[];for(let k=0;k<3;k++){const f=new THREE.Mesh(new THREE.ConeGeometry(.14-k*.03,.45-k*.08,8),dE(['#f28a1c','#f6d34a','#ffe9a8'][k],1));f.position.y=.32-k*.02;g.add(f);F.push(f)}
+  const h=halo('#ffb05a',2.4,.5);h.position.y=.4;g.add(h);
+  for(let k=0;k<4;k++){const a=k/4*TAU+.4,b=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.7,8),woodA);b.rotation.z=Math.PI/2;b.rotation.y=-a;b.position.set(Math.cos(a)*1.15,.13,Math.sin(a)*1.15);g.add(b)}return{F,h}},
+ tele(g){for(let k=0;k<3;k++){const a=k/3*TAU,l=new THREE.Mesh(new THREE.CylinderGeometry(.02,.025,1.05,5),dM('#3d4148'));l.position.set(Math.cos(a)*.18,.5,Math.sin(a)*.18);l.rotation.set(Math.sin(a)*.32,0,-Math.cos(a)*.32);g.add(l)}
+  const tb=new THREE.Group();const tube=new THREE.Mesh(new THREE.CylinderGeometry(.09,.12,.95,14),dM('#2f4f7a'));tube.rotation.z=Math.PI/2;tb.add(tube);const ring=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.08,14),dM('#d9b45a'));ring.rotation.z=Math.PI/2;ring.position.x=.45;tb.add(ring);
+  const ep=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.14,8),dM('#222'));ep.rotation.z=Math.PI/2;ep.position.x=-.52;tb.add(ep);tb.position.y=1.05;tb.rotation.z=.55;g.add(tb);return{tb}},
+ fount(g){const st=lam('#b9b1a0'),wa=curve(new THREE.MeshLambertMaterial({color:'#5fb6dc',transparent:true,opacity:.85,emissive:'#123844',emissiveIntensity:.3}));
+  const ring=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.15,.4,28,1,true),st);ring.position.y=.2;g.add(ring);const rim=new THREE.Mesh(new THREE.TorusGeometry(1.1,.08,8,28),st);rim.rotation.x=Math.PI/2;rim.position.y=.4;g.add(rim);
+  const w=new THREE.Mesh(new THREE.CircleGeometry(1.08,28).rotateX(-Math.PI/2),wa);w.position.y=.3;g.add(w);const col=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,.9,10),st);col.position.y=.6;g.add(col);
+  const bowl=new THREE.Mesh(new THREE.SphereGeometry(.42,16,8,0,TAU,Math.PI/2,Math.PI/2),st);bowl.position.y=1.1;bowl.rotation.x=Math.PI;g.add(bowl);const bw=new THREE.Mesh(new THREE.CircleGeometry(.38,16).rotateX(-Math.PI/2),wa);bw.position.y=1.08;g.add(bw);
+  const D=[];for(let k=0;k<10;k++){const d=new THREE.Mesh(new THREE.SphereGeometry(.035,6,4),wa);g.add(d);D.push({d,u:k/10,a:k/10*TAU})}return{D}},
+ treeh(g){const tr=new THREE.Mesh(new THREE.CylinderGeometry(.2,.32,2.8,9),trunkM);tr.position.y=1.4;g.add(tr);const lf=lam('#3a6646');for(const[x,y,z,r]of[[0,3.5,0,1.25],[.8,3.1,.3,.8],[-.8,3.2,-.2,.85],[.2,3.3,-.8,.8]]){const c=new THREE.Mesh(new THREE.SphereGeometry(r,14,10),lf);c.position.set(x,y,z);g.add(c)}
+  const pl=new THREE.Mesh(new THREE.BoxGeometry(1.6,.1,1.4),woodA);pl.position.set(0,2.2,.25);g.add(pl);const h=new THREE.Mesh(new THREE.BoxGeometry(1,.75,.8),dM('#c98a5a'));h.position.set(0,2.62,.15);g.add(h);const rf=gable(1.1,.9,.4,roofR);rf.position.set(0,3,.15);g.add(rf);
+  const win=new THREE.Mesh(new THREE.PlaneGeometry(.3,.26),glowM('#f6c27a',.5));win.position.set(.2,2.7,.56);g.add(win);const dr=new THREE.Mesh(new THREE.PlaneGeometry(.26,.45),lam('#5e4330'));dr.position.set(-.25,2.48,.56);g.add(dr);
+  for(const x of[-.22,.22]){const r=new THREE.Mesh(new THREE.BoxGeometry(.05,2.3,.05),woodB);r.position.set(x+.1,1.1,1.05);r.rotation.x=.18;g.add(r)}for(let k=0;k<7;k++){const ru=new THREE.Mesh(new THREE.BoxGeometry(.48,.04,.04),woodB);ru.position.set(.1,.2+k*.3,1.22-k*.054);g.add(ru)}return{}},
+ wheel(g){const met=dM('#e9efe8'),col=['#e0463c','#4f9ad8','#f6d34a','#7fbf5a','#e88fb0','#f28a1c'];for(const z of[-.35,.35])for(const sx of[-1,1]){const l=new THREE.Mesh(new THREE.BoxGeometry(.08,2.9,.08),met);l.position.set(sx*.7,1.35,z);l.rotation.z=sx*.25;g.add(l)}
+  const base=new THREE.Mesh(new THREE.BoxGeometry(2.2,.12,1),woodB);base.position.y=.06;g.add(base);const W=new THREE.Group();W.position.y=2.7;g.add(W);
+  for(const z of[-.3,.3]){const r=new THREE.Mesh(new THREE.TorusGeometry(1.85,.05,6,40),met);r.position.z=z;W.add(r)}const hub=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,.75,12),dM('#f6d34a'));hub.rotation.x=Math.PI/2;W.add(hub);
+  for(let k=0;k<12;k++){const s=new THREE.Mesh(new THREE.BoxGeometry(.03,1.85,.03),met);const a=k/12*TAU;s.position.set(Math.cos(a)*.92,Math.sin(a)*.92,0);s.rotation.z=a-Math.PI/2;W.add(s)}
+  const G=[];for(let k=0;k<6;k++){const a=k/6*TAU,c=new THREE.Group();const cab=new THREE.Mesh(new THREE.BoxGeometry(.5,.38,.5),dM(col[k]));cab.position.y=-.32;c.add(cab);const rf=new THREE.Mesh(new THREE.BoxGeometry(.56,.05,.56),dM('#ffffff'));rf.position.y=-.1;c.add(rf);
+   c.position.set(Math.cos(a)*1.85,Math.sin(a)*1.85,0);W.add(c);G.push(c)}
+  const L=[];for(let k=0;k<12;k++){const a=k/12*TAU+.26,b=new THREE.Mesh(new THREE.SphereGeometry(.05,6,4),dE('#fff1c4',.2));b.position.set(Math.cos(a)*1.85,Math.sin(a)*1.85,.36);W.add(b);L.push(b)}return{W,G,L}},
+ caro(g){const base=new THREE.Mesh(new THREE.CylinderGeometry(1.7,1.75,.25,28),dM('#efe1c2'));base.position.y=.12;g.add(base);const R0=new THREE.Group();R0.position.y=.25;g.add(R0);
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,2.1,10),dM('#f6d34a'));pole.position.y=1.05;R0.add(pole);
+  const st=document.createElement('canvas');st.width=128;st.height=16;{const q=st.getContext('2d');for(let k=0;k<8;k++){q.fillStyle=k%2?'#ffffff':'#e0463c';q.fillRect(k*16,0,16,16)}}
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(1.9,.9,16),texM(new THREE.CanvasTexture(st)));roof.position.y=2.45;R0.add(roof);const fl=new THREE.Mesh(new THREE.ConeGeometry(.12,.3,4),dM('#4f9ad8'));fl.position.y=3.05;R0.add(fl);
+  const H=[];const hc=['#ffffff','#f2c94c','#e88fb0','#8cc63f'];for(let k=0;k<4;k++){const a=k/4*TAU,h=new THREE.Group();const p=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,2,6),dM('#d9b45a'));p.position.y=1;h.add(p);
+   const body=new THREE.Mesh(new THREE.BoxGeometry(.55,.26,.2),dM(hc[k]));body.position.y=.7;h.add(body);const head=new THREE.Mesh(new THREE.BoxGeometry(.18,.32,.16),dM(hc[k]));head.position.set(.3,.9,0);head.rotation.z=-.3;h.add(head);
+   const sn=new THREE.Mesh(new THREE.CylinderGeometry(.03,.07,.3,8),dM(hc[k]));sn.rotation.z=-1.2;sn.position.set(.48,.98,0);h.add(sn);h.position.set(Math.cos(a)*1.25,0,Math.sin(a)*1.25);h.rotation.y=-a;R0.add(h);H.push(h)}return{R0,H}},
+ lights(g){const fl=['#e88fb0','#f6d34a','#ffffff','#b48ce6','#e0463c'];for(const[x,z]of[[-.9,.3],[.9,.3],[0,-.6]]){const bed=new THREE.Mesh(new THREE.CylinderGeometry(.48,.52,.18,16),dM('#6b4a2e'));bed.position.set(x,.09,z);g.add(bed);
+   for(let k=0;k<7;k++){const a=k/7*TAU,r=k?.28:0,f=new THREE.Mesh(new THREE.SphereGeometry(.08,8,6),dM(fl[(k+Math.round(x*3))%5]));f.position.set(x+Math.cos(a)*r,.26,z+Math.sin(a)*r);g.add(f)}}
+  const B=[];for(const x of[-1.35,1.35]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.03,.04,1.5,6),dM('#2a2a2c'));p.position.set(x,.75,-.2);g.add(p)}
+  for(let k=0;k<11;k++){const u=k/10,x=-1.35+u*2.7,y=1.45-Math.sin(u*Math.PI)*.35,b=new THREE.Mesh(new THREE.SphereGeometry(.05,6,4),dE(['#f6d34a','#e0463c','#7fe3ef','#9be38a'][k%4],.1));b.position.set(x,y,-.2);g.add(b);B.push(b)}return{B}}};
+const decoO={};
+function decoBuild(k){const p=DEC()[k];if(!p||p.x==null)return null;if(decoO[k])return decoO[k];const D=DECO[k],g=new THREE.Group();g.position.set(p.x,0,p.z);g.rotation.y=Math.atan2(-p.x,-p.z);
+ const parts=DECO3D[k](g)||{};world.add(g);blob(g,D.r,.9);const fx=[p.x,p.z,D.r*.85];FIXB.push(fx);block(p.x,p.z,D.r*.7);const bk=blocked[blocked.length-1];
+ const B0=BUILD;BUILD='out';hit(g,Math.min(1.4,D.r*.8),()=>decoTap(k),'deco-'+k,.8);const L=label(N(D.N),'',new V3(p.x,k==='wheel'||k==='treeh'||k==='caro'?4.8:k==='totem'?3.3:2.4,p.z),()=>decoTap(k),5);L.el.classList.add('plot');BUILD=B0;
+ return decoO[k]={g,parts,fx,bk,L}}
+function decoMoveTo(k,x,z){const o=decoO[k];if(!o)return;o.g.position.set(x,0,z);o.g.rotation.y=Math.atan2(-x,-z);o.fx[0]=x;o.fx[1]=z;o.bk.x=x;o.bk.z=z;o.L.pos.set(x,o.L.pos.y,z)}
+function decoPlace(k,x,z){const M=DEC();if(!M[k])return;const had=M[k].x!=null;M[k].x=+x.toFixed(2);M[k].z=+z.toFixed(2);if(had)decoMoveTo(k,x,z);else decoBuild(k);snd('build');
+ say(had?tt('Moved!','Spostato!'):pick(tt(['There! Looks great.','Perfect spot!'],['Ecco! Sta benissimo.','Posto perfetto!'])),2.2)}
+const DSAY={fire:[['A little fire is nice in the evening.','Un fuocherello è bello la sera.']],lights:[['The lights come on at sunset.','Le lucine si accendono al tramonto.']],totem:[['Four of me! The bottom one is the bravest.','Quattro me! Quello sotto è il più coraggioso.']],
+ beach:[['Sun, sea and a deckchair.','Sole, mare e una sdraio.']],tele:[['I can see… the other side of the sea!','Vedo… l’altra parte del mare!'],['At night you can see the rings of a planet.','Di notte si vedono gli anelli di un pianeta.']],fount:[['Splish splash!','Splish splash!']],
+ stage:[['A stage! Who plays first?','Un palco! Chi suona per primo?']],treeh:[['A secret hideout. Shh!','Un nascondiglio segreto. Shh!']],wheel:[['Round and round we go!','Gira gira gira!']],caro:[['Hold on to the little horses!','Tenetevi forte ai cavallini!']]};
+function decoTap(k){if(PL)return;const o=decoO[k];if(!o)return;const P=o.g.position.clone();const go=()=>{say(N(pick(DSAY[k])),2.6);if(k==='wheel'||k==='caro')o.spin=T+6;
+  if(VISIT)return;chips(P.clone().setY(k==='wheel'||k==='treeh'||k==='caro'?4.2:2.2),()=>[{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'deco',id:k,fx:o.fx});return false}}],'deco'+k)};
+ if(igor.position.distanceTo(P)>DECO[k].r+2.4)walkNear(P.clone().setY(0),DECO[k].r+.9,go);else go()}
+// build the placed ones at start and whenever the save changes
+{let key='';updaters.push((t,dt)=>{const F=S.farm;if(!F||!F.deco)return;const k2=JSON.stringify(F.deco);if(k2===key)return;key=k2;
+ for(const k of DKEYS){const p=F.deco[k];if(p&&p.x!=null){if(decoO[k]){const o=decoO[k];if(o.g.position.x!==p.x||o.g.position.z!==p.z)decoMoveTo(k,p.x,p.z)}else decoBuild(k)}else if(decoO[k]){const o=decoO[k];world.remove(o.g);o.bk.r=0;o.fx[2]=0;o.L.el.remove();labels.splice(labels.indexOf(o.L),1);delete decoO[k]}}})}
+// animations
+updaters.push((t,dt)=>{const night=SKY.nk;for(const k in decoO){const o=decoO[k],P=o.parts;
+ if(k==='fire'){const on=night>.15;P.F.forEach((f,i)=>{f.visible=on;f.scale.set(1,.8+.3*Math.abs(Math.sin(t*7+i*2)),1)});P.h.material.opacity=on?.4+.12*Math.sin(t*9):0}
+ else if(k==='lights'){P.B.forEach((b,i)=>b.material.emissiveIntensity=night>.35?.7+.3*Math.sin(t*2+i):.08)}
+ else if(k==='totem'){P.star.rotation.y+=dt*1.5;P.H.forEach((h,i)=>h.rotation.y=Math.sin(t*.8+i)*.25)}
+ else if(k==='stage'){P.L.forEach((b,i)=>b.material.emissiveIntensity=.5+.5*Math.sin(t*4+i*1.3))}
+ else if(k==='fount'){for(const d of P.D){d.u=(d.u+dt*.6)%1;const u=d.u,r=.15+u*.75;d.d.position.set(Math.cos(d.a)*r,1.15+Math.sin(u*Math.PI)*.45-u*.85,Math.sin(d.a)*r)}}
+ else if(k==='wheel'){const fast=o.spin>T||o.riders;P.W.rotation.z+=dt*(fast?.35:.08);P.G.forEach(c=>c.rotation.z=-P.W.rotation.z);P.L.forEach((b,i)=>b.material.emissiveIntensity=night>.35?.8:.15)}
+ else if(k==='caro'){const run=o.spin>T||o.riders;o.v=(o.v||0)+((run?.7:0)-(o.v||0))*Math.min(1,dt*1.5);P.R0.rotation.y+=dt*o.v;P.H.forEach((h,i)=>{h.position.y=o.v>.05?Math.sin(t*3+i*1.6)*.12:0})}
+ else if(k==='tele'){P.tb.rotation.y=Math.sin(t*.2)*.6}}});
+
+/* --- the Igorlets play with the decorations: each personality has its favourites --- */
+const DLIKE={music:{stage:6,wheel:1,caro:1,totem:2,fire:1},sporty:{beach:5,caro:3,fount:2,wheel:2,totem:1},sleepy:{beach:5,treeh:2,fire:3},foodie:{fire:6,beach:1,fount:1},explorer:{tele:6,wheel:3,treeh:2,caro:1},shy:{treeh:6,lights:3,tele:1},lazy:{beach:4,fire:3,lights:1},keen:{totem:3,fount:3,lights:2,stage:2,caro:1}};
+{const _idl=idleDirector;idleDirector=function(list){_idl(list);const M=FM().deco;if(!M)return;const on=DKEYS.filter(k=>decoO[k]);if(!on.length)return;const use={};
+ for(const o of list){if(o.act&&/^(ride|wh|lead|rope|ball|ring)$/.test(o.act.k))continue;const g=igById(o.id)||{},W=DLIKE[g.trait]||{};if(Math.random()>.5)continue;
+  const C=on.filter(k=>(use[k]||0)<DECO[k].cap);if(!C.length)break;let tot=0;const w=C.map(k=>{const v=(W[k]||.6);tot+=v;return v});let r=Math.random()*tot,k=C[0];for(let i=0;i<C.length;i++){r-=w[i];if(r<=0){k=C[i];break}}
+  const n=use[k]=(use[k]||0)+1;o.act={k:'deco',d:k,n:n-1,goal:decoSlot(k,n-1,T,o).p,trait:g.trait}}}}
+// where an Igorlet stands (or rides) for a decoration, in world coordinates
+const _dv=new V3();
+function decoLocal(k,x,y,z){const o=decoO[k];return o.g.localToWorld(_dv.set(x,y,z)).clone()}
+function decoSlot(k,n,t,ob){const o=decoO[k];if(!o)return{p:igor.position.clone()};const tr=ob&&ob.act&&ob.act.trait;
+ if(k==='totem'){const a=t*.7+n*TAU/4;return{p:decoLocal(k,Math.cos(a)*1.1,0,Math.sin(a)*1.1),ic:'heart',hop:.5}}
+ if(k==='beach'){if(n===0)return{p:decoLocal(k,.35,0,.6),ic:tr==='sleepy'||tr==='lazy'?'z':'heart',y:.25};return{p:decoLocal(k,n===1?-.2:1.4,0,n===1?1.6:1.5),hop:1.2,ic:'heart'}}
+ if(k==='stage'){if(n===0||tr==='music'&&n<3)return{p:decoLocal(k,-.6+n*.6,0,-.4),y:.37,ic:'note',hop:.9};return{p:decoLocal(k,-.8+n*.55,0,1.25),ic:'heart'}}
+ if(k==='fire'){const a=n/4*TAU+.4;return{p:decoLocal(k,Math.cos(a)*1.15,0,Math.sin(a)*1.15+.01),ic:tr==='foodie'?'ant':'heart',y:.12}}
+ if(k==='tele')return{p:decoLocal(k,-.75,0,.05),ic:'q'};
+ if(k==='fount'){const a=t*.25+n*TAU/3;return{p:decoLocal(k,Math.cos(a)*1.45,0,Math.sin(a)*1.45),hop:.4}}
+ if(k==='lights')return{p:decoLocal(k,n?.9:-.9,0,1),ic:'heart'};
+ if(k==='treeh'){if(n===0)return{p:decoLocal(k,-.2,0,.2),y:2.25,ic:'heart',up:1};return{p:decoLocal(k,.35,0,.25),y:2.25,ic:'heart',up:1}}
+ if(k==='wheel'){const P=o.parts,c=P.G[[0,2,4,1][n]||0],w=new V3();c.getWorldPosition(w);return{p:new V3(w.x,0,w.z).add(new V3(0,0,0)),y:w.y-.45,ride:1,board:decoLocal(k,0,0,.9)}}
+ if(k==='caro'){const h=o.parts.H[n%4],w=new V3();h.getWorldPosition(w);return{p:new V3(w.x,0,w.z),y:.7+h.position.y,ride:1,board:decoLocal(k,0,0,2.1)}}
+ return{p:o.g.position.clone()}}
+updaters.push((t,dt)=>{for(const k in decoO)decoO[k].riders=0;
+ for(const[,o]of igObjs){const A=o.act;
+  if(!A||A.k!=='deco'||o.mode!=='idle'||!decoO[A.d]){if(o._dy){o.grp.position.y=0;o._dy=0;o._on=0}continue}
+  const s=decoSlot(A.d,A.n,t,o);
+  if(s.ride||s.up){const B=s.board||s.p;if(!o._on){A.goal=B.clone();if(o.grp.position.distanceTo(new V3(B.x,o.grp.position.y,B.z))<.35)o._on=1}
+   if(o._on){A.goal=s.p;o.grp.position.x=s.p.x;o.grp.position.z=s.p.z;o.grp.position.y=s.y;o._dy=1;if(s.ride)decoO[A.d].riders++}}
+  else{A.goal=s.p;const there=o.grp.position.distanceTo(new V3(s.p.x,o.grp.position.y,s.p.z))<.35;if(there&&s.y){o.grp.position.y=s.y;o._dy=1}else if(o._dy&&!there){o.grp.position.y=0;o._dy=0}
+   if(there&&s.hop&&o.jump<=0&&Math.random()<dt*s.hop)o.jump=.5}
+  const near=o._on||o.grp.position.distanceTo(new V3(s.p.x,o.grp.position.y,s.p.z))<.5;if(near&&s.ic){o.ic.visible=true;o.ic.material.map=iconTex[s.ic];o.ic.position.y=IGH+.25+Math.sin(t*2+o.ph)*.05}}});
+// a shell that left the collection is silent in the melodies
+{const _mp=melPlay;melPlay=function(m,how){if(!m||!m.ev)return _mp(m,how);const U=FUN();const ev=m.ev.map(([t,id])=>[t,id]);const keep=ev.filter(([,id])=>(U.col[id]|0)>0);if(!keep.length){melStop();return}
+ melStop();const t0=ev[0][0];keep.forEach(([t,id])=>PLAYT.push(setTimeout(()=>{if(how==='mar'){let f=shellF(id);while(f<262)f*=2;while(f>1050)f/=2;snd('marimba',f)}else shPlay(id,sheetKind==='shplay')},t-t0)))}}
 
 /* ================= sound (sound.js): nature around Igor, footsteps, the Igorlets ================= */
 function snd(n,a){if(window.IgorSound&&started)IgorSound.sfx(n,a)}
