@@ -165,6 +165,18 @@ html.touch #zoomB{top:calc(var(--hh,62px) + var(--evh,0px) + 14px)!important;tra
 #zmT{display:grid;place-items:center}#zoomB.open #zmT{background:#f6d34a}
 </style>
 <script src="/pres.js?v=1" defer></script>
+<script>/* errors on screen: tell us what broke (and let the player reload) */
+(function(){var n=0,seen={};function show(m){try{if(seen[m]||n>4)return;seen[m]=1;n++;console.warn('[igortime]',m);var d=document.getElementById('igErr');
+ if(!d){d=document.createElement('div');d.id='igErr';d.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#3a0d0d;color:#ffd9d0;font:12px/1.35 ui-monospace,monospace;padding:10px 12px;border:2px solid #ff8a7a;border-radius:12px;white-space:pre-wrap;word-break:break-word;max-height:38vh;overflow:auto';
+  var it=/^it/i.test(localStorage.getItem('igortime_lang')||navigator.language||'');
+  d.innerHTML='<div style="font:600 14px system-ui,sans-serif;margin-bottom:6px">'+(it?'Ops, qualcosa si è inceppato.':'Oops, something got stuck.')+' <button type="button" style="margin-left:6px;font:600 13px system-ui;padding:4px 10px;border-radius:8px;border:0;background:#ffd9d0;color:#3a0d0d" onclick="location.reload()">'+(it?'Ricarica':'Reload')+'</button> <button type="button" style="font:600 13px system-ui;padding:4px 10px;border-radius:8px;border:0;background:transparent;color:#ffd9d0" onclick="this.closest(\'#igErr\').remove()">✕</button></div><span></span>';
+  (document.body||document.documentElement).appendChild(d)}
+ d.querySelector('span').textContent+=m+'\n'}catch(e){}}
+ var ua=(navigator.userAgent.match(/(Chrome|CriOS|Firefox|Version)\/[\d.]+/)||[''])[0]+(navigator.brave?' Brave':'');
+ window.__igErr=function(e,where){show((where?where+': ':'')+(e&&(e.message||e))+(e&&e.stack?' | '+String(e.stack).split('\n').slice(1,3).join(' ').replace(/\s+/g,' ').slice(0,160):'')+' ['+ua+']')};
+ addEventListener('error',function(e){if(e.target&&e.target!==window)return;show((e.message||'error')+' @'+(e.lineno||'?')+':'+(e.colno||'?')+' ['+ua+']')},true);
+ addEventListener('unhandledrejection',function(e){var r=e.reason,m=r&&(r.message||r.code)||String(r);if(/firebase|firestore|permission|network|fetch|offline|quota|auth\//i.test(m))return;show('promise: '+m+' ['+ua+']')});
+})();</script>
 </head><body>
 <div id="stage"></div>
 <header>
@@ -4491,12 +4503,15 @@ function newUfo(v,forced){return{v:v||(Math.random()<.5?'m':'d'),st:'pending',at
 function forceEv(k,lead){if(VISIT)return false;ensureFarm();const F=FM(),t=Date.now();
  if(/^ufo/.test(k)){if(F.ufo)return false;if(!F.igs.length)return false;F.ufo=newUfo(k==='ufo:m'?'m':k==='ufo:d'?'d':null,1);fmDirty=true;save();return true}
  if(!EVK[k])return false;if(F.ev&&t<F.ev.end)F.evDone[F.ev.id]=1;
- const E=mkEv(k,t+Math.max((lead|0)*MIN,8000),'f'+t);E.warn=t;E.forced=1;F.ev=E;fmDirty=true;simTo(t,true);try{renderBanner()}catch(e){}save();return true}
+ F.fq=F.fq||[];F.fq.push({k,lead:lead|0,id:'f'+t+'_'+F.fq.length});fmDirty=true;save();fqTick();return true}
+function fqTick(){if(VISIT||!S.farm)return;const F=FM();if(!F.fq||!F.fq.length)return;if(!started||where!=='out'||T<2||CUT)return;
+ if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden})||!sheet.hidden)return;const intro=$('intro');if(intro&&!intro.classList.contains('gone'))return;
+ const q=F.fq.shift(),t=Date.now();if(!EVK[q.k])return;if(F.ev&&t<F.ev.end)F.evDone[F.ev.id]=1;const E=mkEv(q.k,t+Math.max(q.lead*MIN,EVK[q.k].lead?40000:3000),q.id);E.warn=t;E.forced=1;F.ev=E;fmDirty=true;simTo(t,true);try{renderBanner()}catch(e){}save()}
 window.IgorForce={ev:forceEv,list:[],global(L){this.list=L||[];gevTick()}};
 function gevTick(){if(VISIT||!S.farm)return;const F=FM();F.gevSeen=F.gevSeen||{};const t=Date.now();
  for(const d of window.IgorForce.list){if(!d||!d.id||F.gevSeen[d.id]||!d.at||d.st==='cancel'||t-d.at>3*864e5)continue;F.gevSeen[d.id]=1;fmDirty=true;forceEv(String(d.k||''),d.lead|0)}
  const ks=Object.keys(F.gevSeen);if(ks.length>40)for(const k of ks.slice(0,ks.length-40))delete F.gevSeen[k]}
-{let acc=0;updaters.push((t,dt)=>{if((acc+=dt)<3)return;acc=0;gevTick()})}
+{let acc=0;updaters.push((t,dt)=>{if((acc+=dt)<1)return;acc=0;gevTick();fqTick()})}
 /* one player: a gift 'ev:<kind>' */
 {const _ap=window.IgorGift.apply;window.IgorGift.apply=function(g){if(g&&g.k==='veh'&&/^ev:/.test(g.v||'')){ensureFarm();const F=FM();F.gifts=F.gifts||{};if(F.gifts[g.id])return false;
   F.gifts[g.id]={k:'veh',n:g.n|0,v:g.v,at:Date.now(),ev:1,had:true};forceEv(g.v.slice(3),Math.max(0,(g.n|0)-1));fmDirty=true;save();return true}return _ap.call(this,g)}}
@@ -4693,7 +4708,7 @@ function ufoSpit(){const U=FM().ufo;if(!U)return;closeSheet();aliSay(tt('Enough!
 {const _o=orphAdopt;orphAdopt=function(){if(ufoAway())return say(tt('First let’s get the others back from the flying saucer!','Prima riportiamo a casa gli altri dal disco volante!'),3);return _o.apply(this,arguments)}}
 
 /* ================= sound (sound.js): nature around Igor, footsteps, the Igorlets ================= */
-function snd(n,a){if(window.IgorSound&&started)IgorSound.sfx(n,a)}
+function snd(n,a){if(window.IgorSound&&started)try{IgorSound.sfx(n,a)}catch(e){}}
 let sndStep=0,sndJy=0,sndLv=-1;const sndV=new V3(),sndR=new V3(),IGV={t:0};
 updaters.push((t,dt)=>{const SN=window.IgorSound;if(!SN)return;IGV.t-=dt;
  const x=igor.position.x,z=igor.position.z,r=Math.hypot(x,z*1.12);sndR.setFromMatrixColumn(camera.matrixWorld,0);
@@ -4721,7 +4736,9 @@ function lookTarget(){if(where!=='out'){look.set(igor.position.x*(portrait()?.8:
 const lookS=new V3();
 function camTarget(){const L=lookTarget(),ins=where!=='out',k=(portrait()?1.3:1)*(ins?(portrait()?1.05:1.05):1);const pr=portrait(),up=(ins?(pr?8.6:7.4):10.5)*(ins?1:k)*CAM.tilt,back=(ins?(pr?9.4:11.5):11)*(ins?1:k);const zk=ins?clamp(CAM.z,.78,1.45):CAM.z,zu=ins?zk:Math.pow(zk,zk>1?1.7:1.25),zb=ins?zk:Math.pow(zk,zk>1?.6:.75);FOC.ex=ins?0:Math.max(0,Math.hypot(up*zu,back*zb)-Math.hypot(up,back));return camGoal.set(L.x+Math.sin(CAM.yaw)*back*zb,up*zu+rideCamY(),L.z+Math.cos(CAM.yaw)*back*zb)}
 camera.position.copy(camTarget());lookS.copy(lookTarget());
-function frame(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
+function frame(){requestAnimationFrame(frame);try{frameBody()}catch(e){window.__igErr&&__igErr(e,'frame')}}
+function frameBody(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
+ if(!isFinite(igor.position.x+igor.position.y+igor.position.z)){igor.position.set(0,0,2);IG.target=null;camSnap=true}if(!isFinite(CAM.z))CAM.z=1;if(!isFinite(camera.position.x+camera.position.y+camera.position.z))camSnap=true;if(!(camera.aspect>0&&isFinite(camera.aspect))&&innerWidth>0&&innerHeight>0){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
  // keyboard + joystick
  IN.x=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0)+JOY.x;IN.z=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0)+JOY.z;
  igorUpdate(t,dt);
@@ -4731,7 +4748,7 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  // walk into doors, the mat, patches and games
  if(started&&!diving&&!rideAirOrSea())for(const Z of zones){if(Z.room!==where){continue}const inside=Math.hypot(igor.position.x-Z.x,igor.position.z-Z.z)<Z.r;if(inside&&!Z.in&&IG.manual){Z.in=true;Z.act();break}Z.in=inside}
  joy.classList.toggle('off',!sheet.hidden||!started);
- for(const u of updaters)u(t,dt);skyTick(dt);
+ for(const u of updaters){try{u(t,dt)}catch(e){if(!u._e){u._e=1;window.__igErr&&__igErr(e,'updater')}}}skyTick(dt);
  sky.rotation.y+=dt*.006;if(sky.userData.big)sky.userData.big.opacity=(.62+.18*Math.sin(t*1.3))*(SKY.P?SKY.P.stars:1);
  shoot.next-=dt;if(shoot.next<=0&&shoot.t<0&&!reduce&&SKY.nk>.8&&SKY.W.cloud<.5){shoot.t=0;shoot.next=9+Math.random()*12;shoot.m.position.set(camera.position.x+(Math.random()-.5)*60,42+Math.random()*12,camera.position.z-80);shoot.m.rotation.set(0,0,-.32)}
  if(shoot.t>=0){shoot.t+=dt;shoot.m.position.x+=dt*55;shoot.m.position.y-=dt*18;shoot.m.material.opacity=Math.sin(Math.min(shoot.t/1.1,1)*Math.PI)*.8;if(shoot.t>1.1){shoot.t=-1;shoot.m.material.opacity=0}}
@@ -4739,8 +4756,8 @@ function frame(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  // labels
  let lbN=null,lbD=1e9;const LV=[];for(const L of labels){projC(pv.copy(L.pos));const ld=Math.hypot(L.pos.x-igor.position.x,L.pos.z-igor.position.z),out=(L.room||'out')==='out',lr=out&&!L.far?Math.min(L.near||LBLR,LBLR):L.near;const vis=started&&!L.hidden&&(L.room||'out')===where&&(!lr||ld<lr*(portrait()?.8:1))&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis&&ld<lbD){lbD=ld;lbN=L}if(vis){const lx=clamp((pv.x*.5+.5)*innerWidth,L.el.offsetWidth/2+6,innerWidth-L.el.offsetWidth/2-6),ly=Math.max((-pv.y*.5+.5)*innerHeight,(window._hh||60)+(window._evh||0)+L.el.offsetHeight+4);L._x=lx;L._y=ly;L._d=ld;LV.push(L)}else L._sx=null}for(const L of labels){const on=L===lbN;if(L.el.classList.contains('nr')!==on)L.el.classList.toggle('nr',on)}
  if(bubbleT>0){bubbleT-=dt;bubbleS+=dt}else if(bubbleQ.length){const[q,s2]=bubbleQ.shift();bubble.textContent=q;bubbleT=s2;bubbleS=0;snd('say')}placeBubble();layoutLabels(LV,lbN);chatter();
- renderer.render(scene,camera);requestAnimationFrame(frame)}
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.fov=fovFor();camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);hh()});
+ renderer.render(scene,camera)}
+addEventListener('resize',()=>{if(!innerWidth||!innerHeight)return;camera.aspect=innerWidth/innerHeight;camera.fov=fovFor();camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);hh()});
 // back from a game: Igor is where you left him
 function comeBack(){let r=null;try{r=JSON.parse(localStorage.getItem('igortime_return'));localStorage.removeItem('igortime_return')}catch(e){}
  if(!r||!(Date.now()-r.t<12*3600e3))return false;if(r.where!=='out'&&ROOMS[r.where])enterRoom(r.where);else if(where!=='out')exitRoom(true);
@@ -4748,6 +4765,12 @@ function comeBack(){let r=null;try{r=JSON.parse(localStorage.getItem('igortime_r
 comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
+/* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
+const IGVER='20261110-2310';let verNew=false,verAt=0;
+async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
+setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,20000);
+updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
+renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();setTimeout(()=>{if(renderer.getContext().isContextLost()&&window.__igErr)__igErr(tt('The 3D graphics stopped (the browser took them away).','La grafica 3D si è fermata (il browser l’ha tolta).'),'webgl')},2500)},false);
 })();
 </script>
 <script type="module">
