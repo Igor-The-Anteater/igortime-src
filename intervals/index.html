@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en"><head><script src="/lang.js?v=3"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Maestro Amadigor's lessons · Igor time</title>
+<meta name="description" content="Ear training for everyone in Igor's music school: Wolfgang Amadigor teaches the intervals step by step, with little songs to remember them.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+:root{--night:#140d09;--ink:#f3e7d3;--dim:#b49f86;--warm:#f1b46e;--bone:#efe4cf;--glow:#ffd38a;--chalk:#eef2e6;
+ --display:'Instrument Serif',Georgia,serif;--toon:'Fredoka','Trebuchet MS',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow:hidden;font-family:var(--mono);-webkit-user-select:none;user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+header{position:fixed;z-index:2;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none;background:linear-gradient(rgba(20,13,9,.85) 30%,rgba(20,13,9,0));
+ padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px))}
+.igback{pointer-events:auto;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none;border:1px solid rgba(243,231,211,.35);border-radius:999px;padding:9px 13px;white-space:nowrap;background:rgba(20,13,9,.6)}.igback:hover{border-color:var(--glow);color:var(--glow)}
+h1{margin:0;font:400 clamp(20px,3.2vw,32px)/1 var(--display);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}h1 em{color:var(--warm)}h1 a{color:inherit;text-decoration:none;pointer-events:auto}
+#stat{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right;white-space:nowrap;pointer-events:auto;cursor:pointer}#stat b{color:var(--bone);font-weight:500}
+#dots{display:flex;gap:4px;justify-content:flex-end;margin-top:5px}#dots i{width:8px;height:8px;border-radius:50%;background:rgba(243,231,211,.18)}#dots i.ok{background:#7fe08a}#dots i.no{background:#f1b46e}#dots i.now{box-shadow:0 0 0 2px var(--bone)}
+#bar{position:fixed;z-index:2;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 12px calc(14px + env(safe-area-inset-bottom,0px))}
+#bar .row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;max-width:980px}
+button{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:13px 18px;border-radius:999px;cursor:pointer;background:rgba(20,13,9,.62);color:var(--ink);border:1px solid rgba(243,231,211,.4);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button.main{background:var(--warm);color:#2b1a0e;border-color:var(--warm)}
+button:disabled{opacity:.35;cursor:default}button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
+button.ex{font:600 15px/1.1 var(--toon);letter-spacing:0;text-transform:none;background:#f7ecd4;color:#2b2018;border:3px solid #2b2018;box-shadow:0 3px 0 #2b2018;padding:10px 16px}
+button.ex.on{background:#ffe08a}
+/* the answers: big friendly cards */
+.ans{display:grid;gap:9px;width:100%;max-width:980px;grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}
+.ans button{font:600 17px/1.15 var(--toon);letter-spacing:0;text-transform:none;border-radius:18px;padding:10px 8px 11px;background:#f7ecd4;color:#2b2018;border:3px solid #2b2018;box-shadow:0 4px 0 #2b2018;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:64px;justify-content:center}
+.ans button .ic{font-size:26px;line-height:1}.ans button small{font:500 12.5px/1.2 var(--toon);color:#6b5340}.ans button small.t{font-size:11px;color:#8a7360;font-style:italic}
+.ans button:active{transform:translateY(2px);box-shadow:0 2px 0 #2b2018}
+.ans button.right{background:#bff2b0}.ans button.wrong{background:#ffd6a6}
+.ans button:disabled{opacity:1}.ans.done button:not(.right):not(.wrong){opacity:.45}
+@media (max-width:620px){.ans{gap:7px}.ans button{font-size:15px;min-height:56px;padding:8px 5px 9px;border-radius:15px}.ans button .ic{font-size:22px}.ans button small{font-size:11px}.ans button small.t{font-size:10px}
+ .igback{padding:8px 10px;font-size:10px}h1 .gm{display:none}button{padding:12px 13px;font-size:10.5px;letter-spacing:.08em}button.ex{font-size:14px;padding:9px 12px}}
+@media (max-width:620px) and (max-height:760px){.ans button small:not(.t){display:none}}
+#bubble{position:fixed;left:0;top:0;z-index:3;box-sizing:border-box;pointer-events:none;font:500 18px/1.25 var(--toon);color:#2b2018;background:#f7ecd4;border:3px solid #2b2018;
+ padding:9px 15px 10px;border-radius:16px;box-shadow:0 4px 0 #2b2018;max-width:min(380px,60vw);opacity:0;transition:opacity .25s}
+#bubble b{color:#a5481c}
+#bubble::after{content:'';position:absolute;left:calc(var(--tx,40px) - 8px);bottom:-11px;width:14px;height:14px;background:#f7ecd4;border:3px solid #2b2018;border-top:0;border-left:0;transform:rotate(45deg);border-radius:0 0 4px 0}
+@media (max-width:620px){#bubble{font-size:15px;max-width:calc(100vw - 28px)}}
+.ov{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 55%,rgba(20,13,9,.78),rgba(20,13,9,.97) 75%);padding:16px;box-sizing:border-box;overflow:auto}
+.ov[hidden]{display:none}.card{max-width:36rem;width:100%}
+.card h2{margin:0;font:400 clamp(36px,7vw,64px)/.95 var(--display);letter-spacing:-.02em}.card h2 em{color:var(--warm)}
+.card p{font-size:12px;line-height:1.7;color:var(--dim);margin:1em 0}.card p b{color:var(--ink);font-weight:500}
+.card .row{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 10px}
+.card .big{font:400 clamp(56px,12vw,96px)/1 var(--display);color:var(--bone)}
+.card .small{font-size:10.5px;letter-spacing:.08em;color:var(--dim)}.card a{color:var(--warm)}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin:16px 0}
+.map button{font:600 13px/1.15 var(--toon);letter-spacing:0;text-transform:none;border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;background:rgba(243,231,211,.07)}
+.map button .ic{font-size:22px}.map button small{font:500 10px var(--mono);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.map button.done{border-color:#7fe08a}.map button.done small{color:#7fe08a}.map button.cur{border-color:var(--warm);background:rgba(241,180,110,.16)}.map button.cur small{color:var(--warm)}
+.map button:disabled{opacity:.33}
+#endnew{font:600 18px/1.3 var(--toon);color:var(--glow)}
+</style>
+</head><body>
+<canvas id="c" aria-label="Igor's music school: Maestro Wolfgang Amadigor, with a powdered wig and a baton, stands next to a blackboard"></canvas>
+<header><a class="igback" href="/">← Island</a><h1><a href="/"><em>Igor</em> time</a><span class="gm" id="gm"></span></h1><div id="stat"><span id="st1"></span><div id="dots"></div></div></header>
+<div id="bubble"></div>
+<div id="bar"></div>
+<div class="ov" id="start"><div class="card" id="startCard"></div></div>
+<div class="ov" id="end" hidden><div class="card" id="endCard"></div></div>
+<script src="/house/kit.js?v=4"></script>
+<script src="/intervals/wig.js?v=1"></script>
+<script>
+(()=>{
+const H=IgorHouse,{TAU,clamp,lerp,ease,rr,drawAnt,paintAvatar,ME,AVN}=H,PAD=H.PAD||.24;
+let IT=false;try{IT=(localStorage.getItem('igortime_lang')||window.IV_LANG||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en'))==='it'}catch(e){IT=window.IV_LANG==='it'}
+const OPEN=!!window.IV_OPEN; // previews: every stage can be tried
+const tt=(en,it)=>IT?it:en,T2=a=>a?(IT?a[1]:a[0]):'';
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
+const MAESTRO='Wolfgang Amadigor';
+try{const h=localStorage.getItem('igortime_home');if(h)document.querySelectorAll('a[href="/"]').forEach(a=>a.href=h)}catch(e){}
+if(IT)document.documentElement.lang='it';
+$('gm').textContent=' · '+tt('The maestro’s lessons','Le lezioni del maestro');
+
+/* ================= the intervals, and the little tricks to remember them ================= */
+const IV={
+ m2:{s:1,n:['semitone','semitono'],t:['minor second','seconda minore'],up:{ic:'🦈',h:['like Jaws','come Lo squalo']},dn:{ic:'🎹',h:['like Für Elise','come Per Elisa'],mel:'elise'},ha:['it scratches','graffia']},
+ M2:{s:2,n:['tone','tono'],t:['major second','seconda maggiore'],up:{ic:'🔔',h:['like Frère Jacques','come Fra Martino'],mel:'jacques'},dn:{ic:'🪜',h:['one step down: mi-re','un gradino giù: mi-re'],mel:'scale'},ha:['a bit rough','un po’ ruvido']},
+ m3:{s:3,n:['minor third','terza minore'],up:{ic:'🌙',h:['like Brahms’ Lullaby','come la Ninna nanna'],mel:'brahms'},dn:{ic:'🐦',h:['like the cuckoo','come il cucù'],mel:'cuckoo'},ha:['sweet, a bit sad','dolce, un po’ triste']},
+ M3:{s:4,n:['major third','terza maggiore'],up:{ic:'🎺',h:['like When the Saints','come When the Saints'],mel:'saints'},dn:{ic:'⚡',h:['like Beethoven’s Fifth','come la Quinta di Beethoven'],mel:'fifth'},ha:['sweet and bright','dolce e luminosa']},
+ P4:{s:5,n:['fourth','quarta'],t:['perfect fourth','quarta giusta'],up:{ic:'💍',h:['like the Wedding March','come la Marcia nuziale'],mel:'wedding'},dn:{ic:'🎻',h:['like Mozart’s Little Night Music','come la Serenata di Mozart'],mel:'mozart'},ha:['open, a bit hollow','aperta, un po’ vuota']},
+ TT:{s:6,n:['tritone','tritono'],t:['the devil’s interval','il diavolo in musica'],up:{ic:'😈',h:['strange, like The Simpsons','strano, come i Simpson']},dn:{ic:'😈',h:['strange and restless','strano e inquieto']},ha:['restless','inquieto']},
+ P5:{s:7,n:['fifth','quinta'],t:['perfect fifth','quinta giusta'],up:{ic:'⭐',h:['like Twinkle Twinkle','come Brilla brilla la stellina'],mel:'twinkle'},dn:{ic:'🌠',h:['a falling star','una stella cadente']},ha:['empty, like a horn','vuota, come un corno']},
+ m6:{s:8,n:['minor sixth','sesta minore'],up:{ic:'🎩',h:['like The Entertainer','come The Entertainer'],mel:'entertainer'},dn:{ic:'🍂',h:['a big, wistful jump','un salto grande e malinconico']},ha:['soft and dreamy','morbida e sognante']},
+ M6:{s:9,n:['major sixth','sesta maggiore'],up:{ic:'⛵',h:['like My Bonnie','come My Bonnie'],mel:'bonnie'},dn:{ic:'🏔',h:['a big, bright jump','un salto grande e luminoso']},ha:['warm and open','calda e aperta']},
+ m7:{s:10,n:['minor seventh','settima minore'],up:{ic:'🖖',h:['an octave minus a tone (Star Trek)','un’ottava meno un tono (Star Trek)']},dn:{ic:'🖖',h:['an octave minus a tone','un’ottava meno un tono']},ha:['wants to move on','vuole andare avanti']},
+ M7:{s:11,n:['major seventh','settima maggiore'],up:{ic:'🤏',h:['an octave minus a semitone','un’ottava meno un semitono']},dn:{ic:'🤏',h:['an octave minus a semitone','un’ottava meno un semitono']},ha:['sharp and tense','tagliente e tesa']},
+ P8:{s:12,n:['octave','ottava'],up:{ic:'🪞',h:['the same note, higher','la stessa nota, più in alto']},dn:{ic:'🪞',h:['the same note, lower','la stessa nota, più in basso']},ha:['one note, doubled','una nota sola, doppia']}};
+const IVK=Object.keys(IV).sort((a,b)=>IV[a].s-IV[b].s);
+/* the beginnings of the songs (semitones from the first note, seconds; null = rest) */
+const MEL={
+ jacques:[[0,.42],[2,.42],[4,.42],[0,.6]],
+ scale:[[0,.42],[-2,.42],[-4,.7]],
+ brahms:[[0,.26],[0,.26],[3,.8],[null,.06],[0,.26],[0,.26],[3,.9]],
+ cuckoo:[[0,.3],[-3,.55],[null,.25],[0,.3],[-3,.7]],
+ saints:[[0,.34],[4,.34],[5,.34],[7,1.1]],
+ fifth:[[0,.15],[0,.15],[0,.15],[-4,1.2]],
+ wedding:[[0,.6],[5,.45],[5,.15],[5,1.1]],
+ mozart:[[0,.42],[null,.06],[-5,.2],[0,.42],[null,.06],[-5,.2],[0,.2],[-5,.2],[0,.2],[4,.2],[7,.8]],
+ twinkle:[[0,.34],[0,.34],[7,.34],[7,.34],[9,.34],[9,.34],[7,.7]],
+ entertainer:[[-2,.13],[-1,.13],[0,.13],[8,.26],[0,.13],[8,.26],[0,.13],[8,.7]],
+ bonnie:[[0,.4],[9,.55],[7,.2],[5,.4],[7,.4],[5,.4],[2,.4],[0,.9]],
+ elise:[[0,.17],[-1,.17],[0,.17],[-1,.17],[0,.17],[-5,.17],[-2,.17],[-4,.17],[-7,.65]]};
+
+/* ================= the stages ================= */
+const ST=[
+ {k:'same',ic:'👂',name:['Same or different?','Uguali o diverse?']},
+ {k:'dir',ic:'↕️',name:['Up or down?','Sale o scende?']},
+ {k:'step',ic:'🦘',name:['Little step or jump?','Passetto o salto?']},
+ {k:'iv',ic:'🦈',name:['Semitone and tone','Semitono e tono'],nw:['m2','M2']},
+ {k:'iv',ic:'🌙',name:['The minor third','La terza minore'],nw:['m3']},
+ {k:'iv',ic:'🎺',name:['The major third','La terza maggiore'],nw:['M3']},
+ {k:'iv',ic:'⭐',name:['The fifth','La quinta'],nw:['P5']},
+ {k:'iv',ic:'💍',name:['The fourth','La quarta'],nw:['P4']},
+ {k:'iv',ic:'🪞',name:['The octave','L’ottava'],nw:['P8']},
+ {k:'iv',ic:'😈',name:['The tritone','Il tritono'],nw:['TT']},
+ {k:'iv',ic:'🎩',name:['The sixths','Le seste'],nw:['m6','M6']},
+ {k:'iv',ic:'🖖',name:['The sevenths','Le settime'],nw:['m7','M7']},
+ {k:'iv',ic:'🎼',name:['All together','Tutti insieme'],nw:[],all:1},
+ {k:'iv',ic:'🎹',name:['Notes together','Note insieme'],nw:[],harm:1}];
+const NS=ST.length,NQ=10,PASS=8;
+function setOf(si){if(ST[si].harm)return null;const o=[];for(let k=3;k<=si;k++)for(const x of ST[k].nw||[])o.push(x);return ST[si].all?IVK.slice():o}
+const HARM0=['m2','M2','m3','M3','P4','P5','P8'],HARM1=['m2','M2','m3','M3','P4','TT','P5','m6','M6','m7','M7','P8'];
+
+/* what the maestro says at the start of each stage; ex = things to listen to */
+const S_=(en,it,ex)=>({say:[en,it],ex:ex||[]});
+const X={iv:(k,d,lab)=>({iv:k,d,lab}),mel:(m,lab)=>({mel:m,lab}),same:lab=>({same:1,lab}),st:(n,d,lab)=>({st:n,d,lab}),harm:(k,lab)=>({harm:k,lab})};
+const LES=[
+ [S_(`Welcome to my school! I am <b>${MAESTRO}</b>, the music teacher. Here we train our ears, one little step at a time.`,`Benvenuto nella mia scuola! Sono <b>${MAESTRO}</b>, il maestro di musica. Qui alleniamo le orecchie, un passetto alla volta.`),
+  S_('We start easy: I play two notes, one after the other. Are they the <b>same</b> or <b>different</b>?','Si comincia facile: suono due note, una dopo l’altra. Sono <b>uguali</b> o <b>diverse</b>?',[X.same(['Same','Uguali']),X.st(7,1,['Different','Diverse'])]),
+  S_('You listen and choose. A mistake? No problem: we listen again together. Ready?','Tu ascolti e scegli. Sbagli? Nessun problema: le riascoltiamo insieme. Pronto?')],
+ [S_('Now: does the second note go <b>up</b> or <b>down</b>? Think of Igor on the stairs.','Adesso: la seconda nota <b>sale</b> o <b>scende</b>? Pensa a Igor sulle scale.',[X.st(5,1,['Up','Sale']),X.st(5,-1,['Down','Scende'])]),
+  S_('When the notes are close, it is harder. Listen carefully!','Quando le note sono vicine è più difficile. Ascolta bene!',[X.st(2,1,['Up','Sale']),X.st(2,-1,['Down','Scende'])])],
+ [S_('Two notes can be close, like a <b>little step</b> on the stairs…','Due note possono essere vicine, come un <b>passetto</b> sulle scale…',[X.st(2,1,['Little step','Passetto']),X.st(1,-1,['Little step','Passetto'])]),
+  S_('…or far apart, like a <b>jump</b>!','…oppure lontane, come un <b>salto</b>!',[X.st(7,1,['Jump','Salto']),X.st(9,-1,['Jump','Salto'])]),
+  S_('Up or down does not matter now: only the distance counts.','Che salga o scenda adesso non importa: conta solo la distanza.')],
+ [S_('The smallest little step of all is the <b>semitone</b>. It is also called a <b>minor second</b>.','Il passetto più piccolo di tutti si chiama <b>semitono</b>. Si chiama anche <b>seconda minore</b>.',[X.iv('m2',1,['Semitone up','Semitono su']),X.iv('m2',-1,['Semitone down','Semitono giù'])]),
+  S_('Going up, it sounds like the shark in <b>Jaws</b>: dum-dum… Going down, it is the start of <b>Für Elise</b>.','Salendo è come lo squalo di <b>Lo squalo</b>: dum-dum… Scendendo è l’inizio di <b>Per Elisa</b>.',[X.iv('m2',1,['🦈 Jaws','🦈 Lo squalo']),X.mel('elise',['🎹 Für Elise','🎹 Per Elisa'])]),
+  S_('Two semitones make a <b>tone</b>. It is also called a <b>major second</b>.','Due semitoni fanno un <b>tono</b>. Si chiama anche <b>seconda maggiore</b>.',[X.iv('M2',1,['Tone up','Tono su']),X.iv('M2',-1,['Tone down','Tono giù'])]),
+  S_('Going up, it is <b>Frère Jacques</b>. Going down, it is like stepping down: mi-re.','Salendo è <b>Fra Martino</b>. Scendendo è come scendere un gradino: mi-re.',[X.mel('jacques',['🔔 Frère Jacques','🔔 Fra Martino']),X.mel('scale',['🪜 Mi-re-do','🪜 Mi-re-do'])]),
+  S_('Hear the difference: semitone… tone. The buttons will help you with the little songs.','Senti la differenza: semitono… tono. Sui pulsanti trovi le canzoncine per aiutarti.',[X.iv('m2',1,['Semitone','Semitono']),X.iv('M2',1,['Tone','Tono'])])],
+ [S_('A new friend: the <b>minor third</b>. A small jump, a little bit sad.','Una nuova amica: la <b>terza minore</b>. Un piccolo salto, un po’ malinconico.',[X.iv('m3',1,['Up','Sale']),X.iv('m3',-1,['Down','Scende'])]),
+  S_('Going up, it starts like <b>Brahms’ Lullaby</b>. When two notes sound like the lullaby, it is always a minor third!','Salendo inizia come la <b>Ninna nanna</b> di Brahms. Quando due note ti sembrano la ninna nanna, è sempre una terza minore!',[X.mel('brahms',['🌙 The lullaby','🌙 La ninna nanna']),X.iv('m3',1,['Minor third','Terza minore'])]),
+  S_('Going down, it is the <b>cuckoo</b>!','Scendendo è il <b>cucù</b>!',[X.mel('cuckoo',['🐦 Cuckoo!','🐦 Cucù!']),X.iv('m3',-1,['Minor third down','Terza minore giù'])]),
+  S_('Now I mix it with semitones and tones. Listen, then choose.','Adesso la mescolo con semitoni e toni. Ascolta, poi scegli.')],
+ [S_('The <b>major third</b>: one semitone bigger than the minor one, and brighter.','La <b>terza maggiore</b>: un semitono più grande della minore, e più luminosa.',[X.iv('M3',1,['Major third','Terza maggiore']),X.iv('m3',1,['Minor third','Terza minore'])]),
+  S_('Going up, it is <b>When the Saints Go Marching In</b>.','Salendo è <b>When the Saints Go Marching In</b>.',[X.mel('saints',['🎺 When the Saints','🎺 When the Saints'])]),
+  S_('Going down, it is <b>Beethoven’s Fifth</b>: ta-ta-ta-taaa!','Scendendo è la <b>Quinta di Beethoven</b>: ta-ta-ta-taaa!',[X.mel('fifth',['⚡ Beethoven','⚡ Beethoven']),X.iv('M3',-1,['Major third down','Terza maggiore giù'])])],
+ [S_('The <b>fifth</b>: a nice, wide-open jump.','La <b>quinta</b>: un salto bello aperto.',[X.iv('P5',1,['Fifth up','Quinta su'])]),
+  S_('Going up, it is <b>Twinkle Twinkle Little Star</b>… and the start of <b>Star Wars</b> too!','Salendo è <b>Brilla brilla la stellina</b>… e anche l’inizio di <b>Star Wars</b>!',[X.mel('twinkle',['⭐ Twinkle twinkle','⭐ Brilla brilla'])]),
+  S_('Going down, it is a <b>falling star</b>.','Scendendo è una <b>stella cadente</b>.',[X.iv('P5',-1,['🌠 Fifth down','🌠 Quinta giù'])])],
+ [S_('The <b>fourth</b>: a bit smaller than the fifth.','La <b>quarta</b>: un po’ più piccola della quinta.',[X.iv('P4',1,['Fourth','Quarta']),X.iv('P5',1,['Fifth','Quinta'])]),
+  S_('Going up, it is the <b>Wedding March</b>: tan, tan-ta-taaan!','Salendo è la <b>Marcia nuziale</b>: tan, tan-ta-taaan!',[X.mel('wedding',['💍 Wedding March','💍 Marcia nuziale'])]),
+  S_('Going down… ah, my favourite: Mozart’s <b>Little Night Music</b>!','Scendendo… ah, la mia preferita: la <b>Piccola serenata notturna</b> di Mozart!',[X.mel('mozart',['🎻 Mozart','🎻 Mozart']),X.iv('P4',-1,['Fourth down','Quarta giù'])])],
+ [S_('The <b>octave</b>: the same note, but higher. The two notes look alike, like twins.','L’<b>ottava</b>: la stessa nota, ma più in alto. Le due note si somigliano tantissimo, come gemelle.',[X.iv('P8',1,['Octave up','Ottava su']),X.iv('P8',-1,['Octave down','Ottava giù'])]),
+  S_('Do not mix it up with the fifth: the octave sounds almost like a single note.','Non confonderla con la quinta: l’ottava suona quasi come una nota sola.',[X.iv('P5',1,['Fifth','Quinta']),X.iv('P8',1,['Octave','Ottava'])])],
+ [S_('The <b>tritone</b> sits right in the middle of the octave. It sounds strange and restless: they used to call it “the devil in music”!','Il <b>tritono</b> sta proprio a metà dell’ottava. Suona strano e inquieto: lo chiamavano “il diavolo in musica”!',[X.iv('TT',1,['Tritone up','Tritono su']),X.iv('TT',-1,['Tritone down','Tritono giù'])]),
+  S_('It is the start of <b>The Simpsons</b> tune. When a jump sounds crooked, it is the tritone.','È l’inizio della sigla dei <b>Simpson</b>. Quando un salto ti sembra storto, è il tritono.',[X.iv('TT',1,['😈 Tritone','😈 Tritono']),X.iv('P5',1,['⭐ Fifth','⭐ Quinta'])])],
+ [S_('The <b>sixths</b>: big jumps, bigger than the fifth.','Le <b>seste</b>: salti grandi, più della quinta.',[X.iv('m6',1,['Minor sixth','Sesta minore']),X.iv('M6',1,['Major sixth','Sesta maggiore'])]),
+  S_('The <b>minor sixth</b> goes up like <b>The Entertainer</b>.','La <b>sesta minore</b> sale come <b>The Entertainer</b>.',[X.mel('entertainer',['🎩 The Entertainer','🎩 The Entertainer'])]),
+  S_('The <b>major sixth</b> goes up like <b>My Bonnie</b>.','La <b>sesta maggiore</b> sale come <b>My Bonnie</b>.',[X.mel('bonnie',['⛵ My Bonnie','⛵ My Bonnie'])]),
+  S_('Going down, the minor one is wistful, the major one is bright.','Scendendo, la minore è malinconica, la maggiore è luminosa.',[X.iv('m6',-1,['🍂 Minor sixth','🍂 Sesta minore']),X.iv('M6',-1,['🏔 Major sixth','🏔 Sesta maggiore'])])],
+ [S_('The <b>sevenths</b>: almost an octave!','Le <b>settime</b>: quasi un’ottava!',[X.iv('m7',1,['Minor seventh','Settima minore']),X.iv('P8',1,['Octave','Ottava'])]),
+  S_('The <b>minor seventh</b> is one tone short of the octave. Going up, it is the start of <b>Star Trek</b>.','Alla <b>settima minore</b> manca un tono per arrivare all’ottava. Salendo è l’inizio di <b>Star Trek</b>.',[X.iv('m7',1,['🖖 Minor seventh','🖖 Settima minore'])]),
+  S_('The <b>major seventh</b> is just one semitone short: it sounds tense, it wants to arrive!','Alla <b>settima maggiore</b> manca solo un semitono: suona tesa, vuole arrivare!',[X.iv('M7',1,['🤏 Up','🤏 Sale']),X.iv('M7',-1,['🤏 Down','🤏 Scende'])])],
+ [S_('Big review: all the intervals together! Take your time: you can listen again as often as you like.','Grande ripasso: tutti gli intervalli insieme! Fai con calma: puoi riascoltare quante volte vuoi.')],
+ [S_('Last challenge: two notes played <b>together</b>! They do not go up or down: listen to their colour.','Ultima sfida: due note suonate <b>insieme</b>! Non salgono e non scendono: ascolta il loro colore.',[X.harm('m2',['It scratches','Graffia']),X.harm('M3',['Sweet','Dolce']),X.harm('P5',['Empty','Vuota'])]),
+  S_('On the buttons you find the colours. Trust your ears!','Sui pulsanti trovi i colori. Fidati delle orecchie!')]];
+
+/* ================= progress ================= */
+const KEY='igortime_intervals';
+let PR={done:0,plays:{},best:{},miss:{}};
+try{Object.assign(PR,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
+try{const S=JSON.parse(localStorage.getItem('igortime_v1'))||{},P=JSON.parse(localStorage.getItem('igortime_pending'))||{};
+ for(const o of[S.scores,P.scores]){const v=o&&o.intervals&&+o.intervals.all;if(v>PR.done)PR.done=Math.min(NS,v)}}catch(e){}
+const saveP=()=>{try{localStorage.setItem(KEY,JSON.stringify(PR))}catch(e){}};
+const giro=si=>Math.min(3,PR.plays[si]|0);
+
+/* ================= sound ================= */
+let AC=null,OUT=null,WAVE={};
+function audio(){if(AC)return;AC=new (window.AudioContext||window.webkitAudioContext)();OUT=AC.createGain();OUT.gain.value=.7;const comp=AC.createDynamicsCompressor();comp.threshold.value=-10;comp.ratio.value=3;OUT.connect(comp);comp.connect(AC.destination);
+ const mk=a=>{const re=new Float32Array(a.length),im=new Float32Array(a.length);a.forEach((v,k)=>im[k]=v);return AC.createPeriodicWave(re,im)};
+ WAVE.piano=mk([0,1,.55,.3,.22,.12,.08,.06,.04,.02]);WAVE.organ=mk([0,1,.7,.05,.42,0,.22,0,.16]);WAVE.flute=mk([0,1,.18,.06,.02])}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+let VOICES=[];
+function tone(t,m,dur,tb='piano',v=1){const f=mtof(m),g=AC.createGain(),o=AC.createOscillator();o.frequency.value=f;let end=t+dur+.35;
+ if(tb==='marimba'){o.type='sine';const o2=AC.createOscillator(),g2=AC.createGain();o2.type='sine';o2.frequency.value=f*3.93;g2.gain.setValueAtTime(.18*v,t);g2.gain.exponentialRampToValueAtTime(.0005,t+.12);o2.connect(g2);g2.connect(OUT);o2.start(t);o2.stop(t+.2);VOICES.push(o2);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.55*v,t+.004);g.gain.exponentialRampToValueAtTime(.0008,t+Math.max(.5,dur+.25));end=t+dur+.35;o.connect(g)}
+ else if(tb==='flute'||tb==='organ'){o.setPeriodicWave(WAVE[tb]);const lv=(tb==='flute'?.42:.3)*v;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(lv,t+(tb==='flute'?.07:.02));g.gain.setValueAtTime(lv,t+dur);g.gain.exponentialRampToValueAtTime(.0005,t+dur+.18);
+  if(tb==='flute'){const l=AC.createOscillator(),lg=AC.createGain();l.frequency.value=5.2;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(f*.0025,t+.35);l.connect(lg);lg.connect(o.frequency);l.start(t);l.stop(end);VOICES.push(l)}o.connect(g)}
+ else{o.setPeriodicWave(WAVE.piano);const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(Math.min(9000,f*9),t);lp.frequency.exponentialRampToValueAtTime(Math.max(500,f*2.2),t+dur+.2);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.4*v,t+.005);g.gain.exponentialRampToValueAtTime(.16*v,t+.18);g.gain.setTargetAtTime(.0001,t+.18,dur*.55);g.gain.setTargetAtTime(.00001,t+dur,.06);o.connect(lp);lp.connect(g)}
+ g.connect(OUT);o.start(t);o.stop(end);VOICES.push(o);NOTES.push({t0:t,t1:t+dur,m})}
+let NOTES=[],PLAYEND=0;
+function hush(){for(const o of VOICES){try{o.stop()}catch(e){}}VOICES=[];NOTES=[]}
+const now=()=>AC?AC.currentTime:0;
+function playPair(a,b,o={}){audio();hush();const t=now()+.08,d=o.dur||.8,tb=o.tb||'piano';
+ if(o.harm){tone(t,a,1.7,tb,.8);tone(t,b,1.7,tb,.8);PLAYEND=t+1.9}else{tone(t,a,d,tb);tone(t+d+.06,b,d+.15,tb);PLAYEND=t+2*d+.3}conduct(PLAYEND-now())}
+function playMel(key,base){audio();hush();let t=now()+.08;base=base??ri(60,65);for(const[s,d]of MEL[key]){if(s!==null)tone(t,base+s,d*.92+.08,'piano',.9);t+=d}PLAYEND=t+.2;conduct(PLAYEND-now())}
+function ding(ok){audio();const t=now()+.02;if(ok){tone(t,84,.12,'marimba',.5);tone(t+.1,91,.25,'marimba',.5)}else{tone(t,76,.15,'marimba',.35);tone(t+.13,72,.25,'marimba',.35)}}
+function fanfare(){audio();const t=now()+.05;[[72,0],[76,.13],[79,.26],[84,.4]].forEach(([m,d])=>tone(t+d,m,.3,'marimba',.6));tone(t+.6,84,.8,'piano',.6);tone(t+.6,79,.8,'piano',.5);tone(t+.6,76,.8,'piano',.5)}
+
+/* ================= questions ================= */
+let SES=null; // {si,i,right,res:[],q,ansd}
+const startRange=g=>[[57,67],[53,70],[50,72],[45,74]][g];
+const timbres=g=>g<1?['piano']:g<2?['piano','marimba']:['piano','marimba','flute','organ'];
+function mkPair(n,d,g){const[lo,hi]=startRange(g);let a=ri(lo,hi);if(d<0)a+=Math.min(n,8);let b=a+n*d;if(b>86){a-=b-86;b=86}return[a,b]}
+function gen(si,i){const st=ST[si],g=giro(si),dd=clamp(i/9*.65+g*.2,0,1),tb=pick(timbres(g)),dur=[.8,.72,.62,.55][g];
+ const q={tb,dur,harm:false};
+ if(st.k==='same'){const same=Math.random()<.4,n=same?0:pick(dd<.3?[7,12,5,9]:dd<.65?[3,4,5,2]:[1,2,1]),d=Math.random()<.5?1:-1;[q.a,q.b]=mkPair(n,d,g);q.ans=same?'same':'diff';q.n=n;q.d=d;return q}
+ if(st.k==='dir'){const n=pick(dd<.3?[7,12,9,5]:dd<.65?[3,4,5]:[1,2]),d=Math.random()<.5?1:-1;[q.a,q.b]=mkPair(n,d,g);q.ans=d>0?'up':'down';q.n=n;q.d=d;return q}
+ if(st.k==='step'){const step=Math.random()<.5,n=step?pick([1,2]):pick(dd<.5?[5,7,8,9,12]:[3,4,5,4]),d=Math.random()<.5?1:-1;[q.a,q.b]=mkPair(n,d,g);q.ans=step?'step':'jump';q.n=n;q.d=d;return q}
+ // intervals
+ let set=st.harm?(g<1?HARM0:HARM1):setOf(si);const nw=st.nw||[],prev=SES&&SES.q&&SES.q.ans;
+ const w=k=>((nw.includes(k)?(nw.length?3.2/nw.length:1):1)+Math.min(3,(PR.miss[k]|0)*.5))*(k===prev?.35:1);
+ let tot=0;for(const k of set)tot+=w(k);let r=Math.random()*tot,k=set[0];for(const x of set){r-=w(x);if(r<=0){k=x;break}}
+ const d=st.harm?1:(i<3&&g<1&&si<12?1:(Math.random()<.5?1:-1));[q.a,q.b]=mkPair(IV[k].s,d,g);q.ans=k;q.n=IV[k].s;q.d=d;q.harm=!!st.harm;if(q.harm)q.tb=pick(g<2?['piano','organ']:['piano','organ','flute']);
+ // the choices: all of them while they are few, otherwise the right one, the new ones and its neighbours (always in order of size)
+ let ch=set.slice();if(ch.length>5){const keep=new Set([k]);for(const x of nw)if(keep.size<3)keep.add(x);const near=set.filter(x=>!keep.has(x)).sort((x,y)=>Math.abs(IV[x].s-IV[k].s)-Math.abs(IV[y].s-IV[k].s)+Math.random()*.6-.3);for(const x of near){if(keep.size>=5)break;keep.add(x)}ch=[...keep]}
+ q.ch=ch.sort((x,y)=>IV[x].s-IV[y].s);return q}
+function playQ(){const q=SES.q;playPair(q.a,q.b,{dur:q.dur,tb:q.tb,harm:q.harm})}
+
+/* the answer buttons */
+const BIN={same:[['same','🟰',['Same','Uguali']],['diff','↔️',['Different','Diverse']]],dir:[['up','⬆️',['Up','Sale']],['down','⬇️',['Down','Scende']]],step:[['step','👣',['Little step','Passetto']],['jump','🦘',['Jump','Salto']]]};
+const hintsOn=si=>giro(si)<2||ST[si].all;
+function ansBtn(k,q,si){const v=IV[k];if(q.harm)return`<span class="ic">${v.up.ic}</span>${T2(v.n)}<small>${T2(v.ha)}</small>`;
+ const s=q.d>0?v.up:v.dn;return`<span class="ic">${s.ic}</span>${T2(v.n)}${hintsOn(si)?`<small>${T2(s.h)}</small>`:''}${v.t?`<small class="t">${T2(v.t)}</small>`:''}`}
+function labelOf(k,q){if(BIN[ST[SES.si].k]){const b=BIN[ST[SES.si].k].find(x=>x[0]===k);return b[1]+' '+T2(b[2])}const v=IV[k];return(q.harm?v.up.ic:(q.d>0?v.up:v.dn).ic)+' '+T2(v.n)}
+
+/* ================= the scene ================= */
+const cv=$('c'),g=cv.getContext('2d');let W=0,Hh=0,DPR=1,T=0;
+const mspr=document.createElement('canvas'),mx=mspr.getContext('2d'),sspr=document.createElement('canvas'),sx=sspr.getContext('2d');
+const SW=420,SH=462;mspr.width=sspr.width=SW;mspr.height=sspr.height=Math.round(SH*(1+PAD));
+let igOK=false;H.loadIgor(()=>{igOK=true});
+const BLm={next:1.5,start:-9},BLs={next:2.6,start:-9};
+function blinkK(B,t){if(t>B.next){B.start=t;B.next=t+(Math.random()<.2?.45:2.4+Math.random()*3.8)}const u=t-B.start;return u<0||u>.26?0:u<.07?u/.07:u<.12?1:1-(u-.12)/.14}
+let CONDUCT=0;function conduct(s){CONDUCT=Math.max(CONDUCT,T+s)}
+function paintMaestro(t){const k=blinkK(BLm,t);paintAvatar(mx,{avatar:'igor'},k,k,SW,mspr.height);const sc=Math.min(SW/663,mspr.height/(730*(1+PAD)));mx.setTransform(sc,0,0,sc,(SW-663*sc)/2,PAD*730*sc);
+ IgorWig.wig(mx);const a=CONDUCT>t?Math.sin(t*7.5)*.38+.2:Math.sin(t*1.1)*.05;IgorWig.baton(mx,a);mx.setTransform(1,0,0,1,0,0)}
+function paintStudent(t){const k=blinkK(BLs,t);paintAvatar(sx,ME,k,k*.9,SW,sspr.height)}
+let L={};// layout
+function layout(){const top=58,barH=$('bar').offsetHeight||140,sh=Math.max(120,Hh-top-barH),land=W>Hh*1.05;
+ if(land){const mh=Math.min(sh*.86,W*.34);L={land,top,sh,m:{x:W*.2,y:top+sh*.5,h:mh},b:{x:W*.38,y:top+sh*.06,w:W*.58,h:sh*.66},s:{x:W*.86,y:top+sh*.84,h:Math.min(sh*.3,W*.12)}}}
+ else{const bh=Math.min(sh*.5,W*.62);L={land,top,sh,b:{x:12,y:top+4,w:W-24,h:bh},m:{x:W*.27,y:top+bh+(sh-bh)*.52,h:Math.min((sh-bh)*.95,W*.55)},s:{x:W*.8,y:top+bh+(sh-bh)*.68,h:Math.min((sh-bh)*.55,W*.3)}}}}
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;Hh=innerHeight;cv.width=W*DPR;cv.height=Hh*DPR;layout()}
+addEventListener('resize',()=>{resize();placeBubble()});
+function room(){const gr=g.createLinearGradient(0,0,0,Hh);gr.addColorStop(0,'#3a2d24');gr.addColorStop(.25,'#d9cfb8');gr.addColorStop(.7,'#cfc3a8');g.fillStyle=gr;g.fillRect(0,0,W,Hh);
+ const wy=Hh*.72;g.fillStyle='#5b4a3c';g.fillRect(0,wy,W,Hh*.1);g.fillStyle='#4e3f33';for(let x=0;x<W;x+=90)g.fillRect(x,wy+6,3,Hh*.1-12);g.fillStyle='#8c8174';g.fillRect(0,wy+Hh*.1,W,Hh);g.fillStyle='#3a2e25';g.fillRect(0,wy-4,W,6);
+ // a portrait of an old composer on the wall (a powdered Igor, of course)
+ const px=L.land?W*.06:W*.84,py=L.land?Hh*.16:Hh*.08;if(L.land||W>480){g.fillStyle='#7a5232';rr(g,px-4,py-4,58,70,4);g.fill();g.fillStyle='#efe0c0';g.fillRect(px,py,50,62);g.fillStyle='#a8d621';g.beginPath();g.ellipse(px+25,py+36,14,12,0,0,TAU);g.fill();g.fillStyle='#f4f3ee';g.beginPath();g.ellipse(px+25,py+24,16,8,0,0,TAU);g.fill()}}
+function board(){const B=L.b;g.fillStyle='#6b4a2e';rr(g,B.x-9,B.y-9,B.w+18,B.h+18,10);g.fill();g.fillStyle='#2f4a3a';rr(g,B.x,B.y,B.w,B.h,4);g.fill();
+ g.fillStyle='rgba(255,255,255,.04)';for(let k=0;k<6;k++){g.beginPath();g.ellipse(B.x+B.w*(.15+k*.15),B.y+B.h*(.3+(k%3)*.2),40,10,.3,0,TAU);g.fill()}
+ g.fillStyle='#7a5232';g.fillRect(B.x+B.w*.1,B.y+B.h+6,B.w*.8,7);g.fillStyle='#f4f1e8';g.fillRect(B.x+B.w*.2,B.y+B.h+2,26,5);
+ g.save();g.beginPath();g.rect(B.x,B.y,B.w,B.h);g.clip();boardContent(B);g.restore()}
+const chalk=(sz,w=500)=>{g.font=`${w} ${sz}px Fredoka, sans-serif`;g.fillStyle='rgba(238,242,230,.92)';g.textAlign='center';g.textBaseline='middle'};
+function boardContent(B){const cx=B.x+B.w/2,s=Math.min(B.w/14,B.h/7);
+ if(!SES){chalk(s*.9,600);g.fillText(tt('Ear school','Scuola d’orecchio'),cx,B.y+B.h*.32);chalk(s*.55);g.fillText('♪  ♫  ♪',cx,B.y+B.h*.62);return}
+ const st=ST[SES.si];chalk(Math.max(12,s*.42));g.globalAlpha=.7;g.fillText(`${tt('Stage','Tappa')} ${SES.si+1} · ${T2(st.name)}`,cx,B.y+B.h*.11);g.globalAlpha=1;
+ if(SES.phase==='lesson'){if(SES.demo)stairs(B,SES.demo,true);else{chalk(s*2.2);g.fillText(st.ic,cx,B.y+B.h*.48);chalk(Math.max(16,s*.8),600);g.fillText(T2(st.name),cx,B.y+B.h*.75)}return}
+ if(SES.phase==='q'){chalk(Math.max(16,s*.85),600);g.fillText(qText(),cx,B.y+B.h*.36);
+  // little notes that bounce while the sound plays
+  const on=NOTES.filter(n=>AC&&AC.currentTime>=n.t0&&AC.currentTime<=n.t1+.1);chalk(s*1.1);for(let k=0;k<2;k++){const lit=on.length&&(SES.q.harm||on.some(n=>n.m===(k?SES.q.b:SES.q.a)));g.globalAlpha=lit?1:.3;g.fillText(k?'♫':'♪',cx+(k?1:-1)*s*1.2,B.y+B.h*.68-(lit?Math.abs(Math.sin(T*9))*s*.25:0))}g.globalAlpha=1;return}
+ if(SES.phase==='fb'){stairs(B,SES.q,false)}}
+function qText(){const k=ST[SES.si].k;return k==='same'?tt('Same or different?','Uguali o diverse?'):k==='dir'?tt('Up or down?','Sale o scende?'):k==='step'?tt('Little step or jump?','Passetto o salto?'):SES.q.harm?tt('What colour is it?','Che colore ha?'):tt('Which one is it?','Che intervallo è?')}
+/* the staircase: 13 steps, one per semitone; the two notes are two dots */
+function stairs(B,q,demo){if(!q)return;const n=q.n,d=q.d||1,x0=B.x+B.w*.08,x1=B.x+B.w*.92,y0=B.y+B.h*.86,y1=B.y+B.h*.24,N=12,sw=(x1-x0)/(N+1),sh=(y0-y1)/(N+1);
+ g.strokeStyle='rgba(238,242,230,.35)';g.lineWidth=2;g.beginPath();g.moveTo(x0,y0);for(let k=0;k<=N;k++){const x=x0+k*sw,y=y0-k*sh;g.lineTo(x,y-sh);g.lineTo(x+sw,y-sh)}g.stroke();
+ const lo=d>0?0:n,hi=d>0?n:0,stepXY=k=>[x0+k*sw+sw/2,y0-k*sh-sh*1.45];
+ g.fillStyle='rgba(255,224,138,.22)';for(let k=Math.min(lo,hi);k<=Math.max(lo,hi);k++){const x=x0+k*sw,y=y0-k*sh;g.fillRect(x+1,y-sh+1,sw-2,sh*1.0)}
+ const[ax,ay]=stepXY(lo),[bx,by]=stepXY(hi),u=demo?1:clamp((T-SES.fbT)*2.2,0,1);
+ g.strokeStyle='#ffe08a';g.lineWidth=3;g.setLineDash([6,6]);g.beginPath();g.moveTo(ax,ay);g.quadraticCurveTo((ax+bx)/2,Math.min(ay,by)-sh*2.2,lerp(ax,bx,u),lerp(ay,by,u)-Math.sin(u*Math.PI)*0);g.stroke();g.setLineDash([]);
+ const dot=(x,y,c,lab)=>{g.fillStyle=c;g.beginPath();g.arc(x,y,Math.max(7,sw*.32),0,TAU);g.fill();g.strokeStyle='#1d2b22';g.lineWidth=2;g.stroke();if(lab){chalk(Math.max(10,sw*.38),600);g.fillStyle='#1d2b22';g.fillText(lab,x,y+1)}};
+ dot(ax,ay,'#f6d34a','1');if(u>.98||demo)dot(bx,by,'#7fe08a','2');
+ const s=Math.min(B.w/14,B.h/7);chalk(Math.max(13,s*.62),600);
+ const name=q.ans&&IV[q.ans]?T2(IV[q.ans].n):n===0?tt('the same note','la stessa nota'):'';g.fillText((name?name+' · ':'')+(n===0?'':n+' '+(n===1?tt('semitone','semitono'):tt('semitones','semitoni'))),B.x+B.w/2,B.y+B.h*.22+ (B.h*.0));
+ if(q.harm){chalk(Math.max(11,s*.45));g.globalAlpha=.75;g.fillText(tt('(played together)','(suonate insieme)'),B.x+B.w/2,B.y+B.h*.33);g.globalAlpha=1}}
+function drawFig(spr,F,face){const w=F.h*SW/SH,by=F.y+Math.sin(T*1.6)*F.h*.012;g.save();g.translate(F.x,by);g.scale(face,1);g.fillStyle='rgba(40,20,8,.25)';g.beginPath();g.ellipse(0,F.h*.5,w*.34,F.h*.05,0,0,TAU);g.fill();
+ if(igOK)g.drawImage(spr,-w/2,-F.h/2-F.h*PAD,w,F.h*(1+PAD));g.restore()}
+/* the ant prize: one hops into the student's mouth */
+let ANT=null;
+function frame(ts){const t=ts/1000,dt=Math.min(.05,t-(frame.l||t));frame.l=t;T+=dt;g.setTransform(DPR,0,0,DPR,0,0);room();board();
+ if(igOK){paintMaestro(T);paintStudent(T)}
+ drawFig(mspr,L.m,1);
+ const gulp=ANT&&ANT.t>.55&&ANT.t<.8?Math.sin((ANT.t-.55)/.25*Math.PI):0;const S=L.s;g.save();g.translate(S.x,S.y);g.scale(1+gulp*.07,1-gulp*.05);g.translate(-S.x,-S.y);drawFig(sspr,S,-1);g.restore();
+ if(ANT){ANT.t+=dt;const u=clamp(ANT.t/.6,0,1),mxp=S.x-S.h*.32,myp=S.y+S.h*.42,x=lerp(ANT.x,mxp,u),y=lerp(ANT.y,myp,u)-Math.sin(u*Math.PI)*80;if(u<1)drawAnt(g,x,y,Math.max(.5,S.h/260),-.5+u,T,{});if(ANT.t>1)ANT=null}
+ requestAnimationFrame(frame)}
+
+/* ================= the maestro talks ================= */
+const bub=$('bubble');let bubTxt='';
+function say(html){bubTxt=html;bub.innerHTML=html;bub.style.opacity=html?1:0;placeBubble()}
+function placeBubble(){if(!bubTxt)return;const M=L.m;if(!M)return;const bw=bub.offsetWidth,bh=bub.offsetHeight,headY=M.y-M.h*.5-M.h*PAD*.55;
+ let x=L.land?M.x-bw*.25:M.x-M.h*.25,y=headY-bh-14;x=clamp(x,10,W-bw-10);
+ if(!L.land){y=clamp(y,L.b.y+L.b.h+8,Hh);if(y+bh>M.y-M.h*.15){/* not enough room above the maestro: put the bubble over the board's lower edge */y=Math.max(64,L.b.y+L.b.h-bh*.6)}}
+ else y=Math.max(64,y);
+ bub.style.transform=`translate(${x}px,${y}px)`;bub.style.setProperty('--tx',clamp(M.x-x,24,bw-24)+'px')}
+
+/* ================= flow ================= */
+const bar=$('bar');
+function setBar(html){bar.innerHTML=html;layout();placeBubble()}
+function hdr(){if(!SES){$('st1').innerHTML=`${tt('stages','tappe')} <b>${PR.done}/${NS}</b>`;$('dots').innerHTML='';return}
+ $('st1').innerHTML=`${tt('stage','tappa')} <b>${SES.si+1}</b>`+(SES.phase==='lesson'?'':` · <b>${Math.min(SES.i+1,NQ)}/${NQ}</b>`);
+ $('dots').innerHTML=SES.phase==='lesson'?'':Array.from({length:NQ},(_,k)=>`<i class="${SES.res[k]===1?'ok':SES.res[k]===0?'no':k===SES.i?'now':''}"></i>`).join('')}
+$('stat').onclick=()=>{if(SES&&SES.phase!=='end'){hush();openMap()}};
+
+function openMap(){SES=null;say('');setBar('');hdr();const cur=Math.min(PR.done,NS-1),fin=PR.done>=NS;
+ const chips=ST.map((s,k)=>`<button data-st="${k}" class="${k<PR.done?'done':k===cur&&!fin?'cur':''}" ${k>PR.done&&!OPEN?'disabled':''}><span class="ic">${k>PR.done&&!OPEN?'🔒':s.ic}</span>${T2(s.name)}<small>${k<PR.done?'✓ '+tt('done','fatta'):k===cur&&!fin?tt('next','prossima'):tt('stage','tappa')+' '+(k+1)}</small></button>`).join('');
+ $('startCard').innerHTML=`<h2>${tt('The <em>maestro’s</em> lessons','Le lezioni del <em>maestro</em>')}</h2>
+ <p>${tt(`<b>${MAESTRO}</b> teaches you to recognise <b>intervals</b>: the distance between two notes. No music theory needed: we start very easy, and little songs help you remember. Every stage you pass opens the next one.`,`<b>${MAESTRO}</b> ti insegna a riconoscere gli <b>intervalli</b>: la distanza tra due note. Non serve sapere la musica: si parte facilissimo, e le canzoncine ti aiutano a ricordare. Ogni tappa superata apre la successiva.`)}</p>
+ <div class="map">${chips}</div>
+ <p class="small">${tt(`${NQ} questions per stage · ${PASS} right to pass · the more you play a stage, the harder it gets`,`${NQ} domande per tappa · ${PASS} giuste per passare · più rigiochi una tappa, più diventa difficile`)}</p>
+ <div class="row"><button class="main" id="go">${fin?tt('Play the big review','Rigioca il grande ripasso'):PR.done?tt('Continue · stage ','Continua · tappa ')+(cur+1):tt('Start the first lesson','Inizia la prima lezione')}</button></div>
+ <p class="small"><a href="${document.querySelector('a.igback').href}">${tt('← back to the island','← torna all’isola')}</a></p>`;
+ $('start').hidden=false;$('end').hidden=true;
+ $('go').onclick=()=>begin(fin?12:cur);document.querySelectorAll('.map button[data-st]').forEach(b=>b.onclick=()=>begin(+b.dataset.st))}
+
+function begin(si){audio();if(AC.state==='suspended')AC.resume();if(!PR.met){PR.met=1;saveP()}$('start').hidden=true;$('end').hidden=true;SES={si,i:0,right:0,res:[],q:null,phase:'lesson',step:0,demo:null};
+ // the lesson is told the first time; when you play a stage again, the maestro only reminds you
+ if(PR.plays[si])lessonShort();else lesson(0)}
+function exampleBtns(ex){return ex.map((e,k)=>`<button class="ex" data-ex="${k}">▶ ${T2(e.lab)}</button>`).join('')}
+function playEx(e){if(e.mel){playMel(e.mel);SES.demo=null;return}if(e.same){const a=ri(58,66);playPair(a,a);SES.demo={n:0,d:1};return}
+ if(e.harm){const a=ri(55,62);playPair(a,a+IV[e.harm].s,{harm:true});SES.demo={n:IV[e.harm].s,d:1,ans:e.harm,harm:true};return}
+ const n=e.st??IV[e.iv].s,d=e.d||1;const[a,b]=mkPair(n,d,0);playPair(a,b);SES.demo={n,d,ans:e.iv}}
+function lesson(k){const L_=LES[SES.si],s=L_[k];SES.phase='lesson';SES.step=k;hdr();say(T2(s.say));const last=k===L_.length-1;
+ setBar(`<div class="row">${exampleBtns(s.ex)}</div><div class="row">${k?`<button id="back">‹</button>`:''}<button class="main" id="next">${last?tt('Let’s start! ▸','Iniziamo! ▸'):tt('Next ▸','Avanti ▸')}</button></div>`);
+ bar.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{bar.querySelectorAll('.ex').forEach(x=>x.classList.remove('on'));b.classList.add('on');playEx(s.ex[+b.dataset.ex])});
+ if(s.ex.length){const first=bar.querySelector('[data-ex="0"]');setTimeout(()=>{if(SES&&SES.phase==='lesson'&&SES.step===k){first.classList.add('on');playEx(s.ex[0])}},450)}else SES.demo=null;
+ $('next').onclick=()=>{hush();last?question():lesson(k+1)};const bk=$('back');if(bk)bk.onclick=()=>{hush();lesson(k-1)}}
+function lessonShort(){SES.phase='lesson';hdr();const st=ST[SES.si],g_=giro(SES.si);
+ const txt=g_>=2&&!ST[SES.si].all?tt('Again? Bravo! This time <b>no song hints</b> on the buttons: only your ears.','Di nuovo? Bravo! Stavolta <b>niente canzoncine</b> sui pulsanti: solo le tue orecchie.'):tt('Welcome back! This time it is a little harder: notes higher and lower, and new sounds.','Bentornato! Stavolta è un po’ più difficile: note più alte e più basse, e suoni nuovi.');
+ say(txt);const all=LES[SES.si].flatMap(s=>s.ex);SES.demo=null;
+ setBar(`<div class="row">${exampleBtns(all.slice(0,6))}</div><div class="row"><button id="les">${tt('The whole lesson','Tutta la lezione')}</button><button class="main" id="next">${tt('Let’s start! ▸','Iniziamo! ▸')}</button></div>`);
+ bar.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{bar.querySelectorAll('.ex').forEach(x=>x.classList.remove('on'));b.classList.add('on');playEx(all[+b.dataset.ex])});
+ $('next').onclick=()=>{hush();question()};$('les').onclick=()=>lesson(0)}
+
+const PRAISE=[['Bravissimo!','Bravissimo!'],['Wunderbar!','Wunderbar!'],['Golden ears!','Orecchio d’oro!'],['Exactly!','Esatto!'],['Perfect!','Perfetto!'],['Magnifique!','Magnifico!'],['Yes!','Sì!']];
+const SOFT=[['Almost!','Quasi!'],['So close!','Ci sei quasi!'],['Good try!','Bel tentativo!'],['Nearly there!','Manca poco!']];
+function question(){const q=gen(SES.si,SES.i);SES.q=q;SES.phase='q';SES.ansd=false;hdr();say(SES.i===0?tt('Listen…','Ascolta…'):pick([['Listen…','Ascolta…'],['Next one!','La prossima!'],['Here it comes…','Ecco…']].map(T2)));
+ const st=ST[SES.si],opts=BIN[st.k]?BIN[st.k].map(([k,ic,n])=>[k,`<span class="ic">${ic}</span>${T2(n)}`]):q.ch.map(k=>[k,ansBtn(k,q,SES.si)]);
+ const cols=opts.length<=2?2:opts.length===4?(W<620?2:4):Math.min(opts.length,W<620?3:5);
+ setBar(`<div class="row"><button id="rep">▶ ${tt('Listen again','Riascolta')}</button></div><div class="ans" style="--n:${cols}">${opts.map(([k,h],j)=>`<button data-a="${k}" title="${j+1}">${h}</button>`).join('')}</div>`);
+ $('rep').onclick=playQ;bar.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>answer(b.dataset.a,b));setTimeout(()=>{if(SES&&SES.q===q)playQ()},350)}
+function answer(k,btn){if(SES.ansd)return;SES.ansd=true;const q=SES.q,ok=k===q.ans;SES.res[SES.i]=ok?1:0;if(ok)SES.right++;else if(IV[q.ans])PR.miss[q.ans]=(PR.miss[q.ans]|0)+1;if(ok&&IV[q.ans]&&PR.miss[q.ans])PR.miss[q.ans]--;
+ const box=bar.querySelector('.ans');box.classList.add('done');bar.querySelectorAll('[data-a]').forEach(b=>{b.disabled=true;if(b.dataset.a===q.ans)b.classList.add('right')});if(!ok)btn.classList.add('wrong');
+ SES.phase='fb';SES.fbT=T;hdr();ding(ok);
+ const v=IV[q.ans],song=v&&!q.harm?(q.d>0?v.up:v.dn):null;
+ if(ok){const B=L.b;ANT={x:B.x+B.w*.5,y:B.y+B.h*.5,t:0};
+  say(T2(pick(PRAISE))+(v?' '+(q.harm?tt(`A ${T2(v.n)}: ${T2(v.ha)}.`,`Una ${T2(v.n)}: ${T2(v.ha)}.`):`${cap(T2(v.n))}: ${T2(song.h)}.`):''));
+  setBar(`<div class="row"><button id="rep">▶ ${tt('Listen again','Riascolta')}</button>${song&&song.mel?`<button class="ex" id="song">▶ ${song.ic} ${tt('the song','la canzoncina')}</button>`:''}<button class="main" id="next">${tt('Next ▸','Avanti ▸')}</button></div>`+box.outerHTML);
+  SES.auto=setTimeout(()=>{if(SES&&SES.phase==='fb'&&SES.q===q)next()},2600)}
+ else{const right=labelOf(q.ans,q),mine=labelOf(k,q);
+  say(T2(pick(SOFT))+' '+(v?tt(`It was <b>${right}</b>${!q.harm&&song?' — '+T2(song.h):''}. Listen to both:`,`Era <b>${right}</b>${!q.harm&&song?' — '+T2(song.h):''}. Ascoltale tutte e due:`):tt(`It was <b>${right}</b>. Listen again:`,`Era <b>${right}</b>. Riascolta:`)));
+  setBar(`<div class="row"><button class="ex" id="cmpA">▶ ${tt('It was','Era')}: ${right}</button><button class="ex" id="cmpB">▶ ${tt('You chose','Hai scelto')}: ${mine}</button>${song&&song.mel?`<button class="ex" id="song">▶ ${song.ic} ${tt('the song','la canzoncina')}</button>`:''}</div><div class="row"><button class="main" id="next">${tt('Next ▸','Avanti ▸')}</button></div>`+box.outerHTML);
+  $('cmpA').onclick=playQ;$('cmpB').onclick=()=>playWrong(k);setTimeout(()=>{if(SES&&SES.q===q&&SES.phase==='fb')playQ()},700)}
+ const stop=()=>clearTimeout(SES.auto),sg=$('song');if(sg)sg.onclick=()=>{stop();playMel(song.mel,q.a)};const rp=$('rep');if(rp)rp.onclick=()=>{stop();playQ()};
+ $('next').onclick=next;saveP()}
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+/* what you chose, from the same first note */
+function playWrong(k){const q=SES.q;let n=q.n,d=q.d;if(k==='same')n=0;else if(k==='diff'||k==='jump')n=n||5;else if(k==='step')n=2;else if(k==='up')d=1;else if(k==='down')d=-1;else if(IV[k])n=IV[k].s;
+ if(k==='diff'&&!q.n)n=5;playPair(q.a,q.a+n*d,{dur:q.dur,tb:q.tb,harm:q.harm});SES.q2={n,d}}
+function next(){clearTimeout(SES.auto);hush();SES.i++;if(SES.i>=NQ)finish();else question()}
+
+function finish(){SES.phase='end';hdr();say('');setBar('');const si=SES.si,r=SES.right,pass=r>=PASS,isNew=pass&&si===PR.done&&PR.done<NS;
+ PR.plays[si]=(PR.plays[si]|0)+1;if(!(PR.best[si]>=r))PR.best[si]=r;if(isNew)PR.done++;saveP();
+ const n=Math.min(8,Math.ceil(r/2)+(isNew?3:0));let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
+ p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};p.scores.intervals=p.scores.intervals||{};if(!(p.scores.intervals.all>=PR.done))p.scores.intervals.all=PR.done;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}
+ const fin=PR.done>=NS,nm=AVN[ME.avatar]||'Igor';
+ const msg=pass?(isNew?(fin?tt('You finished every stage! You are a real maestro now. Play them again: they get harder.','Hai finito tutte le tappe! Adesso sei un vero maestro. Rigiocale: diventano più difficili.'):tt('Stage passed! Wunderbar!','Tappa superata! Wunderbar!')):tt('Stage passed again: the next round will be harder!','Tappa superata di nuovo: il prossimo giro sarà più difficile!')):
+  r>=5?tt(`So close! You need ${PASS} to pass: one more go and it is yours.`,`Ci sei quasi! Ne servono ${PASS} per passare: un altro giro ed è tua.`):tt('Good work! Listen to the lesson again and try once more: your ears are learning.','Bel lavoro! Riascolta la lezione e riprova: le tue orecchie stanno imparando.');
+ if(pass)fanfare();
+ $('endCard').innerHTML=`<p class="small">${tt('Stage','Tappa')} ${si+1} · ${T2(ST[si].name)}</p><div class="big">${r}/${NQ}</div><p>${msg}</p>
+ ${isNew&&!fin?`<p id="endnew">${tt('New stage open:','Nuova tappa aperta:')} ${ST[PR.done].ic} ${T2(ST[PR.done].name)}</p>`:''}
+ <p style="color:var(--warm)">${n?tt(`+${n} tofu seed${n>1?'s':''} for ${nm}’s field. Collect them back on the island.`,`+${n} sem${n>1?'i':'e'} di tofu per il campo di ${nm}. Li ritrovi sull’isola.`):''}</p>
+ <div class="row">${isNew&&!fin?`<button class="main" id="nx">${tt('Next stage ▸','Prossima tappa ▸')}</button>`:''}<button ${isNew&&!fin?'':'class="main"'} id="again">${tt('Play this stage again','Rigioca questa tappa')}</button><button id="map">${tt('All the stages','Tutte le tappe')}</button></div>
+ <p class="small"><a href="${document.querySelector('a.igback').href}">${tt('← back to the island','← torna all’isola')}</a></p>`;
+ $('end').hidden=false;if($('nx'))$('nx').onclick=()=>begin(PR.done);$('again').onclick=()=>begin(si);$('map').onclick=openMap;
+ if(PR.done>0)import('/board.js?v=4').then(B=>B.show($('endCard'),'intervals','all',PR.done,ME.avatar,tt('How far everyone got · stages','Fin dove siete arrivati · tappe'))).catch(()=>{})}
+
+addEventListener('keydown',e=>{if(!SES||e.repeat)return;if(SES.phase==='q'){if(e.key===' '||e.key==='r'||e.key==='R'){e.preventDefault();playQ();return}const n=+e.key;if(n>=1){const b=bar.querySelectorAll('[data-a]')[n-1];if(b)b.click()}}
+ else if((SES.phase==='fb'||SES.phase==='lesson')&&e.key==='Enter'){e.preventDefault();const b=$('next');b&&b.click()}});
+resize();openMap();requestAnimationFrame(frame);
+window.__iv={PR,gen:(si,i)=>gen(si,i),ST,IV,get SES(){return SES},begin,answer:k=>{const b=bar.querySelector(`[data-a="${k}"]`);b&&b.click()},next:()=>{const b=$('next');b&&b.click()}};
+})();
+</script>
+</body></html>
