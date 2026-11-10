@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><script src="/lang.js?v=2"></script>
+<html lang="en"><head><script src="/lang.js?v=3"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Pitch Stairs · Igor time</title>
@@ -157,8 +157,8 @@ let avKey='igor';try{const v=localStorage.getItem('pitchStairsAvatar');if(AV[v])
 /* account (set by the home): registered players use their own Igor */
 let ACCT=null,HOME=null,AVO=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'));HOME=JSON.parse(localStorage.getItem('igortime_v1'))}catch(e){}
 if(ACCT&&HOME&&AV[HOME.avatar]){avKey=HOME.avatar;AVO={ball:HOME.ball,head:HOME.head,hcol:HOME.hcol,glasses:HOME.glasses,gcol:HOME.gcol,ears:HOME.ears,ecol:HOME.ecol};if(HOME.rim)AV[avKey]={...AV[avKey],rim:HOME.rim}}
-const MULT={easy:1,medium:2,extreme:3};
-function reward(total){const n=Math.round(total/100*MULT[lvKey]);let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
+const CAP={easy:4,medium:7,extreme:10};
+function reward(total){const n=Math.min(CAP[lvKey],Math.round(total/500*CAP[lvKey]));let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
  p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.pitchStairs=p.scores.pitchStairs||{};if(!(g[lvKey]>=total))g[lvKey]=total;
  try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n}
 const EYES=[{x:306,y:194,rx:19,ry:21},{x:341,y:190.5,rx:16,ry:19.5}];
@@ -308,7 +308,7 @@ function finish(){phase='end';let best=0;try{best=+localStorage.getItem('pitchSt
  $('endlv').textContent=LV.name+' · your score';$('endsc').textContent=total;
  const N=AV[avKey].name;$('endmsg').textContent=total>=450?'Golden ears. '+N+' is full and very grateful.':total>=350?'Great ears! '+N+' had a lovely meal.':total>=200?'Nice ears! '+N+' had a tasty snack and is ready for a second course.':N+' loved the concert! One more round and lunch is yours.';
  $('endbest').textContent=total>best?'New personal best on '+LV.name+'!':'Your best on '+LV.name+': '+best;
- const won=reward(total);$('endants').textContent=won?'+'+won+' tofu seed'+(won>1?'s':'')+' for '+N+'’s field'+(MULT[lvKey]>1?' (×'+MULT[lvKey]+' on '+LV.name+')':'')+'. Collect them back home.':'';$('end').hidden=false;import('/board.js?v=3').then(B=>B.show(document.querySelector('#end .card'),'pitch',lvKey,total,avKey)).catch(()=>{});updateButtons()}
+ const won=reward(total);$('endants').textContent=won?'+'+won+' tofu seed'+(won>1?'s':'')+' for '+N+'’s field'+'. Collect them back home.':'';$('end').hidden=false;import('/board.js?v=3').then(B=>B.show(document.querySelector('#end .card'),'pitch',lvKey,total,avKey)).catch(()=>{});updateButtons()}
 function updateButtons(){const gu=phase==='guess';$('ok').disabled=!gu;$('mine').disabled=!gu;
  const L=$('listen');L.disabled=!gu||(R&&R.played&&R.left<=0);L.textContent=R&&R.played&&isFinite(R.left)?`▶ Listen (${R.left})`:'▶ Listen'}
 
@@ -338,8 +338,8 @@ function setLevel(k){lvKey=k;LV=LEVELS[k];document.querySelectorAll('.lv button'
 document.querySelectorAll('.lv button').forEach(b=>b.onclick=()=>setLevel(b.dataset.lv));setLevel(lvKey);
 function setAv(k){avKey=k;spr.key='';document.querySelectorAll('.av button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.av===k));document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[k].name);try{localStorage.setItem('pitchStairsAvatar',k)}catch(e){}}
 document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset.av));
-if(ACCT){spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent='Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · easy ×1, medium ×2, extreme ×3 tofu seeds'}
-else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent='Tofu seeds won: easy ×1, medium ×2, extreme ×3'}
+if(ACCT){spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent='Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · easy up to 4, medium up to 7, extreme up to 10 tofu seeds'}
+else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent='Tofu seeds won: easy up to 4, medium up to 7, extreme up to 10'}
 function begin(){audio();if(AC.state==='suspended')AC.resume();if(!antVoice){antVoice=voice();myVoice=voice()}
  round=0;total=0;$('sc').textContent=0;$('start').hidden=true;$('end').hidden=true;newRound()}
 $('go').onclick=begin;$('again').onclick=begin;$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;phase='menu'};
