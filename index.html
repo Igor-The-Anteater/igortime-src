@@ -6,6 +6,7 @@
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
 <script src="/sound.js?v=13"></script>
+<script src="/intervals/wig.js?v=1"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -1199,6 +1200,31 @@ updaters.push((t,dt)=>{const F=FM();
  blob(t,2.6,.9);scene.add(t);block(-13.5,-6,2.4);hit(t,2.3,()=>goTo('school'),'school',1);glowObj(t,'out',-11.02,-4.88,.35,9,.8);
  label(['Music school','Scuola di musica'],['walk in the door','entra dalla porta'],new V3(-13.5,4.6,-6),()=>goTo('school'),15);zone('out',-11.02,-4.88,.75,()=>enterRoom('school'),'school door')}
 
+/* --- 10 Nov 2026: Maestro Wolfgang Amadigor waits OUTSIDE the music school until the first lesson, calling everyone in; after that he waits inside at his blackboard --- */
+let maestroIn=null;
+const ivMet=()=>{try{const p=JSON.parse(localStorage.getItem('igortime_intervals'))||{};if(p.met||p.done||Object.keys(p.plays||{}).length)return true}catch(e){}return!!(S.scores&&S.scores.intervals)};
+const MOUT={x:-9.55,z:-3.55};
+const maestroOut=(()=>{const grp=new THREE.Group();grp.position.set(MOUT.x,0,MOUT.z);
+ const mc=document.createElement('canvas');mc.width=IGC;mc.height=IGCH;const tx=new THREE.CanvasTexture(mc);let ok=false,ba=-1;
+ const paint=a=>{if(!igorOK)return;const c2=mc.getContext('2d');c2.setTransform(1,0,0,1,0,0);c2.clearRect(0,0,IGC,IGCH);c2.setTransform(SCI,0,0,SCI,0,IGPAD*SCI);c2.drawImage(igorImg,0,0,663,730);if(window.IgorWig){IgorWig.wig(c2);IgorWig.baton(c2,a)}tx.needsUpdate=true;ok=true};
+ const m=curve(new THREE.MeshBasicMaterial({map:tx,transparent:true,alphaTest:.15,side:THREE.DoubleSide,color:new THREE.Color(.95,.96,.98)}));
+ const MS=1.75,pl=new THREE.Mesh(new THREE.PlaneGeometry(IGW*MS,IGH2*MS).translate(0,IGH2*MS/2,0),m);grp.add(pl);blob(grp,.4);scene.add(grp);
+ const go=()=>{if(VISIT){say(tt('Lessons at our own island!','Le lezioni a casa nostra!'),2.4);return}walkIn(new V3(MOUT.x+.9,0,MOUT.z+.6),()=>launch('/intervals/',tt('To the lesson!','A lezione!'),['out',MOUT.x+.9,MOUT.z+.6]))};
+ hit(grp,.7,go,'maestro',.7);
+ const CALLS=[['To the lesson! To the lesson!','A lezione! A lezione!'],['Come to the music lesson!','Venite a lezione di musica!'],['Ears ready? We begin!','Orecchie pronte? Si comincia!'],['Wunderbar! Your turn!','Wunderbar! Tocca a te!'],['A lesson on intervals, come in!','Lezione di intervalli, entrate!'],['Easy, step by step!','Facile, un passetto alla volta!']];
+ const L=label(CALLS[0],['Maestro Wolfgang Amadigor · tap me','Maestro Wolfgang Amadigor · toccami'],new V3(MOUT.x,IGH2*MS+.5,MOUT.z),go,16);setTimeout(()=>{L.near=16},50);
+ let ci=0,nextC=0,met=ivMet();
+ updaters.push(t=>{if(!met&&ivMet())met=true;const vis=!met;grp.visible=vis;L.hidden=!vis;if(maestroIn)maestroIn.visible=met;if(!vis)return;
+  pl.quaternion.copy(camera.quaternion);const near=Math.hypot(igor.position.x-MOUT.x,igor.position.z-MOUT.z)<4;pl.position.y=Math.abs(Math.sin(t*(near?4:2.2)))*(near?.09:.04);
+  const a=Math.round((Math.sin(t*(near?7:3))*.35+.15)*10)/10;if(a!==ba||!ok){ba=a;paint(a)}
+  if(t>nextC){nextC=t+3.2;ci=(ci+1)%CALLS.length;L.text=CALLS[ci];L.el.innerHTML=N(L.text)+`<small>${N(L.sub)}</small>`}});
+ // the first time on the island after the update, Igor points him out (once)
+ let hi=0;try{hi=+localStorage.getItem('igortime_maestro_hi')||0}catch(e){}
+ // only for players who already knew the island: new players get the farm tutorial first, and meet him on their own
+ if(!hi&&!met&&(S.seen|0)>=1)updaters.push(()=>{if(hi||!started||where!=='out'||leaving)return;hi=1;try{localStorage.setItem('igortime_maestro_hi','1')}catch(e){}
+  setTimeout(()=>say(tt('Look! In front of the music school there is a new maestro, Wolfgang Amadigor: he is waiting for you for a lesson!','Guarda! Davanti alla scuola di musica c’è un maestro nuovo, Wolfgang Amadigor: ti aspetta per una lezione!'),6),6500)});
+ return{grp,L}})();
+
 /* --- the deep pool: dive into the abyss --- */
 const POOL=new V3(7.6,0,6.6);
 {const t=new THREE.Group();t.position.copy(POOL);PLACES.abyss={pos:new V3(POOL.x,0,POOL.z+2.15),open:()=>dive(),name:'The deep pool'};
@@ -1613,7 +1639,25 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   const knob=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),lam('#c9a24a'));knob.position.set(.38,1,.09);o.add(knob);
   const pad=new THREE.Mesh(new THREE.BoxGeometry(.16,.22,.05),lam('#c9a24a'));pad.position.set(.38,.86,.1);o.add(pad);
   o.rotation.y=ry;station(Rm,'school',{name:['Closed door','Porta chiusa'],sub:['a future game','un gioco futuro'],pos:new V3(x,0,z),stand:new V3(x*.78,0,z<-3?z+1.5:z),obj:o,act:()=>say(tt('Closed. A new game soon!','Chiusa. Presto un gioco nuovo!'),3),r:.9,zr:1.4})};
- door(-4.6,-4.2,0);door(-5.45,1.6,Math.PI/2);door(5.45,1.6,-Math.PI/2);
+ door(-4.6,-4.2,0);door(5.45,1.6,-Math.PI/2);
+ // 10 Nov 2026: where the left closed door was, the blackboard of Maestro Wolfgang Amadigor (the interval lessons)
+ {const o=new THREE.Group(),c=document.createElement('canvas');c.width=512;c.height=300;const q=c.getContext('2d');
+  q.fillStyle='#6b4a2e';q.fillRect(0,0,512,300);q.fillStyle='#2f4a3a';q.fillRect(14,14,484,272);q.strokeStyle='rgba(238,242,230,.8)';q.lineWidth=3;
+  q.beginPath();q.moveTo(60,250);for(let k=0;k<8;k++){q.lineTo(60+k*48,250-k*24-24);q.lineTo(108+k*48,250-k*24-24)}q.stroke();
+  q.setLineDash([8,8]);q.strokeStyle='#ffe08a';q.beginPath();q.moveTo(84,214);q.quadraticCurveTo(170,120,228,142);q.stroke();q.setLineDash([]);
+  for(const[x,y,col]of[[84,214,'#f6d34a'],[228,142,'#7fe08a']]){q.fillStyle=col;q.beginPath();q.arc(x,y,13,0,TAU);q.fill()}
+  q.fillStyle='rgba(238,242,230,.9)';q.font='600 34px Fredoka, sans-serif';q.textAlign='center';q.fillText('♪ ↗ ♫',380,92);q.font='500 26px Fredoka, sans-serif';q.fillText(LANG==='it'?'intervalli':'intervals',380,140);
+  const bm=new THREE.Mesh(new THREE.BoxGeometry(.06,1.25,2.15),[texM(new THREE.CanvasTexture(c)),lam('#6b4a2e'),lam('#6b4a2e'),lam('#6b4a2e'),lam('#6b4a2e'),lam('#6b4a2e')]);bm.position.set(-.38,1.75,0);o.add(bm);
+  const tray=new THREE.Mesh(new THREE.BoxGeometry(.16,.05,1.6),lam('#7a5232'));tray.position.set(-.3,1.1,0);o.add(tray);const ch=new THREE.Mesh(new THREE.BoxGeometry(.04,.04,.18),lam('#f4f1e8'));ch.position.set(-.27,1.14,.3);o.add(ch);
+  // the maestro: an Igorlet with a powdered wig and a baton
+  const mc=document.createElement('canvas');mc.width=IGC;mc.height=IGCH;const mtx=new THREE.CanvasTexture(mc);let mOK=false;
+  const paintM=()=>{if(!igorOK||mOK)return;mOK=true;const c2=mc.getContext('2d');c2.setTransform(SCI,0,0,SCI,0,IGPAD*SCI);c2.drawImage(igorImg,0,0,663,730);if(window.IgorWig){IgorWig.wig(c2);IgorWig.baton(c2,.15)}mtx.needsUpdate=true};
+  const mm=new THREE.MeshBasicMaterial({map:mtx,transparent:true,alphaTest:.15,side:THREE.DoubleSide,color:new THREE.Color(.95,.96,.98)});
+  const MS=1.75,mp=new THREE.Mesh(new THREE.PlaneGeometry(IGW*MS,IGH2*MS).translate(0,IGH2*MS/2,0),mm);mp.position.set(.5,0,-.8);o.add(mp);maestroIn=mp;
+  const nc=document.createElement('canvas');nc.width=nc.height=64;{const q2=nc.getContext('2d');q2.fillStyle='#f7ecd4';q2.font='48px serif';q2.textAlign='center';q2.textBaseline='middle';q2.fillText('♪',32,34)}
+  const nt=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(nc),transparent:true,opacity:0,depthWrite:false}));nt.scale.set(.3,.3,1);o.add(nt);
+  updaters.push(t=>{if(!o.parent||!o.parent.visible)return;nt.visible=mp.visible;paintM();mp.quaternion.copy(camera.quaternion);mp.position.y=Math.abs(Math.sin(t*1.7))*.04;mp.rotation.z=Math.sin(t*.9)*.04;const u=(t*.35)%1;nt.position.set(.7+Math.sin(t)*.12,1.5+u*.9,-.8);nt.material.opacity=Math.sin(u*Math.PI)*.85});
+  station(Rm,'school',{name:['Maestro Amadigor','Maestro Amadigor'],sub:['interval lessons: walk to the blackboard','lezioni di intervalli: vai alla lavagna'],pos:new V3(-5.05,0,1.6),stand:new V3(-3.9,0,1.6),obj:o,act:()=>launch('/intervals/',tt('To the maestro!','Dal maestro!'),['school',-3.7,1.6]),r:1.1,zr:1.5})}
  // the drum kit: The drums (hi-hat, high tom, low tom, cymbal)
  {const o=new THREE.Group(),shell=lam('#c0392b'),head=lam('#f4efe2'),gold=lam('#d9b44a'),mt=lam('#2b2b2e');
   const fc=document.createElement('canvas');fc.width=fc.height=128;{const q=fc.getContext('2d');q.fillStyle='#f4efe2';q.fillRect(0,0,128,128);q.strokeStyle='#c0392b';q.lineWidth=6;q.beginPath();q.arc(64,64,52,0,TAU);q.stroke();q.fillStyle='#2b2018';q.font='700 30px Fredoka,sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText('IGOR',64,66)}
@@ -1886,7 +1930,7 @@ function renderLv(){const F=FM(),l=lvlOf(),a=LVX[l-1]||0,b=LVX[l],tot=F.total|0,
 lvB.onclick=()=>{const l=lvlOf(),b=LVX[l];say(b?tt(`Level ${l}. At ${b} tofu ants picked: level ${l+1}!`,`Livello ${l}. A ${b} formiche raccolte: livello ${l+1}!`)+(LVNEW[l+1]?' '+N(LVNEW[l+1]):''):tt('Top level: the island is complete!','Livello massimo: l’isola è completa!'),4)};
 updaters.push(renderLv);
 /* coming back from a game: a little party for the seeds */
-const GNAME={kitchen:['from the kitchen','dalla cucina'],window:['from the window','dalla finestra'],bedroom:['from the bedroom','dalla camera'],stairs:['from Pitch Stairs','da Pitch Stairs'],pitch:['from Pitch Stairs','da Pitch Stairs'],cadences:['from Cadences','da Cadenze'],cad:['from Cadences','da Cadenze'],drums:['from the drums','dalla batteria'],abyss:['from the abyss','dall’abisso']};
+const GNAME={kitchen:['from the kitchen','dalla cucina'],window:['from the window','dalla finestra'],bedroom:['from the bedroom','dalla camera'],stairs:['from Pitch Stairs','da Pitch Stairs'],pitch:['from Pitch Stairs','da Pitch Stairs'],cadences:['from Cadences','da Cadenze'],cad:['from Cadences','da Cadenze'],drums:['from the drums','dalla batteria'],intervals:['from the maestro’s lesson','dalla lezione del maestro'],abyss:['from the abyss','dall’abisso']};
 function seedParty(n){snd('seeds',n);const _k=Math.min(14,n+3),_lag0=window._seedLag||0;window._seedLag=_lag0;const g=GNAME[window._fromGame||''],from=g?' '+N(g):'';toast(tt(`+${n} seeds${from}!`,`+${n} semi${from}!`));bubbleQ.length=0;bubbleT=0;say(tt(`Hooray! +${n} seeds. Let’s sow them!`,`Evviva! +${n} semi. Seminiamoli!`),4);
  const to=$('seeds').getBoundingClientRect(),k=Math.min(14,n+3);for(let j=0;j<k;j++){const el=document.createElement('div');el.className='seedFly';el.textContent='🌱';const x0=innerWidth/2+(Math.random()-.5)*160,y0=innerHeight*.55+(Math.random()-.5)*80;el.style.transform=`translate(${x0}px,${y0}px) scale(1.4)`;document.body.appendChild(el);
   setTimeout(()=>{el.style.transform=`translate(${to.left+to.width/2-10}px,${to.top+to.height/2-10}px) scale(.6)`;el.style.opacity='.2'},60+j*70);setTimeout(()=>{el.remove();if(_lag0)window._seedLag=Math.max(0,_lag0*(1-(j+1)/_k));hudFarm();const sb=$('seeds');sb.classList.remove('pop');void sb.offsetWidth;sb.classList.add('pop')},1100+j*70)}}
@@ -1896,19 +1940,20 @@ const HG={stairs:{stand:new V3(-3,0,.4),url:'/pitch-stairs/',go:['Up the stairs!
  w:{stand:new V3(-4.4,0,1.2),url:'/window/',go:['To the window!','Alla finestra!'],ask:['Shall we open the window and listen?','Apriamo la finestra e ascoltiamo fuori?']},
  b:{stand:new V3(2.7,0,1.4),url:'/bedroom/',go:['To the bedroom!','In camera!'],ask:['A game of sounds in the bedroom?','Un gioco di suoni in camera?']},
  cad:{room:'school',stand:new V3(0,0,-1.1),url:'/cadences/',go:['To the piano!','Al pianoforte!'],ask:['Shall we write some cadences at the piano?','Scriviamo qualche cadenza al pianoforte?']},
- drums:{room:'school',stand:new V3(3.1,0,-1.6),url:'/drums/',go:['To the drums!','Alla batteria!'],ask:['Shall we play the drums at the music school?','Suoniamo la batteria alla scuola di musica?']}};
+ drums:{room:'school',stand:new V3(3.1,0,-1.6),url:'/drums/',go:['To the drums!','Alla batteria!'],ask:['Shall we play the drums at the music school?','Suoniamo la batteria alla scuola di musica?']},
+ iv:{room:'school',stand:new V3(-3.9,0,1.6),url:'/intervals/',go:['To the maestro!','Dal maestro!'],ask:['A lesson with Maestro Amadigor? He trains your ears!','Una lezione col maestro Amadigor? Ti allena le orecchie!']}};
 let ASK=null,nextAsk=Date.now()+45000;
 function playHouseGame(k){const G=HG[k];if(!G||PL)return;const rm=G.room||'house',go=()=>walkIn(G.stand.clone(),()=>launch(G.url,N(G.go),[rm,G.stand.x,G.stand.z]));
  if(where===rm){go();return}if(where!=='out')exitRoom(true);GPEND={k,t:T,go,rm};goTo(rm)}
 let GPEND=null;updaters.push(()=>{if(!GPEND)return;if(T-GPEND.t>45){GPEND=null;return}if(where===GPEND.rm&&!IG.target){const g=GPEND;GPEND=null;setTimeout(g.go,350)}});
-function proposeGame(){const ks=Object.keys(HG).filter(k=>!HG[k].room||k==='drums'),k=ks[Math.floor(Math.random()*ks.length)],txt='✨ '+N(HG[k].ask);bubbleQ.length=0;bubbleT=0;say(txt,9);ASK={k,txt};bubble.classList.add('ask')}
+function proposeGame(){const ks=Object.keys(HG).filter(k=>!HG[k].room||k==='drums'||k==='iv'),k=ks[Math.floor(Math.random()*ks.length)],txt='✨ '+N(HG[k].ask);bubbleQ.length=0;bubbleT=0;say(txt,9);ASK={k,txt};bubble.classList.add('ask')}
 bubble.addEventListener('click',()=>{if(!ASK)return;const k=ASK.k;ASK=null;bubble.classList.remove('ask');bubbleT=0;playHouseGame(k)});
 updaters.push(()=>{if(ASK&&(bubbleT<=0||bubble.textContent!==ASK.txt)){ASK=null;bubble.classList.remove('ask')}
  if(!ASK&&started&&!leaving&&!PL&&(where==='out'||where==='house')&&Date.now()>nextAsk&&T-lastAct>10&&!IG.target&&!RIDE&&sheet.hidden&&bar.hidden&&!CH&&helpC.hidden&&idx.hidden){nextAsk=Date.now()+120000;proposeGame()}});
 /* the compass orb: top left, every 12 s it proposes a different place to jump to; tap it and Igor goes there */
 const ORB=[{k:'stairs',ic:'🎵',n:['Pitch Stairs','Pitch Stairs'],go:()=>playHouseGame('stairs')},{k:'k',ic:'🔥',n:['The kitchen','La cucina'],go:()=>playHouseGame('k')},
  {k:'w',ic:'🌬',n:['The window','La finestra'],go:()=>playHouseGame('w')},{k:'b',ic:'🛏',n:['The bedroom','La camera'],go:()=>playHouseGame('b')},
- {k:'cad',ic:'🎹',n:['Cadences','Cadenze'],go:()=>playHouseGame('cad')},{k:'drums',ic:'🥁',n:['The drums','La batteria'],go:()=>playHouseGame('drums')},{k:'abyss',ic:'🌊',n:['The abyss','L’abisso'],go:()=>{if(where!=='out')exitRoom(true);goTo('abyss')}}];
+ {k:'cad',ic:'🎹',n:['Cadences','Cadenze'],go:()=>playHouseGame('cad')},{k:'drums',ic:'🥁',n:['The drums','La batteria'],go:()=>playHouseGame('drums')},{k:'iv',ic:'🎼',n:['The maestro’s lessons','Le lezioni del maestro'],go:()=>playHouseGame('iv')},{k:'abyss',ic:'🌊',n:['The abyss','L’abisso'],go:()=>{if(where!=='out')exitRoom(true);goTo('abyss')}}];
 const orb=document.createElement('button');orb.id='orb';orb.type='button';orb.innerHTML='<span class="ball"><i></i></span><span class="tx"><small></small><b></b></span>';document.body.appendChild(orb);
 let orbI=Math.floor(Math.random()*ORB.length),orbNext=Date.now()+12000;
 function renderOrb(flash){const D=ORB[orbI];orb.querySelector('i').textContent=D.ic;orb.querySelector('small').textContent=tt('Jump to','Vai a');orb.querySelector('b').textContent=N(D.n);orb.setAttribute('aria-label',tt('Jump to ','Vai a ')+N(D.n));
@@ -1967,7 +2012,7 @@ window.IgorUI={openAccount,renderDress,refresh:()=>refresh(),toast:t=>toast(t),o
 /* ================= index ================= */
 const idx=$('index');
 function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igor')}</h2><ul><li><button data-i="house">${tt('Igor’s house','La casa di Igor')}<small>${tt('games','giochi')}</small></button></li><li><button data-i="field">${tt('The fields','I campi')}</button></li><li><button data-i="pen">${tt('Igorlet village','Villaggio degli Igorlets')}</button></li><li><button data-i="prizes">${tt('Prize shop','Negozietto dei premi')}</button></li><li><button data-i="school">${tt('Music school','Scuola di musica')}<small>${tt('composers','compositori')}</small></button></li><li><button data-i="abyss">${tt('The abyss','L’abisso')}<small>${tt('game','gioco')}</small></button></li><li><button data-i="jetty">${tt('Leaderboards','Classifiche')}<small>${tt('everyone','tutti')}</small></button></li></ul>
- <h2>${tt('Games','Giochi')}</h2><ul><li><button data-i="gamesPage">${tt('The games page','La pagina dei giochi')}<small>${tt('all seven','tutti e sette')}</small></button></li><li><button data-i="stairs">Pitch Stairs<small>${tt('house','casa')}</small></button></li><li><button data-i="cad">${tt('Cadences','Cadenze')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="drums">${tt('The drums','La batteria')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="w">${tt('The window','La finestra')}<small>${tt('house','casa')}</small></button></li><li><button data-i="k">${tt('The kitchen','La cucina')}<small>${tt('house','casa')}</small></button></li><li><button data-i="b">${tt('The bedroom','La camera')}<small>${tt('house','casa')}</small></button></li></ul>
+ <h2>${tt('Games','Giochi')}</h2><ul><li><button data-i="gamesPage">${tt('The games page','La pagina dei giochi')}<small>${tt('all eight','tutti e otto')}</small></button></li><li><button data-i="stairs">Pitch Stairs<small>${tt('house','casa')}</small></button></li><li><button data-i="cad">${tt('Cadences','Cadenze')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="drums">${tt('The drums','La batteria')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="iv">${tt('The maestro’s lessons','Le lezioni del maestro')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="w">${tt('The window','La finestra')}<small>${tt('house','casa')}</small></button></li><li><button data-i="k">${tt('The kitchen','La cucina')}<small>${tt('house','casa')}</small></button></li><li><button data-i="b">${tt('The bedroom','La camera')}<small>${tt('house','casa')}</small></button></li></ul>
  <h2>Chat</h2><ul><li><button data-i="chat">${tt('Chat with friends','Chatta con gli amici')}<small>14+</small></button></li></ul>
  <h2>${tt('Language','Lingua')}</h2><ul><li><button data-lang="en" aria-pressed="${LANG==='en'}">English</button></li><li><button data-lang="it" aria-pressed="${LANG==='it'}">Italiano</button></li></ul>
  <h2>${tt('Sky','Cielo')}</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">${tt('Random weather','Meteo casuale')}<small>${tt('Igor’s weather, same for everyone','il meteo di Igor, uguale per tutti')}</small></button></li><li><button data-sky="real">${tt('The weather where I am','Il meteo dove sono')}<small>${tt('uses your location','usa la tua posizione')}</small></button></li></ul>`}
@@ -1985,7 +2030,7 @@ function staticTexts(){$('index').setAttribute('aria-label',tt('Index','Indice')
   $('goGuest').textContent=gm?tt('Play as a guest','Gioca come ospite'):tt('Explore as a guest','Esplora come ospite');$('goSign').textContent=tt('Sign in / register','Accedi / registrati');$('iSmall').textContent=tt('As a guest your farm and scores stay on this device. With an account you dress up your Igor right away and keep everything everywhere.','Come ospite fattoria e punteggi restano su questo dispositivo. Con un account vesti subito il tuo Igor e ritrovi tutto ovunque.');$('introBack').textContent=tt('← Back','← Indietro');
   const L=$('langIntro');if(L)L.innerHTML=`<button type="button" data-l="en" aria-pressed="${LANG==='en'}">English</button><button type="button" data-l="it" aria-pressed="${LANG==='it'}">Italiano</button>`}}
 idx.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.lang){setLang(b.dataset.lang);return}if(b.dataset.sky){skyMode(b.dataset.sky);return}const k=b.dataset.i;idx.hidden=true;$('indexBtn').setAttribute('aria-expanded','false');
- if(k==='chat'){if(window.IgorChat)window.IgorChat.open();return}if(k==='gamesPage'){toGames();return}if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/',tt('Cadences!','Cadenze!'),['school',0,-0.85]);return}if(k==='drums'){launch('/drums/',tt('The drums!','La batteria!'),['school',3.1,-1.4]);return}if(k==='w'){launch('/window/',tt('The window!','La finestra!'),['house',-4.2,1.2]);return}if(k==='k'){launch('/kitchen/',tt('The kitchen!','La cucina!'),['house',3.7,-2.2]);return}if(k==='b'){launch('/bedroom/',tt('The bedroom!','La camera!'),['house',2.5,1.4]);return}if(where!=='out')exitRoom(true);goTo(k)});
+ if(k==='chat'){if(window.IgorChat)window.IgorChat.open();return}if(k==='gamesPage'){toGames();return}if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/',tt('Cadences!','Cadenze!'),['school',0,-0.85]);return}if(k==='drums'){launch('/drums/',tt('The drums!','La batteria!'),['school',3.1,-1.4]);return}if(k==='iv'){launch('/intervals/',tt('To the maestro!','Dal maestro!'),['school',-3.7,1.6]);return}if(k==='w'){launch('/window/',tt('The window!','La finestra!'),['house',-4.2,1.2]);return}if(k==='k'){launch('/kitchen/',tt('The kitchen!','La cucina!'),['house',3.7,-2.2]);return}if(k==='b'){launch('/bedroom/',tt('The bedroom!','La camera!'),['house',2.5,1.4]);return}if(where!=='out')exitRoom(true);goTo(k)});
 function toggleIndex(){idx.hidden=!idx.hidden;skyStatus();$('indexBtn').setAttribute('aria-expanded',String(!idx.hidden));if(!idx.hidden)say(pick(tt(['Where to?','Pick a place, I’ll take you.'],['Dove andiamo?','Scegli un posto, ti ci porto.'])),2)}
 $('indexBtn').onclick=toggleIndex;
 $('me').onclick=()=>openAccount();
@@ -3167,13 +3212,13 @@ function shopChips(k){if(VISIT){visitNo();return}const V=VEH[k],n=vehN(k),D=_sho
 /* ---------- 9 Nov, later: the leaderboard board where the jetty was; the pocket (fruit, shells, messages); pick things up by walking on them ---------- */
 const BOARDS=[{g:'total',l:'all',N:['Overall','Generale'],sub:['all the games added up','tutti i giochi sommati']},{g:'island',l:'all',N:['The island','L’isola'],sub:['tofu ants picked','formiche raccolte']},{g:'abyss',N:['The abyss','L’abisso'],sub:['metres, all dives added up','metri, tutte le immersioni sommate']},
  {g:'kitchen',N:['The kitchen','La cucina'],sub:['all your games added up','tutte le partite sommate']},{g:'window',N:['The window','La finestra'],sub:['all your games added up','tutte le partite sommate']},{g:'bedroom',N:['The bedroom','La camera'],sub:['all your games added up','tutte le partite sommate']},{g:'drums',N:['The drums','La batteria'],sub:['all your games added up','tutte le partite sommate']},
- {g:'pitch',N:['Pitch Stairs','Pitch Stairs'],sub:['all your games added up','tutte le partite sommate']},{g:'cadences',N:['Cadences','Cadenze'],sub:['all your games added up','tutte le partite sommate']}];
+ {g:'pitch',N:['Pitch Stairs','Pitch Stairs'],sub:['all your games added up','tutte le partite sommate']},{g:'cadences',N:['Cadences','Cadenze'],sub:['all your games added up','tutte le partite sommate']},{g:'intervals',l:'all',N:['The maestro’s lessons','Le lezioni del maestro'],sub:['stages passed (out of 14)','tappe superate (su 14)']}];
 const LVN={easy:['Easy','Facile'],medium:['Medium','Medio'],extreme:['Extreme','Estremo']};
 let bdSel={g:'total',l:'all'};
-const boardMod=()=>window.IgorCloud?import('/board.js?v=3'):Promise.reject('no cloud');
-function boardSheet(g,l){if(g)bdSel={g,l:l||(g==='island'||g==='abyss'||g==='total'?'all':bdSel.l!=='all'?bdSel.l:'easy')};const B=BOARDS.find(b=>b.g===bdSel.g)||BOARDS[0],lv=bdSel.g!=='island'&&bdSel.g!=='abyss'&&bdSel.g!=='total';
+const boardMod=()=>window.IgorCloud?import('/board.js?v=4'):Promise.reject('no cloud');
+function boardSheet(g,l){if(g)bdSel={g,l:l||(g==='island'||g==='abyss'||g==='total'||g==='intervals'?'all':bdSel.l!=='all'?bdSel.l:'easy')};const B=BOARDS.find(b=>b.g===bdSel.g)||BOARDS[0],lv=bdSel.g!=='island'&&bdSel.g!=='abyss'&&bdSel.g!=='total'&&bdSel.g!=='intervals';
  const tabs=BOARDS.map(b=>`<button type="button" data-bd="${b.g}" class="${b.g===bdSel.g?'on':''}">${N(b.N)}</button>`).join(''),lvs=lv?`<div class="bdl">${Object.keys(LVN).map(k=>`<button type="button" data-bl="${k}" class="${k===bdSel.l?'on':''}">${N(LVN[k])}</button>`).join('')}</div>`:'';
- const BPLAY={kitchen:'k',window:'w',bedroom:'b',drums:'drums',pitch:'stairs',cadences:'cad',abyss:'abyss'}[bdSel.g],playB=BPLAY?`<button type="button" class="bdGo" data-play="${BPLAY}">🏃 ${N(B.N)} · ${tt('let’s play!','giochiamo!')}</button>`:'';
+ const BPLAY={kitchen:'k',window:'w',bedroom:'b',drums:'drums',pitch:'stairs',cadences:'cad',abyss:'abyss',intervals:'iv'}[bdSel.g],playB=BPLAY?`<button type="button" class="bdGo" data-play="${BPLAY}">🏃 ${N(B.N)} · ${tt('let’s play!','giochiamo!')}</button>`:'';
  openSheet('board',`<h2>🏆 ${tt('Leaderboards','Classifiche')}</h2><div class="bdt">${tabs}</div>${lvs}${playB}<div id="bdBox"><p>${tt('Loading…','Carico…')}</p></div>`);
  const box=$('bdBox'),title=`${N(B.N)}${lv?' · '+N(LVN[bdSel.l]):''}${B.sub?' · '+N(B.sub):''}`;
  if(bdSel.g==='island'||bdSel.g==='total')islandSubmit(true);

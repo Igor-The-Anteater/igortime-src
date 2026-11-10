@@ -21,8 +21,8 @@ async function overall(n){const ALL=[['abyss','all'],...['kitchen','window','bed
 export async function top(g,l,n=10){if(g==='total')return overall(n);const q=await getDocs(query(collection(db,col(g,l)),orderBy('score','desc'),limit(n)));return q.docs.map(d=>({uid:d.id,n:d.data().nick,s:d.data().score}))}
 export async function submit(g,l,score,avatar){await authReady;if(!user)return'guest';const nk=await nick();if(!nk)return'nonick';score=Math.floor(+score||0);if(score<=0)return'zero';
  const ref=doc(db,col(g,l),user.uid);let cur=null;try{cur=await getDoc(ref)}catch(e){}
- // the games add up: every game you finish adds its points to your total (300 + 400 + 500 = 1200); the island already counts every tofu ant ever picked
- const add=g!=='island',old=cur&&cur.exists()?Math.floor(+cur.data().score||0):0;
+ // the games add up: every game you finish adds its points to your total (300 + 400 + 500 = 1200); the island already counts every tofu ant ever picked, and the interval lessons count how many stages you have passed
+ const add=g!=='island'&&g!=='intervals',old=cur&&cur.exists()?Math.floor(+cur.data().score||0):0;
  if(!add&&old>=score){if(cur.data().nick!==nk)try{await setDoc(ref,{nick:nk},{merge:true})}catch(e){}return'lower'}
  await setDoc(ref,{nick:nk,score:add?old+score:score,avatar:String(avatar||'igor'),at:serverTimestamp()});return add?'added':'ok'}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
