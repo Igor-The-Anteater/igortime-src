@@ -9,7 +9,10 @@ try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choo
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
-<style>
+<style>#chips:not([hidden]),#bar:not([hidden]){background:rgba(34,26,20,.86);border:2px solid #f7ecd4;border-radius:16px;padding:8px 10px;box-shadow:0 4px 0 #0005,0 8px 24px #0006;pointer-events:auto}
+#bar:not([hidden]){left:50%!important;right:auto!important;transform:translateX(-50%);width:max-content;max-width:min(94vw,640px)}
+#chips .gt,#bar .gt{width:100%;text-align:center;font:600 13px/1.2 Fredoka,sans-serif;color:#f7ecd4;letter-spacing:.02em;margin:-1px 0 1px;opacity:.9}
+
 :root{--abyss:#05080d;--ink:#dbe7ea;--dim:#8a9ca2;--glow:#7fe3ef;--bone:#efe4cf;--warm:#f1b46e;--ok:#9be38a;--veil:rgba(5,8,13,.84);
  --display:'Instrument Serif',Georgia,'Times New Roman',serif;--toon:'Fredoka','Trebuchet MS',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
 html,body{height:100%;margin:0;background:var(--abyss);color:var(--ink);overflow:hidden;font-family:var(--mono)}
@@ -1704,7 +1707,7 @@ const chipBox=document.createElement('div');chipBox.id='chips';chipBox.hidden=tr
 let CH=null;
 function chips(pos,build,key,keep){CH={pos:pos.clone(),build,key,keep,more:false,room:where};renderChips()}
 function renderChips(){if(!CH)return;const items=CH.build().filter(Boolean);CH.items=items;
- const h=items.map((it,j)=>`<button data-c="${j}"${it.main?' class="m"':''}${it.off?' aria-disabled="true"':''}>${it.t}</button>`).join('')+`<button data-c="x" class="x" aria-label="${tt('Close','Chiudi')}">✕</button>`;
+ const h=(CH.title?`<div class="gt">${CH.title}</div>`:'')+items.map((it,j)=>`<button data-c="${j}"${it.main?' class="m"':''}${it.off?' aria-disabled="true"':''}>${it.t}</button>`).join('')+`<button data-c="x" class="x" aria-label="${tt('Close','Chiudi')}">✕</button>`;
  if(chipBox.innerHTML!==h)chipBox.innerHTML=h;chipBox.hidden=false}
 function hideChips(){CH=null;chipBox.hidden=true}
 chipBox.addEventListener('pointerdown',e=>e.stopPropagation());
@@ -1788,7 +1791,7 @@ function renderBar(){const F=FM(),lv=lvlOf(),n=F.fields.length;let L=[];
   ...Object.keys(EVK).map(k=>({t:N(EVK[k].N),fn:()=>{const D=EVK[k],t=Date.now();F.ev=mkEv(k,t+Math.max(D.lead*MIN,1000),'test'+t);F.ev.warn=t;simTo(t,true);save();closeBar();renderBanner()}})),
   {t:FAST>1?tt('Real time','Tempo vero'):tt('Time ×60','Tempo ×60'),fn:()=>{try{localStorage.setItem('igortime_fast',FAST>1?'1':'60')}catch(e){}simTo(Date.now(),false);saveLocal();location.reload()}},
   {t:tt('New farm','Nuova fattoria'),fn:()=>{S.farm=null;ensureFarm();for(const[,o]of igObjs){world.remove(o.grp);o.L.el.remove();labels.splice(labels.indexOf(o.L),1)}igObjs.clear();save();closeBar();fmNew=true;awaySummary()}}]}
- bar._L=L;bar.innerHTML=L.map((it,j)=>`<button data-b="${j}"${it.why?' aria-disabled="true"':''}>${it.t}</button>`).join('')+`<button data-b="x" class="x" aria-label="${tt('Close','Chiudi')}">✕</button>`}
+ bar._L=L;const BT={build:'🔨 '+tt('Build','Costruisci'),field:'🌱 '+tt('Which field?','Che campo?'),veh:'🏆 '+tt('Prizes','Premi'),test:'🧪 Test'};bar.innerHTML=(BT[barKind]?`<div class="gt">${BT[barKind]}</div>`:'')+L.map((it,j)=>`<button data-b="${j}"${it.why?' aria-disabled="true"':''}>${it.t}</button>`).join('')+`<button data-b="x" class="x" aria-label="${tt('Close','Chiudi')}">✕</button>`}
 bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.b==='x'){closeBar();return}const it=bar._L[+b.dataset.b];if(!it)return;if(it.why){say(it.why,2.4);return}it.fn();if(barKind&&!PL)renderBar()});
 $('buildB').onclick=()=>{if(PL){endPlace();return}if(bar.hidden||barKind!=='build'){openBar('build');say(tt('What shall we build?','Cosa costruiamo?'),2)}else closeBar()};
 if(TESTING)$('testB').onclick=()=>{bar.hidden||barKind!=='test'?openBar('test'):closeBar()};
@@ -1922,7 +1925,7 @@ hudIgs();
 
 function vehShop(){if(PL)return;goTo('prizes');return;say(tt('Prizes! Save up tofu ants.','Premi! Metti da parte formiche di tofu.'),2.6);
  chips(SHOPV.clone().add(new V3(0,2.2,0)),()=>{const F=FM();return VKEYS.map(k=>{const V=VEH[k];return F.veh[k]?{t:`${V.ic} ${N(V.N)} ✓`,fn:()=>{mount(k);return false}}:{t:`${V.ic} ${N(V.N)} ${cst(dual({t:V.cost}))}`,main:F.ants.t>=V.cost,fn:()=>{buyVeh(k);return true}}})},'shopv')}
-function vehChips(){chips(igor.position.clone().add(new V3(0,2.4,0)),()=>{const F=FM(),L=[],own=VKEYS.filter(k=>F.veh[k]);
+function vehChips(){chips(igor.position.clone().add(new V3(0,2.4,0)),()=>{CH.title=(RIDE?VEH[RIDE].ic:'🚲')+' '+tt('Vehicles','Mezzi');const F=FM(),L=[],own=VKEYS.filter(k=>F.veh[k]);
  if(CH.more==='col'){const k=RIDE;if(!k||!F.veh[k])return[];for(const c of VCOL)L.push({t:`<span class="sw" style="background:${c}"></span>`,main:F.veh[k].c===c,fn:()=>{F.veh[k].c=c;fmDirty=true;vehPaint(k);return true}});L.push({t:'‹',fn:()=>{CH.more=false;return true}});return L}
  for(const k of own)L.push({t:`${VEH[k].ic} ${N(VEH[k].N)}`,main:RIDE===k,fn:()=>{mount(k);return false}});
  if(RIDE)L.push({t:'🚶 '+tt('On foot','A piedi'),fn:()=>{dismount();return false}});
