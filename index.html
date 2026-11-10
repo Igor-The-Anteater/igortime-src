@@ -982,8 +982,9 @@ function idleDirector(list){const F=FM();idleT=8+Math.random()*6;ballO.a=ballO.c
   else{const base=tr==='shy'&&o.hi!=null?houseObjs[o.hi%HOUSEP.length].door():P;let x,z,ok=false;for(let k=0;k<10&&!ok;k++){const a=Math.random()*TAU,rr=(tr==='shy'?.6:1.5)+Math.random()*(tr==='shy'?1.2:tr==='sporty'?7:4);x=base.x+Math.cos(a)*rr;z=base.z+Math.sin(a)*rr;ok=walkable(x,z)}o.act={k:'wander',goal:new V3(x,0,z)}}}}
 function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>.3||SKY.W.hail>.3,night=SKY.nk>.85,snow=SKY.cover>.5;snowman.visible=snow;if(snow)snowman.position.copy(spotOf('pen')).add(new V3(2.6,0,1.6));
  const idle=[];const seen=new Set();
- F.igs.forEach((g,i)=>{const o=igObj(g);seen.add(g.id);const q=g.task&&F.tasks.find(x=>x.id===g.task);let hat='',mode='idle';o.ic.visible=false;
+ F.igs.forEach((g,i)=>{const o=igObj(g);seen.add(g.id);const q=g.task&&F.tasks.find(x=>x.id===g.task);let hat='',mode='idle';o.ic.visible=false;const wOut=window._wishOut&&window._wishOut.id===g.id&&T<window._wishOut.until;
   if(q){const S0=siteOf(q),k=q.w.indexOf(g.id);o.goal.copy(S0).add(q.k==='build'?new V3(k?-.9:.9,0,1.1):q.k==='scare'?new V3(-1.5,0,2.2):new V3(.62,0,1.22));hat=hatOf(q.k);mode='work';o.act=null}
+  else if(wOut){idle.push(o)}
   else if(night){o.goal.copy(penIn(i));hat='night';mode='sleep';o.act=null}
   else if(g.rest){o.goal.copy(penIn(i));mode='rest';o.act=null}
   else if(wet){o.goal.copy(penIn(i));hat=SKY.W.rain>.35?'rain':'';mode='shelter';o.act=null}
@@ -2190,7 +2191,7 @@ function funPick(cx,cy){if(where!=='out')return false;return beachPick(cx,cy)||f
   if(whCall&&whCall.id===id&&!WH.st){whCall=null;const go=()=>whStart(id);if(o&&igor.position.distanceTo(o.grp.position)>3.2)walkNear(o.grp.position.clone(),1.4,go);else go();return}
   if(hungry(id)&&o&&o.mode==='idle'){const go=()=>wishChips(id);if(igor.position.distanceTo(o.grp.position)>4)walkNear(o.grp.position.clone(),1.3,go);else go();return}
   // asleep, napping or sheltering: a wish you can hand over (fruit, a tofu ant, a shell) is granted all the same: it comes out of the little house for a moment
-  if(hungry(id)&&o&&['fruit','ant','shell'].includes(wishOf(id).k)){const go=()=>{_it(id);setTimeout(()=>{if(hungry(id))wishChips(id)},900)},P=igSpot(id)||o.grp.position;if(Math.hypot(igor.position.x-P.x,igor.position.z-P.z)>3)walkNear(P.clone(),1.4,go);else go();return}_it(id)}}
+  if(hungry(id)&&o&&(['fruit','ant','shell'].includes(wishOf(id).k)||o.mode!=='work')){const go=()=>{_it(id);setTimeout(()=>{if(hungry(id))wishChips(id)},900)},P=igSpot(id)||o.grp.position;if(Math.hypot(igor.position.x-P.x,igor.position.z-P.z)>3)walkNear(P.clone(),1.4,go);else go();return}_it(id)}}
 let beachNext=fT(90),ftNext=fT(100),hunNext=fT(150);
 updaters.push((t,dt)=>{if(!S.farm)return;const U=FUN();if(!funT){funT=1;beachSync();ftSync();if(!U.beach.length)beachAdd()}
  for(const o of beachObjs){o.g.userData.h.material.opacity=.25+.15*Math.sin(t*2.6+o.it.x);o.g.position.y=Math.sin(t*1.7+o.it.z)*.015}
@@ -2308,7 +2309,7 @@ function wishTick(){if((wishT-=1/60)>0)return;wishT=1;const U=FUN(),F=FM(),tn=Da
   U.wish[g.id]={k:pick(K),t0:tn};fmDirty=true;if(started&&where==='out'&&igObjs.get(g.id)&&igObjs.get(g.id).grp.position.distanceTo(igor.position)<10)setTimeout(()=>{const o=igObjs.get(g.id);if(o)o.jump=.4},200)}
  for(const id of Object.keys(U.wish))if(!igById(+id))delete U.wish[id]}
 const hearts=n=>'❤'.repeat(Math.min(5,1+Math.floor((n||0)/4)));
-function wishDone(id,line){const U=FUN(),g=igById(id),o=igObjs.get(id);if(!g)return;delete U.wish[id];U.wnext[id]=Date.now()+(45+Math.random()*30)*60e3/FUNFAST;const fr=U.fr[id]=(U.fr[id]|0)+1;g.en=Math.min(enMaxG(g),g.en+1);fmDirty=true;hudFarm();
+function wishDone(id,line){const U=FUN(),g=igById(id),o=igObjs.get(id);if(!g)return;if(window._wishOut&&window._wishOut.id===id)window._wishOut=null;delete U.wish[id];U.wnext[id]=Date.now()+(45+Math.random()*30)*60e3/FUNFAST;const fr=U.fr[id]=(U.fr[id]|0)+1;g.en=Math.min(enMaxG(g),g.en+1);fmDirty=true;hudFarm();
  if(o){o.jump=.55;o.showT=T+4;if(o.act&&(o.act.k==='lead'))o.act=null}setTimeout(()=>{if(window.IgorSound&&started)IgorSound.ig('happy',{id,trait:g.trait,pan:0,g:1})},300);
  const L={music:['Thank you! A song for you: la la la.','Grazie! Una canzone per te: la la la.'],sporty:['Yes! Best day ever!','Sì! Giornata perfetta!'],sleepy:['Mmm… lovely. Now a little nap?','Mmm… che bello. E adesso un pisolino?'],foodie:['GNAM! You’re the best.','GNAM! Sei il migliore.'],explorer:['What a discovery!','Che scoperta!'],shy:['…thank you.','…grazie.']}[g.trait]||['Thank you!','Grazie!'];
  bubbleQ.length=0;bubbleT=0;if(line)say(line,2.4);say(`${g.name}: “${N(L)}” ${hearts(fr)}`,3);
@@ -2320,10 +2321,10 @@ function wishChips(id){if(VISIT){return}const g=igById(id),o=igObjs.get(id),w=wi
   if(w.k==='ant')L.push(pocket()>0?{t:`${tt('A tofu ant','Una formica di tofu')} <small>−1</small>`,main:1,fn:()=>{FM().ants.t--;snd('munch');wishDone(id);return false}}:{t:tt('A tofu ant','Una formica di tofu'),off:1,why:tt('No tofu ants in your pocket: pick a field!','Niente formiche di tofu in tasca: raccogli un campo!')});
   if(w.k==='shell'){const d=Object.entries(U.col).filter(([v,n])=>n>1&&SHELL[v]).sort((a,b)=>SHELL[a[0]].ti-SHELL[b[0]].ti||b[1]-a[1])[0];L.push(d?{t:`🐚 ${N(SHELL[d[0]].N)} <small>×${d[1]}</small>`,main:1,fn:()=>{U.col[d[0]]--;snd('shell');caseDirty=true;wishDone(id);return false}}:{t:'🐚 '+tt('A spare shell','Una conchiglia doppia'),off:1,why:tt('You need a spare shell: look on the beach!','Ti serve una conchiglia doppia: cercala sulla spiaggia!')})}
   if(w.k==='sea')L.push({t:'🌊 '+tt('Let’s go!','Andiamo!'),main:1,fn:()=>{wishSea(id);return false}});
-  if(w.k==='jump')L.push({t:'⤴ '+tt('Let’s jump!','Saltiamo!'),main:1,fn:()=>{JW={id,n:0,t:T};say(matchMedia('(pointer:coarse)').matches?tt('Double-tap the joystick: three jumps!','Doppio tocco sul joystick: tre salti!'):tt('Press space: three jumps!','Premi spazio: tre salti!'),3);return false}});
+  if(w.k==='jump')L.push({t:'⤴ '+tt('Let’s jump!','Saltiamo!'),main:1,fn:()=>{JW={id,n:0,t:T};window._wishOut={id,until:T+90};say(matchMedia('(pointer:coarse)').matches?tt('Double-tap the joystick: three jumps!','Doppio tocco sul joystick: tre salti!'):tt('Press space: three jumps!','Premi spazio: tre salti!'),3);return false}});
   L.push({t:tt('Later','Dopo'),fn:()=>false});return L},'wish'+id)}
 function wishSea(id){const o=igObjs.get(id);if(!o)return;const p=o.grp.position,a=Math.atan2(p.z*1.12,p.x),r=R-1.3;let P=null;for(let k=0;k<16&&!P;k++){const b=a+(k%2?1:-1)*Math.ceil(k/2)*.18,x=Math.cos(b)*r,z=Math.sin(b)*r/1.12;if(!blocked.some(q=>Math.hypot(q.x-x,q.z-z)<q.r+.6))P=new V3(x,0,z)}
- if(!P)return wishDone(id);o.act={k:'lead',goal:P.clone().add(new V3(.5,0,0))};LEAD={id,P,t:T};say(tt('Follow me!','Seguimi!'),1.8);walkNear(P,.6,null)}
+ if(!P)return wishDone(id);window._wishOut={id,until:T+65};o.act={k:'lead',goal:P.clone().add(new V3(.5,0,0))};LEAD={id,P,t:T};say(tt('Follow me!','Seguimi!'),1.8);walkNear(P,.6,null)}
 {const _j=jump;jump=function(){const was=IG.jy;_j();if(!JW||was>.05||IG.jy<=0)return;const o=igObjs.get(JW.id);if(!o||o.grp.position.distanceTo(igor.position)>4.5)return;JW.n++;setTimeout(()=>{if(o)o.jump=.5},120);if(JW.n>=3){const id=JW.id;JW=null;setTimeout(()=>wishDone(id,tt('Boing boing boing!','Boing boing boing!')),600)}}}
 updaters.push(()=>{if(JW&&T-JW.t>90)JW=null;if(LEAD){const o=igObjs.get(LEAD.id);if(!o||T-LEAD.t>60){if(o&&o.act&&o.act.k==='lead')o.act=null;LEAD=null;return}if(o.grp.position.distanceTo(o.act&&o.act.goal||LEAD.P)<.4&&igor.position.distanceTo(LEAD.P)<1.6){const id=LEAD.id;LEAD=null;wishDone(id,tt('Look how beautiful the sea is!','Guarda che bello il mare!'))}}});
 
@@ -2444,7 +2445,7 @@ function tiredFeed(id,what){if(VISIT){return}const g=igById(id),U=FUN();if(!g)re
 function treat(id){if(VISIT)return;const g=igById(id),U=FUN(),o=igObjs.get(id);if(!g||U.fruit<1)return;const w=wishOf(id);U.fruit--;snd('munch');if(w&&w.k==='fruit'){wishDone(id);return}
  fmDirty=true;if(o){o.jump=.5;o.showT=T+4}setTimeout(()=>{if(window.IgorSound&&started)IgorSound.ig('happy',{id,trait:g.trait,pan:0,g:1})},400);bubbleQ.length=0;bubbleT=0;say(tt(`${g.name}: “Yum, thank you!” (already full of energy)`,`${g.name}: “Gnam, grazie!” (era già pieno di energia)`),2.6)}
 function tiredChips(id){const g=igById(id);if(!g)return;const P=(igSpot(id)||igor.position.clone()).clone().add(new V3(0,1.3,0));
- chips(P,()=>{const g=igById(id),U=FUN(),L=[];if(!g)return L;const ed=VISIT?null:{t:'✏️ '+tt('Name & look','Nome e look'),fn:()=>{hideChips();igDress(id);return false}};
+ chips(P,()=>{const g=igById(id),U=FUN(),L=[];if(!g)return L;{const w=wishOf(id);if(w&&(w.k==='sea'||w.k==='jump'))L.push({t:(w.k==='sea'?'🌊 ':'⤴ ')+N(WISHN[w.k]),off:1,why:tt(`${g.name} is working: when the job is done, tap it again!`,`${g.name} sta lavorando: quando ha finito, toccalo di nuovo!`)})}const ed=VISIT?null:{t:'✏️ '+tt('Name & look','Nome e look'),fn:()=>{hideChips();igDress(id);return false}};
   if(g.en>=enMaxG(g)){const F0=FRUIT[U.fk]||fruitOf();L.push(U.fruit>0?{t:`🍎 ${cap1(N(F0.N))} <small>×${U.fruit}</small>`,main:1,fn:()=>{treat(id);return false}}:{t:'🍎 '+tt('Fruit','Frutta'),off:1,why:tt('No fruit: shake a tree with fruit!','Niente frutta: scuoti un albero con la frutta!')});if(ed)L.push(ed);return L}const F0=FRUIT[U.fk]||fruitOf(),mx=enMaxG(g),e=Math.max(0,Math.min(mx,Math.floor(g.en+1e-6)));
   L.push({t:`${g.name} <small>${'●'.repeat(e)}${'○'.repeat(mx-e)}</small>`,off:1,why:tt(`${g.name} has ${e} leaves of energy out of ${mx}.`,`${g.name} ha ${e} foglioline di energia su ${mx}.`)});
   L.push(U.fruit>0?{t:`🍎 ${cap1(N(F0.N))} <small>×${U.fruit} · +2</small>`,main:1,fn:()=>{tiredFeed(id,'fruit');return true}}:{t:'🍎 '+tt('Fruit','Frutta')+' <small>+2</small>',off:1,why:tt('No fruit: shake a tree with fruit!','Niente frutta: scuoti un albero con la frutta!')});
