@@ -2104,7 +2104,7 @@ function ftAdd(){const U=FUN();if(U.ft.length>=2)return;const C=fruitTrees().map
 let shakeA=null;
 function ftShake(i){if(VISIT){visitNo();return}const U=FUN(),o=ftObjs.get(i),tr=trees[i];if(!o||!tr)return;U.ft=U.ft.filter(x=>x!==i);ftObjs.delete(i);fmDirty=true;snd('shake',i);poke();
  const F0=fruitOf(),falls=[];o.fr.forEach(m=>{if(m.isSprite){m.parent.remove(m);return}const P=new V3();m.getWorldPosition(P);m.parent.remove(m);m.position.copy(P);m.scale.multiplyScalar(tr.t.scale.x);world.add(m);falls.push({m,v:0,dx:(Math.random()-.5)*.8,dz:(Math.random()-.5)*.8,d:.15+Math.random()*.3})});
- shakeA={tr,t:0,falls};const n=falls.length,U2=FUN(),room=Math.max(0,12-U2.fruit),got=Math.min(n,room);U2.fruit+=got;U2.fk=SKY.season||'Autumn';bubbleQ.length=0;bubbleT=0;
+ shakeA={tr,t:0,falls};const n=falls.length,U2=FUN(),room=Math.max(0,99-U2.fruit),got=Math.min(n,room);U2.fruit+=got;U2.fk=SKY.season||'Autumn';bubbleQ.length=0;bubbleT=0;
  setTimeout(()=>say(got?tt(`${got} ${N(F0.N)}! For the Igorlets’ snack.`,`${got} ${N(F0.N)}! Per la merenda degli Igorlets.`):tt('My pockets are full of fruit: give some to the Igorlets!','Ho le tasche piene di frutta: dalla agli Igorlets!'),3),500)}
 updaters.push((t,dt)=>{for(const[i,o]of ftObjs)o.h.material.opacity=.18+.12*Math.sin(t*3+i);
  if(!shakeA)return;const A=shakeA;A.t+=dt;A.tr.t.rotation.z=A.t<.9?Math.sin(A.t*28)*.06*(1-A.t/.9):0;
