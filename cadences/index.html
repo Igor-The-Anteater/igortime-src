@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><script src="/lang.js?v=2"></script>
+<html lang="en"><head><script src="/lang.js?v=3"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Cadences · Igor time</title>
@@ -305,7 +305,7 @@ let avKey='igor';try{const v=localStorage.getItem('igorAvatar')||localStorage.ge
 /* account (set by the island): registered players use their own Igor */
 let ACCT=null,HOME=null,AVO=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'));HOME=JSON.parse(localStorage.getItem('igortime_v1'))}catch(e){}
 if(ACCT&&HOME&&AV[HOME.avatar]){avKey=HOME.avatar;AVO={ball:HOME.ball,head:HOME.head,hcol:HOME.hcol,glasses:HOME.glasses,gcol:HOME.gcol,ears:HOME.ears,ecol:HOME.ecol};if(HOME.rim)AV[avKey]={...AV[avKey],rim:HOME.rim}}
-const MULT={easy:1,medium:2,extreme:3};
+const CAP={easy:4,medium:7,extreme:10};
 const EYES=[{x:306,y:194,rx:19,ry:21},{x:341,y:190.5,rx:16,ry:19.5}];
 const spr=document.createElement('canvas');spr.width=spr.height=512;const sx=spr.getContext('2d');spr.key='';
 function lid(c,e,k){k=k*k*(3-2*k);const top=e.y-e.ry-2,bot=e.y+e.ry+2,m=e.y+e.ry*.35,Lu=top+(m-top)*k,Ll=bot-(bot-m)*k,bend=6*k,Lx=e.x-e.rx-3,Rx=e.x+e.rx+3;
@@ -605,7 +605,7 @@ function doCheck(){phase='result';const res=analyze();R.res=res;total+=res.score
 function finish(){phase='end';let best=0;const k='cadencesBest_'+lvKey;try{best=+localStorage.getItem(k)||0;if(total>best){localStorage.setItem(k,total);best=total}}catch(e){}
  const N=AV[avKey].name;$('endlv').textContent=LV.name+' · '+ROUNDS+tr(' rounds',' round');$('endsc').textContent=total+' / '+ROUNDS*100;
  $('endmsg').textContent=IT_?(total>=450?'Condotta delle parti magnifica. '+N+' è sazio e fiero di te.':total>=350?'Che armonia! '+N+' ha fatto un bel pranzetto.':total>=200?'Bel lavoro! '+N+' ha fatto uno spuntino e vuole un altro giro.':'A '+N+' sono piaciuti i tuoi accordi! Un altro giro e le cadenze scorreranno.'):(total>=450?'Magnificent part-writing. '+N+' is full and very proud of you.':total>=350?'Great harmony! '+N+' had a lovely meal.':total>=200?'Nice work! '+N+' enjoyed a tasty snack and wants another round.':N+' loved your chords! One more round and the cadences will flow.');
- const won=(()=>{const n=Math.round(total/100*MULT[lvKey]);let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.cadences=p.scores.cadences||{};if(!(g[lvKey]>=total))g[lvKey]=total;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n})();
+ const won=(()=>{const n=Math.min(CAP[lvKey],Math.round(total/(ROUNDS*100)*CAP[lvKey]));let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.cadences=p.scores.cadences||{};if(!(g[lvKey]>=total))g[lvKey]=total;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n})();
  if(won)$('endmsg').textContent+=IT_?' +'+won+(won>1?' semi':' seme')+' di tofu per il campo di '+N+': raccoglili sull’isola.':' +'+won+' tofu seed'+(won>1?'s':'')+' for '+N+'’s field: collect them back on the island.';
  $('endbest').textContent=tr('best on ','record a livello ')+LV.name.toLowerCase()+': '+best;$('end').hidden=false;import('/board.js?v=3').then(B=>B.show(document.querySelector('#end .card'),'cadences',lvKey,total,avKey)).catch(()=>{})}
 function begin(){audio();if(AC.state==='suspended')AC.resume();$('start').hidden=true;$('end').hidden=true;round=0;total=0;$('sc').textContent=0;R=null;newRound()}
@@ -613,8 +613,8 @@ function setLevel(k){lvKey=k;LV=LEVELS[k];document.querySelectorAll('.lv button'
 document.querySelectorAll('.lv button').forEach(b=>b.onclick=()=>setLevel(b.dataset.lv));setLevel(lvKey);
 function setAv(k){avKey=k;spr.key='';document.querySelectorAll('.av button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.av===k));document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[k].name);try{localStorage.setItem('igorAvatar',k);localStorage.setItem('pitchStairsAvatar',k)}catch(e){}}
 document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset.av));
-if(ACCT){avKey=AV[avKey]?avKey:'igor';spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent=tr('Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · tofu seeds: easy ×1, medium ×2, extreme ×3','Giochi come '+(ACCT.name||'te')+' con '+AV[avKey].name+' · semi di tofu: facile ×1, medio ×2, estremo ×3')}
-else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent=tr('Tofu seeds won: easy ×1, medium ×2, extreme ×3','Semi di tofu vinti: facile ×1, medio ×2, estremo ×3')}
+if(ACCT){avKey=AV[avKey]?avKey:'igor';spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent=tr('Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · tofu seeds: easy up to 4, medium up to 7, extreme up to 10','Giochi come '+(ACCT.name||'te')+' con '+AV[avKey].name+' · semi di tofu: facile fino a 4, medio fino a 7, estremo fino a 10')}
+else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent=tr('Tofu seeds won: easy up to 4, medium up to 7, extreme up to 10','Semi di tofu vinti: facile fino a 4, medio fino a 7, estremo fino a 10')}
 $('go').onclick=begin;$('again').onclick=begin;$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;phase='menu'};
 $('help-touch').textContent=tr('Tap a staff in your chords: Igor picks the voice (lower note = alto or bass, higher = soprano or tenor) · keep your finger down and slide up or down to adjust, the bubble shows the note · tap S A T B first to choose the voice yourself','Tocca un pentagramma nei tuoi accordi: Igor sceglie la voce (nota più bassa = contralto o basso, più alta = soprano o tenore) · tieni giù il dito e scorri su o giù per aggiustarla, il fumetto mostra la nota · tocca prima S A T B per scegliere tu la voce');
 sayHTML(tr('Hi! Ready to write some cadences?','Ciao! Pronto a scrivere qualche cadenza?'));
