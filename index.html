@@ -2555,7 +2555,60 @@ const SPECIES={
 const SPKEYS=Object.keys(SPECIES);
 const SPCLASS={fish:{N:['Sea','Mare'],snd:'kalimba'},bird:{N:['Sky','Cielo'],snd:'whistle'},amph:{N:['Lake','Lago'],snd:'marimba'},crab:{N:['Sand','Sabbia'],snd:'harp'},bug:{N:['Forest','Bosco'],snd:'glock'},peng:{N:['Ice','Ghiaccio'],snd:'flute'}};
 const ANIM=[]; // {sp, o: Object3D, ok:()=>bool}
-const animAdd=(sp,o,ok)=>ANIM.push({sp,o,ok:ok||(()=>true)});
+const animAdd=(sp,o,ok)=>{try{dress(o,sp)}catch(e){console.warn('dress',e)}ANIM.push({sp,o,ok:ok||(()=>true)})};
+/* 10 Nov 2026: no two animals are the same. Each one gets a slightly different colour and, often, something from the Igorlets' wardrobe:
+   a hat (beanie, cap, top hat, crown, party hat, bow, flower), glasses (round, sunglasses, hearts) or an earring (hoop, pearl, star).
+   The photo keeps the look of the very animal you photographed. */
+const DRESS={hat:['beanie','cap','top','crown','party','bow','flower'],gl:['round','sun','heart'],ear:['hoop','pearl','star'],
+ col:['#e0463c','#4f9ad8','#f6d34a','#7fbf5a','#e88fb0','#9a6ad8','#f28a1c','#4fb7a0','#ffffff','#2b2b2e'],
+ at:{fish:{e:.35,hz:.35},bird:{e:.25,hz:.55},amph:{e:.2,hz:.4},crab:{e:.15,hz:.4},peng:{e:.13,hz:0},bug:{e:.3,hz:.3}}};
+const rp=a=>a[Math.floor(Math.random()*a.length)];
+function rndLook(){const L={dh:+((Math.random()-.5)*.16).toFixed(3),dl:+((Math.random()-.5)*.16).toFixed(3),hc:rp(DRESS.col)};
+ if(Math.random()<.55)L.hat=rp(DRESS.hat);if(Math.random()<.35)L.gl=rp(DRESS.gl);if(Math.random()<.3)L.ear=rp(DRESS.ear);
+ if(!L.hat&&!L.gl&&!L.ear&&Math.random()<.6)L.hat=rp(DRESS.hat);return L}
+function dress(o,sp){const S0=SPECIES[sp];if(!S0||sp==='firefly'||!o||o.userData.look)return;const L=o.userData.look=rndLook(),cl=S0.c,A=DRESS.at[cl]||DRESS.at.fish;
+ // a slightly different colour (eyes, black and white parts stay as they are)
+ const done=new Map();o.traverse(m=>{if(!m.isMesh||!m.material||!m.material.color||m.material===shadowMat||m.material===hitMat||m.material.isMeshBasicMaterial)return;const c=m.material.color,l=c.r*.3+c.g*.59+c.b*.11;if(l<.14||l>.9)return;
+  if(!done.has(m.material)){const n=curve(m.material.clone());n.color.offsetHSL(L.dh,0,L.dl);done.set(m.material,n)}m.material=done.get(m.material)});
+ if(!L.hat&&!L.gl&&!L.ear)return;
+ // where the head is, measured on the model itself
+ const p0=o.position.clone(),r0=o.rotation.clone(),s0=o.scale.clone();o.position.set(0,0,0);o.rotation.set(0,0,0);o.scale.set(1,1,1);o.updateMatrixWorld(true);
+ const B=new THREE.Box3();o.traverse(m=>{if(m.isMesh&&m.material!==shadowMat&&m.material!==hitMat&&m.visible!==false){const b=new THREE.Box3().setFromObject(m);B.union(b)}});
+ o.position.copy(p0);o.rotation.copy(r0);o.scale.copy(s0);o.updateMatrixWorld(true);if(B.isEmpty())return;
+ const h=B.max.y-B.min.y,u=Math.min(h*.28,.13),top=B.max.y,hz=B.max.z*A.hz,ey=top-h*A.e,fz=B.max.z*.62,col=lam(L.hc),gold=lam('#f2c230'),dark=lam('#1f2328'),G=new THREE.Group();G.userData.acc=1;o.add(G);
+ const M=(geo,mat,x,y,z)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);G.add(m);return m};
+ if(L.hat==='beanie'){M(new THREE.SphereGeometry(u*.9,12,8,0,TAU,0,Math.PI/2),col,0,top-u*.25,hz);M(new THREE.SphereGeometry(u*.3,8,6),lam('#ffffff'),0,top+u*.7,hz)}
+ else if(L.hat==='cap'){M(new THREE.SphereGeometry(u*.85,12,8,0,TAU,0,Math.PI/2),col,0,top-u*.2,hz);const v=M(new THREE.BoxGeometry(u*1.2,u*.12,u*.9),col,0,top-u*.15,hz+u*.9)}
+ else if(L.hat==='top'){M(new THREE.CylinderGeometry(u*.55,u*.55,u*1.2,12),dark,0,top+u*.5,hz);M(new THREE.CylinderGeometry(u*.95,u*.95,u*.1,14),dark,0,top-u*.05,hz);M(new THREE.CylinderGeometry(u*.57,u*.57,u*.22,12),col,0,top+u*.05,hz)}
+ else if(L.hat==='crown'){M(new THREE.CylinderGeometry(u*.6,u*.6,u*.45,10,1,true),gold,0,top+u*.15,hz).material.side=THREE.DoubleSide;for(let k=0;k<5;k++){const a=k/5*TAU;M(new THREE.ConeGeometry(u*.14,u*.4,5),gold,Math.cos(a)*u*.55,top+u*.55,hz+Math.sin(a)*u*.55)}M(new THREE.SphereGeometry(u*.12,8,6),lam('#e0463c'),0,top+u*.2,hz+u*.62)}
+ else if(L.hat==='party'){const c=M(new THREE.ConeGeometry(u*.55,u*1.5,12),col,0,top+u*.65,hz);c.rotation.z=.15;M(new THREE.SphereGeometry(u*.18,8,6),lam('#f6d34a'),-u*.11,top+u*1.45,hz)}
+ else if(L.hat==='bow'){for(const s of[-1,1]){const b=M(new THREE.ConeGeometry(u*.35,u*.6,4),col,s*u*.32,top+u*.1,hz);b.rotation.z=s*Math.PI/2}M(new THREE.SphereGeometry(u*.16,8,6),col,0,top+u*.1,hz)}
+ else if(L.hat==='flower'){for(let k=0;k<5;k++){const a=k/5*TAU;M(new THREE.SphereGeometry(u*.24,8,6),col,Math.cos(a)*u*.32,top+u*.12,hz+Math.sin(a)*u*.32)}M(new THREE.SphereGeometry(u*.2,8,6),lam('#f6d34a'),0,top+u*.16,hz)}
+ if(L.gl){const gm=L.gl==='sun'?dark:L.gl==='heart'?lam('#e0463c'):lam('#2b2018');for(const s of[-1,1]){if(L.gl==='round'){const r=M(new THREE.TorusGeometry(u*.32,u*.06,6,14),gm,s*u*.4,ey,fz)}
+   else{gm.side=THREE.DoubleSide;const d=M(new THREE.CircleGeometry(u*.34,L.gl==='heart'?3:14),gm,s*u*.4,ey,fz);if(L.gl==='heart')d.rotation.z=Math.PI/2*3}}
+  M(new THREE.BoxGeometry(u*.25,u*.06,u*.06),gm,0,ey,fz)}
+ if(L.ear){const ex=B.max.x*.95,yy=ey-u*.5;if(L.ear==='hoop'){const e=M(new THREE.TorusGeometry(u*.2,u*.05,6,12),gold,ex,yy,hz*.6);e.rotation.y=Math.PI/2}
+  else if(L.ear==='pearl')M(new THREE.SphereGeometry(u*.17,8,6),lam('#fbf6ee'),ex,yy,hz*.6);
+  else{const st=M(new THREE.CircleGeometry(u*.26,5),lam('#f6d34a',{side:THREE.DoubleSide}),ex,yy,hz*.6);st.rotation.y=Math.PI/2}}}
+/* the same look, drawn on the photo */
+function phDress(q,sp,L){if(!L)return;const cl=SPECIES[sp].c,P={fish:{h:[22,-19],e:[[24,-6]]},bird:{h:[20,-27],e:[[25,-16]]},amph:{h:[0,-23],e:[[-12,-14],[12,-14]]},crab:{h:[0,sp==='hermit'?-30:-14],e:[[-9,-4],[9,-4]]},
+  bug:{h:[4,-25],e:[[14,-6]]},peng:{h:[0,-31],e:[[-7,-19],[7,-19]]}}[cl];if(!P)return;const[hx,hy]=P.h,s=13;q.save();q.lineWidth=2.5;q.strokeStyle='#2b2018';q.fillStyle=L.hc;
+ const path=f=>{q.beginPath();f();q.fill();q.stroke()};
+ if(L.hat==='beanie'){path(()=>q.arc(hx,hy+3,s,Math.PI,0));q.fillStyle='#fff';path(()=>q.arc(hx,hy-s+1,4,0,TAU))}
+ else if(L.hat==='cap'){path(()=>q.arc(hx,hy+3,s*.9,Math.PI,0));path(()=>{q.moveTo(hx+s*.6,hy+3);q.lineTo(hx+s*1.8,hy+5);q.lineTo(hx+s*.6,hy+6)})}
+ else if(L.hat==='top'){q.fillStyle='#1f2328';path(()=>q.rect(hx-s*.6,hy-s*1.3,s*1.2,s*1.4));path(()=>q.rect(hx-s,hy,s*2,3));q.fillStyle=L.hc;q.fillRect(hx-s*.6,hy-4,s*1.2,4)}
+ else if(L.hat==='crown'){q.fillStyle='#f2c230';path(()=>{q.moveTo(hx-s*.8,hy+2);q.lineTo(hx-s*.8,hy-s*.7);q.lineTo(hx-s*.4,hy-s*.2);q.lineTo(hx,hy-s);q.lineTo(hx+s*.4,hy-s*.2);q.lineTo(hx+s*.8,hy-s*.7);q.lineTo(hx+s*.8,hy+2);q.closePath()})}
+ else if(L.hat==='party'){path(()=>{q.moveTo(hx-s*.6,hy+2);q.lineTo(hx+2,hy-s*1.6);q.lineTo(hx+s*.6,hy+2);q.closePath()});q.fillStyle='#f6d34a';path(()=>q.arc(hx+2,hy-s*1.6,3.5,0,TAU))}
+ else if(L.hat==='bow'){path(()=>{q.moveTo(hx,hy);q.lineTo(hx-s,hy-s*.6);q.lineTo(hx-s,hy+s*.6);q.closePath()});path(()=>{q.moveTo(hx,hy);q.lineTo(hx+s,hy-s*.6);q.lineTo(hx+s,hy+s*.6);q.closePath()});path(()=>q.arc(hx,hy,3.5,0,TAU))}
+ else if(L.hat==='flower'){for(let k=0;k<5;k++){const a=k/5*TAU;path(()=>q.arc(hx+Math.cos(a)*6,hy-2+Math.sin(a)*6,5,0,TAU))}q.fillStyle='#f6d34a';path(()=>q.arc(hx,hy-2,4,0,TAU))}
+ if(L.gl){for(const[ex,ey]of P.e){if(L.gl==='round'){q.beginPath();q.arc(ex,ey,6,0,TAU);q.stroke()}else if(L.gl==='sun'){q.fillStyle='#1f2328';path(()=>q.ellipse(ex,ey,7,5,0,0,TAU))}
+   else{q.fillStyle='#e0463c';path(()=>{q.moveTo(ex,ey+6);q.bezierCurveTo(ex-9,ey-1,ex-4,ey-8,ex,ey-3);q.bezierCurveTo(ex+4,ey-8,ex+9,ey-1,ex,ey+6)})}}
+  if(P.e.length>1){q.beginPath();q.moveTo(P.e[0][0]+6,P.e[0][1]);q.lineTo(P.e[1][0]-6,P.e[1][1]);q.stroke()}else{q.beginPath();q.moveTo(P.e[0][0]-6,P.e[0][1]);q.lineTo(P.e[0][0]-14,P.e[0][1]-2);q.stroke()}}
+ if(L.ear){const[ex,ey]=P.e[0],x=ex-(P.e.length>1?6:4),y=ey+13;if(L.ear==='hoop'){q.strokeStyle='#f2c230';q.lineWidth=2.5;q.beginPath();q.arc(x,y,4,0,TAU);q.stroke()}else if(L.ear==='pearl'){q.fillStyle='#fbf6ee';path(()=>q.arc(x,y,3.5,0,TAU))}
+  else{q.fillStyle='#f6d34a';path(()=>{for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,r=k%2?2.2:5.5;q.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r)}q.closePath()})}}
+ q.restore()}
+const tintCol=(c,L)=>L?new THREE.Color(c).offsetHSL(L.dh||0,0,L.dl||0).getStyle():c;
+
 const PH=()=>{const U=FUN();U.ph=U.ph||{};return U.ph};
 const photoN=()=>Object.keys(PH()).filter(k=>SPECIES[k]).length;
 const isShown=o=>{for(let q=o;q;q=q.parent){if(!q.visible)return false;if(q===scene)return true}return false};
@@ -2837,9 +2890,10 @@ for(const I of ISLES){if(I.crabs)for(const c of I.crabs)animAdd(c.g.userData.sp,
 /* ---------- the camera: bought in the prize shop; 📷 button next to the vehicles ---------- */
 const CAMCOST=40;
 const camB=document.createElement('button');camB.type='button';camB.id='camB';camB.textContent='📷';camB.hidden=true;camB.setAttribute('aria-label',tt('Camera','Macchina fotografica'));$('fab').insertBefore(camB,$('fab').firstChild);
-const camV=document.createElement('div');camV.id='camV';camV.hidden=true;camV.innerHTML='<i></i><i></i><i></i><i></i><span></span><button type="button" aria-label="Close">✕</button>';document.body.appendChild(camV);
-{const st=document.createElement('style');st.textContent=`#camV{position:fixed;inset:0;z-index:3;cursor:crosshair}#camV i{position:absolute;width:46px;height:46px;border:4px solid rgba(255,255,255,.9);filter:drop-shadow(0 1px 2px #0008)}
-#camV i:nth-child(1){left:14%;top:18%;border-right:0;border-bottom:0}#camV i:nth-child(2){right:14%;top:18%;border-left:0;border-bottom:0}#camV i:nth-child(3){left:14%;bottom:16%;border-right:0;border-top:0}#camV i:nth-child(4){right:14%;bottom:16%;border-left:0;border-top:0}
+const camV=document.createElement('div');camV.id='camV';camV.hidden=true;camV.innerHTML='<div class="bx"><i></i><i></i><i></i><i></i></div><span></span><button type="button" aria-label="Close">✕</button>';document.body.appendChild(camV);
+{const st=document.createElement('style');st.textContent=`#camV{position:fixed;inset:0;z-index:3;cursor:crosshair}#camV .bx{position:absolute;left:50%;top:50%;width:120px;height:120px;transform:translate(-50%,-50%);transition:left .22s ease-out,top .22s ease-out,width .22s,height .22s;pointer-events:none}#camV .bx.aim{width:96px;height:96px}
+#camV i{position:absolute;width:26px;height:26px;border:4px solid rgba(255,255,255,.95);filter:drop-shadow(0 1px 2px #0008)}
+#camV i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0;border-top-left-radius:6px}#camV i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0;border-top-right-radius:6px}#camV i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0;border-bottom-left-radius:6px}#camV i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0;border-bottom-right-radius:6px}
 #camV span{position:absolute;left:50%;top:calc(var(--hh,62px) + 70px);transform:translateX(-50%);background:#2b2018d0;color:#fff7e6;font:600 14px Fredoka,sans-serif;padding:6px 12px;border-radius:999px;white-space:nowrap;pointer-events:none}
 #camV button{position:absolute;right:16px;bottom:calc(150px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border-radius:50%;border:3px solid #2b2018;background:#fff7e6;font-size:20px;box-shadow:0 3px 0 #2b2018}
 #camF{position:fixed;inset:0;z-index:70;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s}
@@ -2847,30 +2901,33 @@ const camV=document.createElement('div');camV.id='camV';camV.hidden=true;camV.in
 #phT canvas{display:block;width:150px;height:110px;border-radius:2px;margin-bottom:6px;background:#9fd3e8}#phT b{color:#e0463c}`;document.head.appendChild(st)}
 const camF=document.createElement('div');camF.id='camF';document.body.appendChild(camF);
 let CAM_ON=false;
-function camMode(on){CAM_ON=!!on;camV.hidden=!CAM_ON;camB.classList.toggle('on',CAM_ON);if(CAM_ON){hideChips();camV.querySelector('span').textContent=tt('Tap an animal to take a photo','Tocca un animale per fotografarlo');say(tt('Click! Look for animals: fish in the sea, birds in the sky…','Clic! Cerca gli animali: pesci nel mare, uccelli in cielo…'),3)}}
+function camMode(on){CAM_ON=!!on;camV.hidden=!CAM_ON;{const bx=camV.querySelector('.bx');bx.style.left='50%';bx.style.top='50%';bx.classList.remove('aim')}camB.classList.toggle('on',CAM_ON);if(CAM_ON){hideChips();camV.querySelector('span').textContent=tt('Tap an animal to take a photo','Tocca un animale per fotografarlo');say(tt('Click! Look for animals: fish in the sea, birds in the sky…','Clic! Cerca gli animali: pesci nel mare, uccelli in cielo…'),3)}}
 camB.onclick=e=>{e.stopPropagation();if(VISIT&&!camOwned())return;camMode(!CAM_ON)};
 camV.querySelector('button').onclick=e=>{e.stopPropagation();camMode(false)};
 const camOwned=()=>{const H=VISIT&&_HOME?_HOME:S;return!!(H.farm&&H.farm.fun&&H.farm.fun.cam)};
-camV.addEventListener('click',e=>{if(e.target.closest('button'))return;snapAt(e.clientX,e.clientY)});
+camV.addEventListener('click',e=>{if(e.target.closest('button')||camV._busy)return;const cx=e.clientX,cy=e.clientY,a=camAim(cx,cy),bx=camV.querySelector('.bx');
+ bx.style.left=(a?a.x:cx)+'px';bx.style.top=(a?a.y:cy)+'px';bx.classList.add('aim');camV._busy=1;setTimeout(()=>{camV._busy=0;snapAt(a?a.x:cx,a?a.y:cy);setTimeout(()=>bx.classList.remove('aim'),400)},260)});
+// the viewfinder jumps onto the animal nearest to where you tapped
+function camAim(cx,cy){let best=null,bd=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;const x=(v.x*.5+.5)*innerWidth,y=(-v.y*.5+.5)*innerHeight,d=Math.hypot(x-cx,y-cy);if(d<bd){bd=d;best={x,y}}}return best}
 function snapAt(cx,cy){let best=null,bd=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;const d=Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy);if(d<bd){bd=d;best=a}}
  snd('shutter');camF.style.transition='none';camF.style.opacity=.85;requestAnimationFrame(()=>{camF.style.transition='opacity .35s';camF.style.opacity=0});
  if(!best){say(tt('Nothing there… try right on an animal!','Lì non c’è niente… prova proprio su un animale!'),2);return}
- const H=VISIT&&_HOME?_HOME:S,P=((H.farm.fun=H.farm.fun||{}).ph=H.farm.fun.ph||{}),sp=best.sp,S0=SPECIES[sp],fresh=!P[sp];P[sp]=(P[sp]|0)+1;
+ const H=VISIT&&_HOME?_HOME:S,P=((H.farm.fun=H.farm.fun||{}).ph=H.farm.fun.ph||{}),sp=best.sp,S0=SPECIES[sp],fresh=!P[sp];P[sp]=(P[sp]|0)+1;const look=best.o.userData.look||null;(H.farm.fun.phL=H.farm.fun.phL||{})[sp]=look;
  if(VISIT){try{localStorage.setItem('igortime_v1',JSON.stringify(_HOME))}catch(e){}window.IgorCloud&&IgorCloud.push&&IgorCloud.push(_HOME)}else{fmDirty=true}
- phToast(sp,fresh);snd(fresh?'star':'pop',2);bubbleQ.length=0;bubbleT=0;
+ phToast(sp,fresh,look);snd(fresh?'star':'pop',2);bubbleQ.length=0;bubbleT=0;
  const n=Object.keys(P).filter(k=>SPECIES[k]).length;say(fresh?tt(`New photo: ${N(S0.N).toLowerCase()}! (${n}/${SPKEYS.length})`,`Foto nuova: ${N(S0.N).toLowerCase()}! (${n}/${SPKEYS.length})`):tt(`Another ${N(S0.N).toLowerCase()}: lovely.`,`Un altro ${N(S0.N).toLowerCase()}: che bello.`),2.8);
  if(fresh&&!VISIT){const F=FM();if(!F.b.phot&&!F.pos.phot&&(n===1||n%4===0))setTimeout(photAsk,3200)}}
-function phDraw(c,sp,w,h){const q=c.getContext('2d'),S0=SPECIES[sp],cl=S0.c;const bg={fish:['#7fc4e8','#2f78a8'],bird:['#bfe3f7','#8ac2e6'],amph:['#a8d8a0','#5d8a8f'],crab:['#cfe9f5','#e8d39a'],bug:['#2b3a4a','#1c2a1e'],peng:['#dff1fa','#f4f8fb']}[cl];
+function phDraw(c,sp,w,h,L){const q=c.getContext('2d'),S0=SPECIES[sp],cl=S0.c;const bg={fish:['#7fc4e8','#2f78a8'],bird:['#bfe3f7','#8ac2e6'],amph:['#a8d8a0','#5d8a8f'],crab:['#cfe9f5','#e8d39a'],bug:['#2b3a4a','#1c2a1e'],peng:['#dff1fa','#f4f8fb']}[cl];
  const gr=q.createLinearGradient(0,0,0,h);gr.addColorStop(0,bg[0]);gr.addColorStop(1,bg[1]);q.fillStyle=gr;q.fillRect(0,0,w,h);const x=w/2,y=h*.56,s=Math.min(w,h)/110;q.save();q.translate(x,y);q.scale(s,s);
- q.fillStyle=S0.col;q.strokeStyle='#2b2018';q.lineWidth=3;
- if(cl==='fish'){q.beginPath();q.ellipse(0,0,sp==='puffer'?26:34,sp==='sunfish'?30:20,0,0,TAU);q.fill();q.stroke();q.beginPath();q.moveTo(-30,0);q.lineTo(-50,-16);q.lineTo(-50,16);q.closePath();q.fill();q.stroke();if(sp==='clown'){q.fillStyle='#fff';q.fillRect(-6,-19,7,38);q.fillRect(12,-15,6,30)}if(sp==='puffer'){q.fillStyle='#2b2018';for(let k=0;k<10;k++){const a=k/10*TAU;q.fillRect(Math.cos(a)*27-1,Math.sin(a)*27-1,3,3)}}}
+ q.fillStyle=tintCol(S0.col,L);q.strokeStyle='#2b2018';q.lineWidth=3;
+ if(cl==='fish'){q.beginPath();q.ellipse(0,0,sp==='puffer'?26:34,sp==='sunfish'?30:20,0,0,TAU);q.fill();q.stroke();q.beginPath();q.moveTo(-30,0);q.lineTo(-50,-16);q.lineTo(-50,16);q.closePath();q.fill();q.stroke();if(sp==='clown'){q.fillStyle='#fff';q.fillRect(-6,-19,7,38);q.fillRect(12,-15,6,30)}if(sp==='puffer'){q.fillStyle='#2b2018';for(let k=0;k<10;k++){const a=k/10*TAU;q.fillRect(Math.cos(a)*27-1,Math.sin(a)*27-1,3,3)}}q.fillStyle='#fff';q.beginPath();q.arc(24,-6,4.5,0,TAU);q.fill();q.stroke();q.fillStyle='#141414';q.beginPath();q.arc(25,-6,2,0,TAU);q.fill()}
  else if(cl==='bird'){q.beginPath();q.ellipse(0,4,26,18,0,0,TAU);q.fill();q.stroke();q.beginPath();q.arc(20,-14,13,0,TAU);q.fill();q.stroke();if(sp==='robin'){q.fillStyle='#e0563c';q.beginPath();q.ellipse(10,8,13,11,0,0,TAU);q.fill()}q.fillStyle=sp==='gull'?'#f2c230':'#e0a040';q.beginPath();q.moveTo(31,-15);q.lineTo(sp==='heron'?58:42,-12);q.lineTo(31,-10);q.fill();if(sp==='owl'){q.fillStyle='#fff';q.beginPath();q.arc(15,-15,6,0,TAU);q.arc(26,-15,6,0,TAU);q.fill()}}
  else if(cl==='amph'){q.beginPath();q.ellipse(0,6,32,20,0,0,TAU);q.fill();q.stroke();for(const sx of[-12,12]){q.beginPath();q.arc(sx,-14,9,0,TAU);q.fill();q.stroke()}if(sp==='toad'){q.fillStyle='#6b4a2e';for(let k=0;k<6;k++)q.beginPath(),q.arc(-18+k*7,6+(k%2)*6,3,0,TAU),q.fill()}}
  else if(cl==='crab'){q.beginPath();q.ellipse(0,4,30,16,0,0,TAU);q.fill();q.stroke();for(const sx of[-1,1]){q.beginPath();q.arc(sx*36,-10,9,0,TAU);q.fill();q.stroke()}if(sp==='hermit'){q.fillStyle='#f2dcc0';q.beginPath();q.arc(0,-12,18,Math.PI,0);q.fill();q.stroke()}}
  else if(cl==='bug'){if(sp==='firefly'){q.fillStyle='rgba(216,255,106,.35)';q.beginPath();q.arc(0,0,40,0,TAU);q.fill();q.fillStyle='#d8ff6a';q.beginPath();q.arc(0,4,14,0,TAU);q.fill();q.fillStyle='#4a3a2a';q.beginPath();q.ellipse(0,-10,10,14,0,0,TAU);q.fill()}else{q.fillStyle='#d9c9a0';q.beginPath();q.ellipse(0,14,36,9,0,0,TAU);q.fill();q.stroke();q.fillStyle=S0.col;q.beginPath();q.arc(4,-4,20,0,TAU);q.fill();q.stroke()}}
  else{q.fillStyle='#1f2328';q.beginPath();q.ellipse(0,4,22,34,0,0,TAU);q.fill();q.fillStyle='#f7f7f2';q.beginPath();q.ellipse(0,8,15,27,0,0,TAU);q.fill();q.fillStyle='#f29a2e';q.beginPath();q.moveTo(0,-26);q.lineTo(12,-22);q.lineTo(0,-18);q.fill();if(sp==='emperor'){q.fillStyle='#f2c230';q.beginPath();q.arc(-8,-16,5,0,TAU);q.arc(8,-16,5,0,TAU);q.fill()}}
- q.restore()}
-let phTT=0;function phToast(sp,fresh){let el=$('phT');if(!el){el=document.createElement('div');el.id='phT';document.body.appendChild(el)}el.innerHTML=`<canvas width="300" height="220"></canvas>${fresh?`<b>${tt('NEW!','NUOVO!')}</b> `:''}${N(SPECIES[sp].N)}`;phDraw(el.querySelector('canvas'),sp,300,220);el.style.opacity=1;clearTimeout(phTT);phTT=setTimeout(()=>el.style.opacity=0,2600)}
+ phDress(q,sp,L);q.restore()}
+let phTT=0;function phToast(sp,fresh,L){let el=$('phT');if(!el){el=document.createElement('div');el.id='phT';document.body.appendChild(el)}el.innerHTML=`<canvas width="300" height="220"></canvas>${fresh?`<b>${tt('NEW!','NUOVO!')}</b> `:''}${N(SPECIES[sp].N)}`;phDraw(el.querySelector('canvas'),sp,300,220,L);el.style.opacity=1;clearTimeout(phTT);phTT=setTimeout(()=>el.style.opacity=0,2600)}
 updaters.push(()=>{const own=camOwned();camB.hidden=!own||where!=='out';if(CAM_ON&&(where!=='out'||!own))camMode(false)});
 // buying the camera: a little table in the prize shop
 function camBuy(){if(VISIT)return;const U=FUN();if(U.cam){say(tt('You already have the camera: 📷 next to the vehicles!','Hai già la macchina fotografica: 📷 accanto ai mezzi!'),2.6);return}
@@ -2902,7 +2959,7 @@ function photAsk(){if(VISIT)return;const F=FM();if(F.b.phot||F.pos.phot||PL)retu
 function album(sel){const P=PH(),n=photoN();const byC={};for(const k of SPKEYS)(byC[SPECIES[k].c]=byC[SPECIES[k].c]||[]).push(k);
  openSheet('album',`<h2>🖼 ${N(BLD.phot.N)}</h2><p class="shn">${n}/${SPKEYS.length} · ${tt('rare ones have stars','le rare hanno le stelle')}</p>${Object.entries(byC).map(([c,L])=>`<div class="k">${N(SPCLASS[c].N)}</div><div class="alg">${L.map(k=>{const o=P[k];return`<button type="button" data-al="${k}" class="${o?'':'no'}${sel===k?' on':''}" aria-label="${o?esc(N(SPECIES[k].N)):'?'}">${o?`<canvas width="120" height="90" data-pc="${k}"></canvas><small>${esc(N(SPECIES[k].N))}${o>1?' ×'+o:''}</small>`:'<b>?</b><small>'+'★'.repeat(SPECIES[k].r)+'</small>'}</button>`}).join('')}</div>`).join('')}
  ${n>=3?`<div class="row" style="margin-top:10px"><button class="main" type="button" data-choir="1">🎵 ${tt('Animal choir','Coro degli animali')}</button></div>`:`<p class="shn">${tt('With 3 animals the animal choir starts: a game for your ears.','Con 3 animali comincia il coro degli animali: un gioco per le orecchie.')}</p>`}`);
- sb.querySelectorAll('canvas[data-pc]').forEach(c=>phDraw(c,c.dataset.pc,120,90))}
+ sb.querySelectorAll('canvas[data-pc]').forEach(c=>phDraw(c,c.dataset.pc,120,90,(FUN().phL||{})[c.dataset.pc]))}
 sb.addEventListener('click',e=>{if(sheetKind!=='album'&&sheetKind!=='choir')return;const b=e.target.closest('button');if(!b)return;
  if(b.dataset.choir){e.stopPropagation();choirStart();return}
  if(b.dataset.al&&sheetKind==='album'){e.stopPropagation();const k=b.dataset.al;if(PH()[k])animCall(k);return}
@@ -2917,7 +2974,7 @@ function choirStart(){const own=SPKEYS.filter(k=>PH()[k]);if(own.length<3){say(t
  const U=FUN(),w=U.chw|0,L=w<3?3:w<10?4:5;CHO.opts=own.length<=6?own.slice():own.sort(()=>Math.random()-.5).slice(0,6);let s;do{s=Array.from({length:L},()=>pick(CHO.opts))}while(new Set(s).size<2);CHO.seq=s;CHO.tries=0;choirSheet();setTimeout(choirPlay,500)}
 function choirSheet(){openSheet('choir',`<h2>🎵 ${tt('Animal choir','Coro degli animali')}</h2><p class="shn" id="chS">${CHO.st==='play'?tt('Your turn: tap the animals in the same order.','Tocca a te: tocca gli animali nello stesso ordine.'):tt('Listen…','Ascolta…')}</p>
  <div class="chg">${CHO.opts.map(k=>`<button type="button" data-ch="${k}"><canvas width="120" height="90" data-pc="${k}"></canvas>${esc(N(SPECIES[k].N))}</button>`).join('')}</div><div class="row"><button type="button" data-chagain="1">🔁 ${tt('Again','Ancora')}</button></div>`);
- sb.querySelectorAll('canvas[data-pc]').forEach(c=>phDraw(c,c.dataset.pc,120,90));const ag=sb.querySelector('[data-chagain]');if(ag)ag.onclick=e=>{e.stopPropagation();if(CHO.st==='play')choirPlay()}}
+ sb.querySelectorAll('canvas[data-pc]').forEach(c=>phDraw(c,c.dataset.pc,120,90,(FUN().phL||{})[c.dataset.pc]));const ag=sb.querySelector('[data-chagain]');if(ag)ag.onclick=e=>{e.stopPropagation();if(CHO.st==='play')choirPlay()}}
 function choirRing(k){const b=sb.querySelector(`[data-ch="${k}"]`);if(b){b.classList.remove('ring');void b.offsetWidth;b.classList.add('ring');setTimeout(()=>b.classList.remove('ring'),380)}}
 function choirPlay(){if(sheetKind!=='choir')return;CHO.st='listen';CHO.in=[];const s=$('chS');if(s)s.textContent=tt('Listen…','Ascolta…');if(window.IgorSound&&IgorSound.focus)IgorSound.focus(true);
  CHO.seq.forEach((k,j)=>setTimeout(()=>{if(CHO.st!=='listen'||sheetKind!=='choir')return;animCall(k);choirRing(k)},500+j*750));
