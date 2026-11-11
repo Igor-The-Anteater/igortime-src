@@ -251,36 +251,26 @@ function applyPending(){let p=null;try{p=JSON.parse(localStorage.getItem(PEND))}
  const g0=Math.max(0,(p.seeds|0)+(p.ants|0));S.seeds=(S.seeds|0)+g0;S.scores=S.scores||{};for(const[g,o]of Object.entries(p.scores||{})){S.scores[g]=S.scores[g]||{};for(const[l,v]of Object.entries(o))if(!(S.scores[g][l]>=v))S.scores[g][l]=v}
  window._fromGame=Object.keys(p.scores||{})[0]||'';window._pendLast={g:g0,scores:p.scores||{}};try{localStorage.removeItem(PEND)}catch(e){}return g0}
 const gotAnts=VISIT?0:applyPending();if(gotAnts){S.at=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-/* never lose an island: an island with more progress (farm.total only grows) is never replaced without asking;
-   whatever is replaced is kept as a backup (users/<uid>/bk in the cloud + igortime_v1_lost here) */
+/* never lose an island: farm.total (everything ever collected) only grows, so between two versions of an island the one with more is the
+   most up to date. The game always keeps that one, by itself; the other one is kept as a backup (users/<uid>/bk in the cloud + igortime_v1_lost here) */
 const igProg=s=>{const f=s&&s.farm;return f&&Array.isArray(f.fields)?(f.total|0):-1},igCopy=o=>{try{return JSON.parse(JSON.stringify(o))}catch(e){return null}};
-let igHold=null,igForceT=0;
-function igBack(o,why){if(!o)return;try{localStorage.setItem('igortime_v1_lost',JSON.stringify({why,t:Date.now(),d:o}))}catch(e){}if(why==='unsynced'){try{const l=+localStorage.getItem('igortime_bku')||0;if(Date.now()-l<600000)return;localStorage.setItem('igortime_bku',String(Date.now()))}catch(e){}}try{if(window.IgorCloud&&IgorCloud.backup)IgorCloud.backup(o,why)}catch(e){}}
-function igDesc(s){const f=(s&&s.farm)||{},v=Object.values(f.veh||{}).reduce((a,x)=>a+((x&&x.n)|0||1),0);return`${tt('level','livello')} ${LVX.filter(x=>(f.total|0)>=x).length} · ${f.total|0} ${tt('collected','raccolte')} · 🧊 ${(f.ants&&f.ants.t)|0} · 🌱 ${(s&&s.seeds)|0}${v?' · 🚲 '+v:''}`}
-function igConflict(d,uid){if(igHold){igHold.d=d;igHold.uid=uid||igHold.uid;igConfDraw();return}igHold={d,uid};igConfDraw()}
-function igConfDraw(){let box=document.getElementById('igConf');if(!box){box=document.createElement('div');box.id='igConf';box.setAttribute('role','dialog');
-  box.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(20,16,12,.74);display:flex;align-items:center;justify-content:center;padding:16px;font:16px/1.4 system-ui,sans-serif';document.body.appendChild(box);
-  box.addEventListener('click',e=>{const b=e.target.closest('button[data-c]');if(!b||!igHold)return;const c=igHold.d,uid=igHold.uid;igHold=null;box.remove();
-   if(b.dataset.c==='here'){igForceT=Date.now()+60000;igBack(igCopy(c),'cloud-replaced');if(uid)S.uid=uid;S.base=c&&c.at||0;S.at=Date.now();ensureFarm();save();refresh();if(window.IgorUI)IgorUI.toast(tt('Kept this island','Tenuta l’isola di questo dispositivo'))}
-   else{igBack(igCopy(S),'device-replaced');window.IgorSave.adopt(c,uid,true)}})}
- const bs='display:block;width:100%;margin:10px 0 0;padding:12px;border:3px solid #2b2018;border-radius:12px;font:16px/1.35 system-ui,sans-serif;color:#2b2018;text-transform:none;letter-spacing:0;text-align:left;cursor:pointer;opacity:1';
- box.innerHTML=`<div style="background:#fff8e8;color:#2b2018;border:3px solid #2b2018;border-radius:16px;max-width:430px;padding:18px"><b style="font-size:19px">${tt('Two different islands','Due isole diverse')}</b>
-  <p style="margin:8px 0 0">${tt('The island saved online has less than the one on this device. Which one do you keep? The other one stays saved as a backup.','L’isola salvata online ha meno cose di quella su questo dispositivo. Quale tieni? L’altra resta salvata come copia di sicurezza.')}</p>
-  <button data-c="here" style="${bs};background:#d9f2c4">📱 <b>${tt('This device','Questo dispositivo')}</b><br><small>${igDesc(S)}</small></button>
-  <button data-c="cloud" style="${bs};background:#fff">☁️ <b>${tt('Online','Online')}</b><br><small>${igDesc(igHold.d)}</small></button></div>`}
-window.IgorSave={get:()=>VISIT&&_HOME?_HOME:S,held:()=>!!igHold,forcing:()=>Date.now()<igForceT,set:v=>{S=v;save();refresh()},
+function igBack(o,why){if(!o)return;try{localStorage.setItem('igortime_v1_lost',JSON.stringify({why,t:Date.now(),d:o}))}catch(e){}
+ try{const k='igortime_bk_'+why,l=+localStorage.getItem(k)||0;if(Date.now()-l<600000)return;localStorage.setItem(k,String(Date.now()))}catch(e){}
+ try{if(window.IgorCloud&&IgorCloud.backup)IgorCloud.backup(o,why)}catch(e){}}
+window.IgorSave={get:()=>VISIT&&_HOME?_HOME:S,back:igBack,set:v=>{S=v;save();refresh()},
  load:(d,uid)=>{if(VISIT){visitHomeIn(d,uid);return}const L0=S,P0=window._pendLast;window._pendLast=null;
   if(uid&&L0.uid===uid&&(L0.at||0)>(d.at||0)&&L0.base===d.at){ensureFarm();const g=applyPending();save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g} seeds from your games`,`+${g} semi dai giochi`));return}
   const mine0=L0&&(!L0.uid||L0.uid===uid)&&!window._wiped,rst=d.rst&&d.rst!==L0.rst;
-  if(mine0&&!rst&&igProg(L0)>0&&igProg(L0)>igProg(d)){ensureFarm();igConflict(d,uid);if(window.IgorUI)IgorUI.refresh();return}
+  /* this device is ahead of the cloud: keep it (it goes online on top of the cloud version), the cloud one becomes a backup */
+  if(mine0&&!rst&&igProg(L0)>0&&igProg(L0)>igProg(d)){igBack(igCopy(d),'cloud-replaced');ensureFarm();if(uid)S.uid=uid;S.base=d.at||0;S.at=Date.now();const g=applyPending();save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g} seeds from your games`,`+${g} semi dai giochi`));return}
   if(mine0&&igProg(L0)>0&&(rst||(L0.at&&L0.at!==d.at&&L0.at!==L0.base)))igBack(igCopy(L0),rst?'restored-over':'unsynced');
   const seen=S.seen;S={...fresh(),...d,seen:Math.max(seen||0,d.seen||0)};if(uid)S.uid=uid;if(d.at)S.base=d.at;if(d.seeds===undefined)S.seeds=Math.max(1,S.seeds|0);if(!Array.isArray(S.plots)||!S.plots.length)S.plots=fresh().plots;ensureFarm();let g=applyPending();
   if(P0&&P0.g>0){S.seeds=(S.seeds|0)+P0.g;g+=P0.g;S.scores=S.scores||{};for(const[gm,o]of Object.entries(P0.scores)){S.scores[gm]=S.scores[gm]||{};for(const[l,v]of Object.entries(o))if(!(S.scores[gm][l]>=v))S.scores[gm][l]=v}}
   save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g} seeds from your games`,`+${g} semi dai giochi`))},
  /* another device (or tab) saved a newer island: take it as it is, without saving (no ping-pong) */
- adopt:(d,uid,force)=>{if(VISIT){visitHomeIn(d,uid);return}if(igHold&&!force){igConflict(d,uid);return}const rst=d.rst&&d.rst!==S.rst;
-  if(!force&&!rst&&Date.now()<igForceT&&igProg(d)<=igProg(S)){save();return}
-  if(!force&&!rst&&!window._wiped&&igProg(S)>0&&igProg(S)>igProg(d)){igConflict(d,uid);return}
+ adopt:(d,uid,force)=>{if(VISIT){visitHomeIn(d,uid);return}const rst=d.rst&&d.rst!==S.rst;
+  /* the other device is behind this one: keep this island and put it online on top of theirs */
+  if(!force&&!rst&&!window._wiped&&igProg(S)>0&&igProg(S)>igProg(d)){igBack(igCopy(d),'cloud-replaced');if(uid)S.uid=uid;if(d.at)S.base=d.at;S.at=Date.now();save();return}
   if(!force&&!window._wiped&&igProg(S)>0&&(rst||(S.at&&S.at!==S.base&&S.at!==d.at)))igBack(igCopy(S),rst?'restored-over':'unsynced');
   const seen=S.seen;S={...fresh(),...d,seen:Math.max(seen||0,d.seen||0)};if(uid)S.uid=uid;if(d.at){S.base=d.at;S.at=d.at}
   if(d.seeds===undefined)S.seeds=Math.max(1,S.seeds|0);if(!Array.isArray(S.plots)||!S.plots.length)S.plots=fresh().plots;ensureFarm();
@@ -2653,8 +2643,10 @@ function marTick(t,dt){if(!S.farm)return;const tn=Date.now();
  if(!insAnn&&insFresh.length&&started&&where==='out'&&T>4){insAnn=true;const L=insFresh.filter(k=>k!=='mar').map(k=>N(INSK[k].N).toLowerCase());insFresh=[];if(L.length){const msg=L.length>2?tt(`${L.length} new instruments to tune on the island: look for them!`,`Sull’isola ci sono ${L.length} strumenti nuovi da accordare: cercali!`):L.length>1?tt(`New instruments to tune: ${L[0]} and ${L[1]}!`,`Strumenti nuovi da accordare: ${L[0]} e ${L[1]}!`):tt(`A new instrument to tune on the island: ${L[0]}!`,`Un nuovo strumento da accordare sull’isola: ${L[0]}!`);setTimeout(()=>say(msg,3.6),3800)}}
  if(insAnn&&insFresh.length){insAnn=false}
  if((insAcc+=dt)<1)return;insAcc=0;let said=false;
- for(const I of INS){if(!insOn(I))continue;const M=insS(I.k);let on=M.off.map((c,i)=>c?i:-1).filter(i=>i>=0);while(on.length>5){const j=on.splice(Math.floor(Math.random()*on.length),1)[0];M.off[j]=0;M.sl[j]=0;fmDirty=true}}
- for(const I of INS){if(!insOn(I))continue;const M=insS(I.k);let k=0,added=0;while(tn>=M.next&&k++<6){const ok=M.off.map((c,i)=>c||M.off[i-1]||M.off[i+1]||(M.miss&&M.miss[i])?-1:i).filter(i=>i>=0);if(insOut(I.k)<2&&ok.length){const i=pick(ok);M.off[i]=(Math.random()<.5?-1:1)*(45+Math.random()*40);M.sl[i]=0;added++}M.next+=60*60e3/FUNFAST}
+ for(const I of INS){if(!insOn(I))continue;const M=insS(I.k);let on=M.off.map((c,i)=>c?i:-1).filter(i=>i>=0);if(M.rl&&on.length<=3)M.rl=0;const lim=M.rl?5:3;
+  if(on.length>lim){on.sort(()=>Math.random()-.5);let keep=on.slice(0,lim);if(lim===3){const P=[];for(const a of on)for(const b of on)for(const c of on)if(a<b&&b<c&&b-a>1&&c-b>1)P.push([a,b,c]);if(P.length)keep=P[Math.floor(Math.random()*P.length)]}
+   for(const i of on)if(!keep.includes(i)){M.off[i]=0;M.sl[i]=0}fmDirty=true}}
+ for(const I of INS){if(!insOn(I))continue;const M=insS(I.k);let k=0,added=0;while(tn>=M.next&&k++<6){const ok=M.off.map((c,i)=>c||M.off[i-1]||M.off[i+1]||(M.miss&&M.miss[i])?-1:i).filter(i=>i>=0);if(insOut(I.k)<3&&ok.length){const i=pick(ok);M.off[i]=(Math.random()<.5?-1:1)*(45+Math.random()*40);M.sl[i]=0;added++}M.next+=60*60e3/FUNFAST}
   if(M.next<tn)M.next=tn+60*60e3/FUNFAST;if(added){fmDirty=true;if(!said&&started&&where==='out'&&T>5){said=true;const o=insO[I.k];if(o&&o.g.position.distanceTo(igor.position)<16)insPlay(I.k,0);setTimeout(()=>say(tt(`Listen… the ${N(I.N).toLowerCase()} is out of tune!`,`Senti… ${N(I.N)}: una nota si è scordata!`),3.4),400)}}}}
 function insPlay(k,i){const I=INSK[k],M=insS(k);if(M.miss&&M.miss[i])return;snd(I.snd,insF(I,i,(M.off[i]||0)+(M.off[i]?M.sl[i]:0)))}
 let INSEL='mar',insSel=-1,insTry=0,insLast=0;
@@ -4375,7 +4367,7 @@ function musStrike(E,t){const L=evActIns();E.nf=L.length;E.cov=0;let nI=0,notes=
  for(const I of L){const M=insS(I.k);
   if(E.k==='tune'){if(M.tuner===E.id){E.cov++;continue}
    const fr=[0,1,2,3,4,5,6,7].filter(i=>!M.off[i]&&!(M.miss&&M.miss[i])).sort(()=>Math.random()-.5).slice(0,Math.max(0,5-insOut(I.k)));
-   for(const i of fr){M.off[i]=(Math.random()<.5?-1:1)*(45+Math.random()*40);M.sl[i]=0}if(fr.length){nI++;notes+=fr.length}}
+   for(const i of fr){M.off[i]=(Math.random()<.5?-1:1)*(45+Math.random()*40);M.sl[i]=0}if(fr.length){M.rl=1;nI++;notes+=fr.length}}
   else{if(M.case===E.id){E.cov++;continue}M.miss=M.miss||{};
    const fr=[0,1,2,3,4,5,6,7].filter(i=>!M.miss[i]).sort(()=>Math.random()-.5).slice(0,2);
    for(const i of fr){M.miss[i]=lostSpot(I);M.off[i]=0;M.sl[i]=0}if(fr.length){nI++;notes+=fr.length}}}
@@ -4793,7 +4785,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-0200';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-0815';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
@@ -4813,9 +4805,10 @@ const clean=S=>JSON.parse(JSON.stringify(S));
 const acctsW=()=>{const u=auth.currentUser;if(!u||!C.user)return;const prov=u.providerData.some(p=>p.providerId==='google.com')?'google':u.providerData.some(p=>p.providerId==='password')?'password':'other';
  setDoc(doc(db,'accts',u.uid),{nick:String(C.user.nick||'').slice(0,16),email:u.email||'',prov,made:Date.parse(u.metadata&&u.metadata.creationTime)||0,seen:serverTimestamp()}).catch(e=>console.warn('accts',e&&e.code||e))};
 const C={user:null,
- /* backups of the island: users/<uid>/bk/<id> {why, t, at, lv, igv, d (the island as JSON)}; one a day (d01…d31) + every island that gets replaced */
- async backup(o,why){const u=C.user;if(!u||!o)return false;let s;try{s=JSON.stringify(o)}catch(e){return false}if(s.length>900000)return false;const t=Date.now(),D=new Date(),p2=n=>String(n).padStart(2,'0'),id=why==='day'?'d'+p2(D.getDate()):why==='unsynced'?'unsynced-'+p2(D.getDate())+'-'+p2(D.getHours()):why+'-'+t;
-  try{await setDoc(doc(db,'users',u.uid,'bk',id),{why,t,at:o.at||0,lv:(o.farm&&o.farm.total)|0,igv:window.IGVER||'',d:s,made:serverTimestamp()});return true}catch(e){console.warn('backup',e&&e.code||e);return false}},
+ /* backups of the island: users/<uid>/bk/<id> {why, t, at, lv, igv, z, d (the island as JSON, gzip+base64 when z=1)}; the last 7 days (day0…day6) + one per kind per day of the month for the islands that get replaced */
+ async backup(o,why){const u=C.user;if(!u||!o)return false;let s;try{s=JSON.stringify(o)}catch(e){return false}if(s.length>900000)return false;const t=Date.now(),D=new Date(),p2=n=>String(n).padStart(2,'0'),id=why==='day'?'day'+D.getDay():why+'-'+p2(D.getDate());
+  let z=0;try{const b=new Uint8Array(await new Response(new Blob([s]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());let bin='';for(let i=0;i<b.length;i+=32768)bin+=String.fromCharCode.apply(null,b.subarray(i,i+32768));s=btoa(bin);z=1}catch(e){}
+  try{await setDoc(doc(db,'users',u.uid,'bk',id),{why,t,at:o.at||0,lv:(o.farm&&o.farm.total)|0,igv:window.IGVER||'',z,d:s,made:serverTimestamp()});return true}catch(e){console.warn('backup',e&&e.code||e);return false}},
  push(){if(!C.user||!ready)return;clearTimeout(timer);timer=setTimeout(()=>writeSave().catch(e=>{console.warn('save',e&&e.code||e);clearTimeout(timer);timer=setTimeout(()=>C.push(),10000)}),1500)},
  async google(){const p=new GoogleAuthProvider();try{await signInWithPopup(auth,p)}catch(e){if(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')return signInWithRedirect(auth,p);throw e}},
  login:(m,p)=>signInWithEmailAndPassword(auth,m,p),
@@ -4833,18 +4826,18 @@ const C={user:null,
    While the island is open it also listens to the save, so it follows the other device right away. */
 const mine=new Set();let busy=false,again=false,unSave=null;
 function adopt(c){const d={...c};delete d.updated;delete d.name;delete d.nick;window.IgorSave.adopt(d,C.user&&C.user.uid)}
-async function writeSave(){if(!C.user)return;if(window.IgorSave.held&&window.IgorSave.held())return;if(busy){again=true;return}busy=true;
+async function writeSave(){if(!C.user)return;if(busy){again=true;return}busy=true;
  try{const uid=C.user.uid,snap=clean(window.IgorSave.get()),at=snap.at,base=snap.base;snap.uid=uid;if(window.IGVER)snap.igv=window.IGVER;mine.add(at);const ref=doc(db,'users',uid);
-  let theirs;try{theirs=await runTransaction(db,async tx=>{const cur=await tx.get(ref),c=cur.exists()?cur.data():null;
+  let theirs,over=null;try{theirs=await runTransaction(db,async tx=>{const cur=await tx.get(ref),c=cur.exists()?cur.data():null;over=null;
    if(c&&c.at&&c.at===at)return'same';
-   if(c&&c.at&&c.at!==base){const pr=o=>o&&o.farm?(o.farm.total|0):-1;
-    /* the player chose this device's island: it goes online even if a device with less progress saved meanwhile */
-    if(window.IgorSave.forcing&&window.IgorSave.forcing()&&pr(c)<=pr(snap)&&(!c.rst||c.rst===snap.rst))snap.base=c.at;else return c}
+   if(c&&c.at&&c.at!==base){const pr=o=>o&&o.farm&&Array.isArray(o.farm.fields)?(o.farm.total|0):-1;
+    /* the island with more progress always wins: this one is ahead of what another device saved meanwhile, so it goes online (theirs becomes a backup) */
+    if(pr(snap)>pr(c)&&(!c.rst||c.rst===snap.rst)){snap.base=c.at;over=c}else return c}
    tx.set(ref,{...snap,name:C.user.nick||'',nick:C.user.nick||'',updated:serverTimestamp()});return null})}
   catch(e){if(e&&e.code==='permission-denied'){if(window.__igVer)window.__igVer();try{const s=await getDoc(ref);const c=s.exists()?s.data():null;if(c&&c.at&&c.at!==base&&c.at!==at&&C.user&&C.user.uid===uid){adopt(c);return}}catch(_){}}throw e}
   if(!C.user||C.user.uid!==uid)return;
   if(theirs&&theirs!=='same')adopt(theirs);
-  else{const L=window.IgorSave.get();if(L&&!window._wiped){L.base=at;L.uid=uid;try{localStorage.setItem('igortime_v1',JSON.stringify(L))}catch(e){}}
+  else{if(over){const o={...over};delete o.updated;try{window.IgorSave.back(o,'cloud-replaced')}catch(e){}}const L=window.IgorSave.get();if(L&&!window._wiped){L.base=at;L.uid=uid;try{localStorage.setItem('igortime_v1',JSON.stringify(L))}catch(e){}}
    try{const k=uid+' '+new Date().toDateString();if(localStorage.getItem('igortime_bkday')!==k)C.backup(snap,'day').then(ok=>{if(ok)try{localStorage.setItem('igortime_bkday',k)}catch(e){}})}catch(e){}}}
  finally{busy=false;if(again){again=false;C.push()}}}
 function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
@@ -4853,7 +4846,7 @@ function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
 window.IgorCloud=C;
 /* events forced by the admins for everyone (gev/<id>): every island listens to the last ones */
 try{onSnapshot(query(collection(db,'gev'),orderBy('at','desc'),limit(10)),q=>{if(window.IgorForce)window.IgorForce.global(q.docs.map(d=>{const x=d.data();return{id:d.id,k:x.k,lead:x.lead|0,st:x.st,at:x.at&&x.at.toMillis?x.at.toMillis():0}}))},e=>console.warn('gev',e&&e.code||e))}catch(e){console.warn('gev',e)}
-{const s=document.createElement('script');s.src='/chat.js?v=13';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=14';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
