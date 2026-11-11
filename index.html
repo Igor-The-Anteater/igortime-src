@@ -236,9 +236,23 @@ function fresh(){return{v:2,ants:0,seeds:1,plots:[{c:null},{c:null},{c:null}],sc
 let S;try{S=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){S=fresh()}
 if(!S.plots)S=fresh();if(S.seeds===undefined){S.seeds=1;S.v=2}
 try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}
-function save(){if(VISIT){visitSave();return}try{visitPub()}catch(e){}S.at=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.IgorCloud)window.IgorCloud.push(S)}
+/* ONE PAGE AT A TIME: every open page has its own id (IGDEV). The page that saves last is the one you are playing on; when you start
+   playing somewhere else (another device, browser or tab), every other page stops ("frozen": it never saves again) and, as soon as you
+   look at it again, it reloads and takes the latest island. So an old page left open can never overwrite or fall behind. */
+const IGDEV=Date.now().toString(36)+Math.random().toString(36).slice(2,8);window.IGDEV=IGDEV;window.__igFrozen=false;
+function igFreeze(why){if(VISIT||window.__igFrozen)return;window.__igFrozen=true;
+ const go=()=>{try{location.reload()}catch(e){}};
+ addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')go()});
+ const box=document.createElement('div');box.id='igFrozen';box.setAttribute('role','dialog');
+ box.style.cssText='position:fixed;inset:0;z-index:2147483001;background:rgba(20,16,12,.8);display:flex;align-items:center;justify-content:center;padding:16px;font:16px/1.4 system-ui,sans-serif';
+ box.innerHTML=`<div style="background:#fff8e8;color:#2b2018;border:3px solid #2b2018;border-radius:16px;max-width:420px;padding:18px;text-align:center"><div style="font-size:40px">🐜</div><b style="font-size:19px">${tt('You are playing somewhere else','Stai giocando da un’altra parte')}</b>
+  <p style="margin:8px 0 14px">${tt('Your island is open on another device, browser or tab. Here it is paused, so nothing gets lost.','La tua isola è aperta su un altro dispositivo, browser o scheda. Qui è in pausa, così non si perde niente.')}</p>
+  <button type="button" style="font:600 17px system-ui,sans-serif;color:#2b2018;background:#d9f2c4;border:3px solid #2b2018;border-radius:12px;padding:12px 18px;cursor:pointer;text-transform:none;letter-spacing:0">▶ ${tt('Play here','Gioca qui')}</button></div>`;
+ box.querySelector('button').onclick=go;document.body.appendChild(box)}
+window.IgorFreeze=igFreeze;
+function save(){if(window.__igFrozen)return;if(VISIT){visitSave();return}try{visitPub()}catch(e){}S.at=Date.now();S.dev=IGDEV;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.IgorCloud)window.IgorCloud.push(S)}
 /* another tab of this browser saved: take its island if it is newer (works for guests too) */
-addEventListener('storage',e=>{if(VISIT||e.key!==KEY||!e.newValue)return;let v=null;try{v=JSON.parse(e.newValue)}catch(_){}if(!v||!v.plots||!((v.at||0)>(S.at||0)))return;if(S.uid&&v.uid&&v.uid!==S.uid)return;
+addEventListener('storage',e=>{if(VISIT||window.__igFrozen||e.key!==KEY||!e.newValue)return;let v=null;try{v=JSON.parse(e.newValue)}catch(_){}if(v&&v.dev&&v.dev!==IGDEV&&(!S.uid||!v.uid||v.uid===S.uid)){igFreeze('tab');return}if(!v||!v.plots||!((v.at||0)>(S.at||0)))return;if(S.uid&&v.uid&&v.uid!==S.uid)return;
  S=v;ensureFarm();try{fmDirty=true;fmRender()}catch(_){}if(window.IgorUI)IgorUI.refresh()});
 const PEND='igortime_pending';
 /* the two ways in: the island or the games page (igortime_view remembers the last choice) */
@@ -257,7 +271,7 @@ const igProg=s=>{const f=s&&s.farm;return f&&Array.isArray(f.fields)?(f.total|0)
 function igBack(o,why){if(!o)return;try{localStorage.setItem('igortime_v1_lost',JSON.stringify({why,t:Date.now(),d:o}))}catch(e){}
  try{const k='igortime_bk_'+why,l=+localStorage.getItem(k)||0;if(Date.now()-l<600000)return;localStorage.setItem(k,String(Date.now()))}catch(e){}
  try{if(window.IgorCloud&&IgorCloud.backup)IgorCloud.backup(o,why)}catch(e){}}
-window.IgorSave={get:()=>VISIT&&_HOME?_HOME:S,back:igBack,set:v=>{S=v;save();refresh()},
+window.IgorSave={get:()=>VISIT&&_HOME?_HOME:S,back:igBack,touch:()=>save(),visiting:!!VISIT,set:v=>{S=v;save();refresh()},
  load:(d,uid)=>{if(VISIT){visitHomeIn(d,uid);return}const L0=S,P0=window._pendLast;window._pendLast=null;
   if(uid&&L0.uid===uid&&(L0.at||0)>(d.at||0)&&L0.base===d.at){ensureFarm();const g=applyPending();save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g} seeds from your games`,`+${g} semi dai giochi`));return}
   const mine0=L0&&(!L0.uid||L0.uid===uid)&&!window._wiped,rst=d.rst&&d.rst!==L0.rst;
@@ -276,7 +290,7 @@ window.IgorSave={get:()=>VISIT&&_HOME?_HOME:S,back:igBack,set:v=>{S=v;save();ref
   if(d.seeds===undefined)S.seeds=Math.max(1,S.seeds|0);if(!Array.isArray(S.plots)||!S.plots.length)S.plots=fresh().plots;ensureFarm();
   try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}try{fmDirty=true;fmRender()}catch(e){}if(window.IgorUI){IgorUI.refresh();IgorUI.toast(tt('Updated with your other device','Aggiornata con l’altro dispositivo'))}},
  reset:()=>{if(VISIT){location.href='/?island';return}const seen=S.seen;S={...fresh(),seen};ensureFarm();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.IgorUI)IgorUI.refresh()}};
-addEventListener('storage',e=>{if(VISIT)return;if(e.key===KEY&&e.newValue){try{S=JSON.parse(e.newValue);ensureFarm();refresh()}catch(_){}}});
+addEventListener('storage',e=>{if(VISIT||window.__igFrozen)return;if(e.key===KEY&&e.newValue){try{const v=JSON.parse(e.newValue);if(v&&v.dev&&v.dev!==IGDEV)return;S=v;ensureFarm();refresh()}catch(_){}}});
 const now=()=>Date.now();
 const fmt=ms=>{ms=Math.max(0,ms);const s=Math.ceil(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?`${h}h ${String(m).padStart(2,'0')}m`:m?`${m}m ${String(x).padStart(2,'0')}s`:`${x}s`};
 const plotState=p=>!p.c?'empty':now()>=p.end?'ready':'growing';
@@ -657,7 +671,7 @@ function ensureFarm(){if(S.farm&&Array.isArray(S.farm.fields)){fixFarm(S.farm);r
  try{if(!localStorage.getItem('igortime_v1_before_farm'))localStorage.setItem('igortime_v1_before_farm',JSON.stringify(S))}catch(e){}
  S.farm=freshFarm();if((S.seeds|0)<3)S.seeds=3;fmNew=true;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 ensureFarm();
-function saveLocal(){if(window._wiped||VISIT)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function saveLocal(){if(window._wiped||VISIT||window.__igFrozen)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const costTxt=c=>Object.entries(c).filter(([,v])=>v).map(([k,v])=>k==='s'?`${v} ${tt(v>1?'seeds':'seed',v>1?'semi':'seme')}`:`${v} ${tt(v>1?'tofu ants':'tofu ant',v>1?'formiche di tofu':'formica di tofu')}`).join(' + ');
 const canPay=c=>Object.entries(c).every(([k,v])=>k==='s'?(S.seeds|0)>=v:FM().ants.t>=v);
 function pay(c){if(!canPay(c))return false;for(const[k,v]of Object.entries(c)){if(k==='s')S.seeds-=v;else FM().ants.t-=v}return true}
@@ -4785,7 +4799,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-0815';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-1100';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
@@ -4824,36 +4838,40 @@ const C={user:null,
    each save says which cloud version it was built on (S.base = the cloud's "at"); the write happens in a transaction and only if the cloud
    still has that version. If another device saved in between, nothing is overwritten: this page takes the newer island instead.
    While the island is open it also listens to the save, so it follows the other device right away. */
-const mine=new Set();let busy=false,again=false,unSave=null;
+const mine=new Set();let busy=false,again=false,unSave=null,claimed=false;
 function adopt(c){const d={...c};delete d.updated;delete d.name;delete d.nick;window.IgorSave.adopt(d,C.user&&C.user.uid)}
-async function writeSave(){if(!C.user)return;if(busy){again=true;return}busy=true;
- try{const uid=C.user.uid,snap=clean(window.IgorSave.get()),at=snap.at,base=snap.base;snap.uid=uid;if(window.IGVER)snap.igv=window.IGVER;mine.add(at);const ref=doc(db,'users',uid);
+async function writeSave(){if(!C.user||window.__igFrozen)return;if(busy){again=true;return}busy=true;
+ try{const uid=C.user.uid,snap=clean(window.IgorSave.get()),at=snap.at,base=snap.base;snap.uid=uid;if(window.IGVER)snap.igv=window.IGVER;if(window.IGDEV&&!window.IgorSave.visiting)snap.dev=window.IGDEV;mine.add(at);const ref=doc(db,'users',uid);
   let theirs,over=null;try{theirs=await runTransaction(db,async tx=>{const cur=await tx.get(ref),c=cur.exists()?cur.data():null;over=null;
    if(c&&c.at&&c.at===at)return'same';
    if(c&&c.at&&c.at!==base){const pr=o=>o&&o.farm&&Array.isArray(o.farm.fields)?(o.farm.total|0):-1;
+    /* once this page is the one in use, a save from another page means you moved there: stop here, never overwrite it */
+    if(claimed&&c.dev&&c.dev!==snap.dev)return{_moved:1};
     /* the island with more progress always wins: this one is ahead of what another device saved meanwhile, so it goes online (theirs becomes a backup) */
     if(pr(snap)>pr(c)&&(!c.rst||c.rst===snap.rst)){snap.base=c.at;over=c}else return c}
    tx.set(ref,{...snap,name:C.user.nick||'',nick:C.user.nick||'',updated:serverTimestamp()});return null})}
   catch(e){if(e&&e.code==='permission-denied'){if(window.__igVer)window.__igVer();try{const s=await getDoc(ref);const c=s.exists()?s.data():null;if(c&&c.at&&c.at!==base&&c.at!==at&&C.user&&C.user.uid===uid){adopt(c);return}}catch(_){}}throw e}
   if(!C.user||C.user.uid!==uid)return;
-  if(theirs&&theirs!=='same')adopt(theirs);
-  else{if(over){const o={...over};delete o.updated;try{window.IgorSave.back(o,'cloud-replaced')}catch(e){}}const L=window.IgorSave.get();if(L&&!window._wiped){L.base=at;L.uid=uid;try{localStorage.setItem('igortime_v1',JSON.stringify(L))}catch(e){}}
+  if(theirs&&theirs._moved){if(window.IgorFreeze)window.IgorFreeze('cloud');return}
+  if(theirs&&theirs!=='same'){adopt(theirs);if(!claimed&&!window.__igFrozen&&window.IgorSave.touch)window.IgorSave.touch()}
+  else{claimed=true;if(over){const o={...over};delete o.updated;try{window.IgorSave.back(o,'cloud-replaced')}catch(e){}}const L=window.IgorSave.get();if(L&&!window._wiped){L.base=at;L.uid=uid;try{localStorage.setItem('igortime_v1',JSON.stringify(L))}catch(e){}}
    try{const k=uid+' '+new Date().toDateString();if(localStorage.getItem('igortime_bkday')!==k)C.backup(snap,'day').then(ok=>{if(ok)try{localStorage.setItem('igortime_bkday',k)}catch(e){}})}catch(e){}}}
  finally{busy=false;if(again){again=false;C.push()}}}
 function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
  unSave=onSnapshot(doc(db,'users',uid),s=>{if(!s.exists()||s.metadata.hasPendingWrites||!C.user||C.user.uid!==uid||!ready)return;const c=s.data(),L=window.IgorSave.get();
-  if(!c.at||mine.has(c.at)||c.at===L.base||c.at===L.at)return;adopt(c)},e=>console.warn('follow',e&&e.code||e))}
+  if(!c.at||mine.has(c.at)||c.at===L.base||c.at===L.at)return;
+  if(c.dev&&c.dev!==window.IGDEV&&claimed&&!(c.rst&&c.rst!==L.rst)){if(window.IgorFreeze)window.IgorFreeze('cloud');return}adopt(c)},e=>console.warn('follow',e&&e.code||e))}
 window.IgorCloud=C;
 /* events forced by the admins for everyone (gev/<id>): every island listens to the last ones */
 try{onSnapshot(query(collection(db,'gev'),orderBy('at','desc'),limit(10)),q=>{if(window.IgorForce)window.IgorForce.global(q.docs.map(d=>{const x=d.data();return{id:d.id,k:x.k,lead:x.lead|0,st:x.st,at:x.at&&x.at.toMillis?x.at.toMillis():0}}))},e=>console.warn('gev',e&&e.code||e))}catch(e){console.warn('gev',e)}
-{const s=document.createElement('script');s.src='/chat.js?v=14';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=15';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
   try{const s=await getDoc(doc(db,'users',u.uid));if(s.exists()){const d=s.data();if(d.nick)C.user.nick=d.nick;else if(d.name&&!google)C.user.nick=d.name;delete d.updated;delete d.name;delete d.nick;window.IgorSave.load(d,u.uid)}}catch(e){console.warn('load',e)}
   C.user.nick=String(C.user.nick||'').slice(0,16);C.user.name=C.user.nick;pendingNick='';
-  ready=true;C.push();follow(u.uid);acct();acctsW();C.ready=true;dispatchEvent(new Event('igor-ready'))}
- else{C.user=null;follow(null);try{localStorage.removeItem('igortime_acct')}catch(e){}}
+  ready=true;/* this page is now the one in use: say so (the other pages stop) */if(window.IgorSave.touch&&!window.IgorSave.visiting)window.IgorSave.touch();C.push();follow(u.uid);acct();acctsW();C.ready=true;dispatchEvent(new Event('igor-ready'))}
+ else{C.user=null;follow(null);if(window.IgorSave.touch&&!window.IgorSave.visiting)setTimeout(()=>window.IgorSave.touch(),500);try{localStorage.removeItem('igortime_acct')}catch(e){}}
  window.IgorUI&&window.IgorUI.onAuth(!!u,first);first=false});
 </script>
 </body></html>
