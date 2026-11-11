@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en"><head><script src="/lang.js?v=3"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Drum school · Igor time</title>
+<meta name="description" content="Learn to play the drums from zero in Igor's music school: Rigor Star teaches you to keep the time, off-beats, bass drum and snare, your first rock groove, fills and styles.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+:root{--night:#140d09;--ink:#f3e7d3;--dim:#b49f86;--warm:#f1b46e;--bone:#efe4cf;--glow:#ffd38a;--chalk:#eef2e6;
+ --display:'Instrument Serif',Georgia,serif;--toon:'Fredoka','Trebuchet MS',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow:hidden;font-family:var(--mono);-webkit-user-select:none;user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+header{position:fixed;z-index:2;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none;background:linear-gradient(rgba(20,13,9,.85) 30%,rgba(20,13,9,0));
+ padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px))}
+.igback{pointer-events:auto;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none;border:1px solid rgba(243,231,211,.35);border-radius:999px;padding:9px 13px;white-space:nowrap;background:rgba(20,13,9,.6)}.igback:hover{border-color:var(--glow);color:var(--glow)}
+h1{margin:0;font:400 clamp(20px,3.2vw,32px)/1 var(--display);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}h1 em{color:var(--warm)}h1 a{color:inherit;text-decoration:none;pointer-events:auto}
+#stat{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right;white-space:nowrap;pointer-events:auto;cursor:pointer}#stat b{color:var(--bone);font-weight:500}
+#dots{display:flex;gap:4px;justify-content:flex-end;margin-top:5px}#dots i{width:8px;height:8px;border-radius:50%;background:rgba(243,231,211,.18)}#dots i.ok{background:#7fe08a}#dots i.no{background:#f1b46e}#dots i.now{box-shadow:0 0 0 2px var(--bone)}
+#bar{position:fixed;z-index:2;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 12px calc(14px + env(safe-area-inset-bottom,0px))}
+#bar .row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;max-width:980px}
+button{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:13px 18px;border-radius:999px;cursor:pointer;background:rgba(20,13,9,.62);color:var(--ink);border:1px solid rgba(243,231,211,.4);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button.main{background:var(--warm);color:#2b1a0e;border-color:var(--warm)}
+button:disabled{opacity:.35;cursor:default}button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
+button.ex{font:600 15px/1.1 var(--toon);letter-spacing:0;text-transform:none;background:#f7ecd4;color:#2b2018;border:3px solid #2b2018;box-shadow:0 3px 0 #2b2018;padding:10px 16px}
+button.ex.on{background:#ffe08a}
+/* the answers: big friendly cards */
+.ans{display:grid;gap:9px;width:100%;max-width:980px;grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}
+.ans button{font:600 17px/1.15 var(--toon);letter-spacing:0;text-transform:none;border-radius:18px;padding:10px 8px 11px;background:#f7ecd4;color:#2b2018;border:3px solid #2b2018;box-shadow:0 4px 0 #2b2018;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:64px;justify-content:center}
+.ans button .ic{font-size:26px;line-height:1}.ans button small{font:500 12.5px/1.2 var(--toon);color:#6b5340}.ans button small.t{font-size:11px;color:#8a7360;font-style:italic}
+.ans button:active{transform:translateY(2px);box-shadow:0 2px 0 #2b2018}
+.ans button.right{background:#bff2b0}.ans button.wrong{background:#ffd6a6}
+.ans button:disabled{opacity:1}.ans.done button:not(.right):not(.wrong){opacity:.45}
+@media (max-width:620px){.ans{gap:7px}.ans button{font-size:15px;min-height:56px;padding:8px 5px 9px;border-radius:15px}.ans button .ic{font-size:22px}.ans button small{font-size:11px}.ans button small.t{font-size:10px}
+ .igback{padding:8px 10px;font-size:10px}h1 .gm{display:none}button{padding:12px 13px;font-size:10.5px;letter-spacing:.08em}button.ex{font-size:14px;padding:9px 12px}}
+@media (max-width:620px) and (max-height:760px){.ans button small:not(.t){display:none}}
+#bubble{position:fixed;left:0;top:0;z-index:3;box-sizing:border-box;pointer-events:none;font:500 18px/1.25 var(--toon);color:#2b2018;background:#f7ecd4;border:3px solid #2b2018;
+ padding:9px 15px 10px;border-radius:16px;box-shadow:0 4px 0 #2b2018;max-width:min(380px,60vw);opacity:0;transition:opacity .25s}
+#bubble b{color:#a5481c}
+#bubble::after{content:'';position:absolute;left:calc(var(--tx,40px) - 8px);bottom:-11px;width:14px;height:14px;background:#f7ecd4;border:3px solid #2b2018;border-top:0;border-left:0;transform:rotate(45deg);border-radius:0 0 4px 0}
+@media (max-width:620px){#bubble{font-size:15px;max-width:calc(100vw - 28px)}}
+.ov{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 55%,rgba(20,13,9,.78),rgba(20,13,9,.97) 75%);padding:16px;box-sizing:border-box;overflow:auto}
+.ov[hidden]{display:none}.card{max-width:36rem;width:100%}
+.card h2{margin:0;font:400 clamp(36px,7vw,64px)/.95 var(--display);letter-spacing:-.02em}.card h2 em{color:var(--warm)}
+.card p{font-size:12px;line-height:1.7;color:var(--dim);margin:1em 0}.card p b{color:var(--ink);font-weight:500}
+.card .row{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 10px}
+.card .big{font:400 clamp(56px,12vw,96px)/1 var(--display);color:var(--bone)}
+.card .small{font-size:10.5px;letter-spacing:.08em;color:var(--dim)}.card a{color:var(--warm)}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin:16px 0}
+.map button{font:600 13px/1.15 var(--toon);letter-spacing:0;text-transform:none;border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;background:rgba(243,231,211,.07)}
+.map button .ic{font-size:22px}.map button small{font:500 10px var(--mono);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.map button.done{border-color:#7fe08a}.map button.done small{color:#7fe08a}.map button.cur{border-color:var(--warm);background:rgba(241,180,110,.16)}.map button.cur small{color:var(--warm)}
+.map button:disabled{opacity:.33}
+#endnew{font:600 18px/1.3 var(--toon);color:var(--glow)}
+
+/* the pads */
+.pads{display:grid;gap:10px;width:100%;max-width:760px;grid-template-columns:repeat(var(--n,1),minmax(0,1fr));touch-action:none}
+.pad{--k:0;position:relative;min-height:92px;border-radius:22px;font:700 17px/1.1 var(--toon);letter-spacing:0;text-transform:none;color:#2b2018;background:color-mix(in srgb,var(--c) calc(55% + var(--k)*45%),#f7ecd4);
+ border:3px solid #2b2018;box-shadow:0 5px 0 #2b2018,0 0 calc(var(--k)*30px) var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;touch-action:none;transform:translateY(calc(var(--k)*3px))}
+.pad .ky{font:700 12px var(--mono);letter-spacing:.08em;background:rgba(43,32,24,.85);color:#f7ecd4;border-radius:7px;padding:3px 8px}
+.pad-bd{min-height:104px}
+.seeds{font:600 15px var(--toon);color:var(--glow)}
+@media (max-width:620px){.pad{min-height:84px;font-size:15px;border-radius:18px}.pads{gap:7px}}
+@media (max-height:640px){.pad{min-height:64px}}
+</style>
+</head><body>
+<canvas id="c" aria-label="Igor's music school: Rigor Star, a rock drummer with long hair, a bandana and sunglasses, stands next to a blackboard with the rhythm to play"></canvas>
+<header><a class="igback" href="/">← Island</a><h1><a href="/"><em>Igor</em> time</a><span class="gm" id="gm"></span></h1><div id="stat"><span id="st1"></span><div id="dots"></div></div></header>
+<div id="bubble"></div>
+<div id="bar"></div>
+<div class="ov" id="start"><div class="card" id="startCard"></div></div>
+<div class="ov" id="end" hidden><div class="card" id="endCard"></div></div>
+<script src="/house/kit.js?v=4"></script>
+<script src="/drumschool/rigor.js?v=1"></script>
+<script>
+(()=>{
+const H=IgorHouse,{TAU,clamp,lerp,ease,rr,drawAnt,paintAvatar,ME,AVN}=H,PAD=H.PAD||.24;
+let IT=false;try{IT=(localStorage.getItem('igortime_lang')||window.DS_LANG||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en'))==='it'}catch(e){IT=window.DS_LANG==='it'}
+const OPEN=!!window.DS_OPEN; // previews: every exercise can be tried
+const tt=(en,it)=>IT?it:en,T2=a=>a?(IT?a[1]:a[0]):'';
+const $=id=>document.getElementById(id);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const TEACHER='Rigor Star';
+try{const h=localStorage.getItem('igortime_home');if(h)document.querySelectorAll('a[href="/"]').forEach(a=>a.href=h)}catch(e){}
+if(IT)document.documentElement.lang='it';
+$('gm').textContent=' · '+tt('Drum school','Scuola di batteria');
+const touch=matchMedia('(pointer:coarse)').matches;
+
+/* ================= the drum kit (same pieces and keys as the drums game) ================= */
+const P={hh:{n:['hi-hat','charleston'],key:'A',col:'#f6d34a'},sn:{n:['snare','rullante'],key:'S',col:'#ff9f43'},t1:{n:['high tom','tom alto'],key:'D',col:'#ff6a5e'},
+ t2:{n:['low tom','tom basso'],key:'F',col:'#6f9bff'},cr:{n:['cymbal','piatto'],key:'G',col:'#7fe08a'},bd:{n:['bass drum','cassa'],key:'␣',col:'#c49bff'}};
+const ORDER=['cr','hh','t1','t2','sn','bd'],KEYMAP={a:'hh',s:'sn',d:'t1',f:'t2',g:'cr',' ':'bd'};
+
+/* ================= the course: 8 stages × 6 exercises =================
+   An exercise: bpm, G = steps per bar (8 = eighths, 16 = sixteenths, 12 = triplets), L = one string per drum ('x' = hit),
+   possibly two bars long; bars = how many bars you play; metro: 'all' (a click on every beat), 'one' (only on 1), 'fade' (two bars, then silence). */
+const E=(bpm,G,L,bars,metro,say)=>({bpm,G,L,bars,metro,say});
+const ROCK8={hh:'x.x.x.x.',bd:'x...x...',sn:'..x...x.'},ROCKE={hh:'xxxxxxxx',bd:'x...x...',sn:'..x...x.'};
+const ST=[
+ {ic:'⏱️',n:['Keep the time','Tenere il tempo'],ex:[
+  E(70,8,{hh:'x.x.x.x.'},2,'all',['Yo! I’m <b>Rigor Star</b>. First rule of rock: <b>keep the time</b>. Hit the hi-hat together with the click: zi, zi, zi, zi.','Ehi! Sono <b>Rigor Star</b>. Prima regola del rock: <b>tenere il tempo</b>. Colpisci il charleston insieme al clic: zi, zi, zi, zi.']),
+  E(80,8,{hh:'x.x.x.x.'},4,'all',['Same thing, a little longer. Breathe, and stay with the click.','La stessa cosa, un po’ più lunga. Respira e resta col clic.']),
+  E(92,8,{hh:'x.x.x.x.'},4,'all',['A bit faster. Don’t run: the click is your friend.','Un po’ più veloce. Non correre: il clic è tuo amico.']),
+  E(80,8,{hh:'x...x...'},4,'all',['Now only on <b>1</b> and <b>3</b>. On 2 and 4 you wait… and count in your head.','Ora solo sull’<b>1</b> e sul <b>3</b>. Sul 2 e sul 4 aspetti… e conti nella testa.']),
+  E(84,8,{hh:'x.x.x.x.'},4,'one',['Now the click plays <b>only on 1</b>. The other beats are up to you!','Ora il clic suona <b>solo sull’1</b>. Gli altri tempi li tieni tu!']),
+  E(96,8,{hh:'x.x.x.x.'},4,'fade',['The click plays for two bars, then <b>goes quiet</b>. Keep going on your own, like a real drummer!','Il clic suona per due battute, poi <b>sta zitto</b>. Tu continua da solo, come un vero batterista!'])]},
+ {ic:'🎈',n:['The off-beat','Il levare'],ex:[
+  E(66,8,{hh:'.x.x.x.x'},2,'all',['Now the tricky one: the <b>off-beat</b>. Count “one AND two AND” and hit only on the AND: un-zi, un-zi.','Ora quello difficile: il <b>levare</b>. Conta “uno E due E” e colpisci solo sulla E: un-zi, un-zi.']),
+  E(76,8,{hh:'.x.x.x.x'},4,'all',['Again, a little faster. Hit right in the middle between two clicks.','Ancora, un po’ più veloce. Colpisci proprio a metà tra due clic.']),
+  E(70,8,{hh:'xxxxxxxx'},2,'all',['Now all of them: on the beat and on the AND. Zi-zi, zi-zi: <b>two hits for every click</b>.','Ora tutti: sul tempo e sulla E. Zi-zi, zi-zi: <b>due colpi per ogni clic</b>.']),
+  E(84,8,{hh:'xxxxxxxx'},4,'all',['Eighths, a bit faster. Keep them even, like a ticking clock.','Crome, un po’ più veloci. Tienile uguali, come un orologio.']),
+  E(76,8,{hh:'x.x..x.x'},4,'all',['A mix! Beats 1 and 2 <b>on</b> the click, then 3 and 4 <b>between</b> the clicks.','Un mix! Il 1 e il 2 <b>sul</b> clic, poi il 3 e il 4 <b>tra</b> i clic.']),
+  E(90,8,{hh:'.x.x.x.x'},4,'one',['Off-beats, with the click only on 1. You’re the boss now!','Levare, con il clic solo sull’1. Adesso comandi tu!'])]},
+ {ic:'🧩',n:['Hits and rests','Colpi e pause'],ex:[
+  E(76,8,{hh:'xxx.xxx.'},4,'all',['Zi-zi-zi, stop. Zi-zi-zi, stop. <b>Silence is music too!</b>','Zi-zi-zi, stop. Zi-zi-zi, stop. <b>Anche il silenzio è musica!</b>']),
+  E(76,8,{hh:'x.xxx.xx'},4,'all',['Zi… zi-zi-zi… zi-zi. Listen to me first, then you.','Zi… zi-zi-zi… zi-zi. Prima ascolta me, poi tu.']),
+  E(80,8,{hh:'xx..xx..'},4,'all',['Two and wait, two and wait. Easy… if you count!','Due e aspetta, due e aspetta. Facile… se conti!']),
+  E(76,8,{hh:'.xx..xx.'},4,'all',['This one starts on the AND. Tricky! Count out loud: one AND two…','Questo parte sulla E. Furbo! Conta ad alta voce: uno E due…']),
+  E(80,8,{hh:'x..x..x.'},4,'all',['This one comes from Cuba: <b>one, two, three</b>, with space in between. Feel the sway!','Questo viene da Cuba: <b>uno, due, tre</b>, con lo spazio in mezzo. Senti come dondola!']),
+  E(88,8,{hh:'x.xx.xx.'},4,'one',['A little rhythm puzzle, with the click only on 1. Go!','Un piccolo puzzle ritmico, con il clic solo sull’1. Vai!'])]},
+ {ic:'🥁',n:['Bass drum and snare','Cassa e rullante'],ex:[
+  E(72,8,{bd:'x...x...'},2,'all',['Meet the <b>bass drum</b>: the heart of the band. ',
+   'Ti presento la <b>cassa</b>: il cuore della band. ']),
+  E(72,8,{sn:'..x...x.'},2,'all',['And the <b>snare</b>: the slap! Hit it on 2 and 4, where people clap their hands.','E il <b>rullante</b>: lo schiaffo! Colpiscilo sul 2 e sul 4, dove la gente batte le mani.']),
+  E(72,8,{bd:'x...x...',sn:'..x...x.'},4,'all',['Boom, cha, boom, cha. <b>Tunz, cha!</b> The most famous sound in rock.','Bum, cia, bum, cia. <b>Tunz, cia!</b> Il suono più famoso del rock.']),
+  E(88,8,{bd:'x...x...',sn:'..x...x.'},4,'all',['Same thing, faster. Tunz-cha, tunz-cha!','La stessa cosa, più veloce. Tunz-cia, tunz-cia!']),
+  E(76,8,{bd:'x..xx...',sn:'..x...x.'},4,'all',['The bass drum takes a little jump: boom… boom-boom cha.','La cassa fa un saltello: bum… bum-bum cia.']),
+  E(82,8,{bd:'x...x.x.',sn:'..x...x.'},4,'one',['Boom, cha, boom-boom, cha. And the click only on 1!','Bum, cia, bum-bum, cia. E il clic solo sull’1!'])]},
+ {ic:'🎸',n:['The first groove','Il primo groove'],two:1,ex:[
+  E(70,8,{hh:'x.x.x.x.',bd:'x.......'},2,'all',['Now <b>two at once</b>! Hi-hat and bass drum together on 1.','Ora <b>due insieme</b>! Charleston e cassa insieme sull’1.']),
+  E(72,8,{hh:'x.x.x.x.',bd:'x...x...',sn:'..x...x.'},4,'all',['A hi-hat on every beat, and under it boom, cha, boom, cha.','Un charleston su ogni tempo, e sotto bum, cia, bum, cia.']),
+  E(70,8,{hh:'xxxxxxxx',bd:'x...x...'},4,'all',['Hi-hat on all the eighths, bass drum on 1 and 3.','Charleston su tutte le crome, cassa sull’1 e sul 3.']),
+  E(70,8,{hh:'xxxxxxxx',sn:'..x...x.'},4,'all',['Hi-hat on the eighths, snare on 2 and 4.','Charleston sulle crome, rullante sul 2 e sul 4.']),
+  E(74,8,ROCKE,4,'all',['Here it is: <b>the rock beat</b>! Tunz, cha, tunz, cha, with the hi-hat on top.','Eccolo: <b>il ritmo rock</b>! Tunz, cia, tunz, cia, con il charleston sopra.']),
+  E(92,8,ROCKE,4,'one',['The same groove, faster, with the click only on 1. Rock and roll!','Lo stesso groove, più veloce, con il clic solo sull’1. Rock and roll!'])]},
+ {ic:'🦘',n:['The jumping bass drum','La cassa che salta'],two:1,ex:[
+  E(78,8,{hh:'xxxxxxxx',bd:'x..xx...',sn:'..x...x.'},4,'all',['The rock beat, but the bass drum jumps: boom… boom-boom.','Il ritmo rock, ma la cassa salta: bum… bum-bum.']),
+  E(78,8,{hh:'xxxxxxxx',bd:'x..x.x..',sn:'..x...x.'},4,'all',['Boom… boom, boom… The bass drum dances around the snare.','Bum… bum, bum… La cassa balla intorno al rullante.']),
+  E(80,8,{hh:'xxxxxxxx',bd:'x...x.x.',sn:'..x...x.'},4,'all',['Two bass drums at the end of the bar. Boom, cha, boom-boom, cha.','Due casse alla fine della battuta. Bum, cia, bum-bum, cia.']),
+  E(80,8,{hh:'xxxxxxxx',bd:'xx..x...',sn:'..x...x.'},4,'all',['A double boom at the start: boom-boom, cha!','Un doppio bum all’inizio: bum-bum, cia!']),
+  E(84,8,{hh:'xxxxxxxx',bd:'x...x..x',sn:'..x...x.'},4,'one',['The last bass drum is on the very last AND. Sneaky!','L’ultima cassa è proprio sull’ultima E. Birichina!']),
+  E(100,8,{hh:'.x.x.x.x',bd:'x.x.x.x.',sn:'..x...x.'},4,'all',['<b>Disco time!</b> Boom on every beat, hi-hat on the AND. Tunz-tz, tunz-tz!','<b>Ora disco!</b> Bum su ogni tempo, charleston sulla E. Tunz-tz, tunz-tz!'])]},
+ {ic:'🌪️',n:['Toms and fills','Tom e fill'],two:1,ex:[
+  E(76,8,{t1:'x...x...',t2:'..x...x.'},4,'all',['Meet the <b>toms</b>! High tom, low tom: bom, bum, bom, bum.','Ti presento i <b>tom</b>! Tom alto, tom basso: bom, bum, bom, bum.']),
+  E(72,8,{sn:'xxxxxxxx'},2,'all',['A <b>fill</b> on the snare: eight hits in a row, ta-ta-ta-ta. Even and calm.','Un <b>fill</b> sul rullante: otto colpi di fila, ta-ta-ta-ta. Uguali e tranquilli.']),
+  E(76,8,{sn:'xx......',t1:'..xx....',t2:'....xxxx'},4,'all',['Down the stairs: snare, snare, high tom, high tom, low tom… Brrrum!','Giù per le scale: rullante, rullante, tom alto, tom alto, tom basso… Brrrum!']),
+  E(76,8,{hh:'x.x.x.x.x.x.....',bd:'x...x...x.......',sn:'..x...x...x.....',t1:'............xx..',t2:'..............xx'},4,'all',['One bar of groove, one bar with a <b>fill</b> at the end. Like a real song!','Una battuta di groove, una con il <b>fill</b> alla fine. Come in una vera canzone!']),
+  E(80,8,{cr:'x...............',hh:'..x.x.x.x.x.....',bd:'x...x...x.......',sn:'..x...x...x.....',t1:'............xx..',t2:'..............xx'},4,'all',['After the fill, a <b>crash</b> on the cymbal, together with the bass drum. Splash!','Dopo il fill, un bel <b>colpo di piatto</b> insieme alla cassa. Splash!']),
+  E(80,8,{bd:'x...x...',t2:'x.xxx.xx'},4,'one',['A tribal groove on the low tom. Boom-boom, like a big drum in the jungle!','Un groove tribale sul tom basso. Bum-bum, come un tamburo nella giungla!'])]},
+ {ic:'⭐',n:['Sixteenths and styles','Semicrome e stili'],two:1,ex:[
+  E(56,16,{hh:'xxxxxxxxxxxxxxxx'},2,'all',['<b>Sixteenths</b>: four hits for every click. Ti-ki-ti-ki. Slow and even!','<b>Semicrome</b>: quattro colpi per ogni clic. Ti-ki-ti-ki. Lente e uguali!']),
+  E(60,16,{hh:'xxxxxxxxxxxxxxxx',bd:'x.......x.......',sn:'....x.......x...'},2,'all',['Sixteenths on the hi-hat, with boom and cha underneath. Two hands… and a foot!','Semicrome sul charleston, con bum e cia sotto. Due mani… e un piede!']),
+  E(80,16,{hh:'x.x.x.x.x.x.x.x.',bd:'x.....x...x.....',sn:'....x.......x...'},4,'all',['A bit of <b>funk</b>: the bass drum plays where you don’t expect it. Groove!','Un po’ di <b>funk</b>: la cassa suona dove non te l’aspetti. Groove!']),
+  E(76,12,{hh:'x.xx.xx.xx.x',bd:'x.....x.....',sn:'...x.....x..'},4,'all',['<b>Shuffle!</b> Long-short, long-short, like a trotting horse. Blues time.','<b>Shuffle!</b> Lungo-corto, lungo-corto, come un cavallo che trotta. È l’ora del blues.']),
+  E(70,16,{hh:'x.x.x.x.x.x.x.x.x.x.x.x.........',bd:'x.......x.......x.......x.......',sn:'....x.......x.......x...xxxx....',t1:'............................xx..',t2:'..............................xx'},4,'all',['A groove bar, then a fill in sixteenths: ta-ka-ta-ka, bom-bom, bum-bum!','Una battuta di groove, poi un fill in semicrome: ta-ka-ta-ka, bom-bom, bum-bum!']),
+  E(104,8,{cr:'x...............',hh:'..xxxxxxxxxx....',bd:'x...x...x...x...',sn:'..x...x...x.....',t1:'............xx..',t2:'..............xx'},4,'all',['<b>The big concert!</b> Groove, fill, crash. Play it, and you’re a rock star!','<b>Il grande concerto!</b> Groove, fill, piatto. Suonalo e sei una rock star!'])]}];
+// the very first bass drum exercise names the key or the pad
+ST[3].ex[0].say=[ST[3].ex[0].say[0]+(touch?'Tap the big pad: boom on 1 and 3.':'Press the <b>space bar</b>: boom on 1 and 3.'),ST[3].ex[0].say[1]+(touch?'Tocca il pad grande: bum sull’1 e sul 3.':'Premi la <b>barra spaziatrice</b>: bum sull’1 e sul 3.')];
+ST[4].ex[0].say=[ST[4].ex[0].say[0]+(touch?' Use <b>two fingers</b>.':' Press <b>two keys</b> at the same time.'),ST[4].ex[0].say[1]+(touch?' Usa <b>due dita</b>.':' Premi <b>due tasti</b> insieme.')];
+const NE=ST.reduce((a,s)=>a+s.ex.length,0),EXS=ST.flatMap((s,si)=>s.ex.map((e,k)=>Object.assign(e,{si,k,id:si*6+k,two:s.two})));
+const PASS=.8;
+
+/* ================= progress ================= */
+const KEY='igortime_drumschool';
+let PR={done:0,best:{},plays:{},lat:null,met:0};
+try{Object.assign(PR,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
+try{const S=JSON.parse(localStorage.getItem('igortime_v1'))||{},Pn=JSON.parse(localStorage.getItem('igortime_pending'))||{};
+ for(const o of[S.scores,Pn.scores]){const v=o&&o.drumschool&&+o.drumschool.all;if(v>PR.done)PR.done=Math.min(NE,v)}}catch(e){}
+const saveP=()=>{try{localStorage.setItem(KEY,JSON.stringify(PR))}catch(e){}};
+
+/* ================= sound: the same synthesized drums as the drums game ================= */
+let AC=null,OUT=null,NOISE=null;
+function audio(){if(AC)return AC;AC=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive'});OUT=AC.createGain();OUT.gain.value=.55;
+ const comp=AC.createDynamicsCompressor();comp.threshold.value=-10;comp.ratio.value=4;OUT.connect(comp);comp.connect(AC.destination);
+ NOISE=AC.createBuffer(1,AC.sampleRate*3,AC.sampleRate);const d=NOISE.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return AC}
+const METAL=[205.3,304.4,369.6,522.7,540,800];
+function metal(t,mult,dur,gain,hp){const g=AC.createGain(),bp=AC.createBiquadFilter(),h=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=10000;bp.Q.value=.8;h.type='highpass';h.frequency.value=hp;
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+.002);g.gain.exponentialRampToValueAtTime(.0008,t+dur);
+ for(const f of METAL){const o=AC.createOscillator();o.type='square';o.frequency.value=f*mult;o.connect(bp);o.start(t);o.stop(t+dur+.05)}bp.connect(h);h.connect(g);g.connect(OUT)}
+function noise(t,dur,gain,type,freq,q){const s=AC.createBufferSource();s.buffer=NOISE;const f=AC.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q||.7;const g=AC.createGain();
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+.002);g.gain.exponentialRampToValueAtTime(.0008,t+dur);s.connect(f);f.connect(g);g.connect(OUT);s.start(t,Math.random()*2);s.stop(t+dur+.05)}
+function tom(t,f0,dur){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(f0*1.7,t);o.frequency.exponentialRampToValueAtTime(f0,t+.05);o.frequency.exponentialRampToValueAtTime(f0*.82,t+dur);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.9,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+dur+.05);noise(t,.035,.35,'lowpass',2500)}
+function snare(t){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.setValueAtTime(330,t);o.frequency.exponentialRampToValueAtTime(185,t+.04);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.55,t+.002);g.gain.exponentialRampToValueAtTime(.001,t+.12);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+.15);
+ noise(t,.2,.62,'bandpass',3200,.55);noise(t,.09,.3,'highpass',6000)}
+function kick(t){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(155,t);o.frequency.exponentialRampToValueAtTime(52,t+.12);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(1.15,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+.42);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+.45);
+ const o2=AC.createOscillator(),g2=AC.createGain();o2.type='triangle';o2.frequency.setValueAtTime(110,t);g2.gain.setValueAtTime(.35,t);g2.gain.exponentialRampToValueAtTime(.001,t+.25);o2.connect(g2);g2.connect(OUT);o2.start(t);o2.stop(t+.3);
+ noise(t,.012,.4,'lowpass',3000)}
+function sound(id,t){t=Math.max(t,AC.currentTime);
+ if(id==='hh'){metal(t,1,.07,.5,7000);noise(t,.05,.18,'highpass',8000)}else if(id==='sn')snare(t);else if(id==='bd')kick(t);
+ else if(id==='t1')tom(t,205,.3);else if(id==='t2')tom(t,118,.48);else{metal(t,1.55,1.5,.32,3500);noise(t,1.3,.22,'highpass',5000);noise(t,.02,.3,'bandpass',4000,1)}}
+function click(t,acc){t=Math.max(t,AC.currentTime);const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(acc?1900:1400,t);
+ g.gain.setValueAtTime(acc?.3:.18,t);g.gain.exponentialRampToValueAtTime(.001,t+.05);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+.06)}
+function ding(ok){const t=AC.currentTime+.02;(ok?[72,76,79,84]:[67,72]).forEach((m,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.value=440*Math.pow(2,(m-69)/12);
+ g.gain.setValueAtTime(0,t+i*.09);g.gain.linearRampToValueAtTime(.16,t+i*.09+.01);g.gain.exponentialRampToValueAtTime(.001,t+i*.09+.4);o.connect(g);g.connect(OUT);o.start(t+i*.09);o.stop(t+i*.09+.45)})}
+/* when did the player really hit? the time of what is coming out of the speakers right now (+ the calibration) */
+function hitTime(){if(AC.getOutputTimestamp){const ts=AC.getOutputTimestamp();if(ts&&ts.contextTime>0&&ts.performanceTime>0)return ts.contextTime+(performance.now()-ts.performanceTime)/1000-(PR.lat||0)}
+ return AC.currentTime-(AC.outputLatency||AC.baseLatency||0)-(PR.lat||0)}
+
+/* ================= a session: listen to Rigor, then play ================= */
+let SES=null,TL=[],HITS=[],LIT={},CLK=[];
+function exOf(id){return EXS[id]}
+function lanes(ex){return ORDER.filter(k=>ex.L[k])}
+function cycleSteps(ex){return Math.max(...Object.values(ex.L).map(s=>s.length))}
+function notes(ex,t0,bars){const st=60/ex.bpm*4/ex.G,cyc=cycleSteps(ex),N=bars*ex.G,out=[];
+ for(let s=0;s<N;s++)for(const k of lanes(ex)){const pat=ex.L[k];if(pat[s%cyc%pat.length]==='x')out.push({p:k,t:t0+s*st,s,ok:null,err:0})}return out}
+/* schedule: count-in (one bar of clicks), then the pattern (demo) or the clicks only (your turn) */
+function schedule(mode){const ex=SES.ex,bt=60/ex.bpm,c0=AC.currentTime+.15,t0=c0+4*bt,bars=mode==='demo'?Math.max(2,cycleSteps(ex)/ex.G):ex.bars,len=bars*4;
+ CLK=[];for(let i=0;i<4;i++){click(c0+i*bt,i===0);CLK.push({at:c0+i*bt,n:i,count:1})}
+ for(let i=0;i<len;i++){const n=i%4,on=ex.metro==='all'||mode==='demo'||(ex.metro==='one'&&n===0)||(ex.metro==='fade'&&i<8);if(on)click(t0+i*bt,n===0);CLK.push({at:t0+i*bt,n,count:0,mute:!on})}
+ TL=notes(ex,t0,bars);if(mode==='demo')for(const h of TL)sound(h.p,h.t);
+ SES.t0=t0;SES.bt=bt;SES.end=t0+len*bt;SES.mode=mode;SES.bars=bars;HITS=[];return(SES.end-AC.currentTime)}
+/* scoring: each of your hits goes to the nearest expected hit of the same drum */
+function win(ex){return ex.si<4?{good:.08,ok:.16}:{good:.07,ok:.14}}
+function judgeHit(p,t){if(!SES||SES.mode!=='play')return;const W=win(SES.ex);let best=null,bd=.26;
+ for(const n of TL){if(n.p!==p||n.ok!==null)continue;const d=Math.abs(t-n.t);if(d<bd){bd=d;best=n}}
+ if(best&&bd<=W.ok){best.ok=bd<=W.good?1:.6;best.err=t-best.t}else HITS.push({p,t,extra:1})}
+function result(){const ex=SES.ex,N=TL.length,got=TL.reduce((a,n)=>a+(n.ok||0),0),extra=HITS.filter(h=>h.extra).length;
+ const acc=clamp((got-.35*extra)/N,0,1),m=TL.filter(n=>n.ok),mean=m.length?m.reduce((a,n)=>a+n.err,0)/m.length:0,missed=TL.filter(n=>n.ok===null).length;
+ return{acc,mean,missed,extra,pass:acc>=PASS}}
+function hit(p){if(!AC)return;if(AC.state==='suspended')AC.resume();sound(p,AC.currentTime);LIT[p]=T;
+ if(SES&&SES.phase==='calib'){SES.taps.push(hitTime());return}
+ if(SES&&SES.mode==='play'&&AC.currentTime<SES.end+.3)judgeHit(p,hitTime())}
+
+/* ================= the scene ================= */
+const cv=$('c'),g=cv.getContext('2d');let W=0,Hh=0,DPR=1,T=0;
+const SW=420,SH=462,rspr=document.createElement('canvas'),rx=rspr.getContext('2d');rspr.width=SW;rspr.height=Math.round(SH*(1+PAD));
+let igOK=false;H.loadIgor(()=>{igOK=true});
+const BL={next:1.5,start:-9};function blinkK(t){if(t>BL.next){BL.start=t;BL.next=t+(Math.random()<.2?.45:2.4+Math.random()*3.8)}const u=t-BL.start;return u<0||u>.26?0:u<.07?u/.07:u<.12?1:1-(u-.12)/.14}
+function paintRigor(t){const k=blinkK(t);paintAvatar(rx,IgorRigor.LOOK,k,k,SW,rspr.height);const sc=Math.min(SW/663,rspr.height/(730*(1+PAD)));rx.setTransform(sc,0,0,sc,(SW-663*sc)/2,PAD*730*sc);
+ IgorRigor.hair(rx);let a=Math.sin(t*1.3)*.05,b=null;
+ if(AC&&SES&&SES.end&&AC.currentTime<SES.end+.2){const ph=((AC.currentTime-SES.t0)/SES.bt)%1;if(AC.currentTime>SES.t0-4*SES.bt){a=-.35+Math.pow(1-((ph+1)%1),3)*.55;b=-.35+Math.pow(1-((ph+.5)%1),3)*.55}}
+ IgorRigor.sticks(rx,a,b);rx.setTransform(1,0,0,1,0,0)}
+let L={};
+function layout(){const top=58,barH=$('bar').offsetHeight||170,sh=Math.max(120,Hh-top-barH),land=W>Hh*1.05;
+ if(land){const mh=Math.min(sh*.8,W*.24);L={land,top,sh,m:{x:W*.15,y:top+sh*.52,h:mh},b:{x:W*.3,y:top+sh*.05,w:W*.66,h:sh*.84}}}
+ else{const bh=Math.min(sh*.62,W*.75);L={land,top,sh,b:{x:10,y:top+4,w:W-20,h:bh},m:{x:W*.24,y:top+bh+(sh-bh)*.5,h:Math.min((sh-bh)*.95,W*.42)}}}}
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;Hh=innerHeight;cv.width=W*DPR;cv.height=Hh*DPR;layout()}
+addEventListener('resize',()=>{resize();placeBubble()});
+function room(){const gr=g.createLinearGradient(0,0,0,Hh);gr.addColorStop(0,'#2a1f2e');gr.addColorStop(.25,'#d9cfb8');gr.addColorStop(.7,'#cfc3a8');g.fillStyle=gr;g.fillRect(0,0,W,Hh);
+ const wy=Hh*.72;g.fillStyle='#4a3a4c';g.fillRect(0,wy,W,Hh*.1);g.fillStyle='#8c8174';g.fillRect(0,wy+Hh*.1,W,Hh);g.fillStyle='#2e2430';g.fillRect(0,wy-4,W,6);
+ // a rock poster with a star
+ if(L.land){const px=W*.03,py=Hh*.14;g.fillStyle='#1f1a2a';g.fillRect(px,py,62,84);g.fillStyle='#d6322b';g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?10:24;g.lineTo(px+31+q*Math.cos(a),py+34+q*Math.sin(a))}g.fill();
+  g.fillStyle='#f3e7d3';g.font='700 10px Fredoka,sans-serif';g.textAlign='center';g.fillText('RIGOR',px+31,py+70)}}
+/* the rock room: fairy lights, a guitar on the wall, an amp stack, a lava lamp, records and a rug */
+function decor(){const wy=Hh*.72,s=clamp(Math.min(W,Hh)/700,.5,1.3),B=L.b,M=L.m;
+ // fairy lights along the top of the wall
+ if(L.land){g.strokeStyle='rgba(40,30,30,.6)';g.lineWidth=1.5;g.beginPath();for(let x=0;x<=W;x+=8){const y=66+Math.sin(x/W*Math.PI*6)*8+10;x?g.lineTo(x,y):g.moveTo(x,y)}g.stroke();
+  const cols=['#ff6a5e','#f6d34a','#7fe08a','#6f9bff','#c49bff'];for(let i=0;i*38<W;i++){const x=i*38+12,y=66+Math.sin(x/W*Math.PI*6)*8+14,on=.55+.45*Math.sin(T*3+i*1.7);g.fillStyle=cols[i%5];g.globalAlpha=on;g.beginPath();g.arc(x,y,4,0,TAU);g.fill();g.globalAlpha=on*.25;g.beginPath();g.arc(x,y,10,0,TAU);g.fill()}g.globalAlpha=1}
+ // a rug under the teacher
+ g.fillStyle='#6a3b4f';g.beginPath();g.ellipse(M.x,M.y+M.h*.5,M.h*.55,M.h*.09,0,0,TAU);g.fill();g.strokeStyle='#e8c27a';g.lineWidth=3;g.beginPath();g.ellipse(M.x,M.y+M.h*.5,M.h*.45,M.h*.065,0,0,TAU);g.stroke();
+ // the amp stack (right of the board in landscape, bottom right in portrait)
+ const ax=L.land?Math.min(W-70*s,B.x+B.w+8):W-84*s,ay=wy+Hh*.1,aw=70*s;if(ax+aw<=W+4&&(L.land?W-(B.x+B.w)>40:true)){
+  for(let k=0;k<2;k++){const y0=ay-(k+1)*aw*.8;g.fillStyle='#1f1b1a';rr(g,ax,y0,aw,aw*.78,6);g.fill();g.fillStyle='#3a3433';rr(g,ax+aw*.08,y0+aw*.12,aw*.84,aw*.58,4);g.fill();
+   g.fillStyle='#2a2524';for(const[cx,cy]of[[.3,.3],[.7,.3],[.3,.58],[.7,.58]]){g.beginPath();g.arc(ax+aw*cx,y0+aw*cy,aw*.13,0,TAU);g.fill()}}
+  if(L.land){g.save();g.translate(ax-6*s,ay-6*s);g.rotate(-.18);g.scale(.8*s,.8*s);g.fillStyle='#2b2018';g.fillRect(-4,-150,8,90);g.fillStyle='#1d1d1d';rr(g,-7,-172,14,24,3);g.fill();g.fillStyle='#d6322b';g.strokeStyle='#2b2018';g.lineWidth=2.5;g.beginPath();g.moveTo(0,-72);g.bezierCurveTo(-36,-80,-38,-40,-22,-26);g.bezierCurveTo(-30,-4,-8,12,0,4);g.bezierCurveTo(10,12,32,-2,22,-24);g.bezierCurveTo(40,-42,30,-76,0,-72);g.closePath();g.fill();g.stroke();g.fillStyle='#f3efe2';g.fillRect(-10,-40,20,5);g.restore()}
+  g.fillStyle='#d9a868';g.font=`700 ${Math.round(aw*.16)}px Fredoka,sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('RIGOR',ax+aw/2,ay-aw*1.56)}
+ // an electric guitar hanging on the wall
+ const gx=L.land?W*.27:W*.86,gy=L.land?Hh*.26:B.y+B.h+40*s,gs=(L.land?1:.8)*s;if(L.land||gy+130*gs>wy-60){}else{g.save();g.translate(gx,gy);g.rotate(.25);g.scale(gs,gs);
+  g.fillStyle='#2b2018';g.fillRect(-4,-70,8,80);g.fillStyle='#1d1d1d';rr(g,-7,-92,14,24,3);g.fill();
+  g.fillStyle='#d6322b';g.strokeStyle='#2b2018';g.lineWidth=2.5;g.beginPath();g.moveTo(0,8);g.bezierCurveTo(-36,0,-38,40,-22,54);g.bezierCurveTo(-30,76,-8,92,0,84);g.bezierCurveTo(10,92,32,78,22,56);g.bezierCurveTo(40,38,30,4,0,8);g.closePath();g.fill();g.stroke();
+  g.fillStyle='#f3efe2';g.fillRect(-10,40,20,5);g.fillStyle='#2b2018';for(const y of[28,58])g.fillRect(-12,y,24,4);g.restore()}
+ // a lava lamp on the floor, left
+ const lx=L.land?W*.035:W*.06,ly=wy+Hh*.09;if(L.land||M.x-M.h*.45>lx+30){g.fillStyle='#3a3a3f';g.beginPath();g.moveTo(lx-14*s,ly);g.lineTo(lx+14*s,ly);g.lineTo(lx+8*s,ly-16*s);g.lineTo(lx-8*s,ly-16*s);g.closePath();g.fill();
+  const gr=g.createLinearGradient(0,ly-80*s,0,ly-16*s);gr.addColorStop(0,'#ff9ec7');gr.addColorStop(1,'#c49bff');g.fillStyle=gr;g.beginPath();g.moveTo(lx-8*s,ly-16*s);g.lineTo(lx+8*s,ly-16*s);g.lineTo(lx+12*s,ly-60*s);g.lineTo(lx+5*s,ly-82*s);g.lineTo(lx-5*s,ly-82*s);g.lineTo(lx-12*s,ly-60*s);g.closePath();g.fill();
+  g.fillStyle='#ffd36a';for(let k=0;k<3;k++){const yy=ly-24*s-((T*8+k*20)%54)*s;g.beginPath();g.ellipse(lx+Math.sin(T+k)*3*s,yy,5*s,7*s,0,0,TAU);g.fill()}
+  g.fillStyle='#3a3a3f';g.fillRect(lx-5*s,ly-88*s,10*s,7*s)}
+ // a crate of records
+ if(L.land){const rx=W*.22,ry=wy+Hh*.11;g.fillStyle='#8a5a33';rr(g,rx,ry-34*s,64*s,34*s,3);g.fill();for(let k=0;k<6;k++){g.fillStyle=['#1d1d1d','#d6322b','#2f6fd6','#f6d34a','#1d1d1d','#7fe08a'][k];g.fillRect(rx+6*s+k*9*s,ry-48*s+((k*7)%3)*3*s,7*s,20*s)}}}
+const chalk=(sz,w=500)=>{g.font=`${w} ${sz}px Fredoka, sans-serif`;g.fillStyle='rgba(238,242,230,.92)';g.textAlign='center';g.textBaseline='middle'};
+function board(){const B=L.b;g.fillStyle='#6b4a2e';rr(g,B.x-9,B.y-9,B.w+18,B.h+18,10);g.fill();g.fillStyle='#2f4a3a';rr(g,B.x,B.y,B.w,B.h,4);g.fill();
+ g.fillStyle='#7a5232';g.fillRect(B.x+B.w*.1,B.y+B.h+6,B.w*.8,7);g.save();g.beginPath();g.rect(B.x,B.y,B.w,B.h);g.clip();boardContent(B);g.restore()}
+function glyph(p,x,y,r,col,hollow){g.save();g.strokeStyle=col;g.fillStyle=col;g.lineWidth=Math.max(2,r*.32);g.lineCap='round';
+ if(p==='hh'){g.beginPath();g.moveTo(x-r,y-r);g.lineTo(x+r,y+r);g.moveTo(x+r,y-r);g.lineTo(x-r,y+r);g.stroke()}
+ else if(p==='cr'){g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?r*.5:r*1.25;g.lineTo(x+q*Math.cos(a),y+q*Math.sin(a))}g.closePath();hollow?g.stroke():g.fill()}
+ else if(p==='sn'){g.beginPath();g.moveTo(x,y-r*1.1);g.lineTo(x+r*1.1,y);g.lineTo(x,y+r*1.1);g.lineTo(x-r*1.1,y);g.closePath();hollow?g.stroke():g.fill()}
+ else if(p==='bd'){const q=r*.95;hollow?g.strokeRect(x-q,y-q,2*q,2*q):g.fillRect(x-q,y-q,2*q,2*q)}
+ else{g.beginPath();g.arc(x,y,p==='t2'?r*1.05:r*.75,0,TAU);hollow?g.stroke():g.fill()}g.restore()}
+function countLab(G,s){const b=Math.floor(s/(G/4))+1,r=s%(G/4);if(r===0)return String(b);if(G===8)return tt('&','e');if(G===16)return r===2?tt('&','e'):'·';return'·'}
+function boardContent(B){const cx=B.x+B.w/2,s=Math.min(B.w/14,B.h/7);
+ if(!SES){chalk(s*.9,600);g.fillText(tt('Drum school','Scuola di batteria'),cx,B.y+B.h*.36);chalk(s*.6);g.fillText('🥁  ♪  🤘',cx,B.y+B.h*.64);return}
+ if(SES.phase==='calib'){calibBoard(B,s);return}
+ const ex=SES.ex,ln=lanes(ex),cyc=cycleSteps(ex),now=AC?AC.currentTime:0;
+ chalk(Math.max(12,s*.42));g.globalAlpha=.75;g.fillText(`${T2(ST[ex.si].n)} · ${ex.k+1}/6 · ${ex.bpm} bpm`,cx,B.y+B.h*.08);g.globalAlpha=1;
+ // the grid: one row per drum, one column per step (one or two bars)
+ g.font=`600 ${Math.max(10,Math.min(s*.62,16))}px Fredoka,sans-serif`;const lw=Math.max(...ln.map(k=>g.measureText(T2(P[k].n)).width));
+ const x0=B.x+Math.max(B.w*.06,lw+16),x1=B.x+B.w*.97,y0=B.y+B.h*.2,y1=B.y+B.h*(SES.res?.74:.84),cw=(x1-x0)/cyc,rh=Math.min((y1-y0)/(ln.length+.6),s*1.6),gy=y0+((y1-y0)-rh*(ln.length+.6))/2;
+ const per=ex.G/4;
+ for(let c=0;c<cyc;c++){const x=x0+c*cw;if(c%per===0){g.fillStyle=c%ex.G===0?'rgba(255,255,255,.1)':'rgba(255,255,255,.05)';g.fillRect(x+1,gy,cw*per-2,rh*ln.length)}}
+ chalk(Math.max(9,Math.min(rh*.42,cw*.75)),600);for(let c=0;c<cyc;c++){const lab=countLab(ex.G,c%ex.G);g.globalAlpha=c%per===0?.95:.5;g.fillText(lab,x0+(c+.5)*cw,gy+rh*(ln.length+.35))}g.globalAlpha=1;
+ // where are we?
+ let cur=-1,cycN=0;if(SES.t0&&now>=SES.t0&&now<SES.end){const st=(now-SES.t0)/(SES.bt*4/ex.G);cur=Math.floor(st)%cyc;cycN=Math.floor(Math.floor(st)/cyc)}
+ ln.forEach((k,r)=>{const y=gy+rh*(r+.5),col=P[k].col;g.font=`600 ${Math.max(10,Math.min(s*.62,16))}px Fredoka,sans-serif`;g.textAlign='right';g.fillStyle=col;g.fillText(T2(P[k].n),x0-8,y);
+  const pat=ex.L[k];for(let c=0;c<cyc;c++){if(pat[c%pat.length]!=='x')continue;const x=x0+(c+.5)*cw,r0=Math.max(4,Math.min(rh*.3,cw*.36));
+   // during your turn: green = on time, orange = a little early or late, white ring = missed
+   let st=null;if(SES.mode==='play'||SES.res){const mine=TL.filter(n=>n.p===k&&n.s%cyc===c);const last=mine.filter(n=>n.t<=now+.02||SES.res);const n=SES.res?pickShow(mine):last[last.length-1];
+    if(n&&(n.t<now-.17||SES.res))st=n.ok===1?'g':n.ok?'o':'m'}
+   const lit=cur===c&&(SES.mode==='demo'||SES.mode==='play');
+   glyph(k,x,y,r0*(lit?1.25:1),st==='g'?'#7fe08a':st==='o'?'#ffc06a':col,st==='m');
+   if(st==='m'){g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=2;g.beginPath();g.arc(x,y,r0*1.7,0,TAU);g.stroke()}
+   if(st==='o'&&SES.res){const n=pickShow(TL.filter(q=>q.p===k&&q.s%cyc===c));if(n){g.fillStyle='#ffc06a';g.font=`700 ${Math.max(9,r0)}px Fredoka`;g.textAlign='center';g.fillText(n.err<0?'◂':'▸',x,y-r0*1.9)}}}});
+ if(cur>=0){const x=x0+(cur+.5)*cw;g.strokeStyle='rgba(255,224,138,.8)';g.lineWidth=3;g.beginPath();g.moveTo(x,gy-6);g.lineTo(x,gy+rh*ln.length+4);g.stroke()}
+ // count-in: big numbers
+ let cl=null;for(const c of CLK)if(c.at<=now)cl=c;
+ if(cl&&cl.count&&now-cl.at<SES.bt){chalk(s*2.2,700);g.fillStyle='rgba(246,211,74,.95)';g.fillText(String(cl.n+1),cx,B.y+B.h*.5)}
+ // the beat dots under the grid
+ if(cl&&now<SES.end+.1){const dy=B.y+B.h*.93,gap=Math.min(26,B.w*.06);for(let i=0;i<4;i++){const on=i===cl.n&&now-cl.at<SES.bt;g.fillStyle=on?(i===0?'#f6d34a':'#f3e7d3'):'rgba(243,231,211,.25)';g.beginPath();g.arc(cx+(i-1.5)*gap,dy,on?6:4,0,TAU);g.fill()}
+  if(cl.mute&&!cl.count&&SES.mode==='play'){chalk(Math.max(10,s*.38));g.globalAlpha=.6;g.fillText(tt('(click off: keep the time!)','(clic spento: tieni il tempo!)'),cx,dy-16);g.globalAlpha=1}}
+ if(SES.res){const R_=SES.res;chalk(Math.max(16,s*.8),700);g.fillStyle=R_.pass?'#7fe08a':'#ffc06a';g.fillText(Math.round(R_.acc*100)+'%',cx,B.y+B.h*.86)}}
+/* in the summary every cell shows the hit of the last cycle you played */
+function pickShow(list){if(!list.length)return null;return list[list.length-1]}
+function drawRigor(){const F=L.m,w=F.h*SW/SH;let bob=0;if(AC&&SES&&SES.end&&AC.currentTime<SES.end&&AC.currentTime>SES.t0-4*SES.bt){const ph=((AC.currentTime-SES.t0)/SES.bt)%1;bob=Math.pow(1-((ph+1)%1),4)*F.h*.025}
+ const hop=bubTxt&&!bob?Math.abs(Math.sin(T*4))*F.h*.015:0,by=F.y+bob-hop+Math.sin(T*1.6)*F.h*.01;g.save();g.translate(F.x,by);g.fillStyle='rgba(40,20,8,.25)';g.beginPath();g.ellipse(0,F.h*.5-bob,w*.34,F.h*.05,0,0,TAU);g.fill();
+ if(igOK)g.drawImage(rspr,-w/2,-F.h/2-F.h*PAD,w,F.h*(1+PAD));g.restore()}
+let ANT=null;
+function frame(ts){const t=ts/1000,dt=Math.min(.05,t-(frame.l||t));frame.l=t;T+=dt;g.setTransform(DPR,0,0,DPR,0,0);room();decor();board();
+ if(igOK)paintRigor(T);drawRigor();lightPads();
+ if(ANT){ANT.t+=dt;const F=L.m,u=clamp(ANT.t/.6,0,1),x=lerp(ANT.x,F.x+F.h*.32,u),y=lerp(ANT.y,F.y+F.h*.42,u)-Math.sin(u*Math.PI)*80;if(u<1)drawAnt(g,x,y,Math.max(.5,F.h/260),-.5+u,T,{});if(ANT.t>1)ANT=null}
+ if(SES&&SES.phase==='calib')calibTick();
+ requestAnimationFrame(frame)}
+
+/* ================= Rigor talks ================= */
+const bub=$('bubble');let bubTxt='';
+function say(html){bubTxt=html;bub.innerHTML=html?`<small style="display:block;font-size:.68em;opacity:.65">${TEACHER}</small>`+html:'';bub.style.opacity=html?1:0;placeBubble()}
+function placeBubble(){if(!bubTxt)return;const M=L.m;if(!M)return;const bw=bub.offsetWidth,bh=bub.offsetHeight,headY=M.y-M.h*.5-M.h*PAD*.55;
+ let x=L.land?M.x-bw*.25:M.x-M.h*.25,y=headY-bh-14;x=clamp(x,10,W-bw-10);
+ if(!L.land){y=clamp(y,L.b.y+L.b.h+8,Hh);if(y+bh>M.y-M.h*.15)y=Math.max(64,L.b.y+L.b.h-bh*.6)}else y=Math.max(64,y);
+ bub.style.transform=`translate(${x}px,${y}px)`;bub.style.setProperty('--tx',clamp(M.x-x,24,bw-24)+'px')}
+
+/* ================= the pads ================= */
+const bar=$('bar');
+function setBar(html){bar.innerHTML=html;layout();placeBubble();bindPads()}
+function padsHtml(ln){return`<div class="pads" style="--n:${ln.length}">${ln.map(k=>`<button class="pad pad-${k}" data-p="${k}" style="--c:${P[k].col}"><span class="nm">${T2(P[k].n)}</span>${touch?'':`<span class="ky">${k==='bd'?tt('SPACE','SPAZIO'):P[k].key}</span>`}</button>`).join('')}</div>`}
+function bindPads(){bar.querySelectorAll('[data-p]').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();hit(b.dataset.p)});b.addEventListener('contextmenu',e=>e.preventDefault())})}
+function lightPads(){bar.querySelectorAll('[data-p]').forEach(b=>{const a=T-(LIT[b.dataset.p]??-9);b.style.setProperty('--k',a<.25?(1-a/.25).toFixed(2):'0')});
+ if(AC&&SES&&SES.mode==='demo'&&SES.end){const now=AC.currentTime;for(const n of TL)if(!n.lit&&n.t<=now){n.lit=1;LIT[n.p]=T}}}
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(KEYMAP[k]!==undefined&&!e.repeat&&(SES&&(SES.phase==='ex'||SES.phase==='calib'))){e.preventDefault();hit(KEYMAP[k]);return}
+ if(e.key==='Enter'&&!e.repeat){const b=$('next')||$('play');if(b){e.preventDefault();b.click()}}});
+
+/* ================= flow ================= */
+function hdr(){if(!SES||SES.phase==='calib'){$('st1').innerHTML=`${tt('exercises','esercizi')} <b>${PR.done}/${NE}</b>`;$('dots').innerHTML='';return}
+ const ex=SES.ex;$('st1').innerHTML=`${tt('stage','tappa')} <b>${ex.si+1}</b> · <b>${ex.k+1}/6</b>`;
+ $('dots').innerHTML=ST[ex.si].ex.map((e,k)=>`<i class="${e.id<PR.done?'ok':k===ex.k?'now':''}"></i>`).join('')}
+$('stat').onclick=()=>{if(SES)stopAll(),openMap()};
+function stopAll(){if(SES){SES.end=0;SES.mode=null}TL=[];CLK=[];clearTimeout(stopAll.t)}
+function openMap(){SES=null;say('');setBar('');hdr();const cur=Math.min(PR.done,NE-1),fin=PR.done>=NE;
+ const chips=ST.map((s,si)=>{const n=Math.max(0,Math.min(6,PR.done-si*6)),open=OPEN||si*6<=PR.done;return`<button data-st="${si}" class="${n>=6?'done':open?'cur':''}" ${open?'':'disabled'}><span class="ic">${open?s.ic:'🔒'}</span>${T2(s.n)}<small>${n>=6?'✓ 6/6':n+'/6'}</small></button>`}).join('');
+ $('startCard').innerHTML=`<h2>${tt('<em>Drum</em> school','Scuola di <em>batteria</em>')}</h2>
+ <p>${tt(`<b>${TEACHER}</b> teaches you to play the drums, from zero: first keeping the time on the hi-hat, then off-beats, bass drum and snare, your first rock groove, fills and styles. ${NE} exercises: pass one and the next one opens.`,`<b>${TEACHER}</b> ti insegna a suonare la batteria, da zero: prima a tenere il tempo sul charleston, poi i levare, la cassa e il rullante, il primo groove rock, i fill e gli stili. ${NE} esercizi: ne superi uno e si apre il prossimo.`)}</p>
+ <p>${touch?tt('Tap the pads at the bottom of the screen; from stage 5 you need <b>two fingers</b>.','Tocca i pad in basso; dalla tappa 5 servono <b>due dita</b>.'):tt('Keys: <b>A</b> hi-hat · <b>S</b> snare · <b>D</b> high tom · <b>F</b> low tom · <b>G</b> cymbal · <b>space</b> bass drum (or click the pads).','Tasti: <b>A</b> charleston · <b>S</b> rullante · <b>D</b> tom alto · <b>F</b> tom basso · <b>G</b> piatto · <b>spazio</b> cassa (oppure clicca i pad).')}</p>
+ <div class="map">${chips}</div>
+ <p class="small">${tt(`${Math.round(PASS*100)}% to pass · use headphones with a cable if you can · `,`${Math.round(PASS*100)}% per passare · se puoi, cuffie col filo · `)}<a href="#" id="cal">${PR.lat==null?tt('tune the timing','regola il tempo'):tt('tune the timing again','regola di nuovo il tempo')}</a></p>
+ <div class="row"><button class="main" id="go">${fin?tt('Play the big concert again','Risuona il grande concerto'):PR.done?tt('Continue · exercise ','Continua · esercizio ')+(Math.floor(cur/6)+1)+'.'+(cur%6+1):tt('Start the first lesson','Inizia la prima lezione')}</button></div>
+ <p class="small"><a href="${document.querySelector('a.igback').href}">${tt('← back to the island','← torna all’isola')}</a></p>`;
+ $('start').hidden=false;$('end').hidden=true;
+ $('go').onclick=()=>start(fin?NE-1:cur);$('cal').onclick=e=>{e.preventDefault();calibrate(null)};
+ document.querySelectorAll('.map button[data-st]').forEach(b=>b.onclick=()=>{const si=+b.dataset.st;start(PR.done>=si*6&&PR.done<si*6+6?PR.done:si*6)})}
+function start(id){audio();if(AC.state==='suspended')AC.resume();$('start').hidden=true;$('end').hidden=true;
+ // the very first time: tune the timing (phones with bluetooth headphones can be late)
+ if(PR.lat==null&&!OPEN){calibrate(id);return}
+ if(!PR.met){PR.met=1;saveP()}exercise(id)}
+function exercise(id){audio();stopAll();const ex=exOf(id);SES={ex,phase:'ex',mode:null,res:null};hdr();
+ say(T2(ex.say)+(ex.metro==='one'&&!/1/.test(T2(ex.say))?' '+tt('The click is only on 1.','Il clic è solo sull’1.'):''));
+ setBar(`<div class="row"><button id="demo">▶ ${tt('Listen to Rigor','Ascolta Rigor')}</button><button class="main" id="play">${tt('Your turn! ▸','Tocca a te! ▸')}</button></div>`+padsHtml(lanes(ex)));
+ $('demo').onclick=demo;$('play').onclick=play;setTimeout(()=>{if(SES&&SES.ex===ex&&!SES.mode)demo()},700)}
+function demo(){if(!SES)return;const ex=SES.ex;SES.res=null;const d=schedule('demo');busy(true);clearTimeout(stopAll.t);stopAll.t=setTimeout(()=>{if(SES&&SES.mode==='demo'){SES.mode=null;busy(false);say(pick([['Your turn!','Tocca a te!'],['Now you!','Ora tu!'],['Ready? Go!','Pronto? Vai!']].map(T2)))}},d*1000+200)}
+function play(){if(!SES)return;SES.res=null;const d=schedule('play');busy(true);say(tt('One, two, three, four…','Uno, due, tre, quattro…'));
+ clearTimeout(stopAll.t);stopAll.t=setTimeout(done,d*1000+350)}
+function busy(on){const a=$('demo'),b=$('play');if(a)a.disabled=on;if(b)b.disabled=on}
+const PRAISE=[['Rock on!','Rock on!'],['Awesome!','Grandioso!'],['Yeah! You’re a natural!','Yeah! Sei nato per questo!'],['Wicked groove!','Che groove!'],['Perfect time!','Tempo perfetto!']];
+function done(){if(!SES||SES.mode!=='play')return;const ex=SES.ex,R_=result();SES.res=R_;SES.mode=null;ding(R_.pass);
+ PR.plays[ex.id]=(PR.plays[ex.id]|0)+1;if(!(PR.best[ex.id]>=R_.acc))PR.best[ex.id]=Math.round(R_.acc*100)/100;
+ const isNew=R_.pass&&ex.id===PR.done;let seeds=0;if(isNew){PR.done++;seeds=2+(ex.k===5?3:0)}else if(R_.pass)seeds=1;saveP();
+ if(seeds||isNew){let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}p.seeds=(p.seeds|0)+seeds;p.scores=p.scores||{};p.scores.drumschool=p.scores.drumschool||{};if(!(p.scores.drumschool.all>=PR.done))p.scores.drumschool.all=PR.done;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}}
+ let tip='';if(R_.missed>TL.length*.25)tip=tt('A few hits were missing: listen to me once more.','Mancava qualche colpo: riascoltami una volta.');
+ else if(R_.mean>.03)tip=tt('You were a tiny bit <b>late</b>: hit a little earlier, together with the click.','Eri un filo <b>in ritardo</b>: colpisci un po’ prima, insieme al clic.');
+ else if(R_.mean<-.03)tip=tt('You were a tiny bit <b>early</b>: relax, wait for the click.','Eri un filo <b>in anticipo</b>: rilassati, aspetta il clic.');
+ else if(R_.extra>2)tip=tt('A few extra hits: play only what is on the board.','Qualche colpo in più: suona solo quello che c’è sulla lavagna.');
+ if(R_.pass){const B=L.b;ANT={x:B.x+B.w*.5,y:B.y+B.h*.5,t:0};say(T2(pick(PRAISE))+' '+(isNew?(ex.id===NE-1?tt('You finished the whole school. You’re a real rock star!','Hai finito tutta la scuola. Sei una vera rock star!'):tt('Next exercise unlocked.','Il prossimo esercizio è aperto.')):'')+(tip&&R_.acc<.95?' '+tip:''))}
+ else say(pick([['So close!','Ci sei quasi!'],['Good energy!','Bella energia!'],['Nice try!','Bel tentativo!']].map(T2))+' '+(tip||tt(`You need ${Math.round(PASS*100)}%: one more go!`,`Serve il ${Math.round(PASS*100)}%: un altro giro!`)));
+ const last=ex.id>=NE-1||!(OPEN||ex.id+1<=PR.done);
+ setBar(`<div class="row"><button id="demo">▶ ${tt('Listen to Rigor','Ascolta Rigor')}</button><button ${R_.pass&&!last?'':'class="main"'} id="play">↺ ${tt('Play again','Riprova')}</button>${R_.pass&&!last?`<button class="main" id="next">${tt('Next ▸','Avanti ▸')}</button>`:''}<button id="map">${tt('All the stages','Tutte le tappe')}</button></div>${seeds?`<div class="row seeds">+${seeds} ${seeds>1?tt('tofu seeds','semi di tofu'):tt('tofu seed','seme di tofu')}</div>`:''}`+padsHtml(lanes(ex)));
+ $('demo').onclick=demo;$('play').onclick=play;$('map').onclick=()=>{stopAll();openMap()};const nx=$('next');if(nx)nx.onclick=()=>exercise(ex.id+1);
+ if(isNew&&ex.k===5&&PR.done>0)import('/board.js?v=5').then(B=>B.show($('startCard'),'drumschool','all',PR.done,ME.avatar,tt('How far everyone got · exercises','Fin dove siete arrivati · esercizi'))).catch(()=>{})}
+
+/* ================= tuning the timing: tap along with 8 clicks ================= */
+let CAL=null;
+function calibrate(then){stopAll();SES={phase:'calib',taps:[],then};hdr();say(tt('Before we rock: let’s <b>tune the timing</b>. Tap the pad (or press space) <b>together with the clicks</b>, eight times.','Prima di suonare: <b>regoliamo il tempo</b>. Tocca il pad (o premi spazio) <b>insieme ai clic</b>, otto volte.'));
+ setBar(`<div class="row"><button class="main" id="play">${tt('Start the clicks','Fai partire i clic')}</button><button id="skip">${tt('Skip','Salta')}</button></div><div class="pads" style="--n:1"><button class="pad" data-p="bd" style="--c:#c49bff"><span class="nm">${tt('tap here','tocca qui')}</span>${touch?'':'<span class="ky">'+tt('SPACE','SPAZIO')+'</span>'}</button></div>`);
+ $('skip').onclick=()=>{if(PR.lat==null){PR.lat=0;saveP()}fin()};
+ const fin=()=>{SES=null;if(then!=null)exercise(then);else openMap()};
+ $('play').onclick=()=>{audio();const bt=60/90,c0=AC.currentTime+.2;SES.taps=[];SES.clicks=[];for(let i=0;i<12;i++){click(c0+i*bt,i%4===0);SES.clicks.push(c0+i*bt)}SES.t0=c0+4*bt;SES.bt=bt;SES.end=c0+12*bt;CAL={c0,bt};$('play').disabled=true;
+  setTimeout(()=>{const offs=SES.taps.map(t=>{let b=1;for(const c of SES.clicks.slice(4)){const d=t-c;if(Math.abs(d)<Math.abs(b))b=d}return b}).filter(d=>Math.abs(d)<.3).sort((a,b)=>a-b);
+   if(offs.length<5){say(tt('I didn’t hear enough taps. Let’s try again!','Non ho sentito abbastanza colpi. Riproviamo!'));$('play').disabled=false;return}
+   const med=offs[Math.floor(offs.length/2)],old=PR.lat||0;PR.lat=Math.round(clamp(old+med,-.05,.4)*1000)/1000;saveP();
+   say(Math.abs(med)<.02?tt('Perfect: your timing is spot on. Let’s rock!','Perfetto: il tempo torna. Si suona!'):tt(`Done! I’ll correct ${Math.round(Math.abs(PR.lat)*1000)} ms of delay. Let’s rock!`,`Fatto! Correggo ${Math.round(Math.abs(PR.lat)*1000)} ms di ritardo. Si suona!`));
+   setTimeout(fin,2200)},(12*bt+.8)*1000)}}
+function calibBoard(B,s){const cx=B.x+B.w/2;chalk(s*.7,600);g.fillText(tt('Tap with the clicks','Tocca insieme ai clic'),cx,B.y+B.h*.22);
+ if(!CAL||!AC)return;const now=AC.currentTime,i=Math.floor((now-CAL.c0)/CAL.bt);for(let k=0;k<8;k++){const on=i-4===k,x=cx+(k-3.5)*Math.min(40,B.w*.1);g.fillStyle=on?'#f6d34a':k<i-4?'#7fe08a':'rgba(243,231,211,.25)';g.beginPath();g.arc(x,B.y+B.h*.55,on?11:8,0,TAU);g.fill()}
+ if(i>=0&&i<4){chalk(s*2,700);g.fillStyle='rgba(246,211,74,.95)';g.fillText(String(i+1),cx,B.y+B.h*.8)}}
+function calibTick(){}
+
+resize();openMap();requestAnimationFrame(frame);
+window.__ds={hitTime:()=>hitTime(),get AC(){return AC},PR,ST,EXS,get SES(){return SES},exercise,hit,result,get TL(){return TL},sched:schedule,calibrate};
+})();
+</script>
+</body></html>
