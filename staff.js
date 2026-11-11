@@ -88,7 +88,7 @@ function inbox(){if(unIn)unIn(),unIn=null;queue=[];note.hidden=true;if(!ME)retur
    gifts/<uid>/g/<id> {k: seeds|ants|veh, n, v, msg, by, byNick, at, st: new|got|back|gone|cancel, tk}
    new → the island applies it (IgorGift.apply) → got;  admin: got → back → the island takes it back (only what was given, never below zero) → gone with tk = how much was taken */
 let unG=null,onReady=null;
-async function handleGift(g){if(!ME)return;const ref=doc(db,'gifts',ME.uid,'g',g.id);
+async function handleGift(g){if(!ME||window.__igFrozen)return;const ref=doc(db,'gifts',ME.uid,'g',g.id);
  try{if(g.st==='new'){window.IgorGift.apply(g);await updateDoc(ref,{st:'got'})}
   else if(g.st==='back'){const tk=window.IgorGift.has(g.id)?window.IgorGift.take(g):0;await updateDoc(ref,{st:'gone',tk})}
   else if((g.st==='gone'||g.st==='cancel')&&window.IgorGift.has(g.id))window.IgorGift.take(g,true)}catch(e){console.warn('gift',e)}}
