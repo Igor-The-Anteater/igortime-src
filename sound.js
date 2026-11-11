@@ -191,6 +191,7 @@ const SFX={
  bell:f=>{f=f||880;const k=FOCUS?.3:1,bus=FOCUS?soloOut:sfxIn;tone(f,f,1.5,{g:.5*k,at:.003,bus});tone(f*2,f*2,.9,{g:.12*k,at:.003,bus});tone(f*2.76,f*2.76,.5,{g:.1*k,at:.002,bus});tone(f*5.4,f*5.4,.25,{g:.04*k,at:.002,bus})},
  whistle:o=>{const f=(o&&o.f)||880,bus=FOCUS?soloOut:igOut;tone(f,f,.66,{g:.34,at:.035,vib:f*.005,vibF:5.5,bus});tone(f*2,f*2,.4,{g:.025,at:.035,bus});if(!FOCUS)nz(.45,{f0:f*2,Q:8,g:.025,at:.05})},
  shake:k=>{for(let i=0;i<6;i++)nz(.13,{f0:R(1800,3400),Q:.8,g:.2,delay:i*.07,pan:R(-.5,.5)});const f=170+((k||0)%5)*22;tone(f,f*.8,.12,{type:'triangle',g:.45});tone(f*1.5,f*1.2,.1,{type:'triangle',g:.3,delay:.12})},
+ surf:()=>{nz(1.7,{buf:BROWN||WHITE,type:'lowpass',f0:300,f1:2400,Q:.6,g:.9,at:.55});nz(1.3,{f0:2600,f1:500,Q:.5,g:.35,delay:.6,at:.04});tone(70,45,.5,{g:.25,delay:.55})},
  thud:()=>{tone(R(140,190),90,.09,{g:.3});nz(.05,{f0:600,Q:1,g:.12})},
  shell:()=>{tone(1568,1568,.6,{g:.3,at:.003});tone(2349,2349,.45,{g:.2,delay:.08,at:.003});tone(3136,3136,.3,{g:.1,delay:.16,at:.003})},
  bottle:()=>{tone(300,1100,.1,{g:.45,type:'triangle'});nz(.07,{f0:3000,Q:2,g:.2});arp(784,[0,7,12],.1,{g:.3,d:.5,type:'triangle'})},
