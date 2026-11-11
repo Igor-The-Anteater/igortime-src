@@ -2274,7 +2274,7 @@ const BOTTLE_MSG=[['Tap a ready field: the tofu ants jump into your pocket.','To
  ['The greenhouse is a winter coat for a field.','La serra è un cappotto invernale per un campo.'],['Every instrument began as a stick, a stone or a shell.','Ogni strumento è nato da un bastone, una pietra o una conchiglia.'],['Igor, do you remember the deep sea? It remembers you.','Igor, ti ricordi l’abisso? Lui si ricorda di te.'],['A secret: play a game, get seeds, grow tofu.','Un segreto: fai un gioco, prendi semi, coltiva tofu.'],
  ['Slow is a speed too.','Anche piano è una velocità.'],['The Igorlets sleep at night. Let them dream.','Di notte gli Igorlets dormono. Lasciali sognare.'],['Two notes are already a song.','Due note sono già una canzone.'],['Thank you for looking after the island.','Grazie di prenderti cura dell’isola.']];
 const beachObjs=[];
-function beachMesh(it){const g=new THREE.Group();if(it.k==='bottle'){const b=new THREE.Mesh(new THREE.CylinderGeometry(.09,.1,.36,10),curve(new THREE.MeshLambertMaterial({color:'#8fcfb0',transparent:true,opacity:.78})));b.rotation.z=Math.PI/2;b.position.y=.1;g.add(b);
+function beachMesh(it){const g=new THREE.Group();if(it.k==='bottle'){const b=new THREE.Mesh(new THREE.CylinderGeometry(.09,.1,.36,10),curve(new THREE.MeshLambertMaterial({color:it.v!=null?btlCol(it.v):'#8fcfb0',transparent:true,opacity:.78})));b.rotation.z=Math.PI/2;b.position.y=.1;g.add(b);
   const nk=new THREE.Mesh(new THREE.CylinderGeometry(.04,.06,.12,8),b.material);nk.rotation.z=Math.PI/2;nk.position.set(.23,.1,0);g.add(nk);const ck=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.06,8),lam('#b48450'));ck.rotation.z=Math.PI/2;ck.position.set(.31,.1,0);g.add(ck);
   const pp=new THREE.Mesh(new THREE.BoxGeometry(.18,.06,.06),lam('#f4ecd6'));pp.position.y=.1;g.add(pp)}
  else{const S0=SHELL[it.v]||SHELLS[0];g.add(shellMesh(S0,1))}
@@ -2283,9 +2283,9 @@ function beachSync(){const B=FUN().beach;const _rm=o=>o&&o.parent&&o.parent.remo
 function beachSpot(){for(let k=0;k<40;k++){const a=Math.random()*TAU,r=R-1.05-Math.random()*.4,x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;
   if(!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.5)&&!FUN().beach.some(o=>Math.hypot(o.x-x,o.z-z)<3))return{x,z}}return null}
 function beachAdd(){const B=FUN().beach;if(B.length>=4)return;const p=beachSpot();if(!p)return;const r=Math.random();
- const it=r<.25?{k:'bottle',...p}:{k:'shell',v:shellRoll(),...p};B.push(it);fmDirty=true;beachSync()}
+ const it=r<.25?{k:'bottle',v:btlRoll(),...p}:{k:'shell',v:shellRoll(),...p};B.push(it);fmDirty=true;beachSync()}
 function beachTake(j){if(VISIT){visitNo();return}const B=FUN().beach,it=B[j];if(!it)return;B.splice(j,1);fmDirty=true;beachSync();const U=FUN();poke();bubbleQ.length=0;bubbleT=0;
- if(it.k==='bottle'){U.bottles++;snd('bottle');const m=BOTTLE_MSG[bottlePick()];say(tt('A bottle with a message!','Una bottiglia con un messaggio!'),2);say(`“${N(m)}”`,5);return}
+ if(it.k==='bottle'){btlPocket();U.bottles++;const bi=it.v!=null?it.v:btlRoll(),P=btlPocket();P[bi]=(P[bi]|0)+1;snd('bottle');btlPlay(bi,0);const m=BOTTLE_MSG[bottlePick()];say(tt(`A ${bi>=12?'rare ':''}bottle with a message! It’s a ${btlName(bi)}.`,`Una bottiglia${bi>=12?' rara':''} con un messaggio! È un ${btlName(bi)}.`),2.4);say(`“${N(m)}”`,5);if(barF().met)setTimeout(()=>say(tt('The empty bottle goes in my pocket: Barigor wants it for his shelf!','La bottiglia vuota la tengo in tasca: Barigor la vuole per il suo scaffale!'),3),400);return}
  gotShell(it.v)}
 function gotShell(v,gift){const U=FUN(),it={v};const S0=SHELL[it.v];if(!S0)return;const had=U.col[it.v]|0;U.col[it.v]=had+1;if(!had){U.colT=U.colT||{};U.colT[it.v]=Date.now()}snd(S0.ti===4?'sing':'shell',S0.ti);caseDirty=true;const n=shellN(),T0=TIERS[S0.ti],stars='★'.repeat(T0.st);
  if(!had){toast(`${stars} ${N(S0.N)} · ${n}/${SHELLS.length}`);
@@ -3072,7 +3072,7 @@ const barF=()=>{const F=FM();F.bar=F.bar||{};return F.bar};
   const m=new THREE.Mesh(new THREE.PlaneGeometry(.6,.9),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(mk),transparent:true}));m.position.set(-4.83,2.1,-.6);m.rotation.y=Math.PI/2;g.add(m)}
  // Barigor behind the counter
  const bpl=barMesh(1.35);bpl.position.set(-.4,.5,-2.15);g.add(bpl);{const stp=new THREE.Mesh(new THREE.BoxGeometry(1.4,.5,.9),Wd);stp.position.set(-.4,.25,-2.2);g.add(stp)}Rm.blocks.push({x:-.4,z:-2.2,r:.4});
- const BS=[["Welcome to the bar! What can I get you?","Benvenuto al bar! Cosa ti preparo?"],["A smoothie? The fizzy one is… lively!","Un frullato? Quello frizzante è… vivace!"],["Bring me empty bottles one day: I have plans for this shelf!","Un giorno portami le bottiglie vuote: ho dei progetti per questo scaffale!"],["Mango, tofu, a little umbrella. Perfect.","Mango, tofu, un ombrellino. Perfetto."]];
+ const BS=[["Welcome to the bar! What can I get you?","Benvenuto al bar! Cosa ti preparo?"],["A smoothie? The fizzy one is… lively!","Un frullato? Quello frizzante è… vivace!"],["Bring me the empty bottles from the beach: every colour is a note!","Portami le bottiglie vuote della spiaggia: ogni colore è una nota!"],["Mango, tofu, a little umbrella. Perfect.","Mango, tofu, un ombrellino. Perfetto."]];
  let bi=0,bnear=false,bnext=0;const BL1=label(BS[0],[BARN+' · barista',BARN+' · barista'],new V3(-.4,IGH2*1.35+1.05,-2.2),()=>barMenu(),0);BL1.hidden=true;
  hit(bpl,.6,()=>{walkIn(new V3(-.4,0,-.55),()=>barMenu())},'barigor',.6);
  BUILD='bar';label(['Smoothies','Frullati'],BARN,new V3(1.7,1.9,-1.35),()=>walkIn(new V3(-.4,0,-.55),()=>barMenu()));
@@ -3083,7 +3083,9 @@ const barF=()=>{const F=FM();F.bar=F.bar||{};return F.bar};
 function barMenu(){const P=new V3(-.4,2.0,-1.0);
  chips(P,()=>{CH.title='🍹 '+BARN;return[
   {t:`🥭 ${tt('Tofu & mango smoothie','Frullato tofu e mango')} ${cst({t:2})}`,main:1,fn:()=>{barDrink('mango');return false}},
-  {t:`🫧 ${tt('Fizzy smoothie','Frullato frizzante')} ${cst({t:3})}`,fn:()=>{barDrink('fizz');return false}}]},'bar',1)}
+  {t:`🫧 ${tt('Fizzy smoothie','Frullato frizzante')} ${cst({t:3})}`,fn:()=>{barDrink('fizz');return false}},
+  ...(btlPocketN()||(FUN().btlOld|0)?[{t:`🍾 ${tt('Here are my bottles','Ecco le mie bottiglie')} (${btlPocketN()+Math.min(8,FUN().btlOld|0)})`,main:1,fn:()=>{btlDeliver();return false}}]:[]),
+  ...(Object.keys(btlShelf()).length?[{t:`🎚 ${tt('The shelf','Lo scaffale')}`,fn:()=>{btlSync();shelfSheet();return false}}]:[])]},'bar',1)}
 let DIZZY=0,hicT=0;
 function barDrink(k){if(!pay({t:k==='fizz'?3:2})){say(tt('Not enough tofu ants for a smoothie!','Non ci sono abbastanza formiche di tofu per un frullato!'),2.4);return}
  save();try{hudFarm()}catch(e){}snd('munch');
@@ -3108,6 +3110,80 @@ updaters.push((t,dt)=>{if(DIZZY<=T){if(igPlane.rotation.z){igPlane.rotation.z=0}
 {const _er=enterRoom;enterRoom=function(k){_er(k);if(k!=='bar'||VISIT)return;const B=barF();if(!B.met){B.met=Date.now();save();setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`${BARN}: “Here we are! This is my bar. Sit down: the first smoothie is on me!”`,`${BARN}: “Eccoci! Questo è il mio bar. Siediti: il primo frullato lo offro io!”`),4);FM().ants.t+=3;try{hudFarm()}catch(e){}},700)}
  }}
 window.IgorBar={go:()=>goTo('bar')};
+/* ================= 11 Nov 2026: coloured bottles and Barigor's shelf (step 3 of the bar plan) =================
+   Every bottle the sea brings has a colour, and the colour is a note: 24 notes, two chromatic octaves (C5…B6).
+   The first octave is common, the second (lighter colours, a little star) is rarer. The message stays in the pocket as before;
+   the empty bottle goes into the pocket too (U.btl = {note: how many}) until you bring it to Barigor.
+   At the bar Barigor puts them on the shelf (S.farm.bar.sh = {note: {n, off, sl}}): a new bottle is always a little out of tune;
+   with more or less water you tune it (more water = lower). In tune within ±INSTOL cents: +1 seed. Doubles stay on the shelf (×2):
+   they will become glass in step 5. Bottles found before today: Barigor finds them "in the cellar" (one per old bottle, up to 8). */
+const BTL_BASE=72,BTL_N=24;
+const btlName=i=>NNAME[(BTL_BASE+i)%12][LANG==='it'?1:0]+(i>=12?'²':'');
+const btlCol=i=>{const h=Math.round((i%12)*30),hi=i>=12;return`hsl(${h},${hi?78:62}%,${hi?72:52}%)`};
+const btlF=(i,c)=>440*Math.pow(2,(BTL_BASE+i-69+(c||0)/100)/12);
+function btlRoll(){const w=i=>i<12?1:.4;let tot=0;for(let i=0;i<BTL_N;i++)tot+=w(i);let r=Math.random()*tot;for(let i=0;i<BTL_N;i++){r-=w(i);if(r<=0)return i}return 0}
+const btlPocket=()=>{const U=FUN();if(!U.btl){U.btl={};U.btlOld=U.bottles|0}return U.btl};
+const btlPocketN=()=>Object.values(btlPocket()).reduce((a,n)=>a+(n|0),0);
+const btlShelf=()=>{const B=barF();B.sh=B.sh||{};return B.sh};
+function btlPlay(i,c){snd('glass',btlF(i,c))}
+/* the bottles on the shelf of the bar */
+const btlObjs={};
+function btlMesh(i){const g=new THREE.Group(),col=btlCol(i);
+ const glass=new THREE.MeshLambertMaterial({color:col,transparent:true,opacity:.55});const body=new THREE.Mesh(new THREE.CylinderGeometry(.075,.08,.3,12),glass);body.position.y=.15;g.add(body);
+ const neck=new THREE.Mesh(new THREE.CylinderGeometry(.03,.055,.12,10),glass);neck.position.y=.36;g.add(neck);
+ const water=new THREE.Mesh(new THREE.CylinderGeometry(.066,.07,1,12),new THREE.MeshLambertMaterial({color:'#bfe8ff',transparent:true,opacity:.75}));water.geometry.translate(0,.5,0);water.position.y=.01;g.add(water);g.userData.water=water;
+ if(i>=12){const st=new THREE.Mesh(new THREE.OctahedronGeometry(.03,0),glowM('#fff3b0',1));st.position.y=.48;g.add(st)}
+ return g}
+function btlLevel(i){const s=btlShelf()[i];if(!s)return .5;return clamp(.5-(s.off+s.sl)/320,.12,.9)}
+function btlSync(){const Rm=ROOMS.bar;if(!Rm||!Rm.shelf)return;const sh=btlShelf();
+ for(let i=0;i<BTL_N;i++){const has=!!sh[i];if(has&&!btlObjs[i]){const m=btlMesh(i);m.scale.setScalar(1.45);m.position.set(-2.42+(i%12)*.44,i<12?1.59:2.19,0);Rm.shelf.add(m);btlObjs[i]=m}
+  if(!has&&btlObjs[i]){Rm.shelf.remove(btlObjs[i]);delete btlObjs[i]}
+  if(btlObjs[i])btlObjs[i].userData.water.scale.y=.3*btlLevel(i)}}
+/* Barigor takes the bottles from the pocket */
+function btlDeliver(){const P=btlPocket(),sh=btlShelf(),B=barF();let n=0,nw=0;
+ {const U=FUN(),old=Math.min(8,U.btlOld|0);U.btlOld=0;for(let k=0;k<old;k++){const i=Math.floor(Math.random()*12);P[i]=(P[i]|0)+1}}
+ for(const[k,v]of Object.entries(P)){const i=+k;if(!(v>0))continue;n+=v;if(!sh[i]){sh[i]={n:v,off:(Math.random()<.5?-1:1)*(40+Math.random()*50),sl:0};nw++}else sh[i].n+=v}
+ FUN().btl={};fmDirty=true;save();btlSync();
+ if(!n){say(tt(`${BARN}: “No empty bottles in your pocket. The sea brings them to the beach!”`,`${BARN}: “Non hai bottiglie vuote in tasca. Il mare le porta sulla spiaggia!”`),3);return}
+ snd('bottle');say(tt(`${BARN}: “${n} bottle${n>1?'s':''} on the shelf${nw?`, ${nw} new note${nw>1?'s':''}`:''}! New bottles are always a little out of tune: let’s tune them with water.”`,`${BARN}: “${n} bottigli${n>1?'e':'a'} sullo scaffale${nw?`, ${nw} not${nw>1?'e':'a'} nuov${nw>1?'e':'a'}`:''}! Le bottiglie nuove sono sempre un po’ stonate: intoniamole con l’acqua.”`),4.2);
+ if(nw)setTimeout(()=>shelfSheet(),900)}
+/* the shelf panel: 24 places, tune with water */
+let shSel=-1;
+function shelfSheet(){const sh=btlShelf(),n=Object.keys(sh).length,out=Object.values(sh).filter(s=>Math.abs(s.off)>0).length;
+ const cell=i=>{const s=sh[i];if(!s)return`<button type="button" class="btl e" disabled aria-label="?"><i>?</i><b>${btlName(i)}</b></button>`;
+  const off=Math.abs(s.off)>0;return`<button type="button" class="btl${off?' off':''}${i===shSel?' on':''}" data-bt="${i}" style="--c:${btlCol(i)};--w:${Math.round(btlLevel(i)*100)}%"><span class="gl"><span class="wt"></span></span><b>${btlName(i)}</b>${s.n>1?`<small>×${s.n}</small>`:''}${off?'<em>~</em>':''}</button>`};
+ const s=shSel>=0?sh[shSel]:null,k=shSel;
+ const ctl=s&&Math.abs(s.off)>0?`<div class="mctl"><p>${tt('Bottle','Bottiglia')} <b>${btlName(k)}</b>: ${tt('more water makes it lower, less water higher. Listen to the right note, then tune it.','più acqua la fa più bassa, meno acqua più alta. Ascolta la nota giusta, poi intonala.')}</p>
+ <div class="msl"><span>💧 ${tt('more water · lower','più acqua · più bassa')}</span><input type="range" min="-100" max="100" step="1" value="${s.sl}" data-bsl="${k}" aria-label="${tt('Water','Acqua')}"><span>${tt('less water · higher','meno acqua · più alta')}</span></div>
+ <div class="mbt"><button type="button" data-bp="one">▶ ${tt('The bottle','La bottiglia')}</button><button type="button" data-bp="ref">🎵 ${tt('The right note','La nota giusta')}</button><button type="button" data-bp="ok" class="m">✓ ${tt('In tune!','Intonata!')}</button></div></div>`
+ :`<div class="mctl"><p>${!n?tt('The shelf is empty: bring Barigor the bottles you find on the beach.','Lo scaffale è vuoto: porta a Barigor le bottiglie che trovi sulla spiaggia.'):out?tt('Tap a bottle with “~” to tune it.','Tocca una bottiglia con “~” per intonarla.'):tt('Every bottle is in tune. Tap them to play!','Tutte le bottiglie sono intonate. Toccale per suonare!')}</p></div>`;
+ openSheet('shelf',`<h2>🍾 ${tt('Barigor’s shelf','Lo scaffale di Barigor')}</h2><p class="shn">${n}/${BTL_N} ${tt('notes','note')}${out?` · ${out} ${tt('to tune','da intonare')}`:''}${btlPocketN()?` · 🎒 ${btlPocketN()} ${tt('in your pocket','in tasca')}`:''}</p>
+ <div class="btls">${[0,1].map(r=>`<div class="btr">${Array.from({length:12},(_,j)=>cell(r*12+j)).join('')}</div>`).join('')}</div>${ctl}`)}
+let shTry=0;
+sb.addEventListener('click',e=>{if(sheetKind!=='shelf')return;const b=e.target.closest('button[data-bt],button[data-bp]');if(!b)return;e.stopPropagation();const sh=btlShelf();
+ if(b.dataset.bt!=null){const i=+b.dataset.bt,s=sh[i];if(!s)return;btlPlay(i,s.off+s.sl);if(i!==shSel){shSel=i;shTry=0;shelfSheet()}return}
+ const k=shSel,s=sh[k];if(!s)return;const p=b.dataset.bp;
+ if(p==='one')btlPlay(k,s.off+s.sl);
+ else if(p==='ref')snd('bell',btlF(k,0));
+ else if(p==='ok'){const err=s.off+s.sl;if(Math.abs(err)<=INSTOL){s.off=0;s.sl=0;S.seeds=(S.seeds|0)+1;fmDirty=true;save();hudFarm();snd('seeds',3);btlSync();bubbleQ.length=0;bubbleT=0;
+   say(tt(`${btlName(k)}: in tune! (+1 seed)`,`${btlName(k)}: intonata! (+1 seme)`),2.6);shSel=-1;shelfSheet()}
+  else{shTry++;btlPlay(k,err);bubbleQ.length=0;bubbleT=0;say(shTry<2?tt('Not yet… listen to the right note again.','Non ancora… riascolta la nota giusta.'):err>0?tt('Still a bit high: more water!','Ancora un po’ alta: più acqua!'):tt('Still a bit low: less water!','Ancora un po’ bassa: meno acqua!'),2.4)}}});
+sb.addEventListener('input',e=>{if(sheetKind!=='shelf')return;const r=e.target.closest('input[data-bsl]');if(!r)return;const k=+r.dataset.bsl,s=btlShelf()[k];if(!s)return;s.sl=+r.value;fmDirty=true;btlSync();
+ const bt=sb.querySelector(`button[data-bt="${k}"]`);if(bt)bt.style.setProperty('--w',Math.round(btlLevel(k)*100)+'%');clearTimeout(r._t);r._t=setTimeout(()=>btlPlay(k,s.off+s.sl),90)});
+sb.addEventListener('change',e=>{if(sheetKind==='shelf'&&e.target.closest('input[data-bsl]'))save()});
+{const st=document.createElement('style');st.textContent=`.btls{display:flex;flex-direction:column;gap:8px;margin:10px 0}.btr{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}
+.btl{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 3px;border:2px solid transparent;border-radius:10px;background:rgba(255,255,255,.06);cursor:pointer;min-width:0;font:inherit;color:inherit;text-transform:none;letter-spacing:0}
+.btl .gl{display:block;position:relative;width:16px;height:34px;border:2px solid var(--c);border-radius:6px 6px 5px 5px;background:color-mix(in srgb,var(--c) 30%,transparent);overflow:hidden}
+.btl .gl::before{content:'';position:absolute;left:4px;top:-2px;width:4px;height:6px;background:var(--c)}
+.btl .wt{position:absolute;left:0;right:0;bottom:0;height:var(--w);background:rgba(170,220,255,.85)}
+.btl b{font-size:10px;font-weight:600;white-space:nowrap}.btl small{position:absolute;top:0;right:1px;font-size:9px}.btl em{position:absolute;top:-2px;left:2px;font-style:normal;font-weight:700;color:#ff9a5a}
+.btl.e{opacity:.35;cursor:default}.btl.e i{display:flex;align-items:center;justify-content:center;width:16px;height:34px;border:2px dashed currentColor;border-radius:6px;font-style:normal;font-size:12px}
+.btl.off{border-color:#ff9a5a55}.btl.on{border-color:#fff3b0}
+@media (max-width:520px){.btr{grid-template-columns:repeat(6,1fr)}}`;document.head.appendChild(st)}
+/* the shelf in the bar can be tapped too */
+{const Rm=ROOMS.bar;if(Rm&&Rm.shelf){BUILD='bar';hit(Rm.shelf,1.2,()=>walkIn(new V3(-.4,0,-.55),()=>{btlSync();shelfSheet()}),'bar shelf',2.15);
+  label(['Bottle shelf','Scaffale delle bottiglie'],'',new V3(-.4,3.1,-3.4),()=>walkIn(new V3(-.4,0,-.55),()=>{btlSync();shelfSheet()}));BUILD='out'}}
+updaters.push(()=>{if(where==='bar'&&S.farm)btlSync()});
 /* ---------- fish around the island, birds in the sky ---------- */
 const FISHW=[['clown',3],['blue',3],['puffer',2],['sunfish',1],['dolphin',.7]];
 const pickW=L=>{let t=L.reduce((a,x)=>a+x[1],0)*Math.random();for(const[k,w]of L){if((t-=w)<=0)return k}return L[0][0]};
@@ -4931,7 +5007,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-1300';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-1400';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
