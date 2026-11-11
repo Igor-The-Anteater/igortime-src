@@ -15,14 +15,14 @@ const col=(g,l)=>g==='abyss'?'abyss':`b_${g}_${l||'all'}`;
 let nickC=null;
 async function nick(){if(!user)return'';if(nickC!==null)return nickC;try{const u=await getDoc(doc(db,'users',user.uid));nickC=u.exists()&&u.data().nick||''}catch(e){nickC=''}return nickC}
 export async function me(){await authReady;return user?user.uid:null}
-async function overall(n){const ALL=[['abyss','all'],...['kitchen','window','bedroom','drums','pitch','cadences'].flatMap(g=>['easy','medium','extreme'].map(l=>[g,l]))],acc={};
+async function overall(n){const ALL=[['abyss','all'],...['kitchen','window','bedroom','drums','pitch','cadences','bath','pitchduo'].flatMap(g=>['easy','medium','extreme'].map(l=>[g,l]))],acc={};
  await Promise.all(ALL.map(async([g,l])=>{try{const q=await getDocs(query(collection(db,col(g,l)),orderBy('score','desc'),limit(300)));q.docs.forEach(d=>{const r=d.data(),o=acc[d.id]=acc[d.id]||{uid:d.id,n:'',s:0,t:0};o.s+=Math.floor(+r.score||0);const t=r.at&&r.at.toMillis?r.at.toMillis():0;if(r.nick&&t>=o.t){o.n=r.nick;o.t=t}})}catch(e){}}));
  return Object.values(acc).sort((a,b)=>b.s-a.s).slice(0,n)}
 export async function top(g,l,n=10){if(g==='total')return overall(n);const q=await getDocs(query(collection(db,col(g,l)),orderBy('score','desc'),limit(n)));return q.docs.map(d=>({uid:d.id,n:d.data().nick,s:d.data().score}))}
 export async function submit(g,l,score,avatar){await authReady;if(!user)return'guest';const nk=await nick();if(!nk)return'nonick';score=Math.floor(+score||0);if(score<=0)return'zero';
  const ref=doc(db,col(g,l),user.uid);let cur=null;try{cur=await getDoc(ref)}catch(e){}
  // the games add up: every game you finish adds its points to your total (300 + 400 + 500 = 1200); the island already counts every tofu ant ever picked, and the interval lessons count how many stages you have passed
- const add=g!=='island'&&g!=='intervals',old=cur&&cur.exists()?Math.floor(+cur.data().score||0):0;
+ const add=g!=='island'&&g!=='intervals'&&g!=='drumschool'&&g!=='notes',old=cur&&cur.exists()?Math.floor(+cur.data().score||0):0;
  if(!add&&old>=score){if(cur.data().nick!==nk)try{await setDoc(ref,{nick:nk},{merge:true})}catch(e){}return'lower'}
  await setDoc(ref,{nick:nk,score:add?old+score:score,avatar:String(avatar||'igor'),at:serverTimestamp()});return add?'added':'ok'}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -40,7 +40,7 @@ export async function show(el,g,l,score,avatar,title){if(!el)return;let box=el.q
  const note=res==='added'?tt('Your points are added to your total: every game counts!','I tuoi punti si sommano al totale: ogni partita conta!'):res==='guest'?tt('Sign in on the island to enter the leaderboard.','Accedi sull’isola per entrare in classifica.'):res==='nonick'?tt('Choose a nickname on the island to enter the leaderboard.','Scegli un nickname sull’isola per entrare in classifica.'):res==='err'?tt('Could not save your score right now.','Non riesco a salvare il punteggio adesso.'):'';
  box.innerHTML=`<h4>${esc(title||tt('Leaderboard · everyone','Classifica · tutti'))}</h4>`+(rows?list(rows,mine):`<p>${tt('The leaderboard is not reachable right now.','La classifica adesso non si raggiunge.')}</p>`)+(note?`<p>${note}</p>`:'')}
 /* the overall leaderboard: the sum of your totals in every game and every level */
-const GAMES=['kitchen','window','bedroom','drums','pitchStairs','cadences','abyss'];
+const GAMES=['kitchen','window','bedroom','drums','pitchStairs','cadences','abyss','bath','pitchduo'];
 export function totalOf(...sets){const best={};for(const sc of sets){if(!sc)continue;for(const g of GAMES){const o=sc[g];if(!o||typeof o!=='object')continue;for(const[l,v]of Object.entries(o)){const k=g+'/'+l,n=+v||0;if(!(best[k]>=n))best[k]=n}}}return Math.floor(Object.values(best).reduce((a,b)=>a+b,0))}
 export function totalLocal(){let S={},P={};try{S=JSON.parse(localStorage.getItem('igortime_v1'))||{}}catch(e){}try{P=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}return totalOf(S.scores,P.scores)}
 export async function submitTotal(){return'sum'}

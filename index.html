@@ -7,6 +7,8 @@
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
 <script src="/sound.js?v=15"></script>
 <script src="/intervals/wig.js?v=2"></script>
+<script src="/drumschool/rigor.js?v=1"></script>
+<script src="/notes/nadia.js?v=1"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
@@ -1284,6 +1286,14 @@ let maestroIn=null,maestraIn=null;
 /* Sofia Gubaigorina (a Shigor, with a dark bob and a red shawl) teaches with Amadigor: the same texture is used outside and inside */
 function sofiaTex(){const c=document.createElement('canvas');c.width=IGC;c.height=IGCH;const tx=new THREE.CanvasTexture(c);tx.paint=()=>{if(!igorOK||tx.ok)return;tx.ok=true;const c2=c.getContext('2d');c2.setTransform(SCI,0,0,SCI,0,IGPAD*SCI);c2.drawImage(igorImg,0,0,663,730);lashes(c2,EYES[0],0,2);lashes(c2,EYES[1],0,2);if(window.IgorWig&&IgorWig.sofia)IgorWig.sofia(c2);tx.needsUpdate=true};return tx}
 const ivMet=()=>{try{const p=JSON.parse(localStorage.getItem('igortime_intervals'))||{};if(p.met||p.done||Object.keys(p.plays||{}).length)return true}catch(e){}return!!(S.scores&&S.scores.intervals)};
+const lsMet=(k,g)=>{try{const p=JSON.parse(localStorage.getItem(k))||{};if(p.met||p.done||Object.keys(p.plays||{}).length)return true}catch(e){}return!!(S.scores&&S.scores[g])};
+const dsMet=()=>lsMet('igortime_drumschool','drumschool'),ntMet=()=>lsMet('igortime_notes','notes');
+/* 11 Nov 2026: the first time after the update, Igor points out what is new (once): the two teachers at school, the bathtub at home */
+{let hi=0;try{hi=+localStorage.getItem('igortime_new1111')||0}catch(e){}
+ if(!(hi&1))updaters.push(()=>{if((hi&1)||!started||where!=='school'||leaving)return;hi|=1;try{localStorage.setItem('igortime_new1111',String(hi))}catch(e){}
+  setTimeout(()=>say(tt('Two new teachers! Rigor Star, next to the drums, teaches you to play them; Nadia Boulangigor, at the big staff, teaches you to read music.','Due maestri nuovi! Rigor Star, accanto alla batteria, ti insegna a suonarla; Nadia Boulangigor, al pentagramma, ti insegna a leggere le note.'),6.5),1200)});
+ if(!(hi&2))updaters.push(()=>{if((hi&2)||!started||where!=='house'||leaving)return;hi|=2;try{localStorage.setItem('igortime_new1111',String(hi))}catch(e){}
+  setTimeout(()=>say(tt('Look: now I have a bathtub too! The bubbles sing… how many?','Guarda: adesso ho anche la vasca da bagno! Le bolle cantano… quante?'),5.5),1200)})}
 const MOUT={x:-9.55,z:-3.55};
 const maestroOut=(()=>{const grp=new THREE.Group();grp.position.set(MOUT.x,0,MOUT.z);
  const mc=document.createElement('canvas');mc.width=IGC;mc.height=IGCH;const tx=new THREE.CanvasTexture(mc);let ok=false,ba=-1;
@@ -1699,6 +1709,41 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   const zz=[];for(let k=0;k<3;k++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(sleepZ),transparent:true,opacity:0,depthWrite:false}));sp.scale.set(.3,.3,1);o.add(sp);zz.push(sp)}
   updaters.push(t=>{zz.forEach((sp,k)=>{const u=(t*.25+k/3)%1;sp.position.set(.2+u*.5,1.1+u*1.2,-.9);sp.material.opacity=Math.sin(u*Math.PI)*.8})});
   station(Rm,'house',{name:['The bedroom','La camera'],sub:['walk to the bed to play','vai al letto per giocare'],pos:new V3(4.5,0,.8),stand:new V3(2.7,0,1.4),obj:o,act:()=>launch('/bedroom/',tt('To the bedroom!','In camera!'),['house',2.5,1.4]),r:1.6})}
+ // 11 Nov 2026: the bathroom corner: tiles, a clawfoot tub with a rubber duck and singing bubbles (The bathtub: how many voices?)
+ {const o=new THREE.Group(),BX=-4.2,BZ=3.15;
+  const tc=document.createElement('canvas');tc.width=tc.height=128;{const q=tc.getContext('2d');q.fillStyle='#d8eef0';q.fillRect(0,0,128,128);q.strokeStyle='#9cc6cc';q.lineWidth=3;for(let k=0;k<=4;k++){q.beginPath();q.moveTo(k*32,0);q.lineTo(k*32,128);q.moveTo(0,k*32);q.lineTo(128,k*32);q.stroke()}}
+  const tt2=new THREE.CanvasTexture(tc);tt2.wrapS=tt2.wrapT=THREE.RepeatWrapping;tt2.repeat.set(3,2.4);
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(3.4,2.6).rotateX(-Math.PI/2),texM(tt2));fl.position.set(-.1,.016,-.05);o.add(fl);
+  const white=lam('#fbfbf8'),gold=lam('#c9a24a');
+  const body=new THREE.Mesh(new THREE.RoundedBoxGeometry(2.0,.62,.95,3,.22),white);body.position.y=.5;o.add(body);
+  const rim=new THREE.Mesh(new THREE.RoundedBoxGeometry(2.1,.1,1.04,2,.05),white);rim.position.y=.84;o.add(rim);
+  const water=new THREE.Mesh(new THREE.BoxGeometry(1.8,.04,.78),lam('#bfe6f0',{emissive:'#3a7f8f',emissiveIntensity:.25}));water.position.y=.86;o.add(water);
+  for(const[a,b]of[[-.82,-.36],[.82,-.36],[-.82,.36],[.82,.36]]){const f=new THREE.Mesh(new THREE.SphereGeometry(.08,10,8),gold);f.position.set(a,.1,b);o.add(f)}
+  const fau=new THREE.Mesh(new THREE.TorusGeometry(.16,.03,8,14,Math.PI),lam('#b9c0c6'));fau.position.set(-.95,1.0,0);fau.rotation.y=Math.PI/2;o.add(fau);
+  const fp=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.3,8),lam('#b9c0c6'));fp.position.set(-.95,.95,-.16);o.add(fp);
+  // foam and a rubber duck
+  for(let k=0;k<9;k++){const fm=new THREE.Mesh(new THREE.SphereGeometry(.09+((k*7)%3)*.03,10,8),lam('#ffffff'));fm.position.set(-.7+k*.17,.9,((k*5)%3-1)*.2);o.add(fm)}
+  const duck=new THREE.Group();const db=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),lam('#f6d34a'));db.scale.set(1.2,.85,1);duck.add(db);const dh=new THREE.Mesh(new THREE.SphereGeometry(.075,12,10),lam('#f6d34a'));dh.position.set(.09,.11,0);duck.add(dh);
+  const bk=new THREE.Mesh(new THREE.ConeGeometry(.03,.08,8),lam('#f08a24'));bk.rotation.z=-Math.PI/2;bk.position.set(.18,.1,0);duck.add(bk);duck.position.set(.45,.93,.12);o.add(duck);
+  // a towel on a rack and a little mirror on the wall
+  const rack=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,.9,8),lam('#b9c0c6'));rack.rotation.x=Math.PI/2;rack.position.set(-1.72,1.35,-.15);o.add(rack);
+  const tw=new THREE.Mesh(new THREE.BoxGeometry(.05,.7,.6),lam('#ff9ec7'));tw.position.set(-1.72,1.05,-.15);o.add(tw);
+  // the singing bubbles float up and pop
+  const bm=['#7fe3ef','#ff9ec7','#ffd36a','#9be38a','#c49bff'].map(c=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.45,depthWrite:false}));
+  const bubs=[];for(let k=0;k<7;k++){const b=new THREE.Mesh(new THREE.SphereGeometry(.09,14,10),bm[k%5]);o.add(b);bubs.push({b,u:k/7,x:-.6+Math.random()*1.2,z:(Math.random()-.5)*.5,s:.6+Math.random()*.8})}
+  updaters.push((t,dt)=>{if(where!=='house')return;duck.position.y=.93+Math.sin(t*2)*.012;duck.rotation.y=Math.sin(t*.7)*.5;for(const q of bubs){q.u=(q.u+dt*.12*q.s)%1;q.b.position.set(q.x+Math.sin(t*1.3+q.x*5)*.08,.95+q.u*1.6,q.z);const sc=(.5+q.s*.6)*(q.u<.9?1:1-(q.u-.9)*10);q.b.scale.setScalar(Math.max(.01,sc));q.b.material.opacity=.45}});
+  {const sh=new THREE.Mesh(new THREE.BoxGeometry(.25,.05,1.0),lam('#8a5e3a'));sh.position.set(-1.78,1.62,.75);o.add(sh);
+   const it=[['#ff9ec7',.4,.09,.12,.2],['#7fe3ef',.62,.07,.3,.07],['#ffd36a',.95,.09,.12,.2],['#9be38a',1.15,.1,.1,.18]];
+   for(const[c,z,w,h,d]of it){const m=new THREE.Mesh(new THREE.RoundedBoxGeometry(w*1.4,h,d,2,.02),lam(c));m.position.set(-1.72,1.645+h/2,z);o.add(m)}
+   const cap=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.06,8),lam('#2f6fd6'));cap.position.set(-1.72,1.98,.62);o.add(cap);
+   const cup=new THREE.Mesh(new THREE.CylinderGeometry(.05,.045,.13,10),lam('#f3efe2'));cup.position.set(-1.72,1.71,1.3);o.add(cup);
+   for(const[dz,c]of[[-.02,'#e0463c'],[.02,'#2f6fd6']]){const tb=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.2,5),lam(c));tb.position.set(-1.72,1.82,1.3+dz);tb.rotation.x=dz*6;o.add(tb)}
+   const mc=document.createElement('canvas');mc.width=64;mc.height=80;{const q=mc.getContext('2d');q.fillStyle='#c9a24a';q.beginPath();q.ellipse(32,40,31,39,0,0,TAU);q.fill();const gr=q.createLinearGradient(0,0,64,80);gr.addColorStop(0,'#e8f6fa');gr.addColorStop(1,'#a9d3df');q.fillStyle=gr;q.beginPath();q.ellipse(32,40,26,34,0,0,TAU);q.fill();q.strokeStyle='#fff';q.lineWidth=3;q.beginPath();q.moveTo(18,24);q.lineTo(26,16);q.stroke()}
+   const mir=new THREE.Mesh(new THREE.PlaneGeometry(.55,.69),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(mc),transparent:true}));mir.position.set(-1.79,2.25,.25);mir.rotation.y=Math.PI/2;o.add(mir);
+   const mat=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.0,.02,.5,2,.01),lam('#7fc9a8'));mat.position.set(.4,.03,.85);o.add(mat);
+   const d2=duck.clone();d2.scale.setScalar(.8);d2.position.set(-.75,.91,-.3);d2.rotation.y=2.4;o.add(d2);
+   const pot=new THREE.Mesh(new THREE.CylinderGeometry(.14,.11,.24,12),lam('#b8643f'));pot.position.set(1.35,.12,-.85);o.add(pot);for(let k=0;k<5;k++){const l=new THREE.Mesh(new THREE.SphereGeometry(.1,8,6),lam('#4f8a4a'));l.scale.set(.5,1.6,.5);l.position.set(1.35+Math.cos(k*1.3)*.06,.42,-.85+Math.sin(k*1.3)*.06);l.rotation.z=Math.cos(k*1.3)*.4;l.rotation.x=Math.sin(k*1.3)*.4;o.add(l)}}
+  o.rotation.y=0;station(Rm,'house',{name:['The bathtub','La vasca'],sub:['walk to the tub to play','vai alla vasca per giocare'],pos:new V3(BX,0,BZ),stand:new V3(-2.6,0,2.9),obj:o,act:()=>launch('/bath/',tt('Bath time!','Tutti in vasca!'),['house',-2.4,2.9]),r:1.25,zr:1.7})}
 }
 
 /* the old music school, inside */
@@ -1733,7 +1778,7 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   const knob=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),lam('#c9a24a'));knob.position.set(.38,1,.09);o.add(knob);
   const pad=new THREE.Mesh(new THREE.BoxGeometry(.16,.22,.05),lam('#c9a24a'));pad.position.set(.38,.86,.1);o.add(pad);
   o.rotation.y=ry;station(Rm,'school',{name:['Closed door','Porta chiusa'],sub:['a future game','un gioco futuro'],pos:new V3(x,0,z),stand:new V3(x*.78,0,z<-3?z+1.5:z),obj:o,act:()=>say(tt('Closed. A new game soon!','Chiusa. Presto un gioco nuovo!'),3),r:.9,zr:1.4})};
- door(-4.6,-4.2,0);door(5.45,1.6,-Math.PI/2);
+ door(5.45,1.6,-Math.PI/2);
  // 10 Nov 2026: where the left closed door was, the blackboard of Maestro Wolfgang Amadigor (the interval lessons)
  {const o=new THREE.Group(),c=document.createElement('canvas');c.width=512;c.height=300;const q=c.getContext('2d');
   q.fillStyle='#6b4a2e';q.fillRect(0,0,512,300);q.fillStyle='#2f4a3a';q.fillRect(14,14,484,272);q.strokeStyle='rgba(238,242,230,.8)';q.lineWidth=3;
@@ -1753,6 +1798,43 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   const nt=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(nc),transparent:true,opacity:0,depthWrite:false}));nt.scale.set(.3,.3,1);o.add(nt);
   updaters.push(t=>{if(!o.parent||!o.parent.visible)return;nt.visible=mp.visible;paintM();ftx.paint();fp.quaternion.copy(camera.quaternion);fp.position.y=Math.abs(Math.sin(t*1.5+1))*.035;mp.quaternion.copy(camera.quaternion);mp.position.y=Math.abs(Math.sin(t*1.7))*.04;mp.rotation.z=Math.sin(t*.9)*.04;const u=(t*.35)%1;nt.position.set(.7+Math.sin(t)*.12,1.5+u*.9,-.8);nt.material.opacity=Math.sin(u*Math.PI)*.85});
   station(Rm,'school',{name:['Amadigor & Gubaigorina','Amadigor e Gubaigorina'],sub:['interval lessons: walk to the blackboard','lezioni di intervalli: vai alla lavagna'],pos:new V3(-5.05,0,1.6),stand:new V3(-3.9,0,1.6),obj:o,act:()=>launch('/intervals/',tt('To the lesson!','A lezione!'),['school',-3.7,1.6]),r:1.1,zr:1.5})}
+
+ // 11 Nov 2026: two new teachers. They call you until your first lesson (dsMet / ntMet), then they just wait.
+ const teacherTex=paintFn=>{const c=document.createElement('canvas');c.width=IGC;c.height=IGCH;const tx=new THREE.CanvasTexture(c);tx.c2=c.getContext('2d');tx.paint=a=>{if(!igorOK)return;const c2=tx.c2;c2.setTransform(1,0,0,1,0,0);c2.clearRect(0,0,IGC,IGCH);c2.setTransform(SCI,0,0,SCI,0,IGPAD*SCI);c2.drawImage(igorImg,0,0,663,730);paintFn(c2,a);tx.needsUpdate=true};return tx};
+ const teacherCall=(x,z,y,lines,name,go,met)=>{BUILD='school';const L=label(lines[0],name,new V3(x,y,z),go,0);BUILD='out';L.hidden=true;let ci=0,nt=0;
+  updaters.push(()=>{if(where!=='school'){L.hidden=true;return}const m=met();L.hidden=m;if(!m&&T>nt){ci=(ci+1)%lines.length;L.text=lines[ci];L.el.innerHTML=N(L.text)+`<small>${N(L.sub)}</small>`;nt=T+3.4}})};
+ // Rigor Star, the drum teacher: long hair, a bandana with a star, sunglasses, earrings, two drumsticks
+ {const RX=2.3,RZ=-3.4,o=new THREE.Group(),MS=1.65;
+  const tx=teacherTex((c2,a)=>{if(window.IgorRigor){igorAcc(c2,EYES,IgorRigor.LOOK);IgorRigor.hair(c2);IgorRigor.sticks(c2,a,-a)}});
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(IGW*MS,IGH2*MS).translate(0,IGH2*MS/2,0),new THREE.MeshBasicMaterial({map:tx,transparent:true,alphaTest:.15,side:THREE.DoubleSide,color:new THREE.Color(.95,.96,.98)}));o.add(pl);
+  const go=()=>launch('/drumschool/',tt('Let’s rock!','Si suona!'),['school',RX-.35,RZ+1.55]);
+  {const amp=new THREE.Mesh(new THREE.RoundedBoxGeometry(.5,.55,.35,2,.03),lam('#1f1b1a'));amp.position.set(-.55,.28,-.15);o.add(amp);
+   const gr=new THREE.Mesh(new THREE.BoxGeometry(.42,.38,.02),lam('#3a3433'));gr.position.set(-.55,.27,.03);o.add(gr);
+   const tp=new THREE.Mesh(new THREE.BoxGeometry(.5,.06,.36),lam('#d9a868'));tp.position.set(-.55,.58,-.15);o.add(tp);
+   const rc=document.createElement('canvas');rc.width=rc.height=128;{const q=rc.getContext('2d');q.fillStyle='#6a3b4f';q.beginPath();q.arc(64,64,62,0,TAU);q.fill();q.strokeStyle='#e8c27a';q.lineWidth=5;q.beginPath();q.arc(64,64,48,0,TAU);q.stroke();q.fillStyle='#d6322b';q.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,r=i%2?10:24;q.lineTo(64+r*Math.cos(a),64+r*Math.sin(a))}q.fill()}
+   const rug=new THREE.Mesh(new THREE.CircleGeometry(.6,32).rotateX(-Math.PI/2),texM(new THREE.CanvasTexture(rc)));rug.position.set(0,.013,.1);o.add(rug)}
+  station(Rm,'school',{name:['Rigor Star','Rigor Star'],sub:['drum school: walk to him','scuola di batteria: vai da lui'],pos:new V3(RX,0,RZ),stand:new V3(RX-.35,0,RZ+1.45),obj:o,act:go,r:.75,y:.8,zr:1.2});
+  teacherCall(RX,RZ,IGH2*MS+1.15,[["Hey! Tap me: I'll teach you the drums!","Ehi! Clicca su di me: ti insegno a suonare la batteria!"],["The rock school is open! Come on!","La scuola di rock è aperta! Vieni!"],["One, two, three, four… want to learn?","Uno, due, tre, quattro… vuoi imparare?"]],['Rigor Star · drum school','Rigor Star · scuola di batteria'],()=>walkIn(new V3(RX-.35,0,RZ+1.45),go),()=>dsMet());
+  let lastP=-1;updaters.push(t=>{if(where!=='school')return;const k=Math.floor(t*10);if(k!==lastP){lastP=k;tx.paint(Math.sin(t*7)*.35)}pl.quaternion.copy(camera.quaternion);pl.position.y=Math.max(0,Math.sin(t*7))**4*.04})}
+ // Nadia Boulangigor, the teacher of reading music: grey hair in a bun, round glasses, a lace collar; a big staff on the wall
+ {const NX=-4.6,NZ=-4.15,o=new THREE.Group(),MS=1.6;
+  const bc=document.createElement('canvas');bc.width=512;bc.height=320;const q=bc.getContext('2d');q.fillStyle='#6b4a2e';q.fillRect(0,0,512,320);q.fillStyle='#2f4a3a';q.fillRect(14,14,484,292);
+  const s0=24,y0=210;q.strokeStyle='rgba(238,242,230,.85)';q.lineWidth=3;for(let k=0;k<5;k++){q.beginPath();q.moveTo(36,y0-k*s0);q.lineTo(478,y0-k*s0);q.stroke()}
+  if(window.IgorNadia)IgorNadia.treble(q,40,y0,s0,'rgba(238,242,230,.92)');
+  const NN=LANG==='it'?['Do','Re','Mi','Fa','Sol']:['C','D','E','F','G'];for(let k=0;k<5;k++){const x=150+k*66,y=y0-(k-2)*s0/2;q.fillStyle='#ffe08a';if(k===0){q.strokeStyle='rgba(238,242,230,.85)';q.beginPath();q.moveTo(x-24,y);q.lineTo(x+24,y);q.stroke()}
+   q.save();q.translate(x,y);q.rotate(-.35);q.beginPath();q.ellipse(0,0,15,10.5,0,0,TAU);q.fill();q.restore();q.fillRect(x+12,y-74,3,74);q.font='600 24px Fredoka, sans-serif';q.textAlign='center';q.fillText(NN[k],x,284)}
+  const bm=new THREE.Mesh(new THREE.BoxGeometry(1.55,.97,.06),[lam('#6b4a2e'),lam('#6b4a2e'),lam('#6b4a2e'),lam('#6b4a2e'),texM(new THREE.CanvasTexture(bc)),lam('#6b4a2e')]);bm.position.set(0,1.75,0);o.add(bm);
+  const tray=new THREE.Mesh(new THREE.BoxGeometry(1.2,.05,.16),lam('#7a5232'));tray.position.set(0,1.22,.08);o.add(tray);
+  const tx=teacherTex(c2=>{lashes(c2,EYES[0],0,2);lashes(c2,EYES[1],0,2);if(window.IgorNadia){igorAcc(c2,EYES,IgorNadia.LOOK);IgorNadia.hair(c2);IgorNadia.dress(c2)}});
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(IGW*MS,IGH2*MS).translate(0,IGH2*MS/2,0),new THREE.MeshBasicMaterial({map:tx,transparent:true,alphaTest:.15,side:THREE.DoubleSide,color:new THREE.Color(.95,.96,.98)}));pl.position.set(.85,0,.75);o.add(pl);
+  const go=()=>launch('/notes/',tt('To the staff!','Al pentagramma!'),['school',NX+.6,NZ+1.75]);
+  {const mt=lam('#2b2b2e'),st=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,1.1,6),mt);pole.position.y=.55;st.add(pole);
+   const desk=new THREE.Mesh(new THREE.BoxGeometry(.5,.36,.03),mt);desk.position.y=1.15;desk.rotation.x=-.4;st.add(desk);
+   const sc=document.createElement('canvas');sc.width=96;sc.height=64;{const q=sc.getContext('2d');q.fillStyle='#f4efe2';q.fillRect(0,0,96,64);q.strokeStyle='#5d554c';for(const y0 of[10,38])for(let k=0;k<5;k++){q.beginPath();q.moveTo(4,y0+k*4);q.lineTo(92,y0+k*4);q.stroke()}q.fillStyle='#2b2018';for(let k=0;k<8;k++){q.beginPath();q.ellipse(12+k*10,14+((k*3)%5)*2,2.6,2,-.4,0,TAU);q.fill()}}
+   const pg=new THREE.Mesh(new THREE.PlaneGeometry(.44,.3),texM(new THREE.CanvasTexture(sc)));pg.position.set(0,1.16,.02);pg.rotation.x=-.4;st.add(pg);st.position.set(-.35,0,1.0);st.rotation.y=.5;o.add(st)}
+  station(Rm,'school',{name:['Nadia Boulangigor','Nadia Boulangigor'],sub:['reading music: walk to the staff','leggere le note: vai al pentagramma'],pos:new V3(NX,0,NZ),stand:new V3(NX+.6,0,NZ+1.65),obj:o,act:go,r:.95,zr:1.45});
+  teacherCall(NX+.85,NZ+.75,IGH2*MS+1.15,[["Bonjour! Tap me: I'll teach you to read music.","Bonjour! Clicca su di me: ti insegno a leggere le note."],["Do, Re, Mi… shall we read them together?","Do, Re, Mi… le leggiamo insieme?"],["Reading music is easy. Come and see!","Leggere la musica è facile. Vieni a vedere!"]],['Nadia Boulangigor · reading music','Nadia Boulangigor · leggere le note'],()=>walkIn(new V3(NX+.6,0,NZ+1.65),go),()=>ntMet());
+  let ok=false;updaters.push(t=>{if(where!=='school')return;if(!ok&&igorOK){tx.paint(0);ok=true}pl.quaternion.copy(camera.quaternion);pl.position.y=Math.abs(Math.sin(t*1.3))*.03})}
  // 10 Nov 2026: Maestro Igor Stravigor (dressed like Stravinsky: hair combed back, round glasses, bow tie) works at his desk on his own piece; come close and he gives you some grumpy advice
  {const SX=3.3,SZ=2.95,o=new THREE.Group();o.position.set(SX,0,SZ);o.rotation.y=-.25;Rm.g.add(o);Rm.blocks.push({x:SX,z:SZ,r:.75});
   const wd=lam('#5a3f2e'),top=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.25,.07,.68,1,.02),lam('#6b4a32'));top.position.y=.74;o.add(top);
@@ -1790,13 +1872,16 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   const fh=new THREE.Mesh(new THREE.CircleGeometry(.345,24),lam('#f4efe2'));fh.material.map=new THREE.CanvasTexture(fc);fh.position.set(0,.38,.165);o.add(fh);
   const tom=(x,y,r,h,tilt)=>{const tm=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,20),[shell,head,head]);tm.position.set(x,y,0);tm.rotation.x=tilt;o.add(tm);return tm};
   const t1=tom(-.19,.86,.15,.15,.38),t2=tom(.22,.84,.19,.2,.32);
+  // 11 Nov 2026: the snare, on its stand in front of the hi-hat
+  const sn=new THREE.Mesh(new THREE.CylinderGeometry(.17,.17,.11,22),[lam('#c9ccd1'),head,head]);sn.position.set(-.38,.66,.3);sn.rotation.x=.28;o.add(sn);
+  {const sp=new THREE.Mesh(new THREE.CylinderGeometry(.016,.016,.6,6),mt);sp.position.set(-.38,.3,.3);o.add(sp)}
   const stand=(x,z,h)=>{const pl=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,h,6),mt);pl.position.set(x,h/2,z);o.add(pl);for(let k=0;k<3;k++){const lg=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.32,5),mt);const a=k*TAU/3;lg.position.set(x+Math.cos(a)*.11,.12,z+Math.sin(a)*.11);lg.rotation.set(Math.sin(a)*.8,0,-Math.cos(a)*.8);o.add(lg)}};
   stand(-.62,.12,1.0);const hh1=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.014,24),gold);hh1.position.set(-.62,.98,.12);o.add(hh1);const hh2=hh1.clone();hh2.position.y=1.02;o.add(hh2);
   stand(.66,-.05,1.24);const cr=new THREE.Group();cr.position.set(.66,1.25,-.05);const crm=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.012,24),gold);cr.add(crm);cr.rotation.set(.25,0,.22);o.add(cr);
   const st=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.08,16),lam('#3a2e25'));st.position.set(0,.46,-.62);o.add(st);const sl=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.44,6),mt);sl.position.set(0,.22,-.62);o.add(sl);
   for(const sx of[-.05,.05]){const sk=new THREE.Mesh(new THREE.CylinderGeometry(.01,.013,.4,6),lam('#d9a868'));sk.position.set(sx,.59,-.1);sk.rotation.set(Math.PI/2,0,sx*4);o.add(sk)}
   // now and then the kit plays itself a little: the drums bob, the cymbal swings
-  updaters.push(t=>{const b=Math.max(0,Math.sin(t*4.4))**12,c=Math.max(0,Math.sin(t*2.2+1))**16;t1.position.y=.86-b*.012;t2.position.y=.84-Math.max(0,Math.sin(t*4.4+Math.PI))**12*.012;cr.rotation.z=.22+c*.08*Math.sin(t*14);hh2.position.y=1.02-Math.max(0,Math.sin(t*8.8))**10*.02});
+  updaters.push(t=>{const b=Math.max(0,Math.sin(t*4.4))**12,c=Math.max(0,Math.sin(t*2.2+1))**16;t1.position.y=.86-b*.012;sn.position.y=.66-Math.max(0,Math.sin(t*4.4+Math.PI/2))**12*.01;t2.position.y=.84-Math.max(0,Math.sin(t*4.4+Math.PI))**12*.012;cr.rotation.z=.22+c*.08*Math.sin(t*14);hh2.position.y=1.02-Math.max(0,Math.sin(t*8.8))**10*.02});
   o.rotation.y=-.55;station(Rm,'school',{name:['The drums','La batteria'],sub:['walk to the drums to play','vai alla batteria per giocare'],pos:new V3(3.9,0,-3.1),stand:new V3(3.1,0,-1.6),obj:o,act:()=>launch('/drums/',tt('To the drums!','Alla batteria!'),['school',3.1,-1.4]),r:1.3,zr:1.6})}
 }
 
@@ -2056,7 +2141,7 @@ function renderLv(){const F=FM(),l=lvlOf(),a=LVX[l-1]||0,b=LVX[l],tot=F.total|0,
 lvB.onclick=()=>{const l=lvlOf(),b=LVX[l];say(b?tt(`Level ${l}. At ${b} tofu ants picked: level ${l+1}!`,`Livello ${l}. A ${b} formiche raccolte: livello ${l+1}!`)+(LVNEW[l+1]?' '+N(LVNEW[l+1]):''):tt('Top level: the island is complete!','Livello massimo: l’isola è completa!'),4)};
 updaters.push(renderLv);
 /* coming back from a game: a little party for the seeds */
-const GNAME={kitchen:['from the kitchen','dalla cucina'],window:['from the window','dalla finestra'],bedroom:['from the bedroom','dalla camera'],stairs:['from Pitch Stairs','da Pitch Stairs'],pitch:['from Pitch Stairs','da Pitch Stairs'],cadences:['from Cadences','da Cadenze'],cad:['from Cadences','da Cadenze'],drums:['from the drums','dalla batteria'],intervals:['from the maestro’s lesson','dalla lezione del maestro'],abyss:['from the abyss','dall’abisso']};
+const GNAME={kitchen:['from the kitchen','dalla cucina'],window:['from the window','dalla finestra'],bedroom:['from the bedroom','dalla camera'],stairs:['from Pitch Stairs','da Pitch Stairs'],pitch:['from Pitch Stairs','da Pitch Stairs'],cadences:['from Cadences','da Cadenze'],cad:['from Cadences','da Cadenze'],drums:['from the drums','dalla batteria'],intervals:['from the maestro’s lesson','dalla lezione del maestro'],pitchduo:['from Pitch Stairs','da Pitch Stairs'],drumschool:['from Rigor Star’s drum school','dalla scuola di batteria di Rigor Star'],notes:['from Nadia Boulangigor’s lesson','dalla lezione di Nadia Boulangigor'],bath:['from the bathtub','dalla vasca'],abyss:['from the abyss','dall’abisso']};
 function seedParty(n){snd('seeds',n);const _k=Math.min(14,n+3),_lag0=window._seedLag||0;window._seedLag=_lag0;const g=GNAME[window._fromGame||''],from=g?' '+N(g):'';toast(tt(`+${n} seeds${from}!`,`+${n} semi${from}!`));bubbleQ.length=0;bubbleT=0;say(tt(`Hooray! +${n} seeds. Let’s sow them!`,`Evviva! +${n} semi. Seminiamoli!`),4);
  const to=$('seeds').getBoundingClientRect(),k=Math.min(14,n+3);for(let j=0;j<k;j++){const el=document.createElement('div');el.className='seedFly';el.textContent='🌱';const x0=innerWidth/2+(Math.random()-.5)*160,y0=innerHeight*.55+(Math.random()-.5)*80;el.style.transform=`translate(${x0}px,${y0}px) scale(1.4)`;document.body.appendChild(el);
   setTimeout(()=>{el.style.transform=`translate(${to.left+to.width/2-10}px,${to.top+to.height/2-10}px) scale(.6)`;el.style.opacity='.2'},60+j*70);setTimeout(()=>{el.remove();if(_lag0)window._seedLag=Math.max(0,_lag0*(1-(j+1)/_k));hudFarm();const sb=$('seeds');sb.classList.remove('pop');void sb.offsetWidth;sb.classList.add('pop')},1100+j*70)}}
@@ -2067,19 +2152,22 @@ const HG={stairs:{stand:new V3(-3,0,.4),url:'/pitch-stairs/',go:['Up the stairs!
  b:{stand:new V3(2.7,0,1.4),url:'/bedroom/',go:['To the bedroom!','In camera!'],ask:['A game of sounds in the bedroom?','Un gioco di suoni in camera?']},
  cad:{room:'school',stand:new V3(0,0,-1.1),url:'/cadences/',go:['To the piano!','Al pianoforte!'],ask:['Shall we write some cadences at the piano?','Scriviamo qualche cadenza al pianoforte?']},
  drums:{room:'school',stand:new V3(3.1,0,-1.6),url:'/drums/',go:['To the drums!','Alla batteria!'],ask:['Shall we play the drums at the music school?','Suoniamo la batteria alla scuola di musica?']},
- iv:{room:'school',stand:new V3(-3.9,0,1.6),url:'/intervals/',go:['To the lesson!','A lezione!'],ask:['A lesson with Amadigor and Gubaigorina? They train your ears!','Una lezione con Amadigor e Gubaigorina? Ti allenano le orecchie!']}};
+ iv:{room:'school',stand:new V3(-3.9,0,1.6),url:'/intervals/',go:['To the lesson!','A lezione!'],ask:['A lesson with Amadigor and Gubaigorina? They train your ears!','Una lezione con Amadigor e Gubaigorina? Ti allenano le orecchie!']},
+ ds:{room:'school',stand:new V3(1.95,0,-1.95),url:'/drumschool/',go:['Let’s rock!','Si suona!'],ask:['A drum lesson with Rigor Star? Rock and roll!','Una lezione di batteria con Rigor Star? Rock and roll!']},
+ nt:{room:'school',stand:new V3(-4.0,0,-2.5),url:'/notes/',go:['To the staff!','Al pentagramma!'],ask:['Shall we learn to read music with Nadia Boulangigor?','Impariamo a leggere le note con Nadia Boulangigor?']},
+ bath:{stand:new V3(-2.6,0,2.9),url:'/bath/',go:['Bath time!','Tutti in vasca!'],ask:['Bath time! How many bubbles are singing?','È l’ora del bagnetto! Quante bolle cantano?']}};
 let ASK=null,nextAsk=Date.now()+45000;
 function playHouseGame(k){const G=HG[k];if(!G||PL)return;const rm=G.room||'house',go=()=>walkIn(G.stand.clone(),()=>launch(G.url,N(G.go),[rm,G.stand.x,G.stand.z]));
  if(where===rm){go();return}if(where!=='out')exitRoom(true);GPEND={k,t:T,go,rm};goTo(rm)}
 let GPEND=null;updaters.push(()=>{if(!GPEND)return;if(T-GPEND.t>45){GPEND=null;return}if(where===GPEND.rm&&!IG.target){const g=GPEND;GPEND=null;setTimeout(g.go,350)}});
-function proposeGame(){const ks=Object.keys(HG).filter(k=>!HG[k].room||k==='drums'||k==='iv'),k=ks[Math.floor(Math.random()*ks.length)],txt='✨ '+N(HG[k].ask);bubbleQ.length=0;bubbleT=0;say(txt,9);ASK={k,txt};bubble.classList.add('ask')}
+function proposeGame(){const ks=Object.keys(HG).filter(k=>!HG[k].room||k==='drums'||k==='iv'||k==='ds'||k==='nt'),k=ks[Math.floor(Math.random()*ks.length)],txt='✨ '+N(HG[k].ask);bubbleQ.length=0;bubbleT=0;say(txt,9);ASK={k,txt};bubble.classList.add('ask')}
 bubble.addEventListener('click',()=>{if(!ASK)return;const k=ASK.k;ASK=null;bubble.classList.remove('ask');bubbleT=0;playHouseGame(k)});
 updaters.push(()=>{if(ASK&&(bubbleT<=0||bubble.textContent!==ASK.txt)){ASK=null;bubble.classList.remove('ask')}
  if(!ASK&&started&&!leaving&&!PL&&(where==='out'||where==='house')&&Date.now()>nextAsk&&T-lastAct>10&&!IG.target&&!RIDE&&sheet.hidden&&bar.hidden&&!CH&&helpC.hidden&&idx.hidden){nextAsk=Date.now()+120000;proposeGame()}});
 /* the compass orb: top left, every 12 s it proposes a different place to jump to; tap it and Igor goes there */
 const ORB=[{k:'stairs',ic:'🎵',n:['Pitch Stairs','Pitch Stairs'],go:()=>playHouseGame('stairs')},{k:'k',ic:'🔥',n:['The kitchen','La cucina'],go:()=>playHouseGame('k')},
  {k:'w',ic:'🌬',n:['The window','La finestra'],go:()=>playHouseGame('w')},{k:'b',ic:'🛏',n:['The bedroom','La camera'],go:()=>playHouseGame('b')},
- {k:'cad',ic:'🎹',n:['Cadences','Cadenze'],go:()=>playHouseGame('cad')},{k:'drums',ic:'🥁',n:['The drums','La batteria'],go:()=>playHouseGame('drums')},{k:'iv',ic:'🎼',n:['The maestros’ lessons','Le lezioni dei maestri'],go:()=>playHouseGame('iv')},{k:'abyss',ic:'🌊',n:['The abyss','L’abisso'],go:()=>{if(where!=='out')exitRoom(true);goTo('abyss')}}];
+ {k:'cad',ic:'🎹',n:['Cadences','Cadenze'],go:()=>playHouseGame('cad')},{k:'drums',ic:'🥁',n:['The drums','La batteria'],go:()=>playHouseGame('drums')},{k:'iv',ic:'🎼',n:['The maestros’ lessons','Le lezioni dei maestri'],go:()=>playHouseGame('iv')},{k:'ds',ic:'🤘',n:['Drum school','Scuola di batteria'],go:()=>playHouseGame('ds')},{k:'nt',ic:'🎶',n:['Reading music','Leggere le note'],go:()=>playHouseGame('nt')},{k:'bath',ic:'🛁',n:['The bathtub','La vasca'],go:()=>playHouseGame('bath')},{k:'abyss',ic:'🌊',n:['The abyss','L’abisso'],go:()=>{if(where!=='out')exitRoom(true);goTo('abyss')}}];
 const orb=document.createElement('button');orb.id='orb';orb.type='button';orb.innerHTML='<span class="ball"><i></i></span><span class="tx"><small></small><b></b></span>';document.body.appendChild(orb);
 let orbI=Math.floor(Math.random()*ORB.length),orbNext=Date.now()+12000;
 function renderOrb(flash){const D=ORB[orbI];orb.querySelector('i').textContent=D.ic;orb.querySelector('small').textContent=tt('Jump to','Vai a');orb.querySelector('b').textContent=N(D.n);orb.setAttribute('aria-label',tt('Jump to ','Vai a ')+N(D.n));
@@ -2138,7 +2226,7 @@ window.IgorUI={openAccount,renderDress,refresh:()=>refresh(),toast:t=>toast(t),o
 /* ================= index ================= */
 const idx=$('index');
 function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igor')}</h2><ul><li><button data-i="house">${tt('Igor’s house','La casa di Igor')}<small>${tt('games','giochi')}</small></button></li><li><button data-i="field">${tt('The fields','I campi')}</button></li><li><button data-i="pen">${tt('Igorlet village','Villaggio degli Igorlets')}</button></li><li><button data-i="prizes">${tt('Prize shop','Negozietto dei premi')}</button></li><li><button data-i="school">${tt('Music school','Scuola di musica')}<small>${tt('composers','compositori')}</small></button></li><li><button data-i="abyss">${tt('The abyss','L’abisso')}<small>${tt('game','gioco')}</small></button></li><li><button data-i="jetty">${tt('Leaderboards','Classifiche')}<small>${tt('everyone','tutti')}</small></button></li></ul>
- <h2>${tt('Games','Giochi')}</h2><ul><li><button data-i="gamesPage">${tt('The games page','La pagina dei giochi')}<small>${tt('all eight','tutti e otto')}</small></button></li><li><button data-i="stairs">Pitch Stairs<small>${tt('house','casa')}</small></button></li><li><button data-i="cad">${tt('Cadences','Cadenze')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="drums">${tt('The drums','La batteria')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="iv">${tt('The maestros’ lessons','Le lezioni dei maestri')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="w">${tt('The window','La finestra')}<small>${tt('house','casa')}</small></button></li><li><button data-i="k">${tt('The kitchen','La cucina')}<small>${tt('house','casa')}</small></button></li><li><button data-i="b">${tt('The bedroom','La camera')}<small>${tt('house','casa')}</small></button></li></ul>
+ <h2>${tt('Games','Giochi')}</h2><ul><li><button data-i="gamesPage">${tt('The games page','La pagina dei giochi')}<small>${tt('all eleven','tutti e undici')}</small></button></li><li><button data-i="stairs">Pitch Stairs<small>${tt('house','casa')}</small></button></li><li><button data-i="cad">${tt('Cadences','Cadenze')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="drums">${tt('The drums','La batteria')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="iv">${tt('The maestros’ lessons','Le lezioni dei maestri')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="ds">${tt('Drum school','Scuola di batteria')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="nt">${tt('Reading music','Leggere le note')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="bath">${tt('The bathtub','La vasca')}<small>${tt('house','casa')}</small></button></li><li><button data-i="w">${tt('The window','La finestra')}<small>${tt('house','casa')}</small></button></li><li><button data-i="k">${tt('The kitchen','La cucina')}<small>${tt('house','casa')}</small></button></li><li><button data-i="b">${tt('The bedroom','La camera')}<small>${tt('house','casa')}</small></button></li></ul>
  <h2>Chat</h2><ul><li><button data-i="chat">${tt('Chat with friends','Chatta con gli amici')}<small>14+</small></button></li></ul>
  <h2>${tt('Language','Lingua')}</h2><ul><li><button data-lang="en" aria-pressed="${LANG==='en'}">English</button></li><li><button data-lang="it" aria-pressed="${LANG==='it'}">Italiano</button></li></ul>
  <h2>${tt('Sky','Cielo')}</h2><p id="skyNow" style="margin:0 0 8px;font-size:12px;color:var(--bone)"></p><ul><li><button data-sky="island">${tt('Random weather','Meteo casuale')}<small>${tt('Igor’s weather, same for everyone','il meteo di Igor, uguale per tutti')}</small></button></li><li><button data-sky="real">${tt('The weather where I am','Il meteo dove sono')}<small>${tt('uses your location','usa la tua posizione')}</small></button></li></ul>`}
@@ -2156,7 +2244,7 @@ function staticTexts(){$('index').setAttribute('aria-label',tt('Index','Indice')
   $('goGuest').textContent=gm?tt('Play as a guest','Gioca come ospite'):tt('Explore as a guest','Esplora come ospite');$('goSign').textContent=tt('Sign in / register','Accedi / registrati');$('iSmall').textContent=tt('As a guest your farm and scores stay on this device. With an account you dress up your Igor right away and keep everything everywhere.','Come ospite fattoria e punteggi restano su questo dispositivo. Con un account vesti subito il tuo Igor e ritrovi tutto ovunque.');$('introBack').textContent=tt('← Back','← Indietro');
   const L=$('langIntro');if(L)L.innerHTML=`<button type="button" data-l="en" aria-pressed="${LANG==='en'}">English</button><button type="button" data-l="it" aria-pressed="${LANG==='it'}">Italiano</button>`}}
 idx.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.lang){setLang(b.dataset.lang);return}if(b.dataset.sky){skyMode(b.dataset.sky);return}const k=b.dataset.i;idx.hidden=true;$('indexBtn').setAttribute('aria-expanded','false');
- if(k==='chat'){if(window.IgorChat)window.IgorChat.open();return}if(k==='gamesPage'){toGames();return}if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/',tt('Cadences!','Cadenze!'),['school',0,-0.85]);return}if(k==='drums'){launch('/drums/',tt('The drums!','La batteria!'),['school',3.1,-1.4]);return}if(k==='iv'){launch('/intervals/',tt('To the lesson!','A lezione!'),['school',-3.7,1.6]);return}if(k==='w'){launch('/window/',tt('The window!','La finestra!'),['house',-4.2,1.2]);return}if(k==='k'){launch('/kitchen/',tt('The kitchen!','La cucina!'),['house',3.7,-2.2]);return}if(k==='b'){launch('/bedroom/',tt('The bedroom!','La camera!'),['house',2.5,1.4]);return}if(where!=='out')exitRoom(true);goTo(k)});
+ if(k==='chat'){if(window.IgorChat)window.IgorChat.open();return}if(k==='gamesPage'){toGames();return}if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/',tt('Cadences!','Cadenze!'),['school',0,-0.85]);return}if(k==='drums'){launch('/drums/',tt('The drums!','La batteria!'),['school',3.1,-1.4]);return}if(k==='iv'){launch('/intervals/',tt('To the lesson!','A lezione!'),['school',-3.7,1.6]);return}if(k==='ds'){launch('/drumschool/',tt('Let’s rock!','Si suona!'),['school',1.95,-1.85]);return}if(k==='nt'){launch('/notes/',tt('To the staff!','Al pentagramma!'),['school',-4.0,-2.4]);return}if(k==='bath'){launch('/bath/',tt('Bath time!','Tutti in vasca!'),['house',-2.4,2.9]);return}if(k==='w'){launch('/window/',tt('The window!','La finestra!'),['house',-4.2,1.2]);return}if(k==='k'){launch('/kitchen/',tt('The kitchen!','La cucina!'),['house',3.7,-2.2]);return}if(k==='b'){launch('/bedroom/',tt('The bedroom!','La camera!'),['house',2.5,1.4]);return}if(where!=='out')exitRoom(true);goTo(k)});
 function toggleIndex(){idx.hidden=!idx.hidden;skyStatus();$('indexBtn').setAttribute('aria-expanded',String(!idx.hidden));if(!idx.hidden)say(pick(tt(['Where to?','Pick a place, I’ll take you.'],['Dove andiamo?','Scegli un posto, ti ci porto.'])),2)}
 $('indexBtn').onclick=toggleIndex;
 $('me').onclick=()=>openAccount();
@@ -3917,13 +4005,15 @@ function shopChips(k){if(VISIT){visitNo();return}const V=VEH[k],n=vehN(k),D=_sho
 /* ---------- 9 Nov, later: the leaderboard board where the jetty was; the pocket (fruit, shells, messages); pick things up by walking on them ---------- */
 const BOARDS=[{g:'total',l:'all',N:['Overall','Generale'],sub:['all the games added up','tutti i giochi sommati']},{g:'island',l:'all',N:['The island','L’isola'],sub:['tofu ants picked','formiche raccolte']},{g:'abyss',N:['The abyss','L’abisso'],sub:['metres, all dives added up','metri, tutte le immersioni sommate']},
  {g:'kitchen',N:['The kitchen','La cucina'],sub:['all your games added up','tutte le partite sommate']},{g:'window',N:['The window','La finestra'],sub:['all your games added up','tutte le partite sommate']},{g:'bedroom',N:['The bedroom','La camera'],sub:['all your games added up','tutte le partite sommate']},{g:'drums',N:['The drums','La batteria'],sub:['all your games added up','tutte le partite sommate']},
- {g:'pitch',N:['Pitch Stairs','Pitch Stairs'],sub:['all your games added up','tutte le partite sommate']},{g:'cadences',N:['Cadences','Cadenze'],sub:['all your games added up','tutte le partite sommate']},{g:'intervals',l:'all',N:['The maestros’ lessons','Le lezioni dei maestri'],sub:['stages passed (out of 14)','tappe superate (su 14)']}];
+ {g:'pitch',N:['Pitch Stairs','Pitch Stairs'],sub:['all your games added up','tutte le partite sommate']},{g:'cadences',N:['Cadences','Cadenze'],sub:['all your games added up','tutte le partite sommate']},{g:'intervals',l:'all',N:['The maestros’ lessons','Le lezioni dei maestri'],sub:['stages passed (out of 14)','tappe superate (su 14)']},
+ {g:'drumschool',l:'all',N:['Drum school','Scuola di batteria'],sub:['exercises passed (out of 48)','esercizi superati (su 48)']},{g:'notes',l:'all',N:['Reading music','Leggere le note'],sub:['stages passed (out of 11)','tappe superate (su 11)']},
+ {g:'bath',N:['The bathtub','La vasca'],sub:['all your games added up','tutte le partite sommate']},{g:'pitchduo',N:['Pitch Stairs · two notes','Pitch Stairs · due note'],sub:['all your games added up','tutte le partite sommate']}];
 const LVN={easy:['Easy','Facile'],medium:['Medium','Medio'],extreme:['Extreme','Estremo']};
 let bdSel={g:'total',l:'all'};
-const boardMod=()=>window.IgorCloud?import('/board.js?v=4'):Promise.reject('no cloud');
-function boardSheet(g,l){if(g)bdSel={g,l:l||(g==='island'||g==='abyss'||g==='total'||g==='intervals'?'all':bdSel.l!=='all'?bdSel.l:'easy')};const B=BOARDS.find(b=>b.g===bdSel.g)||BOARDS[0],lv=bdSel.g!=='island'&&bdSel.g!=='abyss'&&bdSel.g!=='total'&&bdSel.g!=='intervals';
+const boardMod=()=>window.IgorCloud?import('/board.js?v=5'):Promise.reject('no cloud');
+function boardSheet(g,l){const ALL1=x=>x==='island'||x==='abyss'||x==='total'||x==='intervals'||x==='drumschool'||x==='notes';if(g)bdSel={g,l:l||(ALL1(g)?'all':bdSel.l!=='all'?bdSel.l:'easy')};const B=BOARDS.find(b=>b.g===bdSel.g)||BOARDS[0],lv=!ALL1(bdSel.g);
  const tabs=BOARDS.map(b=>`<button type="button" data-bd="${b.g}" class="${b.g===bdSel.g?'on':''}">${N(b.N)}</button>`).join(''),lvs=lv?`<div class="bdl">${Object.keys(LVN).map(k=>`<button type="button" data-bl="${k}" class="${k===bdSel.l?'on':''}">${N(LVN[k])}</button>`).join('')}</div>`:'';
- const BPLAY={kitchen:'k',window:'w',bedroom:'b',drums:'drums',pitch:'stairs',cadences:'cad',abyss:'abyss',intervals:'iv'}[bdSel.g],playB=BPLAY?`<button type="button" class="bdGo" data-play="${BPLAY}">🏃 ${N(B.N)} · ${tt('let’s play!','giochiamo!')}</button>`:'';
+ const BPLAY={kitchen:'k',window:'w',bedroom:'b',drums:'drums',pitch:'stairs',pitchduo:'stairs',cadences:'cad',abyss:'abyss',intervals:'iv',drumschool:'ds',notes:'nt',bath:'bath'}[bdSel.g],playB=BPLAY?`<button type="button" class="bdGo" data-play="${BPLAY}">🏃 ${N(B.N)} · ${tt('let’s play!','giochiamo!')}</button>`:'';
  openSheet('board',`<h2>🏆 ${tt('Leaderboards','Classifiche')}</h2><div class="bdt">${tabs}</div>${lvs}${playB}<div id="bdBox"><p>${tt('Loading…','Carico…')}</p></div>`);
  const box=$('bdBox'),title=`${N(B.N)}${lv?' · '+N(LVN[bdSel.l]):''}${B.sub?' · '+N(B.sub):''}`;
  if(bdSel.g==='island'||bdSel.g==='total')islandSubmit(true);
@@ -5443,7 +5533,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-2100';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-2300';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
