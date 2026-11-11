@@ -1351,11 +1351,11 @@ for(let i=0;i<90;i++){const a=rnd()*TAU,r=2+rnd()*(R-2.5),x=Math.cos(a)*r,z=Math
 for(const sp of CLEAR_SPOTS){for(const tr of trees)if(tr.t.parent&&Math.hypot(tr.t.position.x-sp.x,tr.t.position.z-sp.z)<sp.r+.8){scene.remove(tr.t);for(const b of blocked)if(b.x===tr.t.position.x&&b.z===tr.t.position.z)b.r=0}
  for(const r of rocks)if(r.parent&&Math.hypot(r.position.x-sp.x,r.position.z-sp.z)<sp.r+.4){scene.remove(r);for(const b of blocked)if(b.x===r.position.x&&b.z===r.position.z)b.r=0}}
 applyCuts();
-/* 11 Nov 2026: fewer trees, more room to walk: about a third of the trees on the main island go, the most crowded first.
+/* 11 Nov 2026: fewer trees, more room to walk: about a third of the trees on the main island go (plus 4 more, asked in the evening), the most crowded first.
    Worked out from the starting positions only, so it is the same on every device; a tree you moved with the nursery stays. */
 const THIN=(()=>{const L=[];trees.forEach((tr,j)=>{if(tr.t.parent)L.push({j,x:tr.t.position.x,z:tr.t.position.z})});const st=blocked.slice(0,NB0).filter(b=>b.r>0);
  const sc=a=>{let v=0;for(const b of L)if(b!==a){const d=Math.hypot(b.x-a.x,b.z-a.z);if(d<4.6)v+=4.6-d}for(const b of st){const d=Math.hypot(b.x-a.x,b.z-a.z)-b.r;if(d<3.4)v+=(3.4-Math.max(0,d))*.8}return v};
- const out=new Set(),n=Math.round(L.length*.32);for(let k=0;k<n;k++){let bi=-1,bv=-1;L.forEach((a,i)=>{const v=sc(a)+a.j*1e-6;if(v>bv){bv=v;bi=i}});out.add(L[bi].j);L.splice(bi,1)}return out})();
+ const out=new Set(),n=Math.round(L.length*.32)+4;for(let k=0;k<n;k++){let bi=-1,bv=-1;L.forEach((a,i)=>{const v=sc(a)+a.j*1e-6;if(v>bv){bv=v;bi=i}});out.add(L[bi].j);L.splice(bi,1)}return out})();
 function applyThin(){const tm=(S.farm&&S.farm.tmv)||{};trees.forEach((tr,j)=>{if(!THIN.has(j))return;const o=tr.t;
  if(tm[j]){if(!o.parent&&tr.thin){tr.thin.par.add(o);for(const[b,r]of tr.thin.b)b.r=r;tr.thin=null}return}
  if(o.parent&&!tr.thin){const b=blocked.filter(q=>q.x===o.position.x&&q.z===o.position.z&&q.r>0).map(q=>[q,q.r]);tr.thin={par:o.parent,b};for(const[q]of b)q.r=0;o.parent.remove(o)}})}
@@ -2983,6 +2983,8 @@ const ISLES=[
  {lv:12,kind:'forest',cx:0,cz:-31.5,rx:8,rz:6.5,A:new V3(0,0,-15.5),B:new V3(0,0,-26.5),k:0,on:false,shown:false,risingT:-1},
  {lv:16,kind:'ice',cx:27,cz:21,rx:8.5,rz:7.2,A:new V3(12,0,10.5),B:new V3(22.5,0,17.5),k:0,on:false,shown:false,risingT:-1}];
 const ISL2=ISLES[0];
+/* 11 Nov 2026: the admins can give an island (and the sand island's Igorlet) to a player, and take them back. S.farm.ig = {4|8|12|16: time} */
+function isleGift(I){const F=S.farm;return!!(F&&F.ig&&F.ig[I.sk||I.lv])}
 const isleE1=(I,x,z)=>Math.hypot((x-I.cx)/I.rx,(z-I.cz)/I.rz);
 const isleN1=(I,x,z)=>segD(x,z,I.A.x,I.A.z,I.B.x,I.B.z);
 const isleE=(x,z)=>{let m=Infinity;for(const I of ISLES)if(I.on)m=Math.min(m,isleE1(I,x,z));return m};
@@ -3164,7 +3166,7 @@ function frogTick(I,dt){for(const f of I.frogs){const g=f.g;
   if(f.cT>0){f.cT-=dt;g.userData.throat.visible=true;const s=1+Math.sin(T*28)*.35;g.userData.throat.scale.set(s,s*.7,s)}else g.userData.throat.visible=false}}
 // the islands rise at their level (once, with Igor watching if he is there), then stay
 updaters.push((t,dt)=>{if(!S.farm)return;const F=FM(),lv=lvlOf();F.isles=F.isles||{};if(F.isle2&&!F.isles[4])F.isles[4]=F.isle2;
- ISLES.forEach((I,i)=>{if(lv<I.lv){I.G.visible=false;I.on=false;I.k=0;I.shown=false;return}
+ ISLES.forEach((I,i)=>{if(lv<I.lv&&!isleGift(I)){I.G.visible=false;I.on=false;I.k=0;I.shown=false;return}
   if(!I.shown){I.shown=true;I.G.visible=true;const fresh=!F.isles[I.sk||I.lv];if(fresh&&!VISIT){F.isles[I.sk||I.lv]=Date.now();if(i===0)F.isle2=F.isles[4];fmDirty=true}
    if(fresh&&!VISIT&&started){I.risingT=T;setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(i===2?tt('Look! A forest of giant mushrooms is rising from the sea… full of fireflies!','Guarda! Dal mare emerge un bosco di funghi giganti… pieno di lucciole!'):i===3?tt('Brrr! An island of ice is coming up, with an igloo and penguins!','Brrr! Sta emergendo un’isola di ghiaccio, con un igloo e i pinguini!'):i===0?tt('Look over there! A sandy island is rising from the sea… and someone is waiting on it!','Guarda laggiù! Dal mare sta emergendo un’isola di sabbia… e qualcuno ci aspetta!'):tt('Look! Another island is coming up, with a little lake you can walk across… and frogs!','Guarda! Sta emergendo un’altra isola, con un laghetto basso basso da attraversare a piedi… e le ranocchie!'),5);snd('wish')},600)}
    else I.k=1}
@@ -3246,7 +3248,7 @@ updaters.push((t,dt)=>{if(DIZZY<=T){if(igPlane.rotation.z){igPlane.rotation.z=0}
 {const H0=new V3(2.3,0,-3.4),bo=new THREE.Group();bo.position.copy(H0);world.add(bo);const pl=barMesh(1);bo.add(pl);blob(bo,.3);bo.visible=false;
  const CALL=[["Psst! I opened a bar on the Caribbean island!","Psst! Ho aperto un bar sull’isola caraibica!"],["Come! The first smoothie is waiting!","Vieni! Il primo frullato ti aspetta!"],["Tap me: I’ll show you the way!","Toccami: ti faccio strada!"]];
  let ci=0,cnext=0,lead=false;const L=label(CALL[0],[BARN+' · barista',BARN+' · barista'],H0.clone().add(new V3(0,IGH2+.55,0)),()=>start(),0);L.hidden=true;
- const want=()=>!VISIT&&S.farm&&lvlOf()>=3&&ISL2.on&&!barF().met;
+ const want=()=>!VISIT&&S.farm&&ISL2.on&&!barF().met;
  function start(){if(!want()||lead)return;lead=true;say(tt(`${BARN}: “Follow me!”`,`${BARN}: “Seguimi!”`),2);goTo('bar')}
  hit(bo,.5,()=>start(),'barigor out',.4);
  updaters.push((t,dt)=>{const on=want()&&where==='out';bo.visible=on;if(!on){L.hidden=true;return}barPaint();pl.quaternion.copy(camera.quaternion);
@@ -5325,6 +5327,53 @@ function gevTick(){if(VISIT||!S.farm)return;const F=FM();F.gevSeen=F.gevSeen||{}
 {const _ap=window.IgorGift.apply;window.IgorGift.apply=function(g){if(g&&g.k==='veh'&&/^ev:/.test(g.v||'')){ensureFarm();const F=FM();F.gifts=F.gifts||{};if(F.gifts[g.id])return false;
   F.gifts[g.id]={k:'veh',n:g.n|0,v:g.v,at:Date.now(),ev:1,had:true};forceEv(g.v.slice(3),Math.max(0,(g.n|0)-1));fmDirty=true;save();return true}return _ap.call(this,g)}}
 
+/* ================= 11 Nov 2026: admin gifts — an island ('i:<4|8|12|16>') and the sand island's Igorlet ('o:4') =================
+   Like the vehicles: if the player already had it (level reached / adopted by themselves) it stays when taken back.
+   Taking back an island: Igor, the Igorlets, and anything the player put on it (fields, buildings, decorations, moved trees and rocks,
+   instruments, souvenirs, parked vehicles) come back to the nearest free spots on the big island. */
+const ISKEY={4:0,8:1,12:2,16:3},isleNm=i=>[['🏝️ The sand island','🏝️ L’isola di sabbia'],['🪷 The lake island','🪷 L’isola del lago'],['🍄 The firefly forest','🍄 Il bosco delle lucciole'],['🧊 The ice island','🧊 L’isola di ghiaccio']][i];
+const onIsle=(I,x,z)=>Math.hypot(x,z*1.12)>R+.3&&(isleE1(I,x,z)<1.15||isleN1(I,x,z)<1.3);
+function isleFree(x,z,r,taken){const F=FM();if(Math.hypot(x,z*1.12)>R-1.5-r)return false;
+ for(const[a,b,c]of FIXB)if(Math.hypot(x-a,z-b)<c+r+.1)return false;
+ for(const f of F.fields)if(Math.hypot(x-f.x,z-f.z)<r+1.25)return false;
+ for(const k of Object.keys(F.pos||{})){const p=spotOf(k);if(Math.hypot(x-p.x,z-p.z)<r+(SPOTR[k]||1.4)+.2)return false}
+ for(const b of blocked)if(b.r>0&&Math.hypot(b.x-x,b.z-z)<b.r+r+.15)return false;
+ const M=DEC();for(const k in M)if(M[k]&&M[k].x!=null&&Math.hypot(M[k].x-x,M[k].z-z)<r+1.1)return false;
+ for(const t of taken)if(Math.hypot(t.x-x,t.z-z)<t.r+r+.3)return false;return true}
+function isleSpot(I,r,taken){const c={x:I.A.x*.86,z:I.A.z*.86};for(let d=0;d<=16;d+=.5){const n=Math.max(1,Math.round(d*5));for(let k=0;k<n;k++){const a=k/n*TAU+d,x=+(c.x+Math.cos(a)*d).toFixed(2),z=+(c.z+Math.sin(a)*d).toFixed(2);
+  if(isleFree(x,z,r,taken)){taken.push({x,z,r});return{x,z}}}}const q={x:c.x,z:c.z};taken.push({...q,r});return q}
+function isleEvict(i){const I=ISLES[i],F=FM(),tk=[];let n=0;const on=(x,z)=>x!=null&&onIsle(I,x,z);
+ if(i===0&&where==='bar')exitRoom(true);
+ if(where==='out'&&on(igor.position.x,igor.position.z)){if(RIDE)dismount(true);const P=isleSpot(I,.5,tk);igor.position.set(P.x,0,P.z);IG.target=null;IG.arrive=null;IG.path=null;camSnap=true}
+ F.fields.forEach(f=>{if(on(f.x,f.z)){const P=isleSpot(I,1.05,tk);f.x=P.x;f.z=P.z;n++}});
+ for(const k of Object.keys(F.pos||{})){const p=F.pos[k];if(on(p.x,p.z)){F.pos[k]=isleSpot(I,SPOTR[k]||1.4,tk);n++}}
+ const M=DEC();for(const k in M){const m=M[k];if(m&&on(m.x,m.z)){const P=isleSpot(I,(DECO[k]&&DECO[k].r)||1,tk);m.x=P.x;m.z=P.z;decoMoveTo(k,P.x,P.z);n++}}
+ if(F.tmv)for(const j in F.tmv){const p=F.tmv[j];if(on(p.x,p.z)){const P=isleSpot(I,.75,tk);F.tmv[j]=P;moveTreeTo(+j,P.x,P.z);n++}}
+ if(F.rmv)for(const j in F.rmv){const p=F.rmv[j];if(on(p.x,p.z)){const P=isleSpot(I,.5,tk);F.rmv[j]=P;moveRockTo(+j,P.x,P.z);n++}}
+ for(const k of INS.map(I=>I.k)){const S2=insS(k);if(S2&&S2.pos&&on(S2.pos.x,S2.pos.z)){const P=isleSpot(I,1.4,tk);S2.pos=P;insMoveTo(k,P.x,P.z);n++}}
+ if(F.souv)for(const sv of F.souv)if(on(sv.x,sv.z)){const P=isleSpot(I,.45,tk);sv.x=P.x;sv.z=P.z}
+ if(F.vpos)for(const k of Object.keys(F.vpos))if(on(F.vpos[k].x,F.vpos[k].z))delete F.vpos[k];
+ const pen=spotOf('pen');for(const[,o]of igObjs){const q=o.grp.position;if(on(q.x,q.z)||(o.act&&o.act.k==='isl'&&o.act.i===i)){if(o.act&&o.act.k==='isl')islOff(o);o.act=null;q.set(pen.x+(Math.random()-.5)*2,0,pen.z+(Math.random()-.5)*2);o.goal.copy(q)}}
+ return n}
+function isleOrphRemove(id){const F=FM();for(const q of F.tasks)q.w=q.w.filter(w=>w!==id);const keep=g=>g.id!==id;const n0=F.igs.length;F.igs=F.igs.filter(keep);
+ if(F.ufo&&F.ufo.igs)F.ufo.igs=F.ufo.igs.filter(keep);const o=igObjs.get(id);if(o&&o.act)o.act=null;return n0!==F.igs.length||true}
+{const _ap=window.IgorGift.apply,_tk=window.IgorGift.take;
+ window.IgorGift.apply=function(g){const v=g&&g.k==='veh'&&g.v||'';const mi=v.match(/^i:(\d+)$/),mo=v==='o:4';if(!mi&&!mo)return _ap.call(this,g);
+  ensureFarm();const F=FM();F.gifts=F.gifts||{};if(F.gifts[g.id])return false;const r={k:'veh',n:1,v,at:Date.now()};let txt='';
+  if(mi){const i=ISKEY[mi[1]];if(i==null)return false;const I=ISLES[i];F.ig=F.ig||{};r.isl=+mi[1];
+   if(lvlOf()>=I.lv||F.ig[r.isl])r.had=true;else F.ig[r.isl]=Date.now();txt=tt(isleNm(i)[0],isleNm(i)[1])+(r.had?tt(' (you already had it)',' (ce l’avevi già)'):'')}
+  else{r.og=1;if(F.orphan){r.had=true;txt=tt('the sand island’s Igorlet (it already lives with you)','l’Igorlet dell’isola di sabbia (abita già con te)')}
+   else{const g2=newIg(F.igs.length);g2.id=Math.max(0,...F.igs.map(x=>x.id),...((F.ufo&&F.ufo.igs)||[]).map(x=>x.id))+1;g2.look={...orphG.look};g2.hue=orphG.hue;g2.trait='explorer';F.igs.push(g2);F.orphan=Date.now();r.oid=g2.id;
+    const pen=spotOf('pen'),o=igObj(g2);o.grp.position.set(pen.x,0,pen.z);o.goal.copy(o.grp.position);txt=tt(`🐾 ${g2.name}, the sand island’s Igorlet! Its little house is ready in the village`,`🐾 ${g2.name}, l’Igorlet dell’isola di sabbia! La sua casetta è già pronta nel villaggio`);
+    if(window.IgorSound&&started)IgorSound.ig('happy',{id:g2.id,trait:g2.trait})}}
+  F.gifts[g.id]=r;fmDirty=true;save();fmRender();refresh();snd('buy');
+  say(tt(`🎁 A gift from Igor Time: ${txt}!`,`🎁 Un regalo da Igor Time: ${txt}!`)+(g.msg?' '+g.msg:''),4.5);return true};
+ window.IgorGift.take=function(g,quiet){const F=FM(),r=F&&F.gifts&&F.gifts[g.id];if(!r||!(r.isl||r.og))return _tk.call(this,g,quiet);if(r.back!==undefined)return 0;let tk=0;
+  if(r.isl&&!r.had&&F.ig&&F.ig[r.isl]){const i=ISKEY[r.isl],I=ISLES[i];delete F.ig[r.isl];tk=1;
+   if(lvlOf()<I.lv){isleEvict(i);if(F.isles)delete F.isles[r.isl];if(i===0)delete F.isle2}}
+  if(r.og&&!r.had&&r.oid!=null){isleOrphRemove(r.oid);F.orphan=0;tk=1}
+  r.back=tk;fmDirty=true;save();fmRender();refresh();if(!quiet&&tk)say(tt('The admins took back a gift.','Gli amministratori hanno ritirato un regalo.'),3);return tk}}
+
 /* --- the spontaneous Aliengor: one roll a day, at a random hour; never in the first week, and never twice within a month --- */
 {let acc=0;updaters.push((t,dt)=>{if((acc+=dt)<5||VISIT||!S.farm)return;acc=0;const F=FM(),now=Date.now(),d=dayIdx(now);
  if(F.ufo||lvlOf()<3||F.igs.length<1)return;if(F.ufoRoll==null){F.ufoRoll=d;fmDirty=true;return}
@@ -5582,7 +5631,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-2330';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-2400';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
@@ -5647,7 +5696,7 @@ function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
 window.IgorCloud=C;
 /* events forced by the admins for everyone (gev/<id>): every island listens to the last ones */
 try{onSnapshot(query(collection(db,'gev'),orderBy('at','desc'),limit(10)),q=>{if(window.IgorForce)window.IgorForce.global(q.docs.map(d=>{const x=d.data();return{id:d.id,k:x.k,lead:x.lead|0,st:x.st,at:x.at&&x.at.toMillis?x.at.toMillis():0}}))},e=>console.warn('gev',e&&e.code||e))}catch(e){console.warn('gev',e)}
-{const s=document.createElement('script');s.src='/chat.js?v=15';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=16';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
