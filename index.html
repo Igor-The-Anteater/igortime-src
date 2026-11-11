@@ -2908,6 +2908,8 @@ function insBuild(I){if(insO[I.k])return insO[I.k];const M=insS(I.k);if(!M.pos){
  return insO[I.k]={g,keys,h,L,ly,fx,bk}}
 let insAcc=0,insAnn=false;
 function marTick(t,dt){if(!S.farm)return;const tn=Date.now();
+ /* 11 Nov 2026: an instrument built for another level (a visit, or the admins' inspector starting from their own island) is hidden when this island hasn't unlocked it */
+ for(const I of INS){const o=insO[I.k];if(!o)continue;const on=insOn(I);if(o.g.visible!==on)o.g.visible=on;if(o.L&&!on)o.L.hidden=true;else if(o.L&&on&&o.L.hidden)o.L.hidden=false}
  for(const I of INS){if(!insOn(I))continue;const o=insBuild(I),M=insS(I.k),n=insOut(I.k);
   o.keys.forEach((b,k)=>{const off=!!M.off[k];b.material.emissiveIntensity=off?.3+.22*Math.sin(t*4+k):0;b.visible=!(M.miss&&M.miss[k])});o.h.material.opacity=n?.25+.15*Math.sin(t*3):0;
   const lt=insLbl(I,n,insMiss(I.k));if(o.L.el.innerHTML!==lt)o.L.el.innerHTML=lt}
@@ -6020,7 +6022,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-2700';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-2710';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
