@@ -1815,7 +1815,7 @@ function hideHint(){if(hintOn){hintOn=false;$('hint').style.opacity=0}}
 
 /* ================= UI: sheets ================= */
 const sheet=$('sheet'),sb=$('sheetBody');let sheetKind=null,farmFocus=null;
-function openSheet(kind,html){const was=sheet.hidden;sheetKind=kind;sb.innerHTML=html;sheet.hidden=false;poke();if(was)snd('open')}
+function openSheet(kind,html){const was=sheet.hidden;sheetKind=kind;sheet.classList.toggle('wide',kind==='counter');sb.innerHTML=html;sheet.hidden=false;poke();if(was)snd('open')}
 function closeSheet(){const was=sheetKind;if(!sheet.hidden)snd('close');sheet.hidden=true;sheetKind=null;farmFocus=null;DRESS_ONB=false;if(ONB&&(was==='acct'||was==='dress'))onbDone()}
 /* end of the onboarding: back to where the player chose to go */
 function onbDone(){const o=ONB;setOnb(null);if(!o)return;if(o.dest==='games'){setView('games');launch('/games/',tt('To the games page!','Alla pagina dei giochi!'));return}if(window.IgorCloud&&window.IgorCloud.user)say(pick(tt(['What a look!','Let’s explore the island!'],['Che bel look!','Andiamo a esplorare l’isola!'])),2.4)}
@@ -3085,7 +3085,7 @@ function barMenu(){const P=new V3(-.4,2.0,-1.0);
   {t:`🥭 ${tt('Tofu & mango smoothie','Frullato tofu e mango')} ${cst({t:2})}`,main:1,fn:()=>{barDrink('mango');return false}},
   {t:`🫧 ${tt('Fizzy smoothie','Frullato frizzante')} ${cst({t:3})}`,fn:()=>{barDrink('fizz');return false}},
   ...(btlPocketN()||(FUN().btlOld|0)?[{t:`🍾 ${tt('Here are my bottles','Ecco le mie bottiglie')} (${btlPocketN()+Math.min(8,FUN().btlOld|0)})`,main:1,fn:()=>{btlDeliver();return false}}]:[]),
-  ...(Object.keys(btlShelf()).length?[{t:`🎚 ${tt('The shelf','Lo scaffale')}`,fn:()=>{btlSync();shelfSheet();return false}}]:[])]},'bar',1)}
+  ...(Object.keys(btlShelf()).length?[{t:`🎚 ${tt('The shelf','Lo scaffale')}`,fn:()=>{btlSync();shelfSheet();return false}},{t:`🎹 ${tt('The counter','Il bancone')}`,main:1,fn:()=>{btlSync();counterSheet();return false}}]:[])]},'bar',1)}
 let DIZZY=0,hicT=0;
 function barDrink(k){if(!pay({t:k==='fizz'?3:2})){say(tt('Not enough tofu ants for a smoothie!','Non ci sono abbastanza formiche di tofu per un frullato!'),2.4);return}
  save();try{hudFarm()}catch(e){}snd('munch');
@@ -3184,6 +3184,87 @@ sb.addEventListener('change',e=>{if(sheetKind==='shelf'&&e.target.closest('input
 {const Rm=ROOMS.bar;if(Rm&&Rm.shelf){BUILD='bar';hit(Rm.shelf,1.2,()=>walkIn(new V3(-.4,0,-.55),()=>{btlSync();shelfSheet()}),'bar shelf',2.15);
   label(['Bottle shelf','Scaffale delle bottiglie'],'',new V3(-.4,3.1,-3.4),()=>walkIn(new V3(-.4,0,-.55),()=>{btlSync();shelfSheet()}));BUILD='out'}}
 updaters.push(()=>{if(where==='bar'&&S.farm)btlSync()});
+/* ================= 11 Nov 2026: Barigor's counter, a 16-step piano roll (step 4 of the bar plan) =================
+   The counter opens full screen: one row for every bottle on the shelf (high notes at the top), 16 steps.
+   You put coloured tokens (colour = note, with its number: white notes 1…7, 8…14 in the high octave, black notes with ♯, e.g. 1♯) on the counter; the tofu ant walks along the steps
+   and Barigor plays the shelf bottles where it finds tokens, as they are tuned on the shelf (out of tune if they are out of tune).
+   Tokens: S.farm.bar.tk = {note: how many}. The first handful is Barigor's gift: 4 tokens for every note on the shelf
+   (and 4 more whenever a new note arrives; B.tkg remembers which notes were given). Step 5 will make more out of glass.
+   The piece on the counter is kept (B.pr = 16 lists of notes, B.bpm); up to 8 pieces saved (B.pz = [{n, s, b}]). */
+const PR_N=16,PR_MAX=8;
+const prNum=i=>{const pc=i%12,W=[0,2,4,5,7,9,11],o=i>=12?7:0,k=W.indexOf(pc);return k>=0?String(k+1+o):(W.indexOf(pc-1)+1+o)+'♯'};
+const prB=()=>{const B=barF();B.tk=B.tk||{};B.tkg=B.tkg||{};if(!Array.isArray(B.pr)||B.pr.length!==PR_N)B.pr=Array.from({length:PR_N},()=>[]);if(!B.bpm)B.bpm=100;B.pz=B.pz||[];return B};
+const prUsed=i=>prB().pr.reduce((a,c)=>a+(c.includes(i)?1:0),0);
+const prFree=i=>(prB().tk[i]|0)-prUsed(i);
+function prGift(){const B=prB(),sh=btlShelf();let n=0;for(const k of Object.keys(sh)){if(!B.tkg[k]){B.tkg[k]=1;B.tk[k]=(B.tk[k]|0)+4;n++}}if(n){fmDirty=true;save()}return n}
+function prSound(i){const s=btlShelf()[i];if(!s)return;btlPlay(i,s.off+s.sl);const o=btlObjs[i];if(o)o.userData.hop=performance.now()}
+/* playing: the tofu ant walks the steps */
+const PR={on:false,st:-1,tm:0,next:0};
+function prStep(){return 60000/prB().bpm/2}
+function prTick(){if(!PR.on)return;if(sheetKind!=='counter'){prStop();return}
+ const B=prB();PR.st=(PR.st+1)%PR_N;for(const i of B.pr[PR.st])prSound(i);prMark();
+ PR.next+=prStep();PR.tm=setTimeout(prTick,Math.max(0,PR.next-performance.now()))}
+function prPlay(){if(PR.on)return;PR.on=true;PR.st=-1;PR.next=performance.now();prTick();prBtn()}
+function prStop(){PR.on=false;clearTimeout(PR.tm);PR.st=-1;if(sheetKind==='counter'){prMark();prBtn()}}
+function prMark(){const a=sb.querySelector('.prant span');if(a){a.style.left=PR.st<0?'0%':((PR.st+.5)/PR_N*100)+'%';a.style.opacity=PR.st<0?'.45':'1'}
+ sb.querySelectorAll('.pr .now').forEach(e=>e.classList.remove('now'));if(PR.st>=0)sb.querySelectorAll(`.pr button[data-c="${PR.st}"]`).forEach(e=>e.classList.add('now'))}
+function prBtn(){const b=sb.querySelector('button[data-pa="play"]');if(b)b.innerHTML=PR.on?'■ '+tt('Stop','Ferma'):'▶ '+tt('Play','Suona')}
+/* the panel */
+let prSel=-1;
+function counterSheet(){const sh=btlShelf(),notes=Object.keys(sh).map(Number).sort((a,b)=>b-a);
+ if(!notes.length){say(tt(`${BARN}: “The counter plays the bottles on the shelf. Bring me some empty bottles first!”`,`${BARN}: “Il bancone suona le bottiglie dello scaffale. Prima portami qualche bottiglia vuota!”`),3.4);return}
+ const g=prGift(),B=prB();if(g)setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`${BARN}: “Here are ${g*4} tokens, 4 for every note! Put them on the counter and I’ll play the bottles.”`,`${BARN}: “Ecco ${g*4} pedine, 4 per ogni nota! Mettile sul bancone e io suono le bottiglie.”`),4)},250);
+ const head=i=>`<div class="h" style="--c:${btlCol(i)}"><i>${prNum(i)}</i><b>${btlName(i)}</b><small data-f="${i}">×${prFree(i)}</small></div>`;
+ const cell=(i,c)=>{const on=B.pr[c].includes(i);return`<button type="button" class="c${c%4?'':' q'}${on?' t':''}" data-r="${i}" data-c="${c}" style="--c:${btlCol(i)}" aria-label="${btlName(i)} ${c+1}">${on?prNum(i):''}</button>`};
+ const out=notes.filter(i=>Math.abs(sh[i].off+sh[i].sl)>INSTOL).length;
+ openSheet('counter',`<h2>🎹 ${tt('Barigor’s counter','Il bancone di Barigor')}</h2>
+ <p class="shn">${tt('Every row is a bottle on the shelf (high notes at the top). Tap a square to put a token, tap it again to take it back. Then ▶: the tofu ant walks along the counter and Barigor plays the bottles where it finds a token.','Ogni riga è una bottiglia dello scaffale (in alto le note acute). Tocca una casella per mettere una pedina, toccala ancora per riprenderla. Poi ▶: la formica di tofu cammina sul bancone e Barigor suona le bottiglie dove trova una pedina.')}${out?` <b>${tt(`${out} bottle${out>1?'s are':' is'} out of tune: tune ${out>1?'them':'it'} on the shelf, or the piece will sound out of tune!`,`${out} bottigli${out>1?'e sono stonate':'a è stonata'}: intonal${out>1?'e':'a'} sullo scaffale, se no il pezzo suona stonato!`)}</b>`:''}</p>
+ <div class="prant"><span>🐜</span></div>
+ <div class="pr" style="--n:${notes.length}">${notes.map(i=>head(i)+Array.from({length:PR_N},(_,c)=>cell(i,c)).join('')).join('')}</div>
+ <div class="prnum">${Array.from({length:PR_N},(_,c)=>`<span${c%4?'':' class="q"'}>${c+1}</span>`).join('')}</div>
+ <div class="prctl"><button type="button" data-pa="play" class="m">${PR.on?'■ '+tt('Stop','Ferma'):'▶ '+tt('Play','Suona')}</button>
+ <label class="prsp">🐢<input type="range" min="60" max="180" step="5" value="${B.bpm}" data-psp aria-label="${tt('Speed','Velocità')}">🐇<span>${B.bpm}</span></label>
+ <button type="button" data-pa="clear">🧹 ${tt('Clear','Svuota')}</button><button type="button" data-pa="save">💾 ${tt('Save','Salva')}</button></div>
+ ${B.pz.length?`<div class="prpz"><span>${tt('Your pieces','I tuoi pezzi')}:</span>${B.pz.map((p,k)=>`<span class="pz${k===prSel?' on':''}"><button type="button" data-pl="${k}">🎵 ${p.n}</button><button type="button" data-pd="${k}" aria-label="${tt('Delete','Elimina')}">✕</button></span>`).join('')}</div>`:''}`);
+ sheet.classList.add('wide');prMark()}
+sb.addEventListener('click',e=>{if(sheetKind!=='counter')return;const b=e.target.closest('button');if(!b)return;const B=prB();
+ if(b.dataset.r!=null){e.stopPropagation();const i=+b.dataset.r,c=+b.dataset.c,col=B.pr[c],k=col.indexOf(i);
+  if(k>=0){col.splice(k,1);b.classList.remove('t');b.textContent=''}
+  else{if(prFree(i)<=0){bubbleQ.length=0;bubbleT=0;say(tt(`No more ${btlName(i)} tokens: take one back from the counter.`,`Non hai più pedine ${btlName(i)}: riprendine una dal bancone.`),2.6);return}
+   col.push(i);b.classList.add('t');b.textContent=prNum(i);prSound(i)}
+  const f=sb.querySelector(`small[data-f="${i}"]`);if(f)f.textContent='×'+prFree(i);fmDirty=true;clearTimeout(prSave._t);prSave._t=setTimeout(prSave,800);return}
+ const a=b.dataset.pa;
+ if(a==='play'){PR.on?prStop():prPlay();return}
+ if(a==='clear'){if(!B.pr.some(c=>c.length))return;B.pr=Array.from({length:PR_N},()=>[]);prSel=-1;fmDirty=true;save();counterSheet();return}
+ if(a==='save'){if(!B.pr.some(c=>c.length)){say(tt('The counter is empty: put some tokens first!','Il bancone è vuoto: metti prima qualche pedina!'),2.4);return}
+  const s=B.pr.map(c=>c.slice());if(prSel>=0&&B.pz[prSel]){B.pz[prSel].s=s;B.pz[prSel].b=B.bpm}
+  else{if(B.pz.length>=PR_MAX){say(tt(`You already have ${PR_MAX} pieces: delete one (✕) to save a new one.`,`Hai già ${PR_MAX} pezzi: eliminane uno (✕) per salvarne uno nuovo.`),3);return}
+   let k=1;while(B.pz.some(p=>p.n===tt('Piece','Pezzo')+' '+k))k++;B.pz.push({n:tt('Piece','Pezzo')+' '+k,s,b:B.bpm});prSel=B.pz.length-1}
+  fmDirty=true;save();snd('pop');say(tt(`Saved: “${B.pz[prSel].n}”!`,`Salvato: “${B.pz[prSel].n}”!`),2.2);counterSheet();return}
+ if(b.dataset.pl!=null){const p=B.pz[+b.dataset.pl];if(!p)return;
+  // a saved piece goes back on the counter only with the tokens you have
+  const need={};p.s.forEach(c=>c.forEach(i=>need[i]=(need[i]|0)+1));const miss=Object.keys(need).filter(i=>need[i]>(B.tk[i]|0)||!btlShelf()[i]);
+  if(miss.length){say(tt(`Not enough tokens for this piece (${miss.map(i=>btlName(+i)).join(', ')}).`,`Non hai abbastanza pedine per questo pezzo (${miss.map(i=>btlName(+i)).join(', ')}).`),3);return}
+  B.pr=p.s.map(c=>c.slice());B.bpm=p.b||100;prSel=+b.dataset.pl;fmDirty=true;save();counterSheet();return}
+ if(b.dataset.pd!=null){const k=+b.dataset.pd;B.pz.splice(k,1);if(prSel===k)prSel=-1;else if(prSel>k)prSel--;fmDirty=true;save();counterSheet()}});
+function prSave(){save()}
+sb.addEventListener('input',e=>{if(sheetKind!=='counter')return;const r=e.target.closest('input[data-psp]');if(!r)return;prB().bpm=+r.value;const s=r.parentElement.querySelector('span');if(s)s.textContent=r.value;fmDirty=true});
+sb.addEventListener('change',e=>{if(sheetKind==='counter'&&e.target.closest('input[data-psp]'))save()});
+{const st=document.createElement('style');st.textContent=`.sheet.wide{width:auto;right:max(16px,env(safe-area-inset-right,0px));max-height:calc(100vh - 40px)}
+.pr{display:grid;grid-template-columns:68px repeat(16,minmax(14px,1fr));gap:3px 2px;margin:4px 0 2px}
+.pr .h{display:flex;align-items:center;gap:4px;font-size:10px;min-width:0}.pr .h i{display:flex;align-items:center;justify-content:center;flex:none;width:17px;height:17px;border-radius:50%;background:var(--c);color:#2b2018;font:700 9px/1 var(--sans,inherit);font-style:normal}
+.pr .h b{font-weight:600;white-space:nowrap}.pr .h small{margin-left:auto;opacity:.75;font-size:9px}
+.pr button.c{aspect-ratio:1;min-width:0;min-height:14px;max-height:30px;padding:0;border:0;border-radius:4px;background:rgba(255,255,255,.07);cursor:pointer;font:700 9px/1 inherit;color:#2b2018;text-transform:none;letter-spacing:0}
+.pr button.c.q{background:rgba(255,255,255,.13)}.pr button.c.t{background:var(--c);border-radius:50%;box-shadow:inset 0 -2px 0 rgba(0,0,0,.22)}
+.pr button.c.now{outline:2px solid #fff3b0;outline-offset:-1px}
+.prant{position:relative;height:20px;margin:6px 0 0 70px}.prant span{position:absolute;left:0;bottom:0;transform:translateX(-50%) scaleX(-1);font-size:16px;transition:left .07s linear;filter:sepia(1) saturate(.35) brightness(1.55)}
+.prnum{display:grid;grid-template-columns:repeat(16,minmax(14px,1fr));gap:2px;margin-left:70px;font-size:9px;text-align:center;opacity:.55}.prnum .q{opacity:1;font-weight:700}
+.prctl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}.prsp{display:flex;align-items:center;gap:6px;font-size:14px}.prsp input{width:120px}.prsp span{font-size:11px;min-width:26px}
+.prpz{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px;font-size:11px}.prpz .pz{display:inline-flex;border:1px solid rgba(219,231,234,.2);border-radius:14px;overflow:hidden}.prpz .pz.on{border-color:#fff3b0}.prpz .pz button{border:0;padding:4px 8px;font-size:11px;text-transform:none;letter-spacing:0}.prpz .pz button+button{padding:4px 7px;opacity:.6}`;document.head.appendChild(st)}
+/* the counter in the bar can be tapped; the shelf bottles hop when Barigor plays them */
+{const Rm=ROOMS.bar;if(Rm){BUILD='bar';const C=new THREE.Group();C.position.set(-2.3,0,-1.25);Rm.g.add(C);const go=()=>walkIn(new V3(-2.3,0,-.4),()=>{btlSync();counterSheet()});
+  hit(C,.75,go,'bar counter',1.1);label(['🎹 The counter','🎹 Il bancone'],tt('piano roll','piano roll'),new V3(-2.3,1.75,-1.25),go);BUILD='out'}}
+updaters.push(()=>{if(where!=='bar')return;const now=performance.now();for(const k in btlObjs){const o=btlObjs[k],h=o.userData.hop;if(!h)continue;const u=(now-h)/260;o.position.y=(+k<12?1.59:2.19)+(u<1?Math.sin(u*Math.PI)*.09:0);if(u>=1)o.userData.hop=0}});
 /* ---------- fish around the island, birds in the sky ---------- */
 const FISHW=[['clown',3],['blue',3],['puffer',2],['sunfish',1],['dolphin',.7]];
 const pickW=L=>{let t=L.reduce((a,x)=>a+x[1],0)*Math.random();for(const[k,w]of L){if((t-=w)<=0)return k}return L[0][0]};
@@ -5007,7 +5088,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-1400';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-1500';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
