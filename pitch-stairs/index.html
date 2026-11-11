@@ -15,6 +15,8 @@ header{position:fixed;top:0;left:0;right:0;display:flex;align-items:baseline;jus
  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px))}
 .igback{pointer-events:auto;align-self:center;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none;border:1px solid rgba(219,231,234,.35);border-radius:999px;padding:9px 13px;white-space:nowrap;background:rgba(5,8,13,.6)}.igback:hover{border-color:var(--glow);color:var(--glow)}
 @media (max-width:520px){.igback{padding:8px 10px;font-size:10px}}
+@media (max-width:520px){#bar{gap:6px}#bar button{padding:11px 11px;letter-spacing:.06em}}
+button[hidden]{display:none}
 h1{margin:0;font:400 clamp(24px,3.6vw,36px)/1 var(--display);letter-spacing:-.01em}
 h1 em{color:var(--glow)}
 h1 a{color:inherit;text-decoration:none;pointer-events:auto}
@@ -34,6 +36,7 @@ button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
 #bubble::after{content:'';position:absolute;left:calc(var(--tx,40px) - 11px);bottom:-14px;width:22px;height:16px;background:var(--bone);clip-path:polygon(0 0,100% 0,50% 100%)}
 #bubble.below::after{bottom:auto;top:-14px;clip-path:polygon(50% 0,100% 100%,0 100%)}
 .ov{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 55%,rgba(4,7,12,.72),rgba(4,7,12,.96) 75%);padding:16px;box-sizing:border-box}
+.ov{overflow-y:auto;place-items:safe center}
 .ov[hidden]{display:none}
 .card{max-width:30rem;width:100%}
 .card h2{margin:0;font:400 clamp(40px,8vw,72px)/.95 var(--display);letter-spacing:-.02em}
@@ -43,7 +46,9 @@ button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
 .card .row{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 10px}
 .card .av button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 12px 10px;border-radius:18px}
 .card .av canvas{width:64px;height:64px}
-.card .av button[aria-pressed="true"],.card .lv button[aria-pressed="true"]{border-color:var(--glow);color:var(--glow)}
+.card .cast{margin:6px 0 0;gap:4px}
+@media (max-height:820px){.card h2{font-size:clamp(34px,7vw,60px)}.card p{margin:.6em 0;line-height:1.55}.card .row{margin:10px 0 6px}.card .av canvas,.card .cast canvas{width:48px;height:48px}}.card .cast canvas{width:64px;height:64px}
+.card .av button[aria-pressed="true"],.card .lv button[aria-pressed="true"],.card .vo button[aria-pressed="true"]{border-color:var(--glow);color:var(--glow)}
 .card .big{font:400 clamp(56px,12vw,96px)/1 var(--display);color:var(--bone)}
 .card .small{font-size:10.5px;letter-spacing:.08em;color:var(--dim)}
 .card a{color:var(--glow)}
@@ -55,20 +60,28 @@ button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
 <div id="bar">
  <button id="listen" type="button">▶ Listen</button>
  <button id="mine" type="button">♪ My note</button>
+ <button id="me0" type="button" hidden>♪</button>
+ <button id="me1" type="button" hidden>♪</button>
  <button id="ok" class="main" type="button">That's it!</button>
 </div>
 
 <div class="ov" id="start"><div class="card">
  <h2>Pitch <em>Stairs</em></h2>
  <p>A tofu ant is hiding on the staircase <b>behind the curtain</b>. When the light comes on, it sings.</p>
- <p><b>Drag <span class="nm">Igor</span></b> up and down the staircase: the higher you climb, the higher the note. Reach the same height as the ant and it’s lunchtime.</p>
+ <p class="solo"><b>Drag <span class="nm">Igor</span></b> up and down the staircase: the higher you climb, the higher the note. Reach the same height as the ant and it’s lunchtime.</p>
+ <p class="duo" id="duop" hidden></p>
  <p class="small" id="acctline" hidden></p>
  <div class="row av" role="group" aria-label="Choose your anteater">
   <button type="button" data-av="igor" aria-pressed="true"><canvas width="128" height="128"></canvas>Igor</button>
   <button type="button" data-av="she" aria-pressed="false"><canvas width="128" height="128"></canvas>Shigor</button>
   <button type="button" data-av="queer" aria-pressed="false"><canvas width="128" height="128"></canvas>Queegor</button>
  </div>
- <p class="small">Headphones recommended · 5 rounds · keys: ↑↓ move, space = my note, L = listen, enter = that’s it</p>
+ <div class="row vo" role="group" aria-label="Notes">
+  <button type="button" data-vo="1" aria-pressed="true" id="vo1">♪ One note</button>
+  <button type="button" data-vo="2" aria-pressed="false" id="vo2">♪♪ Two notes</button>
+ </div>
+ <div id="cast" hidden><div class="row cast"><canvas width="128" height="128"></canvas><canvas width="128" height="128"></canvas></div><p class="small" id="castline"></p></div>
+ <p class="small" id="keys">Headphones recommended · 5 rounds · keys: ↑↓ move, space = my note, L = listen, enter = that’s it</p>
  <div class="row lv" role="group" aria-label="Difficulty">
   <button type="button" data-lv="easy" aria-pressed="true">Easy</button>
   <button type="button" data-lv="medium" aria-pressed="false">Medium</button>
@@ -106,21 +119,13 @@ try{const s=localStorage.getItem('pitchStairsLevel');if(s&&LEVELS[s]){lvKey=s;LV
 let AC=null,OUT=null;
 function audio(){if(AC)return AC;AC=new (window.AudioContext||window.webkitAudioContext)();
  OUT=AC.createGain();OUT.gain.value=.22;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4200;OUT.connect(lp);lp.connect(AC.destination);return AC}
-function voice(){const o1=AC.createOscillator(),o2=AC.createOscillator(),g2=AC.createGain(),g=AC.createGain();
- o1.type='sine';o2.type='sine';g2.gain.value=.18;o1.connect(g);o2.connect(g2);g2.connect(g);g.gain.value=0;g.connect(OUT);o1.start();o2.start();
- return{set(f,t=0){o1.frequency.setTargetAtTime(f,AC.currentTime+t,.008);o2.frequency.setTargetAtTime(f*2,AC.currentTime+t,.008)},
+function voice(kind){const HM=kind==='reed'?[[1,.62],[3,.3],[5,.15],[7,.06]]:[[1,1],[2,.18]];const g=AC.createGain();g.gain.value=0;g.connect(OUT);
+ const os=HM.map(([n,a])=>{const o=AC.createOscillator(),ga=AC.createGain();o.type='sine';ga.gain.value=a;o.connect(ga);ga.connect(g);o.start();return[o,n]});
+ return{set(f,t=0){os.forEach(([o,n])=>o.frequency.setTargetAtTime(f*n,AC.currentTime+t,.008))},
   on(){g.gain.cancelScheduledValues(AC.currentTime);g.gain.setTargetAtTime(1,AC.currentTime,.02)},
   off(){g.gain.cancelScheduledValues(AC.currentTime);g.gain.setTargetAtTime(0,AC.currentTime,.05)},
-  stop(t){setTimeout(()=>{try{o1.stop();o2.stop()}catch(e){}},t*1000)},g}}
-let antVoice=null,myVoice=null,antPlaying=0,antPlayEnd=0;
-function playAnt(){if(!AC||phase!=='guess')return;if(R.left<=0&&R.played)return;
- if(R.played)R.left--;R.played=true;updateButtons();
- antVoice.set(fOf(R.u));antVoice.on();antPlaying=1;antPlayEnd=performance.now()/1000+LV.dur;
- setTimeout(()=>{antVoice.off();antPlaying=0},LV.dur*1000)}
-let myOn=false;function myStart(){if(!AC||phase!=='guess'||myOn)return;myOn=true;myVoice.set(fOf(IG.u));myVoice.on()}
-function myStop(){if(!myOn)return;myOn=false;myVoice.off()}
+  kill(){this.off();setTimeout(()=>{os.forEach(([o])=>{try{o.stop()}catch(e){}})},500)},g}}
 const fOf=u=>LV.f0*Math.pow(2,u*LV.oct);
-const cents=(a,b)=>1200*Math.log2(fOf(a)/fOf(b));
 
 /* ---------- canvas ---------- */
 const cv=$('c'),g=cv.getContext('2d');let W=0,H=0,DPR=1,bg=null,STARS=[];
@@ -159,7 +164,7 @@ let ACCT=null,HOME=null,AVO=null;try{ACCT=JSON.parse(localStorage.getItem('igort
 if(ACCT&&HOME&&AV[HOME.avatar]){avKey=HOME.avatar;AVO={ball:HOME.ball,head:HOME.head,hcol:HOME.hcol,glasses:HOME.glasses,gcol:HOME.gcol,ears:HOME.ears,ecol:HOME.ecol};if(HOME.rim)AV[avKey]={...AV[avKey],rim:HOME.rim}}
 const CAP={easy:4,medium:7,extreme:10};
 function reward(total){const n=Math.min(CAP[lvKey],Math.round(total/500*CAP[lvKey]));let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
- p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.pitchStairs=p.scores.pitchStairs||{};if(!(g[lvKey]>=total))g[lvKey]=total;
+ p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const gk=DUO?'pitchduo':'pitchStairs',g=p.scores[gk]=p.scores[gk]||{};if(!(g[lvKey]>=total))g[lvKey]=total;
  try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n}
 const EYES=[{x:306,y:194,rx:19,ry:21},{x:341,y:190.5,rx:16,ry:19.5}];
 const spr=document.createElement('canvas');spr.width=spr.height=512;const sx=spr.getContext('2d');spr.key='';
@@ -236,29 +241,35 @@ function igorAcc(c,eyes,o){const a=accOf(o);if(!a.head&&!a.glasses&&!a.ears)retu
  const H={cap:accCap,beanie:accBeanie,bow:accBow,star:accStar,flower:accFlower}[a.head];if(H)H(c,a.hcol);
  if(a.ears)accEars(c,a.ears,a.ecol,'r');
  if(a.glasses==='eye'||a.glasses==='sun')accGlasses(c,a.glasses,a.gcol);c.restore()}
-function paintAvatar(c,key,k0,k1){c.clearRect(0,0,512,512);c.drawImage(igorImg,0,0,512,512);const A=AV[key];
- if(A.rim){c.save();c.strokeStyle=A.rim;c.lineWidth=5;c.beginPath();c.arc(251,251,216,Math.PI/2+.47,Math.PI/2-.47+TAU);c.stroke();c.restore()}
- const d0=lid(c,EYES[0],k0),d1=lid(c,EYES[1],k1);
- if(key==='she'){lashes(c,EYES[0],d0,2);lashes(c,EYES[1],d1,2);}
- else if(key==='queer'){lashes(c,EYES[0],d0,1);lashes(c,EYES[1],d1,1);}
- igorAcc(c,EYES,{...(AVO||{}),avatar:key})}
-function drawSprite(k0,k1){if(!igorOK)return;const key=avKey+'|'+k0.toFixed(2)+'|'+k1.toFixed(2);if(key===spr.key)return;spr.key=key;paintAvatar(sx,avKey,k0,k1)}
-const BL={next:2,start:-9,lag:[0,.08]};
-function blink(t){if(t>BL.next){BL.start=t;const lag=.06+Math.random()*.05;BL.lag=Math.random()<.5?[0,lag]:[lag,0];BL.next=t+(Math.random()<.2?.45:2.5+Math.random()*4)}
- const cc=BL.lag.map(l=>{const u=t-BL.start-l;if(u<0||u>.26)return 0;return u<.07?u/.07:u<.12?1:1-(u-.12)/.14});drawSprite(cc[0],cc[1])}
-function drawAvButtons(){if(!igorOK)return;document.querySelectorAll('.av button').forEach(b=>{const c=b.querySelector('canvas').getContext('2d');const tmp=document.createElement('canvas');tmp.width=tmp.height=512;paintAvatar(tmp.getContext('2d'),b.dataset.av,0,0);c.clearRect(0,0,128,128);c.drawImage(tmp,0,0,128,128)})}
+const canFilter='filter' in CanvasRenderingContext2D.prototype;
+/* paint one anteater: ch = {av, acc, hue, rim}. Igor uses the player's look; an Igorlet uses its own look and colour */
+function paintChar(c,ch,k0,k1){c.clearRect(0,0,512,512);if(ch.hue&&canFilter)c.filter=`hue-rotate(${ch.hue}deg) saturate(1.05)`;c.drawImage(igorImg,0,0,512,512);
+ if(ch.rim){c.save();c.strokeStyle=ch.rim;c.lineWidth=5;c.beginPath();c.arc(251,251,216,Math.PI/2+.47,Math.PI/2-.47+TAU);c.stroke();c.restore()}
+ const d0=lid(c,EYES[0],k0),d1=lid(c,EYES[1],k1);c.filter='none';
+ if(ch.av==='she'){lashes(c,EYES[0],d0,2);lashes(c,EYES[1],d1,2);}
+ else if(ch.av==='queer'){lashes(c,EYES[0],d0,1);lashes(c,EYES[1],d1,1);}
+ igorAcc(c,EYES,{...(ch.acc||{}),avatar:ch.av})}
+function paintAvatar(c,key,k0,k1){paintChar(c,{av:key,acc:AVO,hue:0,rim:AV[key].rim},k0,k1)}
+/* every character on the staircase has its own sprite and its own blinking */
+function charSprite(ch,k0,k1){if(!igorOK)return;if(!ch.spr){ch.spr=document.createElement('canvas');ch.spr.width=ch.spr.height=512;ch.sx=ch.spr.getContext('2d');ch.key=''}
+ const key=(ch.isIgor?avKey:'')+'|'+k0.toFixed(2)+'|'+k1.toFixed(2);if(key===ch.key)return;ch.key=key;if(ch.isIgor){ch.av=avKey;ch.rim=AV[avKey].rim}paintChar(ch.sx,ch,k0,k1)}
+function blinkChar(ch,t){const BL=ch.BL=ch.BL||{next:1+Math.random()*2,start:-9,lag:[0,.08]};
+ if(t>BL.next){BL.start=t;const lag=.06+Math.random()*.05;BL.lag=Math.random()<.5?[0,lag]:[lag,0];BL.next=t+(Math.random()<.2?.45:2.5+Math.random()*4)}
+ const cc=BL.lag.map(l=>{const u=t-BL.start-l;if(u<0||u>.26)return 0;return u<.07?u/.07:u<.12?1:1-(u-.12)/.14});charSprite(ch,cc[0],cc[1])}
+function drawSprite(){spr.key='';CH.forEach(c=>c.key='')}
+function drawAvButtons(){if(!igorOK)return;document.querySelectorAll('.av button').forEach(b=>{const c=b.querySelector('canvas').getContext('2d');const tmp=document.createElement('canvas');tmp.width=tmp.height=512;paintAvatar(tmp.getContext('2d'),b.dataset.av,0,0);c.clearRect(0,0,128,128);c.drawImage(tmp,0,0,128,128)});drawCast()}
 const TONGUE=[[361,409],[354,413],[343,419],[331,423],[319,425],[307,424],[295,422],[283,418],[271,411],[259,401],[247,387],[237,372],[227,361],[217,355],[208,354],[200,358],[196,365]];
 function igorM(x,y,size,face,t){const a=Math.sin(t*.8)*.04,c=Math.cos(a),sn=Math.sin(a),k=size/512,ty=y+Math.sin(t*1.6)*size*.02;
  return{w:(px,py)=>{const lx=face*(px-256)*k,ly=(py-256)*k;return[x+c*lx-sn*ly,ty+sn*lx+c*ly]},l:(wx,wy)=>{const dx=wx-x,dy=wy-ty,lx=c*dx+sn*dy,ly=-sn*dx+c*dy;return[lx/k/face+256,ly/k+256]}}}
-function drawIgor(x,y,size,face,t,alpha=1,tongueTo=null,gulp=0){g.save();g.globalAlpha=alpha;g.translate(x,y+Math.sin(t*1.6)*size*.02);g.rotate(Math.sin(t*.8)*.04);g.scale(face,1);if(gulp>0)g.scale(1+gulp*.07,1-gulp*.05);
+function drawIgor(x,y,size,face,t,alpha=1,tongueTo=null,gulp=0,SP=spr){g.save();g.globalAlpha=alpha;g.translate(x,y+Math.sin(t*1.6)*size*.02);g.rotate(Math.sin(t*.8)*.04);g.scale(face,1);if(gulp>0)g.scale(1+gulp*.07,1-gulp*.05);
  g.shadowColor='rgba(127,227,239,.2)';g.shadowBlur=24;
- if(igorOK)g.drawImage(spr,-size/2,-size/2,size,size);else{g.fillStyle='#a8d721';g.beginPath();g.arc(0,0,size*.3,0,TAU);g.fill()}
+ if(igorOK&&SP)g.drawImage(SP,-size/2,-size/2,size,size);else{g.fillStyle='#a8d721';g.beginPath();g.arc(0,0,size*.3,0,TAU);g.fill()}
  g.shadowBlur=0;g.scale(size/512,size/512);g.translate(-256,-256);g.lineCap=g.lineJoin='round';g.beginPath();
  let P=TONGUE.map(([a,b],i)=>{const s=i/(TONGUE.length-1);return[a,b+Math.sin(t*3-s*5)*3*s]});
  if(tongueTo){const k=tongueTo.k,b=P[1];P=P.map((p,i)=>{const s=Math.max(0,(i-1)/(P.length-2));return[lerp(p[0],b[0]+(tongueTo.x-b[0])*s,k),lerp(p[1],b[1]+(tongueTo.y-b[1])*s+Math.sin(Math.PI*s)*14,k)]})}
  g.moveTo(P[0][0],P[0][1]);for(let i=1;i<P.length-1;i++)g.quadraticCurveTo(P[i][0],P[i][1],(P[i][0]+P[i+1][0])/2,(P[i][1]+P[i+1][1])/2);g.lineTo(P[P.length-1][0],P[P.length-1][1]);
  g.strokeStyle='#111';g.lineWidth=8.6;g.stroke();g.strokeStyle='#6cd48b';g.lineWidth=4.4;g.stroke();
- if(igorOK){g.save();g.beginPath();g.arc(358,410,11,0,TAU);g.clip();g.drawImage(spr,0,0,512,512);g.restore()}
+ if(igorOK&&SP){g.save();g.beginPath();g.arc(358,410,11,0,TAU);g.clip();g.drawImage(SP,0,0,512,512);g.restore()}
  g.restore()}
 function rr(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.quadraticCurveTo(x+w,y,x+w,y+r);g.lineTo(x+w,y+h-r);g.quadraticCurveTo(x+w,y+h,x+w-r,y+h);g.lineTo(x+r,y+h);g.quadraticCurveTo(x,y+h,x,y+h-r);g.lineTo(x,y+r);g.quadraticCurveTo(x,y,x+r,y);g.closePath()}
 function drawAnt(x,y,k,ang,t,alpha=1,sing=0){g.save();g.globalAlpha=alpha;g.translate(x,y);g.rotate(ang);g.scale(k,k);const lw=Math.sin(t*9);
@@ -284,108 +295,198 @@ function drawCurtain(S,open,light,t){const x0=S.x0+S.pw*.03,x1=S.x0+S.pw*.97,y0=
  g.fillStyle='rgba(60,14,30,.98)';rr(x0-6,y0-10,x1-x0+12,16,6);g.fill(); // rod
  g.fillStyle=`rgba(241,215,166,${.25+.6*light})`;g.beginPath();g.arc((x0+x1)/2,y0-14,4+3*light,0,TAU);g.fill()} // little lamp
 
+/* ---------- one note or two notes ---------- */
+const LANG=(()=>{try{return localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en')}catch(e){return'en'}})();
+const tt=(en,it)=>LANG==='it'?it:en;
+/* two notes: two ants sing, Igor and an Igorlet (or two Igorlets) catch one each */
+const DUO_LV={
+ easy:   {min:7,single:1.3,both:2.0,listens:5,info:()=>tt('Two notes far apart · first one, then the other, then together · you can listen 5 times','Due note lontane · prima una, poi l’altra, poi insieme · puoi ascoltare 5 volte')},
+ medium: {min:4,single:0,both:1.6,listens:4,info:()=>tt('Two notes together · two different voices · you can listen 4 times','Due note insieme · due voci diverse · puoi ascoltare 4 volte')},
+ extreme:{min:3,single:0,both:0.9,listens:2,info:()=>tt('Two notes together · the same voice · you can listen twice','Due note insieme · la stessa voce · puoi ascoltare 2 volte')}};
+let DUO=false;try{DUO=localStorage.getItem('pitchStairsVoices')==='2'}catch(e){}
+/* the cast: Igor alone, or Igor + an Igorlet, or two Igorlets (from the player's island) */
+const IGS=(()=>{const f=HOME&&HOME.farm;return f&&Array.isArray(f.igs)?f.igs.filter(x=>x&&x.name):[]})();
+const igorChar=()=>({isIgor:true,name:AV[avKey].name,av:avKey,acc:AVO,hue:0,rim:AV[avKey].rim,small:1,timbre:'soft'});
+const letChar=g=>g?{name:g.name,av:(g.look&&g.look.avatar)||'igor',acc:{...(g.look||{}),head:(g.look&&g.look.head)||''},hue:g.hue||0,small:.74,timbre:'reed'}
+ :{name:'Igorlet',av:'igor',acc:{head:''},hue:0,small:.74,timbre:'reed'}; // an Igorlet nobody knows: nothing on its head
+const CH=[];let castPick=null;
+function pickCast(){if(IGS.length>=2){const a=Math.floor(Math.random()*IGS.length);let b;do{b=Math.floor(Math.random()*IGS.length)}while(b===a);castPick=[a,b]}else castPick=null}
+function setupCast(){CH.length=0;if(!DUO){CH.push(igorChar());return}
+ if(IGS.length>=2){const[a,b]=castPick||[0,1];const A=letChar(IGS[a]),B=letChar(IGS[b]);A.small=.8;A.timbre='soft';B.timbre='reed';CH.push(A,B)}
+ else{CH.push(igorChar(),letChar(IGS[0]||null))}}
+const castNames=()=>CH.map(c=>c.name);
+function drawCast(){const box=$('cast');if(!box)return;box.hidden=!DUO;if(!DUO||phase!=='menu')return;setupCast();
+ const N=castNames();$('castline').textContent=IGS.length>=2?tt(`Today ${N[0]} and ${N[1]} sing with you.`,`Oggi cantano con te ${N[0]} e ${N[1]}.`):IGS.length===1?tt(`${N[0]} and ${N[1]} sing with you.`,`Cantano con te ${N[0]} e ${N[1]}.`):tt(`${N[0]} and an Igorlet sing with you.`,`Cantano con te ${N[0]} e un Igorlet.`);
+ if(!igorOK)return;const cvs=box.querySelectorAll('canvas');CH.forEach((ch,i)=>{const c=cvs[i].getContext('2d'),tmp=document.createElement('canvas');tmp.width=tmp.height=512;paintChar(tmp.getContext('2d'),ch,0,0);c.clearRect(0,0,128,128);const s=128*(ch.small<1?.82:1);c.drawImage(tmp,(128-s)/2,128-s,s,s)})}
+
 /* ---------- game state ---------- */
-let phase='menu',round=0,total=0,R=null,REV=0,revT=0;
-const IG={u:.3,face:1,drag:false};
+let phase='menu',round=0,total=0,R=null,REV=0,revT=0,sel=0;
 let nudgeIv=0;function nudge(){const b=$('ok');b.classList.remove('nudge');void b.offsetWidth;if(phase==='guess')b.classList.add('nudge')}
 function moved(){if(phase!=='guess'||!R||R.moved)return;R.moved=true;nudge();clearInterval(nudgeIv);nudgeIv=setInterval(nudge,6500)}
-function newRound(){round++;clearInterval(nudgeIv);R={u:.08+Math.random()*.84,left:LV.replays,played:false,err:0,pts:0,eat:false,moved:false};
- let s;do{s=.05+Math.random()*.9}while(Math.abs(s-R.u)<.18);IG.u=s;REV=0;phase='guess';
- $('rd').textContent=round+'/'+ROUNDS;updateButtons();
- say(round===1?'Listen. Where is the ant singing?':['Again! Listen…','Shh. It’s singing.','Another one. Up or down?','Last one. Concentrate.'][Math.min(3,round-2)],2.4);
+function newUs(){if(!DUO)return[.08+Math.random()*.84];const D=DUO_LV[lvKey],semi=LV.oct*12;let a,b,d;
+ for(let k=0;k<200;k++){a=.08+Math.random()*.84;b=.08+Math.random()*.84;d=Math.abs(a-b)*semi;if(d<D.min)continue;if(lvKey==='medium'&&Math.abs(d-12)<1.2)continue;break}return[a,b]}
+function newRound(){round++;clearInterval(nudgeIv);const us=newUs();R={us,left:DUO?DUO_LV[lvKey].listens-1:LV.replays,played:false,match:[],err:[],pts:[],eat:[],fx:[],moved:false};
+ // start every character away from the notes and from each other
+ const taken=[...us],far=[];CH.forEach(ch=>{let s,k=0;do{s=.05+Math.random()*.9;k++}while(k<300&&(taken.some(v=>Math.abs(s-v)<.18)||far.some(v=>Math.abs(s-v)<.34)));taken.push(s);far.push(s);ch.u=s;ch.face=ch.face||1});
+ sel=0;REV=0;phase='guess';$('rd').textContent=round+'/'+ROUNDS;updateButtons();
+ if(DUO)say(round===1?tt('Two ants are singing! One note each.','Cantano due formiche! Una nota a testa.'):[tt('Again! Two notes…','Ancora! Due note…'),tt('Shh. They’re singing.','Shh. Cantano.'),tt('Another duet. Who goes up?','Un altro duetto. Chi sale?'),tt('Last one. Concentrate.','L’ultimo. Concentrati.')][Math.min(3,round-2)],2.6);
+ else say(round===1?'Listen. Where is the ant singing?':['Again! Listen…','Shh. It’s singing.','Another one. Up or down?','Last one. Concentrate.'][Math.min(3,round-2)],2.4);
  setTimeout(playAnt,700)}
-function confirm(){if(phase!=='guess')return;clearInterval(nudgeIv);$('ok').classList.remove('nudge');myStop();if(antVoice)antVoice.off();antPlaying=0;phase='reveal';revT=0;
- const e=cents(IG.u,R.u),ae=Math.abs(e);R.err=e;R.pts=Math.max(0,Math.round(100*(1-ae/LV.zero)));R.eat=ae<=25;total+=R.pts;$('sc').textContent=total;updateButtons();
- const n=Math.round(ae),dir=e>0?'a little lower':'a little higher',dir2=e>0?'lower down':'higher up';let msg;
+/* the reference: one ant, or two (easy: one, the other, then together) */
+let antV=[],myV=[],antSing=[0,0],antPlaying=0,antPlayEnd=0,antTO=[];
+function antStop(){antTO.forEach(clearTimeout);antTO=[];antV.forEach(v=>v.off());antSing=[0,0];antPlaying=0}
+function playAnt(){if(!AC||phase!=='guess')return;if(R.left<=0&&R.played)return;
+ if(R.played)R.left--;R.played=true;updateButtons();antStop();
+ const seg=(i,t0,d)=>{antTO.push(setTimeout(()=>{antV[i].set(fOf(R.us[i]));antV[i].on();antSing[i]=1},t0*1000),setTimeout(()=>{antV[i].off();antSing[i]=0},(t0+d)*1000))};
+ let end;if(!DUO){seg(0,0,LV.dur);end=LV.dur}
+ else{const D=DUO_LV[lvKey];if(D.single){const o=Math.random()<.5?[0,1]:[1,0];seg(o[0],0,D.single);seg(o[1],D.single+.3,D.single);const t2=2*D.single+.75;seg(0,t2,D.both);seg(1,t2,D.both);end=t2+D.both}
+  else{seg(0,0,D.both);seg(1,0,D.both);end=D.both}}
+ antPlaying=1;antPlayEnd=performance.now()/1000+end;antTO.push(setTimeout(()=>{antPlaying=0},end*1000+60))}
+const myOn=[false,false];
+function myStart(i){if(!AC||phase!=='guess'||myOn[i]||!CH[i])return;myOn[i]=true;myV[i].set(fOf(CH[i].u));myV[i].on()}
+function myStop(i){if(i==null){CH.forEach((_,k)=>myStop(k));return}if(!myOn[i])return;myOn[i]=false;myV[i].off()}
+function myAll(){CH.forEach((_,i)=>myStart(i))}
+const cents=(a,b)=>1200*Math.log2(fOf(a)/fOf(b));
+function confirm(){if(phase!=='guess')return;clearInterval(nudgeIv);$('ok').classList.remove('nudge');myStop();antStop();phase='reveal';revT=0;
+ // each character takes the closest note: if they are swapped it doesn't matter, both notes count
+ let m=[0];if(DUO){const d=Math.abs(cents(CH[0].u,R.us[0]))+Math.abs(cents(CH[1].u,R.us[1])),x=Math.abs(cents(CH[0].u,R.us[1]))+Math.abs(cents(CH[1].u,R.us[0]));m=x<d?[1,0]:[0,1]}
+ R.match=m;const per=100/CH.length;let rp=0;
+ CH.forEach((ch,i)=>{const e=cents(ch.u,R.us[m[i]]),ae=Math.abs(e);R.err[i]=e;R.pts[i]=Math.max(0,Math.round(per*(1-ae/LV.zero)));R.eat[i]=ae<=25;R.fx[i]={};rp+=R.pts[i]});
+ R.pt=rp;total+=rp;$('sc').textContent=total;updateButtons();
+ setTimeout(()=>{if(DUO)duoSay(m);else soloSay()},900);
+ setTimeout(()=>{if(round>=ROUNDS)finish();else newRound()},(R.eat.some(Boolean)?4600:3800)+(DUO?900:0))}
+function soloSay(){const e=R.err[0],ae=Math.abs(e),n=Math.round(ae),dir=e>0?'a little lower':'a little higher',dir2=e>0?'lower down':'higher up';let msg;
  if(ae<3)msg=['Perfect pitch! Spot on.','Bullseye! What ears!'][round%2];
  else if(ae<12)msg=['Wow, only '+n+' cents away. Brilliant!','Just '+n+' cents. Super ears!'][round%2];
  else if(ae<=25)msg=['Only '+n+' cents away. Lunch is served!','Nice catch, just '+n+' cents!'][round%2];
  else if(ae<60)msg=['Really close! Next time try '+dir+'.','Nearly there! The ant was '+dir+'.'][round%2];
  else msg=['Good try! The ant was singing '+dir2+'. The next one’s yours.','Nice effort! Listen again: the ant was '+dir2+'.'][round%2];
- setTimeout(()=>say(msg,3.2),900);
- setTimeout(()=>{if(round>=ROUNDS)finish();else newRound()},R.eat?4600:3800)}
-function finish(){phase='end';let best=0;try{best=+localStorage.getItem('pitchStairsBest_'+lvKey)||0;if(total>best)localStorage.setItem('pitchStairsBest_'+lvKey,total)}catch(e){}
- $('endlv').textContent=LV.name+' · your score';$('endsc').textContent=total;
- const N=AV[avKey].name;$('endmsg').textContent=total>=450?'Golden ears. '+N+' is full and very grateful.':total>=350?'Great ears! '+N+' had a lovely meal.':total>=200?'Nice ears! '+N+' had a tasty snack and is ready for a second course.':N+' loved the concert! One more round and lunch is yours.';
+ say(msg,3.2)}
+function duoSay(m){const N=castNames(),ae=R.err.map(Math.abs),both=ae.every(a=>a<=25),swapped=m[0]===1&&lvKey!=='extreme';
+ const dir=i=>R.err[i]>0?tt('a little lower','un po’ più giù'):tt('a little higher','un po’ più su');
+ if(swapped&&ae.every(a=>a<60)){const meIgor=CH[0].isIgor;
+  say(meIgor?[tt(`Ha! It was ${N[1]} singing my note… who cares: you caught both!`,`Ah! Era ${N[1]} a cantare la mia nota… pazienza: le avete beccate tutte e due!`),
+   tt(`We swapped notes with ${N[1]}! Doesn’t matter: both caught!`,`Ci siamo scambiati le note con ${N[1]}! Non importa: prese tutte e due!`)][round%2]
+   :tt(`Ha! ${N[1]} was singing ${N[0]}’s note… who cares: you caught both!`,`Ah! ${N[1]} cantava la nota di ${N[0]}… pazienza: le avete beccate tutte e due!`),3.6);
+  if(both)return}
+ let msg;
+ if(ae.every(a=>a<12))msg=[tt('Two notes, two bullseyes. What a duet!','Due note, due centri. Che duetto!'),tt('Both spot on! Golden ears.','Tutte e due perfette! Orecchie d’oro.')][round%2];
+ else if(both)msg=[tt('Both notes caught! Lunch for two.','Prese tutte e due! Pranzo per due.'),tt('Two ants, two snacks. Bravo!','Due formiche, due merende. Bravo!')][round%2];
+ else if(ae.some(a=>a<=25)){const i=ae[0]<=25?1:0;msg=tt(`One caught! ${N[i]} was close: next time ${dir(i)}.`,`Una presa! ${N[i]} era vicino: la prossima volta ${dir(i)}.`)}
+ else msg=tt(`Good try! ${N[0]} ${dir(0)}, ${N[1]} ${dir(1)}. The next duet is yours.`,`Bel tentativo! ${N[0]} ${dir(0)}, ${N[1]} ${dir(1)}. Il prossimo duetto è tuo.`);
+ say(msg,3.4)}
+function finish(){phase='end';const bk='pitchStairsBest_'+(DUO?'duo_':'')+lvKey;let best=0;try{best=+localStorage.getItem(bk)||0;if(total>best)localStorage.setItem(bk,total)}catch(e){}
+ $('endlv').textContent=(DUO?tt('Two notes','Due note')+' · ':'')+LV.name+' · your score';$('endsc').textContent=total;
+ const N=DUO?castNames().join(tt(' and ',' e ')):AV[avKey].name;
+ $('endmsg').textContent=DUO?(total>=450?tt('Golden ears. A perfect duet!','Orecchie d’oro. Un duetto perfetto!'):total>=350?tt(`Great ears! ${N} are full and happy.`,`Che orecchie! ${N} sono sazi e felici.`):total>=200?tt(`Nice ears! ${N} had a tasty snack.`,`Belle orecchie! ${N} hanno fatto una buona merenda.`):tt(`${N} loved singing with you! One more duet?`,`A ${N} è piaciuto un sacco cantare con te! Un altro duetto?`))
+  :total>=450?'Golden ears. '+N+' is full and very grateful.':total>=350?'Great ears! '+N+' had a lovely meal.':total>=200?'Nice ears! '+N+' had a tasty snack and is ready for a second course.':N+' loved the concert! One more round and lunch is yours.';
  $('endbest').textContent=total>best?'New personal best on '+LV.name+'!':'Your best on '+LV.name+': '+best;
- const won=reward(total);$('endants').textContent=won?'+'+won+' tofu seed'+(won>1?'s':'')+' for '+N+'’s field'+'. Collect them back home.':'';$('end').hidden=false;import('/board.js?v=3').then(B=>B.show(document.querySelector('#end .card'),'pitch',lvKey,total,avKey)).catch(()=>{});updateButtons()}
+ const won=reward(total);$('endants').textContent=won?'+'+won+' tofu seed'+(won>1?'s':'')+' for '+(DUO?tt('Igor','Igor'):N)+'’s field'+'. Collect them back home.':'';$('end').hidden=false;
+ import('/board.js?v=5').then(B=>B.show(document.querySelector('#end .card'),DUO?'pitchduo':'pitch',lvKey,total,avKey)).catch(()=>{});updateButtons()}
 function updateButtons(){const gu=phase==='guess';$('ok').disabled=!gu;$('mine').disabled=!gu;
+ // two notes: listen to each of your singers alone, or both together
+ ['me0','me1'].forEach((id,i)=>{const b=$(id);b.hidden=!DUO;b.disabled=!gu;if(DUO&&CH[i])b.textContent='♪ '+CH[i].name});
+ $('mine').textContent=DUO?tt('♪ Together','♪ Insieme'):'♪ My note';
  const L=$('listen');L.disabled=!gu||(R&&R.played&&R.left<=0);L.textContent=R&&R.played&&isFinite(R.left)?`▶ Listen (${R.left})`:'▶ Listen'}
 
-/* ---------- bubble (tail always points at Igor) ---------- */
+/* ---------- bubble (tail always points at the first character) ---------- */
 const bubble=$('bubble');let bubT=0,bubS=0;const bubQ=[];function say(t,s=2.4){if(bubT>0&&bubble.textContent===t)return;if(bubT>0&&bubS<1.8){if(!bubQ.some(q=>q[0]===t)){bubQ.push([t,s]);if(bubQ.length>3)bubQ.shift()}return}bubble.textContent=t;bubT=s;bubS=0}
 function placeBubble(dt,ix,iy,isz){if(bubT<=0&&bubQ.length){const[q,s]=bubQ.shift();bubble.textContent=q;bubT=s;bubS=0}if(bubT<=0){bubble.style.opacity=0;return}bubT-=dt;bubS+=dt;bubble.style.opacity=bubT>0?1:0;
  const bw=bubble.offsetWidth,bh=bubble.offsetHeight,r=isz*.46;let x=clamp(ix-bw*.55,10,Math.max(10,W-bw-10)),y=iy-r-bh-14,below=false;if(y<62){y=iy+r+16;below=true}
  bubble.classList.toggle('below',below);bubble.style.setProperty('--tx',clamp(ix-x,24,bw-24)+'px');bubble.style.transform=`translate(${x}px,${y}px)`}
 
-/* ---------- input: drag Igor up and down his staircase ---------- */
-let dragY0=0,dragU0=0;
-cv.addEventListener('pointerdown',e=>{if(phase!=='guess'||e.clientX<W/2)return;const S=stair(1);IG.drag=true;dragY0=e.clientY;dragU0=IG.u;
+/* ---------- input: drag a character up and down the staircase (with two, the one nearest to your finger) ---------- */
+let dragY0=0,dragU0=0,drag=-1;
+cv.addEventListener('pointerdown',e=>{if(phase!=='guess'||e.clientX<W/2)return;const S=stair(1);
+ let i=0;if(CH.length>1){const d=CH.map(c=>Math.abs(e.clientY-(stairPt(S,c.u).y-isz0()*c.small*.3)));i=d[1]<d[0]?1:0}
+ sel=i;drag=i;dragY0=e.clientY;dragU0=CH[i].u;
  // tap on the staircase jumps there, then drag fine-tunes
- const uTap=clamp((S.bot-e.clientY)/(S.bot-S.top),0,1);const p=stairPt(S,IG.u);if(Math.abs(e.clientY-p.y)>H*.08){IG.u=uTap;dragU0=uTap;moved()}
- try{cv.setPointerCapture(e.pointerId)}catch(_){}myStart()});
-cv.addEventListener('pointermove',e=>{if(!IG.drag)return;const S=stair(1);IG.u=clamp(dragU0+(dragY0-e.clientY)/(S.bot-S.top),0,1);if(Math.abs(IG.u-dragU0)>.01)moved();if(myOn)myVoice.set(fOf(IG.u))});
-const up=()=>{if(!IG.drag)return;IG.drag=false;myStop()};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+ const uTap=clamp((S.bot-e.clientY)/(S.bot-S.top),0,1);const p=stairPt(S,CH[i].u);if(Math.abs(e.clientY-p.y)>H*.08){CH[i].u=uTap;dragU0=uTap;moved()}
+ try{cv.setPointerCapture(e.pointerId)}catch(_){}myStart(i)});
+cv.addEventListener('pointermove',e=>{if(drag<0)return;const S=stair(1),c=CH[drag];c.u=clamp(dragU0+(dragY0-e.clientY)/(S.bot-S.top),0,1);if(Math.abs(c.u-dragU0)>.01)moved();if(myOn[drag])myV[drag].set(fOf(c.u))});
+const up=()=>{if(drag<0)return;const i=drag;drag=-1;myStop(i)};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 $('listen').onclick=playAnt;$('ok').onclick=confirm;
-const mine=$('mine');mine.addEventListener('pointerdown',e=>{e.preventDefault();myStart()});['pointerup','pointerleave','pointercancel'].forEach(k=>mine.addEventListener(k,myStop));
-addEventListener('keydown',e=>{if(phase!=='guess')return;const st=(e.shiftKey?1:5)/(LV.oct*1200);
- if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();IG.u=clamp(IG.u+(e.key==='ArrowUp'?st:-st),0,1);moved();if(myOn)myVoice.set(fOf(IG.u));else{myStart();clearTimeout(window.__kt);window.__kt=setTimeout(myStop,350)}}
- else if(e.key===' '){e.preventDefault();myStart()}else if(e.key==='l'||e.key==='L')playAnt();else if(e.key==='Enter'){e.preventDefault();confirm()}});
-addEventListener('keyup',e=>{if(e.key===' ')myStop()});
+const mine=$('mine');mine.addEventListener('pointerdown',e=>{e.preventDefault();myAll()});['pointerup','pointerleave','pointercancel'].forEach(k=>mine.addEventListener(k,()=>myStop()));
+['me0','me1'].forEach((id,i)=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();sel=i;myStart(i)});['pointerup','pointerleave','pointercancel'].forEach(k=>b.addEventListener(k,()=>myStop(i)))});
+const keyT=[0,0];
+addEventListener('keydown',e=>{if(phase!=='guess')return;const st=(e.shiftKey?1:5)/(LV.oct*1200),k=e.key;
+ const mv=(i,d)=>{const c=CH[i];if(!c)return;e.preventDefault();sel=i;c.u=clamp(c.u+d*st,0,1);moved();if(!myOn[i])myStart(i);else myV[i].set(fOf(c.u));clearTimeout(keyT[i]);keyT[i]=setTimeout(()=>myStop(i),350)};
+ if(k==='ArrowUp'||k==='ArrowDown')mv(0,k==='ArrowUp'?1:-1);
+ else if(DUO&&(k==='w'||k==='W'||k==='s'||k==='S'))mv(1,k==='w'||k==='W'?1:-1);
+ else if(k===' '){e.preventDefault();myAll()}else if(DUO&&(k==='1'||k==='2')){e.preventDefault();if(!e.repeat)myStart(+k-1)}else if(k==='l'||k==='L')playAnt();else if(k==='Enter'){e.preventDefault();confirm()}});
+addEventListener('keyup',e=>{if(e.key===' ')myStop();else if(e.key==='1')myStop(0);else if(e.key==='2')myStop(1)});
 
 /* ---------- menus ---------- */
-function setLevel(k){lvKey=k;LV=LEVELS[k];document.querySelectorAll('.lv button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lv===k));$('lvinfo').textContent=LV.info;try{localStorage.setItem('pitchStairsLevel',k)}catch(e){}}
-document.querySelectorAll('.lv button').forEach(b=>b.onclick=()=>setLevel(b.dataset.lv));setLevel(lvKey);
-function setAv(k){avKey=k;spr.key='';document.querySelectorAll('.av button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.av===k));document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[k].name);try{localStorage.setItem('pitchStairsAvatar',k)}catch(e){}}
+function setLevel(k){lvKey=k;LV=LEVELS[k];document.querySelectorAll('.lv button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lv===k));$('lvinfo').textContent=DUO?DUO_LV[k].info():LV.info;try{localStorage.setItem('pitchStairsLevel',k)}catch(e){}}
+document.querySelectorAll('.lv button').forEach(b=>b.onclick=()=>setLevel(b.dataset.lv));
+function setVoices(two){DUO=!!two;document.querySelectorAll('.solo').forEach(e=>e.hidden=DUO);$('duop').hidden=!DUO;
+ $('duop').innerHTML=tt('With <b>two notes</b>, two ants sing together. Move <b>each character</b> on its own (drag the one nearest to your finger) until both notes are caught. Who takes which note doesn’t matter!','Con <b>due note</b> cantano due formiche insieme. Muovi <b>ogni personaggio</b> per conto suo (trascini quello più vicino al dito) finché le note non sono prese tutte e due. Chi prende quale nota non importa!');document.querySelectorAll('.vo button').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.vo==='2')===DUO));try{localStorage.setItem('pitchStairsVoices',DUO?'2':'1')}catch(e){}
+ $('keys').textContent=DUO?tt('Headphones recommended · 5 rounds · keys: ↑↓ the first one, W S the second one, 1 and 2 = hear one alone, space = together, L = listen to the ants, enter = that’s it','Cuffie consigliate · 5 round · tasti: ↑↓ il primo, W S il secondo, 1 e 2 = ascolta uno solo, spazio = insieme, L = ascolta le formiche, invio = ecco'):'Headphones recommended · 5 rounds · keys: ↑↓ move, space = my note, L = listen, enter = that’s it';
+ setLevel(lvKey);drawCast()}
+document.querySelectorAll('.vo button').forEach(b=>b.onclick=()=>setVoices(b.dataset.vo==='2'));
+function setAv(k){avKey=k;spr.key='';CH.forEach(c=>c.key='');document.querySelectorAll('.av button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.av===k));document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[k].name);try{localStorage.setItem('pitchStairsAvatar',k)}catch(e){}drawCast()}
 document.querySelectorAll('.av button').forEach(b=>b.onclick=()=>setAv(b.dataset.av));
+pickCast();setVoices(DUO);
 if(ACCT){spr.key='';document.querySelectorAll('.nm').forEach(n=>n.textContent=AV[avKey].name);document.querySelector('.av').style.display='none';const a=$('acctline');a.hidden=false;a.textContent='Playing as '+(ACCT.name||'you')+' with your '+AV[avKey].name+' · easy up to 4, medium up to 7, extreme up to 10 tofu seeds'}
 else{setAv(avKey);const a=$('acctline');a.hidden=false;a.textContent='Tofu seeds won: easy up to 4, medium up to 7, extreme up to 10'}
-function begin(){audio();if(AC.state==='suspended')AC.resume();if(!antVoice){antVoice=voice();myVoice=voice()}
+function begin(){audio();if(AC.state==='suspended')AC.resume();
+ setupCast();R=null;
+ // the voices: one note = the soft voice; two notes = the first one soft, the second one reedy (extreme: the same voice for both)
+ const vk=i=>!DUO||lvKey==='extreme'?'soft':CH[i].timbre;
+ [...antV,...myV].forEach(v=>v.kill());antV=CH.map((c,i)=>voice(vk(i)));myV=CH.map((c,i)=>voice(vk(i)));
  round=0;total=0;$('sc').textContent=0;$('start').hidden=true;$('end').hidden=true;newRound()}
-$('go').onclick=begin;$('again').onclick=begin;$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;phase='menu'};
+$('go').onclick=begin;$('again').onclick=()=>{pickCast();begin()};$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;phase='menu';pickCast();drawCast()};
 
+window.__ps={get CH(){return CH},get R(){return R}};
 /* ---------- loop ---------- */
+const isz0=()=>{const SR=stair(1);return clamp(Math.min(SR.pw*.62,H*.17),70,190)};
 let last=performance.now()/1000,T=0;
+function eatFx(i,M,pA,ay,antK,antAng,t,k,isz,fc){const S=R.fx[i],sL=[352,414],T1=1.45,T2=1.7,T3=1.85,T4=2.35,T5=2.8,aL=M.l(pA.x,ay);let tongue=null,gulp=0;
+ if(revT<T4){let tgt=aL,tk=0,ax=pA.x,yy=ay,ang=antAng,sc=antK;
+  if(revT>=T1&&revT<T2)tk=1-Math.pow(1-(revT-T1)/(T2-T1),3);
+  else if(revT>=T2&&revT<T3){tk=1;sc=antK*(1+.25*Math.sin((revT-T2)/(T3-T2)*Math.PI))}
+  else if(revT>=T3){tk=1;const q=(revT-T3)/(T4-T3),qe=q*q*(3-2*q);tgt=[lerp(aL[0],sL[0],qe),lerp(aL[1],sL[1],qe)];[ax,yy]=M.w(tgt[0],tgt[1]);ang=antAng+Math.sin(revT*40)*.35;sc=antK*(1-.45*qe)}
+  if(tk>0)tongue={x:tgt[0],y:tgt[1],k:tk};
+  drawAnt(ax,yy,sc,ang,t,k,revT<T1?.5:0)}
+ else{const q=clamp((revT-T4)/(T5-T4),0,1);if(q<1)tongue={x:sL[0],y:sL[1],k:1-q*q*(3-2*q)};
+  {const ag=revT-T4;gulp=ag<.7?Math.abs(Math.sin(ag/.7*Math.PI*2))*(1-ag/.7*.5):0}
+  if(!S.crumbs){const[sx,sy]=M.w(sL[0],sL[1]);S.crumbs=[];for(let n=0;n<9;n++){const a=-Math.PI/2+(Math.random()-.5)*2.4,v=40+Math.random()*70;S.crumbs.push({x:sx,y:sy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,s:2+Math.random()*2.5,r:Math.random()*6})}S.gx=sx;S.gy=sy}
+  const age=revT-T4;for(const c of S.crumbs){const x=c.x+c.vx*age,y=c.y+c.vy*age+60*age*age;g.save();g.globalAlpha=clamp(1-age/1.1,0,1);g.translate(x,y);g.rotate(c.r+age*5);g.fillStyle='#f8f5ec';g.shadowColor='rgba(255,253,240,.8)';g.shadowBlur=6;g.fillRect(-c.s/2,-c.s/2,c.s,c.s);g.restore()}
+  const ga=clamp(1-(age-.5)/.8,0,1)*clamp(age/.12,0,1);if(ga>0){g.save();g.globalAlpha=ga;g.fillStyle='#f1d7a6';g.font='italic '+Math.round(18+isz*.08)+'px "Instrument Serif",serif';g.textAlign='center';g.fillText('gnam!',S.gx+fc*isz*.62,S.gy-isz*.28-age*34);g.restore()}}
+ return{tongue,gulp}}
 function frame(now){now/=1000;const dt=Math.min(.05,now-last);last=now;T+=dt;const t=T;
  g.setTransform(DPR,0,0,DPR,0,0);g.drawImage(bg,0,0,W,H);
  for(const s of STARS){g.fillStyle=`rgba(232,251,255,${.25+.35*(.5+.5*Math.sin(t*s.sp+s.ph))})`;g.fillRect(s.x,s.y,s.r,s.r)}
  g.strokeStyle='rgba(127,227,239,.12)';g.setLineDash([3,6]);g.beginPath();g.moveTo(W/2,80);g.lineTo(W/2,H-90);g.stroke();g.setLineDash([]);
- blink(t);const SL=stair(0),SR=stair(1),isz=clamp(Math.min(SR.pw*.62,H*.17),70,190),antK=clamp(isz/60,1.4,2.8);
+ if(!CH.length)setupCast();
+ CH.forEach(c=>blinkChar(c,t));const SL=stair(0),SR=stair(1),isz=isz0(),antK=clamp(isz/60,1.4,2.8);
  if(phase==='reveal')revT+=dt;const open=phase==='reveal'||phase==='end'?clamp(revT/.9,0,1):0;
- // left: the hidden ant
+ // left: the hidden ant(s)
  drawStair(SL,null);
- if(R){const p=stairPt(SL,R.u);drawAnt(p.x,p.y-antK*6,antK,p.z>0?-.15:.15+Math.PI,t,1,antPlaying)}
+ if(R)R.us.forEach((u,j)=>{const p=stairPt(SL,u);drawAnt(p.x,p.y-antK*6,antK,p.z>0?-.15:.15+Math.PI,t,1,antSing[j])});
  const light=antPlaying?clamp(1-Math.max(0,(performance.now()/1000-(antPlayEnd-.12))/.12),0,1):0;
  drawCurtain(SL,open,light,t);
- // right: Igor on his staircase
- drawStair(SR,phase==='guess'?IG.u:null);
- const pI=stairPt(SR,IG.u),face=-Math.sin(pI.th)>=0?1:-1;IG.face+=(face-IG.face)*(1-Math.exp(-dt*8));
- const ix=pI.x,iy=pI.y-isz*.42;
- // after the reveal: a ghost of the ant on Igor's staircase, the distance between them, and lunch if close
- let tongue=null,gulp=0;
- if(R&&open>0){const pA=stairPt(SR,R.u),ay=pA.y-antK*6,k=ease(clamp((revT-.9)/.5,0,1));
-  g.strokeStyle=`rgba(241,215,166,${.7*k})`;g.setLineDash([4,5]);g.beginPath();g.moveTo(SR.cx+SR.R*1.25,ay);g.lineTo(SR.cx+SR.R*1.25,pI.y);g.stroke();g.setLineDash([]);
-  g.beginPath();g.moveTo(SR.cx+SR.R*1.15,ay);g.lineTo(SR.cx+SR.R*1.35,ay);g.moveTo(SR.cx+SR.R*1.15,pI.y);g.lineTo(SR.cx+SR.R*1.35,pI.y);g.stroke();
-  g.fillStyle=`rgba(241,215,166,${k})`;g.font='500 11px "IBM Plex Mono",monospace';g.textAlign='right';
-  const ae=Math.abs(R.err);g.fillText(ae<3?'0 ¢':(R.err>0?'+':'−')+Math.round(ae)+' ¢',SR.x0+SR.pw-8,(ay+pI.y)/2+4);
-  g.textAlign='left';g.fillText('+'+R.pts,SR.x0+8,(ay+pI.y)/2+4);
-  const zz=pI.z<0?.85:1,fc=IG.face>=0?1:-1,M=igorM(ix,iy,isz*zz,fc,t),antAng=pA.z>0?-.15:Math.PI+.15;
-  if(!R.eat)drawAnt(pA.x,ay,antK,antAng,t,k*.6,.5);
-  else{const aL=M.l(pA.x,ay),sL=[352,414],T1=1.45,T2=1.7,T3=1.85,T4=2.35,T5=2.8;
-   if(revT<T4){let tgt=aL,tk=0,ax=pA.x,yy=ay,ang=antAng,sc=antK;
-    if(revT>=T1&&revT<T2)tk=1-Math.pow(1-(revT-T1)/(T2-T1),3);
-    else if(revT>=T2&&revT<T3){tk=1;sc=antK*(1+.25*Math.sin((revT-T2)/(T3-T2)*Math.PI))}
-    else if(revT>=T3){tk=1;const q=(revT-T3)/(T4-T3),qe=q*q*(3-2*q);tgt=[lerp(aL[0],sL[0],qe),lerp(aL[1],sL[1],qe)];[ax,yy]=M.w(tgt[0],tgt[1]);ang=antAng+Math.sin(revT*40)*.35;sc=antK*(1-.45*qe)}
-    if(tk>0)tongue={x:tgt[0],y:tgt[1],k:tk};
-    drawAnt(ax,yy,sc,ang,t,k,revT<T1?.5:0)}
-   else{const q=clamp((revT-T4)/(T5-T4),0,1);if(q<1)tongue={x:sL[0],y:sL[1],k:1-q*q*(3-2*q)};
-    {const ag=revT-T4;gulp=ag<.7?Math.abs(Math.sin(ag/.7*Math.PI*2))*(1-ag/.7*.5):0}
-    if(!R.crumbs){const[sx,sy]=M.w(sL[0],sL[1]);R.crumbs=[];for(let i=0;i<9;i++){const a=-Math.PI/2+(Math.random()-.5)*2.4,v=40+Math.random()*70;R.crumbs.push({x:sx,y:sy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,s:2+Math.random()*2.5,r:Math.random()*6})}R.gx=sx;R.gy=sy}
-    const age=revT-T4;for(const c of R.crumbs){const x=c.x+c.vx*age,y=c.y+c.vy*age+60*age*age;g.save();g.globalAlpha=clamp(1-age/1.1,0,1);g.translate(x,y);g.rotate(c.r+age*5);g.fillStyle='#f8f5ec';g.shadowColor='rgba(255,253,240,.8)';g.shadowBlur=6;g.fillRect(-c.s/2,-c.s/2,c.s,c.s);g.restore()}
-    const ga=clamp(1-(age-.5)/.8,0,1)*clamp(age/.12,0,1);if(ga>0){g.save();g.globalAlpha=ga;g.fillStyle='#f1d7a6';g.font='italic '+Math.round(18+isz*.08)+'px "Instrument Serif",serif';g.textAlign='center';g.fillText('gnam!',R.gx+fc*isz*.62,R.gy-isz*.28-age*34);g.restore()}}}}
- const z=pI.z<0?.85:1;drawIgor(ix,iy,isz*z,IG.face>=0?1:-1,t,1,tongue,gulp);
- if(phase==='guess'&&round===1&&!IG.drag&&T%4<2.2){g.fillStyle='rgba(127,227,239,.55)';g.font='500 10px "IBM Plex Mono",monospace';g.textAlign='center';g.fillText('↕ drag '+AV[avKey].name,ix,Math.min(H-100,pI.y+26))}
- placeBubble(dt,ix,iy,isz);
+ // right: the characters on their staircase
+ drawStair(SR,phase==='guess'?CH[sel].u:null);
+ const P=CH.map((c,i)=>{const pI=stairPt(SR,c.u),f=-Math.sin(pI.th)>=0?1:-1;c.face=(c.face||1)+(f-(c.face||1))*(1-Math.exp(-dt*8));const sz=isz*c.small*(pI.z<0?.85:1);return{pI,sz,ix:pI.x,iy:pI.y-isz*c.small*.42}});
+ const FX=CH.map(()=>({tongue:null,gulp:0}));
+ // after the reveal: a ghost of each ant next to whoever caught it, the distance between them, and lunch if close
+ if(R&&open>0&&R.match.length)CH.forEach((c,i)=>{const j=R.match[i],pA=stairPt(SR,R.us[j]),ay=pA.y-antK*6,k=ease(clamp((revT-.9)/.5,0,1)),pI=P[i].pI,side=i?-1:1,xr=SR.cx+side*SR.R*1.25;
+  g.strokeStyle=`rgba(241,215,166,${.7*k})`;g.setLineDash([4,5]);g.beginPath();g.moveTo(xr,ay);g.lineTo(xr,pI.y);g.stroke();g.setLineDash([]);
+  g.beginPath();g.moveTo(xr-SR.R*.1,ay);g.lineTo(xr+SR.R*.1,ay);g.moveTo(xr-SR.R*.1,pI.y);g.lineTo(xr+SR.R*.1,pI.y);g.stroke();
+  g.fillStyle=`rgba(241,215,166,${k})`;g.font='500 11px "IBM Plex Mono",monospace';const ae=Math.abs(R.err[i]),my=(ay+pI.y)/2+4,lab=ae<3?'0 ¢':(R.err[i]>0?'+':'−')+Math.round(ae)+' ¢';
+  if(CH.length===1){g.textAlign='right';g.fillText(lab,SR.x0+SR.pw-8,my);g.textAlign='left';g.fillText('+'+R.pts[i],SR.x0+8,my)}
+  else{g.textAlign=i?'left':'right';const ex=i?SR.x0+8:SR.x0+SR.pw-8;g.fillText(c.name,ex,my-14);g.fillText(lab+'  +'+R.pts[i],ex,my+2)}
+  const fc=c.face>=0?1:-1,M=igorM(P[i].ix,P[i].iy,P[i].sz,fc,t),antAng=pA.z>0?-.15:Math.PI+.15;
+  if(!R.eat[i])drawAnt(pA.x,ay,antK,antAng,t,k*.6,.5);else FX[i]=eatFx(i,M,pA,ay,antK,antAng,t,k,P[i].sz,fc)});
+ // draw the far one first
+ const order=CH.map((c,i)=>i).sort((a,b)=>P[a].pI.z-P[b].pI.z);
+ for(const i of order){const c=CH[i],p=P[i];if(DUO&&phase==='guess'&&i===sel){g.save();g.globalAlpha=.25+.12*Math.sin(t*4);g.fillStyle='#7fe3ef';g.beginPath();g.ellipse(p.ix,p.pI.y-2,p.sz*.36,p.sz*.09,0,0,TAU);g.fill();g.restore()}
+  drawIgor(p.ix,p.iy,p.sz,c.face>=0?1:-1,t+i*1.3,1,FX[i].tongue,FX[i].gulp,c.spr);
+  if(DUO&&phase!=='end'){const lab=c.name+(!('ontouchstart' in window)?(i?' · W S':' · ↑↓'):''),ly=Math.min(H-96,p.pI.y+18);g.font='500 10px "IBM Plex Mono",monospace';const lw=g.measureText(lab).width+14;
+   g.fillStyle='rgba(4,7,12,.72)';rr(p.ix-lw/2,ly-11,lw,16,8);g.fill();g.fillStyle=i===sel&&phase==='guess'?'rgba(127,227,239,.95)':'rgba(219,231,234,.75)';g.textAlign='center';g.fillText(lab,p.ix,ly+1)}}
+ if(phase==='guess'&&round===1&&drag<0&&T%4<2.2&&!DUO){const p=P[0];g.fillStyle='rgba(127,227,239,.55)';g.font='500 10px "IBM Plex Mono",monospace';g.textAlign='center';g.fillText('↕ drag '+AV[avKey].name,p.ix,Math.min(H-100,p.pI.y+26))}
+ placeBubble(dt,P[0].ix,P[0].iy,P[0].sz);
  requestAnimationFrame(frame)}
 addEventListener('resize',resize);resize();requestAnimationFrame(frame);
 })();
