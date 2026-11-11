@@ -93,7 +93,14 @@ function apron(c){c.save();c.translate(304,388);c.rotate(.5);c.scale(1.2,1.2);c.
  c.strokeStyle='#141414';c.lineWidth=5;c.fillStyle='#ffffff';c.beginPath();c.moveTo(-62,0);c.lineTo(62,0);c.lineTo(58,104);c.quadraticCurveTo(0,122,-58,104);c.closePath();c.fill();c.stroke();
  c.strokeStyle='#e0463c';c.lineWidth=5;c.beginPath();c.moveTo(-60,16);c.lineTo(60,16);c.stroke();
  c.strokeStyle='#141414';c.lineWidth=4;c.fillStyle='#f3f3f3';c.beginPath();c.rect(-30,48,60,34);c.fill();c.stroke();c.restore()}
-function igorAcc(c,eyes,o){if(o&&o.outfit==='chef'){const a=accOf(o);c.save();accMap(c,eyes);apron(c);if(a.ears)accEars(c,a.ears,a.ecol,'l');chefHat(c);if(a.ears)accEars(c,a.ears,a.ecol,'r');
+/* the bath outfit: a frilly shower cap with polka dots */
+function showerCap(c){c.save();c.translate(330,132);c.rotate(.3);c.lineJoin='round';c.lineCap='round';c.strokeStyle='#141414';c.lineWidth=6;c.fillStyle='#ff9ec7';
+ c.beginPath();c.moveTo(-150,10);c.bezierCurveTo(-150,-150,150,-150,150,10);c.closePath();c.fill();c.stroke();
+ c.fillStyle='#ffffff';for(const[x,y]of[[-90,-50],[-30,-90],[40,-80],[95,-36],[-40,-30],[30,-20]]){c.beginPath();c.arc(x,y,12,0,TAU);c.fill()}
+ c.fillStyle='#ffc4dc';c.beginPath();for(let i=0;i<=16;i++){const x=-158+i*316/16,y=i%2?28:6;i?c.lineTo(x,y):c.moveTo(x,y)}c.lineTo(158,-6);c.lineTo(-158,-6);c.closePath();c.fill();c.stroke();c.restore()}
+function igorAcc(c,eyes,o){if(o&&o.outfit==='bath'){const a=accOf(o);c.save();accMap(c,eyes);if(a.ears)accEars(c,a.ears,a.ecol,'l');showerCap(c);if(a.ears)accEars(c,a.ears,a.ecol,'r');
+  if(a.glasses==='eye'||a.glasses==='sun')accGlasses(c,a.glasses,a.gcol);c.restore();return}
+ if(o&&o.outfit==='chef'){const a=accOf(o);c.save();accMap(c,eyes);apron(c);if(a.ears)accEars(c,a.ears,a.ecol,'l');chefHat(c);if(a.ears)accEars(c,a.ears,a.ecol,'r');
   if(a.glasses==='eye'||a.glasses==='sun')accGlasses(c,a.glasses,a.gcol);c.restore();return}
  igorAcc0(c,eyes,o)}
 const PAD=.24; // room above the head for hats
@@ -258,7 +265,7 @@ ${cfg.phones?'<p class="warn">🎧 Use headphones, and keep your volume fixed fo
   const n=Math.min(CAP[K.lv],Math.round(tot/(N*MAXR)*CAP[K.lv]));let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
   p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const sc=p.scores[cfg.key]=p.scores[cfg.key]||{};if(!(sc[K.lv]>=tot))sc[K.lv]=tot;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}
   $('endseeds').textContent=n?'+'+n+' tofu seed'+(n>1?'s':'')+' for '+nm+'’s field'+'. Collect them back on the island.':'';
-  $('end').hidden=false;K.update();import('/board.js?v=3').then(B=>B.show(document.querySelector('#end .card'),cfg.key,K.lv,tot,ME&&ME.avatar)).catch(()=>{})}
+  $('end').hidden=false;K.update();import('/board.js?v=5').then(B=>B.show(document.querySelector('#end .card'),cfg.key,K.lv,tot,ME&&ME.avatar)).catch(()=>{})}
  K.update=()=>{const L=$('listen');if(L){L.disabled=!K.canListen();const R=K.R;L.textContent=R&&R.played&&isFinite(R.left)?`▶ Listen (${Math.max(0,R.left)})`:'▶ Listen'}
   if(okB)okB.disabled=K.phase!=='guess';cfg.update&&cfg.update(K)};
  $('listen')&&($('listen').onclick=K.listen);okB&&(okB.onclick=K.confirm);
