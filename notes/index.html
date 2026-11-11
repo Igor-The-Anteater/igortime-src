@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en"><head><script src="/lang.js?v=3"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Reading music · Igor time</title>
+<meta name="description" content="Learn to read music from zero in Igor's music school: Nadia Boulangigor teaches the notes on the staff, the treble and bass clef, sharps and flats, then notes that run faster and faster.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+:root{--night:#140d09;--ink:#f3e7d3;--dim:#b49f86;--warm:#f1b46e;--bone:#efe4cf;--glow:#ffd38a;--chalk:#eef2e6;
+ --display:'Instrument Serif',Georgia,serif;--toon:'Fredoka','Trebuchet MS',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow:hidden;font-family:var(--mono);-webkit-user-select:none;user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+header{position:fixed;z-index:2;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none;background:linear-gradient(rgba(20,13,9,.85) 30%,rgba(20,13,9,0));
+ padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px))}
+.igback{pointer-events:auto;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none;border:1px solid rgba(243,231,211,.35);border-radius:999px;padding:9px 13px;white-space:nowrap;background:rgba(20,13,9,.6)}.igback:hover{border-color:var(--glow);color:var(--glow)}
+h1{margin:0;font:400 clamp(20px,3.2vw,32px)/1 var(--display);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}h1 em{color:var(--warm)}h1 a{color:inherit;text-decoration:none;pointer-events:auto}
+#stat{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right;white-space:nowrap;pointer-events:auto;cursor:pointer}#stat b{color:var(--bone);font-weight:500}
+#dots{display:flex;gap:4px;justify-content:flex-end;margin-top:5px}#dots i{width:8px;height:8px;border-radius:50%;background:rgba(243,231,211,.18)}#dots i.ok{background:#7fe08a}#dots i.no{background:#f1b46e}#dots i.now{box-shadow:0 0 0 2px var(--bone)}
+#bar{position:fixed;z-index:2;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 12px calc(14px + env(safe-area-inset-bottom,0px))}
+#bar .row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;max-width:980px}
+button{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:13px 18px;border-radius:999px;cursor:pointer;background:rgba(20,13,9,.62);color:var(--ink);border:1px solid rgba(243,231,211,.4);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button.main{background:var(--warm);color:#2b1a0e;border-color:var(--warm)}
+button:disabled{opacity:.35;cursor:default}button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
+button.ex{font:600 15px/1.1 var(--toon);letter-spacing:0;text-transform:none;background:#f7ecd4;color:#2b2018;border:3px solid #2b2018;box-shadow:0 3px 0 #2b2018;padding:10px 16px}
+button.ex.on{background:#ffe08a}
+/* the answers: big friendly cards */
+.ans{display:grid;gap:9px;width:100%;max-width:980px;grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}
+.ans button{font:600 17px/1.15 var(--toon);letter-spacing:0;text-transform:none;border-radius:18px;padding:10px 8px 11px;background:#f7ecd4;color:#2b2018;border:3px solid #2b2018;box-shadow:0 4px 0 #2b2018;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:64px;justify-content:center}
+.ans button .ic{font-size:26px;line-height:1}.ans button small{font:500 12.5px/1.2 var(--toon);color:#6b5340}.ans button small.t{font-size:11px;color:#8a7360;font-style:italic}
+.ans button:active{transform:translateY(2px);box-shadow:0 2px 0 #2b2018}
+.ans button.right{background:#bff2b0}.ans button.wrong{background:#ffd6a6}
+.ans button:disabled{opacity:1}.ans.done button:not(.right):not(.wrong){opacity:.45}
+@media (max-width:620px){.ans{gap:7px}.ans button{font-size:15px;min-height:56px;padding:8px 5px 9px;border-radius:15px}.ans button .ic{font-size:22px}.ans button small{font-size:11px}.ans button small.t{font-size:10px}
+ .igback{padding:8px 10px;font-size:10px}h1 .gm{display:none}button{padding:12px 13px;font-size:10.5px;letter-spacing:.08em}button.ex{font-size:14px;padding:9px 12px}}
+@media (max-width:620px) and (max-height:760px){.ans button small:not(.t){display:none}}
+#bubble{position:fixed;left:0;top:0;z-index:3;box-sizing:border-box;pointer-events:none;font:500 18px/1.25 var(--toon);color:#2b2018;background:#f7ecd4;border:3px solid #2b2018;
+ padding:9px 15px 10px;border-radius:16px;box-shadow:0 4px 0 #2b2018;max-width:min(380px,60vw);opacity:0;transition:opacity .25s}
+#bubble b{color:#a5481c}
+#bubble::after{content:'';position:absolute;left:calc(var(--tx,40px) - 8px);bottom:-11px;width:14px;height:14px;background:#f7ecd4;border:3px solid #2b2018;border-top:0;border-left:0;transform:rotate(45deg);border-radius:0 0 4px 0}
+@media (max-width:620px){#bubble{font-size:15px;max-width:calc(100vw - 28px)}}
+.ov{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 55%,rgba(20,13,9,.78),rgba(20,13,9,.97) 75%);padding:16px;box-sizing:border-box;overflow:auto}
+.ov[hidden]{display:none}.card{max-width:36rem;width:100%}
+.card h2{margin:0;font:400 clamp(36px,7vw,64px)/.95 var(--display);letter-spacing:-.02em}.card h2 em{color:var(--warm)}
+.card p{font-size:12px;line-height:1.7;color:var(--dim);margin:1em 0}.card p b{color:var(--ink);font-weight:500}
+.card .row{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 10px}
+.card .big{font:400 clamp(56px,12vw,96px)/1 var(--display);color:var(--bone)}
+.card .small{font-size:10.5px;letter-spacing:.08em;color:var(--dim)}.card a{color:var(--warm)}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin:16px 0}
+.map button{font:600 13px/1.15 var(--toon);letter-spacing:0;text-transform:none;border-radius:14px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;background:rgba(243,231,211,.07)}
+.map button .ic{font-size:22px}.map button small{font:500 10px var(--mono);letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.map button.done{border-color:#7fe08a}.map button.done small{color:#7fe08a}.map button.cur{border-color:var(--warm);background:rgba(241,180,110,.16)}.map button.cur small{color:var(--warm)}
+.map button:disabled{opacity:.33}
+#endnew{font:600 18px/1.3 var(--toon);color:var(--glow)}
+
+/* the keyboard */
+.kb{position:relative;width:min(100%,560px);height:clamp(120px,22vh,180px);touch-action:none}
+.kb button{position:absolute;top:0;padding:0;letter-spacing:0;text-transform:none;font:600 15px var(--toon);border-radius:0 0 10px 10px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;padding-bottom:10px;touch-action:none}
+.kb .wk{left:calc(var(--i)*100%/7);width:calc(100%/7 - 4px);margin-left:2px;height:100%;background:#fbf7ee;color:#2b2018;border:2px solid #2b2018;box-shadow:0 4px 0 #2b2018}
+.kb .bk{left:calc((var(--i) + 1)*100%/7 - 100%/7*.3);width:calc(100%/7*.6);height:60%;background:#2b2018;color:#f3e7d3;border:2px solid #000;z-index:2}
+.kb small{font:600 10px var(--mono);opacity:.6}
+.kb button.right{background:#bff2b0}.kb .bk.right{background:#3c8a3a}.kb button.wrong{background:#ffd6a6}.kb .bk.wrong{background:#a5481c}
+.ans button.right,.ans button.wrong{transition:none}
+</style>
+</head><body>
+<canvas id="c" aria-label="Igor's music school: Nadia Boulangigor, with grey hair in a bun, round glasses and a lace collar, stands next to a blackboard with a music staff"></canvas>
+<header><a class="igback" href="/">← Island</a><h1><a href="/"><em>Igor</em> time</a><span class="gm" id="gm"></span></h1><div id="stat"><span id="st1"></span><div id="dots"></div></div></header>
+<div id="bubble"></div>
+<div id="bar"></div>
+<div class="ov" id="start"><div class="card" id="startCard"></div></div>
+<div class="ov" id="end" hidden><div class="card" id="endCard"></div></div>
+<script src="/house/kit.js?v=4"></script>
+<script src="/notes/nadia.js?v=1"></script>
+<script>
+(()=>{
+const H=IgorHouse,{TAU,clamp,lerp,ease,rr,drawAnt,paintAvatar,ME,AVN}=H,PAD=H.PAD||.24;
+let IT=false;try{IT=(localStorage.getItem('igortime_lang')||window.NT_LANG||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en'))==='it'}catch(e){IT=window.NT_LANG==='it'}
+const OPEN=!!window.NT_OPEN;
+const tt=(en,it)=>IT?it:en,T2=a=>a?(IT?a[1]:a[0]):'';
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
+const TEACHER='Nadia Boulangigor';
+try{const h=localStorage.getItem('igortime_home');if(h)document.querySelectorAll('a[href="/"]').forEach(a=>a.href=h)}catch(e){}
+if(IT)document.documentElement.lang='it';
+$('gm').textContent=' · '+tt('Reading music','Leggere le note');
+const touch=matchMedia('(pointer:coarse)').matches;
+
+/* ================= notes =================
+   d = steps on the staff from the middle Do (C4 = 0, Re = 1, … Si below = -1); acc = -1 flat, 1 sharp */
+const NM=IT?['Do','Re','Mi','Fa','Sol','La','Si']:['C','D','E','F','G','A','B'];
+const PCS=[0,2,4,5,7,9,11];
+const pcOf=d=>((d%7)+7)%7,octOf=d=>Math.floor(d/7);
+const midiOf=n=>60+octOf(n.d)*12+PCS[pcOf(n.d)]+(n.acc||0);
+const nameOf=n=>NM[pcOf(n.d)]+(n.acc>0?'♯':n.acc<0?'♭':'');
+const R=(a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);
+/* the stages */
+const ST=[
+ {ic:'🎼',n:['C, D and B','Do, Re e Si'],clef:'t',pool:[-1,0,1],les:[
+  [['Bonjour! I am <b>Nadia Boulangigor</b>. Let’s learn to read music! These <b>five lines</b> are the staff: notes sit on the lines or in the spaces.','Bonjour! Sono <b>Nadia Boulangigor</b>. Impariamo a leggere la musica! Queste <b>cinque righe</b> sono il pentagramma: le note stanno sulle righe o negli spazi.'],[]],
+  [['This curly sign is the <b>treble clef</b>. It curls around the second line: that line is <b>G</b>.','Questo segno arricciato è la <b>chiave di violino</b>. Si arrotola intorno alla seconda riga: quella riga è il <b>Sol</b>.'],[4]],
+  [['Under the staff, on its own little line: this is <b>C</b>, the middle C. Remember it, it is our best friend!','Sotto il pentagramma, su una lineetta tutta sua: questo è il <b>Do</b>, il Do centrale. Ricordatelo, è il nostro migliore amico!'],[0]],
+  [['Just above C, hanging under the staff: <b>D</b>. Just below C: <b>B</b>.','Subito sopra il Do, appeso sotto il pentagramma: il <b>Re</b>. Subito sotto il Do: il <b>Si</b>.'],[-1,0,1]]]},
+ {ic:'🪜',n:['From C to G','Da Do a Sol'],clef:'t',pool:R(0,4),les:[
+  [['Now we climb! C, D, then <b>E</b> on the first line, <b>F</b> in the first space, <b>G</b> on the second line.','Ora saliamo! Do, Re, poi il <b>Mi</b> sulla prima riga, il <b>Fa</b> nel primo spazio, il <b>Sol</b> sulla seconda riga.'],R(0,4)],
+  [['Line, space, line, space: every little step up the staff is the next note.','Riga, spazio, riga, spazio: ogni passetto in su è la nota dopo.'],R(0,4)]]},
+ {ic:'🎹',n:['The whole octave','Tutta l’ottava'],clef:'t',pool:R(-1,7),les:[
+  [['Let’s finish the octave: <b>A</b> in the second space, <b>B</b> on the middle line, and <b>C</b> in the third space.','Finiamo l’ottava: il <b>La</b> nel secondo spazio, il <b>Si</b> sulla riga di mezzo e il <b>Do</b> nel terzo spazio.'],[5,6,7]],
+  [['From C to C: eight notes, an <b>octave</b>!','Da Do a Do: otto note, un’<b>ottava</b>!'],R(0,7)]]},
+ {ic:'✨',n:['Lines and spaces','Righe e spazi'],clef:'t',pool:R(0,11),les:[
+  [['A trick: the notes <b>on the lines</b>, from the bottom, are E, G, B, D, F.','Un trucco: le note <b>sulle righe</b>, dal basso, sono Mi, Sol, Si, Re, Fa.'],[2,4,6,8,10]],
+  [['And <b>in the spaces</b>: F, A, C, E. In English they spell FACE!','E <b>negli spazi</b>: Fa, La, Do, Mi.'],[3,5,7,9]],
+  [['Sitting on top of the staff: <b>G</b>.','Seduto sopra il pentagramma: il <b>Sol</b>.'],[11]]]},
+ {ic:'🪄',n:['Little extra lines','I tagli addizionali'],clef:'t',pool:[-3,-2,-1,0,9,10,11,12,13,14],les:[
+  [['When notes go above or below the staff, we add little lines just for them: <b>ledger lines</b>.','Quando le note escono dal pentagramma, aggiungiamo delle lineette solo per loro: i <b>tagli addizionali</b>.'],[-3,-2,12,13]],
+  [['Below C: B, A, G. Above the staff: A, B, C. Count the little lines!','Sotto il Do: Si, La, Sol. Sopra il pentagramma: La, Si, Do. Conta le lineette!'],[-3,-2,-1,12,13,14]]]},
+ {ic:'🏃',n:['Running notes','Le note che corrono'],clef:'t',pool:R(-1,11),run:3,les:[
+  [['Now the notes <b>run</b>! They come from the right: name each one before it reaches the line.','Ora le note <b>corrono</b>! Arrivano da destra: dimmi il nome di ognuna prima che arrivi alla riga.'],[]],
+  [['If one gets away, never mind: the next one is coming. Every time you play, they run a little faster.','Se una ti scappa, pazienza: arriva subito la prossima. Ogni volta che rigiochi, corrono un po’ più veloci.'],[]]]},
+ {ic:'🐻',n:['The bass clef','La chiave di basso'],clef:'b',pool:R(-11,0),les:[
+  [['This is the <b>bass clef</b>, for the low notes. Its two dots hug the fourth line: that line is <b>F</b>.','Questa è la <b>chiave di basso</b>, per le note gravi. I suoi due puntini abbracciano la quarta riga: quella riga è il <b>Fa</b>.'],[-4]],
+  [['On the lines, from the bottom: G, B, D, F, A.','Sulle righe, dal basso: Sol, Si, Re, Fa, La.'],[-10,-8,-6,-4,-2]],
+  [['In the spaces: A, C, E, G. And on the little line above: the middle C, the same as in the treble clef!','Negli spazi: La, Do, Mi, Sol. E sulla lineetta sopra: il Do centrale, lo stesso della chiave di violino!'],[-9,-7,-5,-3,0]]]},
+ {ic:'🎭',n:['Both clefs','Le due chiavi'],clef:'tb',pool:R(-1,11),poolB:R(-11,1),run:2.6,les:[
+  [['Now <b>both clefs</b> at once, one above the other: the treble clef on top, the bass clef below, and the middle C on its little line in between. It is like one big staff of eleven lines.','Ora <b>tutte e due le chiavi</b> insieme, una sopra l’altra: sopra la chiave di violino, sotto quella di basso, e in mezzo, sulla sua lineetta, il Do centrale. È come un unico grande pentagramma di undici righe.'],[{d:0},{d:4},{d:-4}]],
+  [['The notes run: a note on the top staff is read in the treble clef, one on the bottom staff in the bass clef.','Le note corrono: una nota sul rigo di sopra si legge in chiave di violino, una sul rigo di sotto in chiave di basso.'],[]]]},
+ {ic:'♯',n:['Sharps and flats','Diesis e bemolle'],clef:'t',pool:R(0,7),acc:1,les:[
+  [['A <b>sharp ♯</b> raises a note by a semitone: F♯ is a little higher than F.','Il <b>diesis ♯</b> alza una nota di un semitono: il Fa♯ è un po’ più alto del Fa.'],[{d:3,acc:1}]],
+  [['A <b>flat ♭</b> lowers it by a semitone: B♭ is a little lower than B.','Il <b>bemolle ♭</b> la abbassa di un semitono: il Si♭ è un po’ più basso del Si.'],[{d:6,acc:-1}]]]},
+ {ic:'🎹',n:['On the keyboard','Sulla tastiera'],clef:'t',pool:R(-1,8),keys:1,les:[
+  [['Now answer on the <b>keyboard</b>: press the key of the note. White keys: C D E F G A B.','Ora rispondi sulla <b>tastiera</b>: premi il tasto della nota. Tasti bianchi: Do Re Mi Fa Sol La Si.'],[]],
+  [['<b>C</b> is the white key just left of the <b>two black keys</b>. Find it, and the others come by themselves!','Il <b>Do</b> è il tasto bianco subito a sinistra dei <b>due tasti neri</b>. Trovato lui, gli altri vengono da soli!'],[0]]]},
+ {ic:'🚀',n:['The big race','La grande corsa'],clef:'tb',pool:R(-1,11),poolB:R(-11,1),run:2.4,keys:1,acc:1,les:[
+  [['<b>The big race!</b> Both clefs, sharps and flats, on the keyboard, and the notes run. Ready? Allez!','<b>La grande corsa!</b> Due chiavi, diesis e bemolle, sulla tastiera, e le note corrono. Pronto? Allez!'],[]]]}];
+const NS=ST.length;
+const NQ=si=>ST[si].run?20:10,PASS=si=>ST[si].run?16:8;
+
+/* ================= progress ================= */
+const KEY='igortime_notes';
+let PR={done:0,plays:{},best:{},met:0};
+try{Object.assign(PR,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
+try{const S=JSON.parse(localStorage.getItem('igortime_v1'))||{},Pn=JSON.parse(localStorage.getItem('igortime_pending'))||{};
+ for(const o of[S.scores,Pn.scores]){const v=o&&o.notes&&+o.notes.all;if(v>PR.done)PR.done=Math.min(NS,v)}}catch(e){}
+const saveP=()=>{try{localStorage.setItem(KEY,JSON.stringify(PR))}catch(e){}};
+const giro=si=>PR.plays[si]|0;
+
+/* ================= sound: a soft piano-like tone ================= */
+let AC=null,OUT=null;
+function audio(){if(AC)return AC;AC=new(window.AudioContext||window.webkitAudioContext)();OUT=AC.createGain();OUT.gain.value=.5;OUT.connect(AC.destination);return AC}
+function tone(m,t=0,dur=1.1,vol=.28){if(!AC)return;const t0=AC.currentTime+t,f=440*Math.pow(2,(m-69)/12),g=AC.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.01);g.gain.exponentialRampToValueAtTime(vol*.35,t0+.25);g.gain.exponentialRampToValueAtTime(.001,t0+dur);g.connect(OUT);
+ for(const[k,a]of[[1,1],[2,.35],[3,.12],[4,.06]]){const o=AC.createOscillator(),ga=AC.createGain();o.type='sine';o.frequency.value=f*k;ga.gain.value=a;o.connect(ga);ga.connect(g);o.start(t0);o.stop(t0+dur+.05)}}
+function ding(ok){if(!AC)return;(ok?[76,84]:[64]).forEach((m,i)=>tone(m,i*.07,.35,.12))}
+
+/* ================= questions ================= */
+let SES=null;
+function gen(si){const s=ST[si],g_=giro(si);let clef=s.clef==='tb'?(Math.random()<.5?'t':'b'):s.clef,pool=clef==='b'&&s.poolB?s.poolB:s.pool;
+ // when you play a stage again, the notes go a little further out
+ if(!s.run&&g_>=1&&si>=2&&si!==6&&clef==='t')pool=[...new Set([...pool,...(g_>=2?[-2,12]:[])])];
+ let d,k=0;do{d=pick(pool);k++}while(k<20&&SES&&SES.last&&SES.last.d===d&&SES.last.clef===clef);
+ let acc=0;if(s.acc){const r=Math.random();acc=r<.35?1:r<.7?-1:0;const pc=pcOf(d);if(acc>0&&(pc===2||pc===6))acc=0;if(acc<0&&(pc===0||pc===3))acc=0}
+ const q={d,acc,clef};SES.last=q;
+ if(!s.keys){q.opts=s.acc?accOpts(q):[...new Set(pool.map(pcOf))].sort((a,b)=>a-b).map(pc=>({pc,acc:0}))}
+ return q}
+function accOpts(q){const pc=pcOf(q.d),o=[{pc,acc:q.acc},{pc,acc:0}];o.push({pc,acc:q.acc?-q.acc:1});o.push({pc:(pc+(q.acc>0?1:6))%7,acc:q.acc||-1});
+ const seen=new Set(),out=[];for(const x of o){const k=x.pc+'/'+x.acc;if(seen.has(k))continue;const pcn=x.pc;if(x.acc>0&&(pcn===2||pcn===6))continue;if(x.acc<0&&(pcn===0||pcn===3))continue;seen.add(k);out.push(x)}
+ while(out.length<4){const x={pc:ri(0,6),acc:ri(-1,1)};const k=x.pc+'/'+x.acc;if(seen.has(k)||(x.acc>0&&(x.pc===2||x.pc===6))||(x.acc<0&&(x.pc===0||x.pc===3)))continue;seen.add(k);out.push(x)}
+ return out.sort((a,b)=>a.pc-b.pc||a.acc-b.acc)}
+const optName=o=>NM[o.pc]+(o.acc>0?'♯':o.acc<0?'♭':'');
+const semOf=o=>(PCS[o.pc]+(o.acc||0)+12)%12;
+
+/* ================= the scene ================= */
+const cv=$('c'),g=cv.getContext('2d');let W=0,Hh=0,DPR=1,T=0;
+const SW=420,SH=462,nspr=document.createElement('canvas'),nx=nspr.getContext('2d');nspr.width=SW;nspr.height=Math.round(SH*(1+PAD));
+let igOK=false;H.loadIgor(()=>{igOK=true});
+const BL={next:1.5,start:-9};function blinkK(t){if(t>BL.next){BL.start=t;BL.next=t+(Math.random()<.2?.45:2.4+Math.random()*3.8)}const u=t-BL.start;return u<0||u>.26?0:u<.07?u/.07:u<.12?1:1-(u-.12)/.14}
+function paintNadia(t){const k=blinkK(t);paintAvatar(nx,IgorNadia.LOOK,k,k,SW,nspr.height);const sc=Math.min(SW/663,nspr.height/(730*(1+PAD)));nx.setTransform(sc,0,0,sc,(SW-663*sc)/2,PAD*730*sc);IgorNadia.hair(nx);IgorNadia.dress(nx);nx.setTransform(1,0,0,1,0,0)}
+let L={};
+function layout(){const top=58,barH=$('bar').offsetHeight||150,sh=Math.max(120,Hh-top-barH),land=W>Hh*1.05;
+ if(land){const mh=Math.min(sh*.8,W*.24);L={land,top,sh,m:{x:W*.15,y:top+sh*.52,h:mh},b:{x:W*.3,y:top+sh*.05,w:W*.66,h:sh*.84}}}
+ else{const bh=Math.min(sh*.6,W*.72);L={land,top,sh,b:{x:10,y:top+4,w:W-20,h:bh},m:{x:W*.24,y:top+bh+(sh-bh)*.5,h:Math.min((sh-bh)*.95,W*.42)}}}}
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;Hh=innerHeight;cv.width=W*DPR;cv.height=Hh*DPR;layout()}
+addEventListener('resize',()=>{resize();placeBubble()});
+function room(){const gr=g.createLinearGradient(0,0,0,Hh);gr.addColorStop(0,'#26283a');gr.addColorStop(.25,'#dcd3c0');gr.addColorStop(.7,'#d0c6ae');g.fillStyle=gr;g.fillRect(0,0,W,Hh);
+ const wy=Hh*.72;g.fillStyle='#3d4458';g.fillRect(0,wy,W,Hh*.1);g.fillStyle='#8c8174';g.fillRect(0,wy+Hh*.1,W,Hh);g.fillStyle='#2b3042';g.fillRect(0,wy-4,W,6);
+ if(L.land){const px=W*.035,py=Hh*.13;g.fillStyle='#7a5232';rr(g,px-4,py-4,62,78,4);g.fill();g.fillStyle='#f3ead6';g.fillRect(px,py,54,70);g.strokeStyle='#2b2018';g.lineWidth=1.2;for(let i=0;i<5;i++){g.beginPath();g.moveTo(px+6,py+22+i*5);g.lineTo(px+48,py+22+i*5);g.stroke()}
+  g.fillStyle='#2b2018';for(const[x,y]of[[16,37],[26,32],[36,27]]){g.beginPath();g.ellipse(px+x,py+y,3.2,2.4,-.35,0,TAU);g.fill()}}}
+/* Nadia's music room: a bookshelf of scores, an upright piano, a metronome, a standing lamp, a plant and a rug */
+function decor(){const wy=Hh*.72,s=clamp(Math.min(W,Hh)/700,.5,1.3),B=L.b,M=L.m;
+ g.fillStyle='#7b3f4e';g.beginPath();g.ellipse(M.x,M.y+M.h*.5,M.h*.55,M.h*.09,0,0,TAU);g.fill();g.strokeStyle='#e8c27a';g.lineWidth=3;g.beginPath();g.ellipse(M.x,M.y+M.h*.5,M.h*.45,M.h*.065,0,0,TAU);g.stroke();
+ // the piano, right of the board (landscape) or bottom right (portrait)
+ const pw=120*s,ph=95*s,px=L.land?Math.min(W-pw-6,B.x+B.w+6):W-pw-10,py=wy+Hh*.09;if(px>(L.land?B.x+B.w-30:M.x+M.h*.4)){
+  g.fillStyle='#2b1e18';rr(g,px,py-ph,pw,ph,5);g.fill();g.fillStyle='#3a2a20';g.fillRect(px-4,py-ph,pw+8,8);g.fillStyle='#f7f2e6';g.fillRect(px+6,py-ph*.5,pw-12,ph*.14);
+  g.fillStyle='#151515';for(let k=0;k<12;k++){if(k%7===2||k%7===6)continue;g.fillRect(px+10+k*(pw-20)/12,py-ph*.5,4*s,ph*.08)}
+  g.fillStyle='#f4efe2';g.fillRect(px+pw*.3,py-ph*.92,pw*.4,ph*.28);g.strokeStyle='#5d554c';g.lineWidth=1;for(let i=0;i<4;i++){g.beginPath();g.moveTo(px+pw*.33,py-ph*.86+i*4*s);g.lineTo(px+pw*.67,py-ph*.86+i*4*s);g.stroke()}
+  // the metronome on the piano
+  const mx=px+pw*.85,my=py-ph;g.fillStyle='#8a5a33';g.beginPath();g.moveTo(mx-9*s,my);g.lineTo(mx+9*s,my);g.lineTo(mx+4*s,my-26*s);g.lineTo(mx-4*s,my-26*s);g.closePath();g.fill();
+  const a=Math.sin(T*Math.PI*1.6)*.45;g.strokeStyle='#d9b44a';g.lineWidth=2;g.beginPath();g.moveTo(mx,my-3*s);g.lineTo(mx+Math.sin(a)*24*s,my-3*s-Math.cos(a)*24*s);g.stroke()}
+ // a bookshelf full of scores (landscape: left wall behind Nadia's portrait; portrait: right, under the board)
+ const bx=L.land?W*.2:W*.62,by=L.land?Hh*.3:B.y+B.h+30*s,bw=78*s,bh=L.land?110*s:Math.min(110*s,wy-(B.y+B.h)-50*s);if(bh>40&&(L.land||bx>M.x+M.h*.35)){
+  g.fillStyle='#6a4630';g.fillRect(bx,by,bw,bh);const rows=Math.max(1,Math.floor(bh/(34*s)));for(let r=0;r<rows;r++){const y=by+6+r*(bh-8)/rows,hh=(bh-8)/rows-6;g.fillStyle='#4e3424';g.fillRect(bx+3,y+hh,bw-6,4);
+   for(let k=0;k<8;k++){g.fillStyle=['#f3ead2','#a8463c','#4f6f8a','#e9d6b0','#c9a24a','#f3ead2','#5e8a6a','#7b3f4e'][(k+r*3)%8];g.fillRect(bx+5+k*(bw-10)/8,y+((k*5)%3)*2,(bw-10)/8-1.5,hh-((k*5)%3)*2)}}}
+ // a standing lamp
+ const lx=L.land?W*.04:W*.07,ly=wy+Hh*.09;if(L.land||M.x-M.h*.45>lx+20){g.fillStyle='rgba(255,214,150,.18)';g.beginPath();g.arc(lx,ly-150*s,70*s,0,TAU);g.fill();g.fillStyle='#3b2c22';g.fillRect(lx-2*s,ly-140*s,4*s,140*s);g.beginPath();g.ellipse(lx,ly,16*s,4*s,0,0,TAU);g.fill();
+  g.fillStyle='#ffe2a8';g.beginPath();g.moveTo(lx-14*s,ly-160*s);g.lineTo(lx+14*s,ly-160*s);g.lineTo(lx+24*s,ly-134*s);g.lineTo(lx-24*s,ly-134*s);g.closePath();g.fill()}
+ // a plant
+ const qx=L.land?W*.255:W*.5,qy=wy+Hh*.1;if(L.land||(qx>M.x+M.h*.4&&qx<W-140*s)){g.fillStyle='#b8643f';rr(g,qx-14*s,qy-28*s,28*s,28*s,4);g.fill();g.fillStyle='#4f8a4a';for(let i=0;i<5;i++){g.save();g.translate(qx,qy-28*s);g.rotate(-1+i*.5+Math.sin(T*.8+i)*.04);g.beginPath();g.ellipse(0,-20*s,6*s,20*s,0,0,TAU);g.fill();g.restore()}}}
+const chalk=(sz,w=500)=>{g.font=`${w} ${sz}px Fredoka, sans-serif`;g.fillStyle='rgba(238,242,230,.92)';g.textAlign='center';g.textBaseline='middle'};
+const CH='rgba(238,242,230,.92)';
+function board(){const B=L.b;g.fillStyle='#6b4a2e';rr(g,B.x-9,B.y-9,B.w+18,B.h+18,10);g.fill();g.fillStyle='#2f4a3a';rr(g,B.x,B.y,B.w,B.h,4);g.fill();
+ g.fillStyle='#7a5232';g.fillRect(B.x+B.w*.1,B.y+B.h+6,B.w*.8,7);g.save();g.beginPath();g.rect(B.x,B.y,B.w,B.h);g.clip();boardContent(B);g.restore()}
+/* a staff with its clef; returns where things go */
+/* the grand staff (the two clefs one above the other, like an 11-line staff with the middle C in between):
+   when both clefs are in play the notes never jump from one staff to another drawing: you see where they are */
+function grandAt(B){const s=Math.min(B.h*.062,B.w*.045,22),yC=B.y+B.h*.56,x0=B.x+B.w*.05,x1=B.x+B.w*.95,yOf=d=>yC-d*s/2;
+ g.strokeStyle=CH;g.lineWidth=Math.max(1.5,s*.09);for(const d of[2,4,6,8,10,-2,-4,-6,-8,-10]){g.beginPath();g.moveTo(x0,yOf(d));g.lineTo(x1,yOf(d));g.stroke()}
+ // the 11th line, the middle C, only hinted
+ g.save();g.setLineDash([4,7]);g.globalAlpha=.3;g.beginPath();g.moveTo(x0+s*3,yC);g.lineTo(x1,yC);g.stroke();g.restore();
+ // the brace and the line that joins the two staves
+ g.lineWidth=Math.max(2,s*.14);g.beginPath();g.moveTo(x0,yOf(10));g.lineTo(x0,yOf(-10));g.stroke();
+ g.lineWidth=Math.max(2,s*.2);g.beginPath();g.moveTo(x0-s*.35,yOf(10));g.quadraticCurveTo(x0-s*1.2,yOf(5),x0-s*.5,yOf(1));g.lineTo(x0-s*1,yC);g.lineTo(x0-s*.5,yOf(-1));g.quadraticCurveTo(x0-s*1.2,yOf(-5),x0-s*.35,yOf(-10));g.stroke();
+ IgorNadia.treble(g,x0+s*.1,yOf(2),s,CH);IgorNadia.bass(g,x0+s*.2,yOf(-10),s,CH);
+ return{s,y0:yOf(-10),x0,x1,yOf,clef:'g'}}
+function staffAt(B,clef){if(clef==='g')return grandAt(B);const s=Math.min(B.h*.085,B.w*.05,26),y0=B.y+B.h*.66,x0=B.x+B.w*.05,x1=B.x+B.w*.95;
+ g.strokeStyle=CH;g.lineWidth=Math.max(1.5,s*.09);for(let i=0;i<5;i++){g.beginPath();g.moveTo(x0,y0-i*s);g.lineTo(x1,y0-i*s);g.stroke()}
+ if(clef==='b')IgorNadia.bass(g,x0+s*.2,y0,s,CH);else IgorNadia.treble(g,x0+s*.1,y0,s,CH);
+ const yOf=d=>clef==='b'?y0-(d+10)*s/2:y0-(d-2)*s/2;return{s,y0,x0,x1,yOf,clef}}
+function noteAt(S,n,x,col,lab){const y=S.yOf(n.d),s=S.s,k=clef=>clef;g.strokeStyle=CH;g.lineWidth=Math.max(1.5,s*.09);
+ // ledger lines
+ const lo=S.clef==='b'||S.clef==='g'?-10:2,hi=S.clef==='b'?-2:10;if(S.clef==='g'&&n.d===0){g.beginPath();g.moveTo(x-s*.95,y);g.lineTo(x+s*.95,y);g.stroke()}for(let d=lo-2;d>=n.d;d-=2){const yy=S.yOf(d);g.beginPath();g.moveTo(x-s*.95,yy);g.lineTo(x+s*.95,yy);g.stroke()}
+ for(let d=hi+2;d<=n.d;d+=2){const yy=S.yOf(d);g.beginPath();g.moveTo(x-s*.95,yy);g.lineTo(x+s*.95,yy);g.stroke()}
+ g.save();g.fillStyle=col;g.strokeStyle=col;g.translate(x,y);g.rotate(-.35);g.beginPath();g.ellipse(0,0,s*.66,s*.46,0,0,TAU);g.fill();g.restore();
+ const mid=S.clef==='b'||(S.clef==='g'&&n.d<0)?-6:6,up=n.d<mid;g.strokeStyle=col;g.lineWidth=Math.max(1.6,s*.11);g.beginPath();if(up){g.moveTo(x+s*.6,y-s*.1);g.lineTo(x+s*.6,y-s*3.3)}else{g.moveTo(x-s*.6,y+s*.1);g.lineTo(x-s*.6,y+s*3.3)}g.stroke();
+ if(n.acc){g.fillStyle=col;g.font=`${Math.round(s*2.1)}px "Apple Symbols","Segoe UI Symbol","DejaVu Sans",serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(n.acc>0?'♯':'♭',x-s*1.55,y-(n.acc<0?s*.45:0))}
+ if(lab){chalk(Math.max(12,s*.85),600);g.fillStyle=col;g.fillText(lab,x,up?y+s*1.7:y-s*1.7)}}
+function boardContent(B){const cx=B.x+B.w/2,s0=Math.min(B.w/14,B.h/7);
+ if(!SES){chalk(s0*.9,600);g.fillText(tt('Reading music','Leggere le note'),cx,B.y+B.h*.3);const S=staffAt({...B,y:B.y+B.h*.2,h:B.h*.8},'t');[0,2,4,5,7].forEach((d,i)=>noteAt(S,{d},S.x0+S.s*5+i*S.s*3.2,CH));return}
+ const st=ST[SES.si];chalk(Math.max(12,s0*.42));g.globalAlpha=.7;g.fillText(`${tt('Stage','Tappa')} ${SES.si+1} · ${T2(st.n)}`,cx,B.y+B.h*.08);g.globalAlpha=1;
+ if(SES.phase==='lesson'){const S=staffAt(B,SES.demoClef||(st.clef==='tb'?'g':st.clef==='b'?'b':'t'));const D=(SES.demo||[]).map(x=>typeof x==='number'?{d:x}:x);
+  const span=S.x1-S.x0-S.s*5,step=D.length?Math.min(S.s*3.4,span/(D.length+.5)):0;D.forEach((n,i)=>noteAt(S,n,S.x0+S.s*5.5+i*step,'#ffe08a',nameOf(n)));
+  if(!D.length&&SES.step===1&&SES.si===0){g.strokeStyle='#ffe08a';g.lineWidth=3;g.beginPath();g.arc(S.x0+S.s*1.3,S.yOf(4),S.s*1.1,0,TAU);g.stroke()}
+  return}
+ const q=SES.q;if(!q)return;const S=staffAt(B,st.clef==='tb'?'g':q.clef);
+ if(st.run){// the finish line, and the running note
+  const fx=S.x0+S.s*4.2;g.strokeStyle='rgba(255,192,106,.85)';g.lineWidth=3;g.setLineDash([6,6]);g.beginPath();if(S.clef==='g'){g.moveTo(fx,S.yOf(13));g.lineTo(fx,S.yOf(-13))}else{g.moveTo(fx,S.y0-S.s*6);g.lineTo(fx,S.y0+S.s*2.5)}g.stroke();g.setLineDash([]);
+  const u=q.done?q.u:clamp((T-q.t0)/q.dur,0,1),x=lerp(S.x1-S.s*1.2,fx,u);q.u=u;
+  noteAt(S,q,x,q.done?(q.ok?'#7fe08a':'#ffc06a'):CH,q.done?nameOf(q):'');
+  if(!q.done&&u>=1)timeout();
+  chalk(Math.max(11,s0*.4));g.globalAlpha=.6;g.fillText(`${(q.dur).toFixed(1)} s`,S.x1-S.s*1.2,B.y+B.h*.92);g.globalAlpha=1}
+ else{const x=S.x0+(S.x1-S.x0)*.55;noteAt(S,q,x,q.done?(q.ok?'#7fe08a':'#ffc06a'):CH,q.done?nameOf(q):'');
+  if(q.lim&&!q.done){const u=clamp((T-q.t0)/q.lim,0,1);g.fillStyle='rgba(255,192,106,.7)';g.fillRect(S.x0,B.y+B.h*.92,(S.x1-S.x0)*(1-u),5);if(u>=1)timeout()}}}
+function drawNadia(){const F=L.m,w=F.h*SW/SH,hop=bubTxt?Math.abs(Math.sin(T*4))*F.h*.015:0,by=F.y-hop+Math.sin(T*1.6)*F.h*.01;g.save();g.translate(F.x,by);g.fillStyle='rgba(40,20,8,.25)';g.beginPath();g.ellipse(0,F.h*.5,w*.34,F.h*.05,0,0,TAU);g.fill();
+ if(igOK)g.drawImage(nspr,-w/2,-F.h/2-F.h*PAD,w,F.h*(1+PAD));g.restore()}
+let ANT=null;
+function frame(ts){const t=ts/1000,dt=Math.min(.05,t-(frame.l||t));frame.l=t;T+=dt;g.setTransform(DPR,0,0,DPR,0,0);room();decor();board();if(igOK)paintNadia(T);drawNadia();
+ if(ANT){ANT.t+=dt;const F=L.m,u=clamp(ANT.t/.6,0,1),x=lerp(ANT.x,F.x+F.h*.32,u),y=lerp(ANT.y,F.y+F.h*.42,u)-Math.sin(u*Math.PI)*80;if(u<1)drawAnt(g,x,y,Math.max(.5,F.h/260),-.5+u,T,{});if(ANT.t>1)ANT=null}
+ requestAnimationFrame(frame)}
+
+/* ================= Nadia talks ================= */
+const bub=$('bubble');let bubTxt='';
+function say(html){bubTxt=html;bub.innerHTML=html?`<small style="display:block;font-size:.68em;opacity:.65">${TEACHER}</small>`+html:'';bub.style.opacity=html?1:0;placeBubble()}
+function placeBubble(){if(!bubTxt)return;const M=L.m;if(!M)return;const bw=bub.offsetWidth,bh=bub.offsetHeight,headY=M.y-M.h*.5-M.h*PAD*.55;
+ let x=L.land?M.x-bw*.25:M.x-M.h*.25,y=headY-bh-14;x=clamp(x,10,W-bw-10);
+ if(!L.land){y=clamp(y,L.b.y+L.b.h+8,Hh);if(y+bh>M.y-M.h*.15)y=Math.max(64,L.b.y+L.b.h-bh*.6)}else y=Math.max(64,y);
+ bub.style.transform=`translate(${x}px,${y}px)`;bub.style.setProperty('--tx',clamp(M.x-x,24,bw-24)+'px')}
+
+/* ================= answers: buttons or a keyboard ================= */
+const bar=$('bar');
+function setBar(html){bar.innerHTML=html;layout();placeBubble()}
+const WK='asdfghj',BKK={1:'w',3:'e',6:'t',8:'y',10:'u'};
+function keyboardHtml(){const whites=[0,2,4,5,7,9,11],blacks=[[1,0],[3,1],[6,3],[8,4],[10,5]];
+ return`<div class="kb">${whites.map((s,i)=>`<button class="wk" data-s="${s}" style="--i:${i}"><span>${NM[i]}</span>${touch?'':`<small>${WK[i].toUpperCase()}</small>`}</button>`).join('')}${blacks.map(([s,i])=>`<button class="bk" data-s="${s}" style="--i:${i}">${touch?'':`<small>${BKK[s].toUpperCase()}</small>`}</button>`).join('')}</div>`}
+function ansHtml(q){const st=ST[SES.si];if(st.keys)return keyboardHtml();
+ const o=q.opts,cols=o.length<=4?o.length:o.length<=5?5:(W<620?4:7);
+ return`<div class="ans" style="--n:${cols}">${o.map((x,j)=>`<button data-o="${j}"><span class="ic">${optName(x)}</span>${touch?'':`<small>${st.acc?(j+1):WK[x.pc].toUpperCase()}</small>`}</button>`).join('')}</div>`}
+function bindAns(){bar.querySelectorAll('[data-o]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();answer({o:+b.dataset.o},b)}));
+ bar.querySelectorAll('[data-s]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();answer({s:+b.dataset.s},b)}))}
+addEventListener('keydown',e=>{if(!SES||e.repeat)return;const k=e.key.toLowerCase();
+ if(SES.phase==='q'&&SES.q&&!SES.q.done){const st=ST[SES.si];
+  if(st.keys){const wi=WK.indexOf(k);let s=null;if(wi>=0)s=PCS[wi];else for(const[sx,kk]of Object.entries(BKK))if(kk===k)s=+sx;if(s!=null){e.preventDefault();answer({s},bar.querySelector(`[data-s="${s}"]`))}return}
+  if(st.acc){const n=+k;if(n>=1&&n<=SES.q.opts.length){answer({o:n-1},bar.querySelector(`[data-o="${n-1}"]`))}return}
+  const wi=WK.indexOf(k);if(wi>=0){const j=SES.q.opts.findIndex(o=>o.pc===wi);if(j>=0){e.preventDefault();answer({o:j},bar.querySelector(`[data-o="${j}"]`))}}return}
+ if(e.key==='Enter'){const b=$('next');if(b){e.preventDefault();b.click()}}});
+
+/* ================= flow ================= */
+function hdr(){if(!SES){$('st1').innerHTML=`${tt('stages','tappe')} <b>${PR.done}/${NS}</b>`;$('dots').innerHTML='';return}
+ const n=NQ(SES.si);$('st1').innerHTML=`${tt('stage','tappa')} <b>${SES.si+1}</b>`+(SES.phase==='lesson'?'':` · <b>${Math.min(SES.i+1,n)}/${n}</b>`);
+ $('dots').innerHTML=SES.phase==='lesson'||(n>10&&W<620)?'':Array.from({length:n},(_,k)=>`<i class="${SES.res[k]===1?'ok':SES.res[k]===0?'no':k===SES.i?'now':''}"></i>`).join('')}
+$('stat').onclick=()=>{if(SES&&SES.phase!=='end')openMap()};
+function openMap(){SES=null;say('');setBar('');hdr();const cur=Math.min(PR.done,NS-1),fin=PR.done>=NS;
+ const chips=ST.map((s,k)=>`<button data-st="${k}" class="${k<PR.done?'done':k===cur&&!fin?'cur':''}" ${k>PR.done&&!OPEN?'disabled':''}><span class="ic">${k>PR.done&&!OPEN?'🔒':s.ic}</span>${T2(s.n)}<small>${k<PR.done?'✓ '+tt('done','fatta'):k===cur&&!fin?tt('next','prossima'):tt('stage','tappa')+' '+(k+1)}</small></button>`).join('');
+ $('startCard').innerHTML=`<h2>${tt('Reading <em>music</em>','Leggere le <em>note</em>')}</h2>
+ <p>${tt(`<b>${TEACHER}</b> teaches you to read the notes on the staff, from zero: first a few notes, then the whole treble clef, the bass clef, sharps and flats, and finally notes that run faster and faster. Every stage you pass opens the next one.`,`<b>${TEACHER}</b> ti insegna a leggere le note sul pentagramma, da zero: prima poche note, poi tutta la chiave di violino, la chiave di basso, diesis e bemolle, e alla fine note che corrono sempre più veloci. Ogni tappa superata apre la successiva.`)}</p>
+ ${touch?'':`<p>${tt('Keys: <b>A S D F G H J</b> = C D E F G A B (like the white keys of a piano).','Tasti: <b>A S D F G H J</b> = Do Re Mi Fa Sol La Si (come i tasti bianchi di un pianoforte).')}</p>`}
+ <div class="map">${chips}</div>
+ <p class="small">${tt('10 notes per stage, 8 right to pass · running notes: 20, 16 right to pass · the more you play a stage, the harder it gets','10 note per tappa, 8 giuste per passare · note che corrono: 20, 16 giuste per passare · più rigiochi una tappa, più diventa difficile')}</p>
+ <div class="row"><button class="main" id="go">${fin?tt('Run the big race again','Rifai la grande corsa'):PR.done?tt('Continue · stage ','Continua · tappa ')+(cur+1):tt('Start the first lesson','Inizia la prima lezione')}</button></div>
+ <p class="small"><a href="${document.querySelector('a.igback').href}">${tt('← back to the island','← torna all’isola')}</a></p>`;
+ $('start').hidden=false;$('end').hidden=true;
+ $('go').onclick=()=>begin(fin?NS-1:cur);document.querySelectorAll('.map button[data-st]').forEach(b=>b.onclick=()=>begin(+b.dataset.st))}
+function begin(si){audio();if(AC.state==='suspended')AC.resume();if(!PR.met){PR.met=1;saveP()}$('start').hidden=true;$('end').hidden=true;
+ SES={si,i:0,right:0,res:[],q:null,phase:'lesson',step:0,demo:null,speed:1};if(PR.plays[si])lessonShort();else lesson(0)}
+function lesson(k){const ls=ST[SES.si].les,s=ls[k];SES.phase='lesson';SES.step=k;SES.demo=s[1];SES.demoClef=null;hdr();say(T2(s[0]));const last=k===ls.length-1;
+ setBar(`<div class="row">${s[1].length?`<button class="ex" id="hear">▶ ${tt('Hear them','Ascoltale')}</button>`:''}${k?`<button id="back">‹</button>`:''}<button class="main" id="next">${last?tt('Let’s start! ▸','Iniziamo! ▸'):tt('Next ▸','Avanti ▸')}</button></div>`);
+ const hear=()=>s[1].forEach((x,i)=>tone(midiOf(typeof x==='number'?{d:x}:x),i*.42,.9));const h=$('hear');if(h){h.onclick=hear;setTimeout(()=>{if(SES&&SES.phase==='lesson'&&SES.step===k)hear()},500)}
+ $('next').onclick=()=>last?question():lesson(k+1);const bk=$('back');if(bk)bk.onclick=()=>lesson(k-1)}
+function lessonShort(){SES.phase='lesson';hdr();SES.demo=[];const st=ST[SES.si];
+ say(st.run?tt('Welcome back! This time the notes run a little faster. Allez!','Bentornato! Stavolta le note corrono un po’ più veloci. Allez!'):tt('Welcome back! This time you have a little less time for each note.','Bentornato! Stavolta hai un po’ meno tempo per ogni nota.'));
+ setBar(`<div class="row"><button id="les">${tt('The whole lesson','Tutta la lezione')}</button><button class="main" id="next">${tt('Let’s start! ▸','Iniziamo! ▸')}</button></div>`);
+ $('next').onclick=question;$('les').onclick=()=>lesson(0)}
+/* how long a note has: running notes start slow and get faster (and faster every time you play the stage again) */
+function runDur(si){const st=ST[si],g_=giro(si),base=st.run*Math.pow(.84,g_);return Math.max(.55,base*Math.pow(.97,SES.right))}
+function limitOf(si){const g_=giro(si);return g_>=2?4:g_>=1?6:0}
+const PRAISE=[['Très bien!','Très bien!'],['Parfait!','Parfait!'],['Bravo!','Bravo!'],['Exactly!','Esatto!'],['Magnifique!','Magnifique!']];
+const SOFT=[['Almost!','Quasi!'],['Nearly!','Ci sei quasi!'],['Good try!','Bel tentativo!']];
+function question(){const st=ST[SES.si],q=gen(SES.si);SES.q=q;SES.phase='q';hdr();q.t0=T;q.done=false;
+ if(st.run)q.dur=runDur(SES.si);else q.lim=limitOf(SES.si);
+ if(SES.i===0)say(st.run?tt('Here they come…','Eccole che arrivano…'):tt('Which note is it?','Che nota è?'));
+ setBar(ansHtml(q));bindAns()}
+function answer(a,btn){const q=SES.q;if(!q||q.done)return;const st=ST[SES.si];let ok;
+ if(a.s!=null)ok=a.s===(midiOf(q)%12+12)%12;else{const o=q.opts[a.o];ok=o.pc===pcOf(q.d)&&(o.acc||0)===(q.acc||0)}
+ fin(ok,btn)}
+function timeout(){const q=SES&&SES.q;if(!q||q.done)return;fin(false,null,true)}
+function fin(ok,btn,late){const q=SES.q,st=ST[SES.si];q.done=true;q.ok=ok;SES.res[SES.i]=ok?1:0;if(ok)SES.right++;tone(midiOf(q),0,.9);if(!ok)ding(false);hdr();
+ if(btn)btn.classList.add(ok?'right':'wrong');if(!ok){const rb=st.keys?bar.querySelector(`[data-s="${(midiOf(q)%12+12)%12}"]`):bar.querySelector(`[data-o="${q.opts.findIndex(o=>o.pc===pcOf(q.d)&&(o.acc||0)===(q.acc||0))}"]`);if(rb)rb.classList.add('right')}
+ if(ok){if(!st.run||SES.right%4===0){const B=L.b;ANT={x:B.x+B.w*.5,y:B.y+B.h*.5,t:0}}if(!st.run||SES.right%5===0)say(T2(pick(PRAISE))+(st.run?'':' '+tt(`It’s <b>${nameOf(q)}</b>.`,`È il <b>${nameOf(q)}</b>.`)))}
+ else say(late?tt(`Too quick? It was <b>${nameOf(q)}</b>. Next one!`,`Troppo veloce? Era il <b>${nameOf(q)}</b>. La prossima!`):T2(pick(SOFT))+' '+tt(`It was <b>${nameOf(q)}</b>.`,`Era il <b>${nameOf(q)}</b>.`));
+ clearTimeout(SES.auto);SES.auto=setTimeout(()=>{if(!SES||SES.q!==q)return;SES.i++;if(SES.i>=NQ(SES.si))finish();else question()},st.run?(ok?260:900):(ok?1100:1900))}
+function finish(){SES.phase='end';hdr();say('');setBar('');const si=SES.si,r=SES.right,n=NQ(si),pass=r>=PASS(si),isNew=pass&&si===PR.done&&PR.done<NS;
+ PR.plays[si]=(PR.plays[si]|0)+1;if(!(PR.best[si]>=r))PR.best[si]=r;if(isNew)PR.done++;saveP();
+ const seeds=Math.min(8,Math.ceil(r/n*5)+(isNew?3:0));let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
+ p.seeds=(p.seeds|0)+seeds;p.scores=p.scores||{};p.scores.notes=p.scores.notes||{};if(!(p.scores.notes.all>=PR.done))p.scores.notes.all=PR.done;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}
+ const fn=PR.done>=NS,nm=AVN[ME.avatar]||'Igor';
+ const msg=pass?(isNew?(fn?tt('You finished every stage: you can read music! Play again: the notes get faster.','Hai finito tutte le tappe: sai leggere la musica! Rigioca: le note diventano più veloci.'):tt('Stage passed! Très bien!','Tappa superata! Très bien!')):tt('Passed again: next time it will be a little harder!','Superata di nuovo: la prossima volta sarà un po’ più difficile!')):
+  tt(`Good work! You need ${PASS(si)}: one more go and it is yours.`,`Bel lavoro! Ne servono ${PASS(si)}: un altro giro ed è tua.`);
+ $('endCard').innerHTML=`<p class="small">${tt('Stage','Tappa')} ${si+1} · ${T2(ST[si].n)}</p><div class="big">${r}/${n}</div><p>${msg}</p>
+ ${isNew&&!fn?`<p id="endnew">${tt('New stage open:','Nuova tappa aperta:')} ${ST[PR.done].ic} ${T2(ST[PR.done].n)}</p>`:''}
+ <p style="color:var(--warm)">${seeds?tt(`+${seeds} tofu seed${seeds>1?'s':''} for ${nm}’s field. Collect them back on the island.`,`+${seeds} sem${seeds>1?'i':'e'} di tofu per il campo di ${nm}. Li ritrovi sull’isola.`):''}</p>
+ <div class="row">${isNew&&!fn?`<button class="main" id="nx">${tt('Next stage ▸','Prossima tappa ▸')}</button>`:''}<button ${isNew&&!fn?'':'class="main"'} id="again">${tt('Play this stage again','Rigioca questa tappa')}</button><button id="map">${tt('All the stages','Tutte le tappe')}</button></div>
+ <p class="small"><a href="${document.querySelector('a.igback').href}">${tt('← back to the island','← torna all’isola')}</a></p>`;
+ $('end').hidden=false;if($('nx'))$('nx').onclick=()=>begin(PR.done);$('again').onclick=()=>begin(si);$('map').onclick=openMap;
+ if(PR.done>0)import('/board.js?v=5').then(B=>B.show($('endCard'),'notes','all',PR.done,ME.avatar,tt('How far everyone got · stages','Fin dove siete arrivati · tappe'))).catch(()=>{})}
+
+resize();openMap();requestAnimationFrame(frame);
+window.__nt={PR,ST,get SES(){return SES},begin,question,answer:(a)=>answer(a,null),fin};
+})();
+</script>
+</body></html>
