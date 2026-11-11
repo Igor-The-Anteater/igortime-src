@@ -24,7 +24,7 @@ async function firestoreBackend(){
   async suspended(){try{return(await getDoc(D('susp',U.uid))).exists()}catch(e){return false}},
   async join(req,av){await setDoc(D('profiles',U.uid),{nick:U.nick,av,seen:serverTimestamp(),req,age14:serverTimestamp()});
    const b=writeBatch(db);if(req==='all')b.set(D('dir',U.uid),{nick:U.nick,nickL:U.nick.toLowerCase(),av});await b.commit();await this.myCode()},
-  async syncMe(p,av){const ch=p.nick!==U.nick||JSON.stringify(p.av)!==JSON.stringify(av);if(!ch)return;
+  async syncMe(p,av){if(!U||!U.nick)return;const ch=p.nick!==U.nick||JSON.stringify(p.av)!==JSON.stringify(av);if(!ch)return;
    await updateDoc(D('profiles',U.uid),{nick:U.nick,av});if(p.req==='all')await setDoc(D('dir',U.uid),{nick:U.nick,nickL:U.nick.toLowerCase(),av})},
   async setReq(req,av){await updateDoc(D('profiles',U.uid),{req});if(req==='all')await setDoc(D('dir',U.uid),{nick:U.nick,nickL:U.nick.toLowerCase(),av});else await deleteDoc(D('dir',U.uid))},
   ping(){return updateDoc(D('profiles',U.uid),{seen:serverTimestamp()})},
@@ -284,7 +284,7 @@ async function start(){if(started)return;started=true;
  B=window.IgorChatFake?window.IgorChatFake:await firestoreBackend();
  B.onAuth(async u=>{subs.splice(0).forEach(f=>{try{f()}catch(e){}});clearInterval(pingT);ME=u;PROF=null;FR=[];RIN=[];ROUT=[];BL=[];REP=[];PCACHE={};chatWith=null;
   NETERR=false;if(u){if(!u.nick&&window.IgorCloud&&window.IgorCloud.user&&window.IgorCloud.user.nick)u.nick=window.IgorCloud.user.nick.slice(0,16);try{PROF=await B.profile()}catch(e){PROF=null;NETERR=true}if(PROF){SUSP=await B.suspended();live()}}
-  if(!window.IgorChatFake&&(u||staffOn)){staffOn=true;import('/staff.js?v=12').then(M=>M.init(u?{uid:u.uid,nick:u.nick,admin:!!u.admin}:null)).catch(e=>console.warn('staff',e))}
+  if(!window.IgorChatFake&&(u||staffOn)){staffOn=true;import('/staff.js?v=13').then(M=>M.init(u?{uid:u.uid,nick:u.nick,admin:!!u.admin}:null)).catch(e=>console.warn('staff',e))}
   badge();if(!panel.hidden)render()})}
 function live(){const av=myAv();B.syncMe(PROF,av).catch(e=>console.warn('sync',e));PROF.av=av;PROF.nick=ME.nick;
  const ping=()=>{if(document.visibilityState==='visible')B.ping().catch(()=>{})};ping();pingT=setInterval(ping,60000);
