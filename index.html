@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=14"></script>
+<script src="/sound.js?v=15"></script>
 <script src="/intervals/wig.js?v=2"></script>
 <meta name="description" content="Igor's island: his house with the games, the tofu ant farm with the Igorlets, the old music school.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1334,13 +1334,22 @@ addEventListener('pageshow',e=>{if(e.persisted){diving=0;igor.position.y=0;igor.
 /* the jetty became the leaderboards notice board (see later) */
 /* vegetation, kept away from the places */
 const free=(x,z)=>Math.hypot(x-POOL.x,z-POOL.z)<4||segD(x,z,0,3,POOL.x,POOL.z+2)<1.3||Math.hypot(x,z+7)<5.3||(Math.abs(x-FIELD.x)<7&&z>FIELD.z-4.5&&z<FIELD.z+9)||Math.hypot(x+10,z+9.5)<4.2||Math.hypot(x+11,z-5.5)<3.5||Math.hypot(x,z)<4.2||segD(x,z,0,-4.2,0,8)<1.4||segD(x,z,0,-4.2,8,-0.5)<1.3||segD(x,z,0,-4.2,-9,-7.5)<1.4||segD(x,z,0,3,-10.5,5)<1.3;
-let placed=0,tries=0;while(placed<38&&tries<4000){tries++;const a=rnd()*TAU,r=5+rnd()*(R-6),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z)||blocked.some(b=>Math.hypot(b.x-x,b.z-z)<2.4))continue;(rnd()<.4?pine:roundTree)(x,z,.8+rnd()*.5);placed++}
+const NB0=blocked.length;let placed=0,tries=0;while(placed<38&&tries<4000){tries++;const a=rnd()*TAU,r=5+rnd()*(R-6),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z)||blocked.some(b=>Math.hypot(b.x-x,b.z-z)<2.4))continue;(rnd()<.4?pine:roundTree)(x,z,.8+rnd()*.5);placed++}
 for(let i=0;i<14;i++){const a=rnd()*TAU,r=4+rnd()*(R-4),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z)||blocked.some(b=>Math.hypot(b.x-x,b.z-z)<1.5))continue;rock(x,z,.6+rnd()*.8)}
 for(let i=0;i<90;i++){const a=rnd()*TAU,r=2+rnd()*(R-2.5),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z))continue;grass(x,z)}
 // keep the building spots of the farm free of trees and rocks
 for(const sp of CLEAR_SPOTS){for(const tr of trees)if(tr.t.parent&&Math.hypot(tr.t.position.x-sp.x,tr.t.position.z-sp.z)<sp.r+.8){scene.remove(tr.t);for(const b of blocked)if(b.x===tr.t.position.x&&b.z===tr.t.position.z)b.r=0}
  for(const r of rocks)if(r.parent&&Math.hypot(r.position.x-sp.x,r.position.z-sp.z)<sp.r+.4){scene.remove(r);for(const b of blocked)if(b.x===r.position.x&&b.z===r.position.z)b.r=0}}
 applyCuts();
+/* 11 Nov 2026: fewer trees, more room to walk: about a third of the trees on the main island go, the most crowded first.
+   Worked out from the starting positions only, so it is the same on every device; a tree you moved with the nursery stays. */
+const THIN=(()=>{const L=[];trees.forEach((tr,j)=>{if(tr.t.parent)L.push({j,x:tr.t.position.x,z:tr.t.position.z})});const st=blocked.slice(0,NB0).filter(b=>b.r>0);
+ const sc=a=>{let v=0;for(const b of L)if(b!==a){const d=Math.hypot(b.x-a.x,b.z-a.z);if(d<4.6)v+=4.6-d}for(const b of st){const d=Math.hypot(b.x-a.x,b.z-a.z)-b.r;if(d<3.4)v+=(3.4-Math.max(0,d))*.8}return v};
+ const out=new Set(),n=Math.round(L.length*.32);for(let k=0;k<n;k++){let bi=-1,bv=-1;L.forEach((a,i)=>{const v=sc(a)+a.j*1e-6;if(v>bv){bv=v;bi=i}});out.add(L[bi].j);L.splice(bi,1)}return out})();
+function applyThin(){const tm=(S.farm&&S.farm.tmv)||{};trees.forEach((tr,j)=>{if(!THIN.has(j))return;const o=tr.t;
+ if(tm[j]){if(!o.parent&&tr.thin){tr.thin.par.add(o);for(const[b,r]of tr.thin.b)b.r=r;tr.thin=null}return}
+ if(o.parent&&!tr.thin){const b=blocked.filter(q=>q.x===o.position.x&&q.z===o.position.z&&q.r>0).map(q=>[q,q.r]);tr.thin={par:o.parent,b};for(const[q]of b)q.r=0;o.parent.remove(o)}})}
+applyThin();
 
 /* a few wild tofu ants wander about: Igor eats them when he passes */
 const wild=[];function wildSpot(){for(let k=0;k<50;k++){const a=Math.random()*TAU,r=3+Math.random()*12,x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.4)&&!(Math.abs(x-FIELD.x)<5&&Math.abs(z-FIELD.z)<3.2)&&Math.hypot(x-POOL.x,z-POOL.z)>2.6)return new V3(x,0,z)}return new V3(2,0,2)}
@@ -1371,10 +1380,11 @@ function jump(){if(diving||IG.jy>.05||!started)return;IG.jv=5.6;IG.jy=.001;snd('
 let where='out';window.__where=()=>where;const ROOMS={};
 /* Igor finds his way (A* on a grid over walkable): used when the straight line to where he's going is blocked */
 function lineOk(ax,az,bx,bz){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.2);for(let i=1;i<=n;i++){const u=i/n;if(!walkable(ax+(bx-ax)*u,az+(bz-az)*u))return false}return true}
-function findPath(from,to){const g=where==='out'?.45:.3,pad=where==='out'?7:2;
+function findPath(from,to,loose){if(!loose){const P0=findPath0(from,to,false);return P0||findPath0(from,to,true)}return findPath0(from,to,true)}
+function findPath0(from,to,loose){const g=where==='out'?.45:.3,pad=where==='out'?7:2;
  const x0=Math.min(from.x,to.x)-pad,z0=Math.min(from.z,to.z)-pad,W=Math.ceil((Math.abs(from.x-to.x)+2*pad)/g)+1,H=Math.ceil((Math.abs(from.z-to.z)+2*pad)/g)+1;if(W*H>60000)return null;
  const id=(i,j)=>j*W+i,cx=i=>x0+i*g,cz=j=>z0+j*g,ok=new Int8Array(W*H),G=new Float32Array(W*H).fill(1e9),P=new Int32Array(W*H).fill(-1),done=new Uint8Array(W*H);
- const m=.18,ok1=(i,j)=>{const k=id(i,j);if(!ok[k]){const x=cx(i),z=cz(j);ok[k]=walkable(x,z)&&walkable(x+m,z)&&walkable(x-m,z)&&walkable(x,z+m)&&walkable(x,z-m)?1:2}return ok[k]===1}; // a little margin, so Igor never brushes the edges
+ const m=loose?0:.18,ok1=(i,j)=>{const k=id(i,j);if(!ok[k]){const x=cx(i),z=cz(j);ok[k]=(loose&&Math.hypot(x-from.x,z-from.z)<.75&&edgeOk(x,z))||walkable(x,z)&&walkable(x+m,z)&&walkable(x-m,z)&&walkable(x,z+m)&&walkable(x,z-m)?1:2}return ok[k]===1}; // a little margin, so Igor never brushes the edges
  const si=Math.round((from.x-x0)/g),sj=Math.round((from.z-z0)/g),ti=Math.round((to.x-x0)/g),tj=Math.round((to.z-z0)/g);
  // the goal may be inside something (a door, a building): aim for the nearest free cell
  let gi=ti,gj=tj;if(!ok1(gi,gj)){let best=1e9;for(let r=1;r<8&&best===1e9;r++)for(let a=-r;a<=r;a++)for(const[i,j]of[[ti+a,tj-r],[ti+a,tj+r],[ti-r,tj+a],[ti+r,tj+a]]){if(i<0||j<0||i>=W||j>=H)continue;if(ok1(i,j)){const d=Math.hypot(i-ti,j-tj);if(d<best){best=d;gi=i;gj=j}}}if(best===1e9)return null}
@@ -1423,9 +1433,9 @@ function igorUpdate(t,dt){blink(t);let moving=false;
   if(Math.abs(ix)>.2)IG.face=ix>0?1:-1;moving=true;IG.walk+=dt*10*k;hideHint();poke()}
  else if(IG.target){const DS=where==='out'?isleVia(IG.target):IG.target;if(IG.pathFor!==DS){IG.pathFor=DS;IG.path=lineOk(igor.position.x,igor.position.z,DS.x,DS.z)?null:findPath(igor.position,DS);if(IG.path&&IG.path.length)IG.path[IG.path.length-1]=DS}
   const TG=IG.path&&IG.path.length?IG.path[0]:DS;if(TG!==IG.target&&IG.tgw!==TG){IG.tgw=TG;IG.best=1e9;IG.bestT=T}const v=TG.clone().sub(igor.position);v.y=0;const L=v.length();
-  if(L<.15&&TG!==IG.target){if(IG.path&&IG.path[0]===TG){IG.path.shift();if(!IG.path.length)IG.path=null}IG.best=1e9;IG.bestT=T}else if(L<.15){IG.target=null;IG.path=null;IG.pathFor=null;if(IG.arrive){const f=IG.arrive;IG.arrive=null;f()}}
+  if(L<(T-IG.bestT>.6?.45:.15)&&TG!==IG.target){if(IG.path&&IG.path[0]===TG){IG.path.shift();if(!IG.path.length)IG.path=null}IG.best=1e9;IG.bestT=T}else if(L<.15){IG.target=null;IG.path=null;IG.pathFor=null;if(IG.arrive){const f=IG.arrive;IG.arrive=null;f()}}
   else{v.divideScalar(L);const sp=Math.min(L,4.2*rideSp()*dt);const nx=igor.position.x+v.x*sp,nz=igor.position.z+v.z*sp;
-   if(IG.tgRef!==IG.target){IG.tgRef=IG.target;IG.best=L;IG.bestT=T;IG.side=0}if(L<IG.best-.25){IG.best=L;IG.bestT=T}let moved=false;if(walkable(nx,nz)){igor.position.x=nx;igor.position.z=nz;moved=true}else{const sd=IG.side||(Math.random()<.5?1:-1);for(const a of[.5,1,1.5,2,2.5]){for(const s0 of[sd,-sd]){const aa=a*s0,c=Math.cos(aa),s1=Math.sin(aa),dx=v.x*c-v.z*s1,dz=v.x*s1+v.z*c,x=igor.position.x+dx*sp,z=igor.position.z+dz*sp;if(walkable(x,z)){igor.position.x=x;igor.position.z=z;IG.side=s0;moved=true;break}}if(moved)break}}if(!moved||T-IG.bestT>5){const Lf=Math.hypot(IG.target.x-igor.position.x,IG.target.z-igor.position.z),f=Lf<1.6?IG.arrive:null;IG.target=null;IG.arrive=null;IG.side=0;IG.path=null;IG.pathFor=null;if(f)f()}
+   if(IG.tgRef!==IG.target){IG.tgRef=IG.target;IG.best=L;IG.bestT=T;IG.side=0}if(L<IG.best-.25){IG.best=L;IG.bestT=T}let moved=false;if(T-IG.bestT>1&&L>.15){const k=sp*.6,x=igor.position.x+v.x*k,z=igor.position.z+v.z*k;if(edgeOk(x,z)){igor.position.x=x;igor.position.z=z;moved=true;if(L<IG.best-.1){IG.best=L;IG.bestT=T-.9}}}if(moved){}else if(walkable(nx,nz)){igor.position.x=nx;igor.position.z=nz;moved=true}else{const sd=IG.side||(((TG.x-igor.position.x)*1.7+(TG.z-igor.position.z))>0?1:-1);for(const a of[.5,1,1.5,2,2.5]){for(const s0 of[sd,-sd]){const aa=a*s0,c=Math.cos(aa),s1=Math.sin(aa),dx=v.x*c-v.z*s1,dz=v.x*s1+v.z*c,x=igor.position.x+dx*sp,z=igor.position.z+dz*sp;if(walkable(x,z)){igor.position.x=x;igor.position.z=z;IG.side=s0;moved=true;break}}if(moved)break}}if(!moved||T-IG.bestT>5){const Lf=Math.hypot(IG.target.x-igor.position.x,IG.target.z-igor.position.z),f=Lf<1.6?IG.arrive:null;IG.target=null;IG.arrive=null;IG.side=0;IG.path=null;IG.pathFor=null;if(f)f()}
    const camRight=new V3().setFromMatrixColumn(camera.matrixWorld,0);const d=v.dot(camRight);if(Math.abs(d)>.25)IG.face=d>0?1:-1;moving=true;IG.walk+=dt*10}}
  else if(started&&!reduce&&where==='out'&&T-lastAct>8){IG.idle-=dt;if(IG.idle<=0&&sheet.hidden){IG.idle=6+Math.random()*7;IG.manual=false;for(let k=0;k<12;k++){const a=Math.random()*TAU,r=1+Math.random()*2.2,x=igor.position.x+Math.cos(a)*r,z=igor.position.z+Math.sin(a)*r;if(walkable(x,z)&&Math.hypot(x,z+3)<6){IG.target=new V3(x,0,z);IG.arrive=null;break}}}}
  igPlane.position.y=.02+(moving?Math.abs(Math.sin(IG.walk))*.16:Math.sin(t*2)*.03);
@@ -2787,7 +2797,7 @@ function mushroom(G,x,z,s,glow){const m=new THREE.Group(),st=new THREE.Mesh(new 
  const cap=new THREE.Mesh(new THREE.SphereGeometry(.95,18,10,0,TAU,0,Math.PI/2),glow?glowM('#5fb7e6',.35):lam(pick(['#d8443a','#c9542f','#b8383a'])));cap.scale.set(1,.55,1);cap.position.y=1.38;m.add(cap);
  for(let k=0;k<7;k++){const d=new THREE.Mesh(new THREE.SphereGeometry(.09,6,5),lam(glow?'#e9f8ff':'#fff6e6'));const a=k/7*TAU+rnd(),r=.35+rnd()*.45;d.position.set(Math.cos(a)*r,1.38+Math.sqrt(Math.max(0,1-r*r))*.5,Math.sin(a)*r);m.add(d)}
  blob(m,.9);m.scale.setScalar(s);m.position.set(x,0,z);G.add(m);block(x,z,.3*s)}
-function isleForest(I,G){for(const[x,z,s,gl]of[[-4.2,-33,1.5],[3.6,-34.2,1.25],[5.5,-29.5,1.05,1],[-5.6,-28.6,.95],[1.2,-36,1.1,1],[-2.2,-30.8,.7],[4.6,-32,.6],[-6.6,-31.8,.8,1]])mushroom(G,x,z,s,gl);
+function isleForest(I,G){for(const[x,z,s,gl]of[[-4.2,-33,1.5],[3.6,-34.2,1.25],[5.5,-29.5,1.05,1],[1.2,-36,1.1,1],[-2.2,-30.8,.7],[-6.6,-31.8,.8,1]])mushroom(G,x,z,s,gl);
  for(let k=0;k<14;k++){const sm=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),lam(pick(['#c94a7a','#e9d24a','#7a5ad8'])));const a=rnd()*TAU,r=.2+rnd()*.7;sm.position.set(I.cx+Math.cos(a)*r*I.rx,.08,I.cz+Math.sin(a)*r*I.rz);sm.scale.set(1,.6,1);G.add(sm)}
  // a snail on a mushroom stem
  const sn=new THREE.Group(),shl=new THREE.Mesh(new THREE.TorusGeometry(.09,.05,8,14),lam('#c99a6a'));shl.position.y=.12;sn.add(shl);const bd=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.2,6),lam('#d9c9a0'));bd.rotation.z=Math.PI/2;bd.position.set(.02,.05,0);sn.add(bd);sn.position.set(-1.6,0,-30.4);G.add(sn);animAdd('snail',sn);I.snail=sn;
@@ -2809,7 +2819,7 @@ function mkPeng(emp){const g=new THREE.Group(),blk=lam('#1f2328'),wh=lam('#f7f7f
   const wg=new THREE.Mesh(new THREE.SphereGeometry(.1,8,6),blk);wg.scale.set(.35,1.3*h,.8);wg.position.set(s*.22,.32*h,0);g.add(wg)}
  if(emp){for(const s of[-1,1]){const y=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),lam('#f2c230'));y.position.set(s*.11,.62*h,.07);g.add(y)}}
  g.userData.sp=emp?'emperor':'penguin';return g}
-function isleIce(I,G){for(const[x,z,s]of[[32.5,24.5,1],[21.5,24.8,.85],[33.8,17.8,.9],[29.5,26.3,.75]])snowPine(G,x,z,s);
+function isleIce(I,G){for(const[x,z,s]of[[32.5,24.5,1],[21.5,24.8,.85],[33.8,17.8,.9]])snowPine(G,x,z,s);
  const ig=new THREE.Group(),dome=new THREE.Mesh(new THREE.SphereGeometry(1.3,20,12,0,TAU,0,Math.PI/2),lam('#f4f9fd'));ig.add(dome);const tn=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,1,14,1,false,0,Math.PI),lam('#eaf2f8'));tn.rotation.z=Math.PI/2;tn.rotation.y=Math.PI/2;tn.position.set(0,.02,1.15);ig.add(tn);
  const dr=new THREE.Mesh(new THREE.CircleGeometry(.42,14,0,Math.PI),lam('#2b3a46'));dr.position.set(0,.02,1.66);ig.add(dr);for(let k=0;k<3;k++){const rg=new THREE.Mesh(new THREE.TorusGeometry(1.3*Math.cos(k*.45+.2),.02,4,30),lam('#cfdde8'));rg.rotation.x=Math.PI/2;rg.position.y=1.3*Math.sin(k*.45+.2);ig.add(rg)}
  ig.position.set(31,0,19.5);ig.rotation.y=-.9;blob(ig,1.5);G.add(ig);block(31,19.5,1.4);I.igloo=ig;
@@ -2963,7 +2973,7 @@ function mkFrog(sp){const g=new THREE.Group(),gr=lam(sp==='toad'?'#8a6a3e':sp===
  const th=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),lam('#f2e9a8'));th.scale.set(1,.7,1);th.position.set(0,.13,.15);th.visible=false;g.add(th);g.userData.throat=th;return g}
 for(const I of ISLES){const G=new THREE.Group();G.visible=false;scene.add(G);I.G=G;I.ground=isleMesh(I);G.add(I.ground);
  const s0=seed;seed=I.kind==='sand'?4242:777;
- if(I.kind==='sand'){for(const[x,z,s]of[[31.5,-23.5,1.05],[24.5,-24.2,.95],[33.5,-18.2,.9],[29.8,-15.4,.85],[21.8,-21.8,.8]])palm(G,x,z,s);
+ if(I.kind==='sand'){for(const[x,z,s]of[[31.5,-23.5,1.05],[24.5,-24.2,.95],[29.8,-15.4,.85]])palm(G,x,z,s);
   for(const[x,z,s]of[[26.2,-25.6,.9],[34.4,-21.4,.7],[20.6,-19.6,.6]]){rock(x,z,s);const r0=rocks[rocks.length-1];scene.remove(r0);G.add(r0)}
   for(let k=0;k<9;k++){const sh=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6,0,TAU,0,Math.PI/2),lam(pick(['#f7e1d0','#f2c6c0','#fff4e0','#e8d3a8'])));const a=rnd()*TAU,r=.3+rnd()*.5;sh.position.set(I.cx+Math.cos(a)*r*I.rx,.03,I.cz+Math.sin(a)*r*I.rz);sh.scale.set(1.3,.6,1);G.add(sh)}
   I.crabs=[];for(let k=0;k<5;k++){const c=mkCrab(k===4&&Math.random()<.4),P=new V3(I.cx+(rnd()-.5)*8,0,I.cz+(rnd()-.5)*6);c.position.copy(P);G.add(c);I.crabs.push({g:c,goal:P.clone(),wait:rnd()*3,chase:null})}isleSand2(I,G)}
@@ -2972,7 +2982,7 @@ for(const I of ISLES){const G=new THREE.Group();G.visible=false;scene.add(G);I.G
   I.pads=[];for(let k=0;k<11;k++){const a=rnd()*TAU,r=.15+rnd()*.6,x=I.cx+Math.cos(a)*r*I.rx,z=I.cz+Math.sin(a)*r*I.rz,pd=new THREE.Mesh(new THREE.CircleGeometry(.32+rnd()*.15,14,.3,TAU-.6).rotateX(-Math.PI/2),lam('#4f9a3e',{side:THREE.DoubleSide}));pd.position.set(x,.075,z);pd.rotation.y=rnd()*TAU;G.add(pd);I.pads.push(pd);
    if(k%4===1){const fl=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),lam(k%8===1?'#ffb6d0':'#ffffff'));fl.scale.set(1,.6,1);fl.position.set(x+.08,.12,z);G.add(fl)}}
   for(let k=0;k<26;k++){const a=k/26*TAU+rnd()*.15,r=.8+rnd()*.12,x=I.cx+Math.cos(a)*r*I.rx,z=I.cz+Math.sin(a)*r*I.rz;if(isleN1(I,x,z)<1.6)continue;for(let j=0;j<3;j++){const h=.5+rnd()*.5,rd=new THREE.Mesh(new THREE.CylinderGeometry(.015,.02,h,4),lam(j?'#6f8f3a':'#7da046'));rd.position.set(x+(rnd()-.5)*.3,h/2,z+(rnd()-.5)*.3);rd.rotation.z=(rnd()-.5)*.3;G.add(rd);if(j===0&&rnd()<.5){const tp=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.18,6),lam('#6b4a2e'));tp.position.set(rd.position.x,h+.02,rd.position.z);G.add(tp)}}}
-  for(const[x,z,s]of[[-33.5,-23.8,.9],[-20.8,-23.6,.85],[-34.2,-16.6,.8]]){pine(x,z,s);const T0=trees[trees.length-1].t;scene.remove(T0);G.add(T0)}
+  for(const[x,z,s]of[[-33.5,-23.8,.9],[-20.8,-23.6,.85]]){pine(x,z,s);const T0=trees[trees.length-1].t;scene.remove(T0);G.add(T0)}
   I.frogs=[];for(let k=0;k<4;k++){const sp=k===2?'toad':k===3&&Math.random()<.25?'gfrog':'frog',f=mkFrog(sp),pd=I.pads[k*2];f.userData.sp=sp;f.position.set(pd.position.x,.08,pd.position.z);f.rotation.y=rnd()*TAU;G.add(f);I.frogs.push({g:f,pad:k*2,hop:null,next:2+rnd()*6,croak:3+rnd()*8})}}
  if(I.kind==='forest')isleForest(I,G);if(I.kind==='ice')isleIce(I,G);
  seed=s0}
@@ -4307,7 +4317,7 @@ function moveRockTo(j,x,z){const r=rocks[j];if(!r||!r.parent)return;mvShift(r,x,
 function insMoveTo(k,x,z){const o=insO[k];if(!o)return;o.g.position.set(x,0,z);o.g.rotation.y=Math.atan2(-x,-z);o.L.pos.set(x,o.ly,z);o.fx[0]=x;o.fx[1]=z;o.bk.x=x;o.bk.z=z}
 // saved moves (S.farm.tmv / rmv = {index:{x,z}}) are applied at start and whenever the farm changes (login, cloud load)
 let mvKey='';
-function applyMoves(){const F=S.farm;if(!F)return;const tm=F.tmv||{},rm=F.rmv||{};
+function applyMoves(){const F=S.farm;if(!F)return;applyThin();const tm=F.tmv||{},rm=F.rmv||{};
  trees.forEach((tr,j)=>{const o=tr.t,p=tm[j]||o.userData.o0;if(p&&o.parent&&(o.position.x!==p.x||o.position.z!==p.z))mvShift(o,p.x,p.z)});
  rocks.forEach((r,j)=>{const p=rm[j]||r.userData.o0;if(p&&r.parent&&(r.position.x!==p.x||r.position.z!==p.z))mvShift(r,p.x,p.z)})}
 {let acc=9;updaters.push((t,dt)=>{if((acc+=dt)<1.2)return;acc=0;const F=S.farm;if(!F)return;const k=JSON.stringify([F.tmv||0,F.rmv||0]);if(k!==mvKey){mvKey=k;applyMoves()}})}
@@ -5165,21 +5175,28 @@ updaters.push((t,dt)=>{const lb=$('labels');if(lb)lb.style.visibility=CUT?'hidde
  if(s>13.6&&!CUT.done){CUT.done=true;cutEl.classList.remove('on');setTimeout(()=>{cutEl.hidden=true},800);CAM.z=CUT.z0;const z0=CUT;CUT=null;ufoG.visible=false;ufoG.scale.setScalar(1);bubbleQ.length=0;bubbleT=0;say(tt('Wow… what happened?! Where are the Igorlets?','Wow… cos’è successo?! Dove sono gli Igorlets?'),3.6)}});
 function abduct(){const F=FM(),U=F.ufo;if(!U)return;for(const q of F.tasks)freeWorkers(q);for(const g of F.igs){g.task=null;g.rest=false}
  U.igs=F.igs;F.igs=[];U.st='gone';U.gone=Date.now();
- let P=null;for(const[dx,dz]of[[2.4,-1.2],[-2.4,-1.2],[2.6,1.4],[-2.6,1.4],[0,-2.8],[3.4,0],[-3.4,0]]){const x=igor.position.x+dx,z=igor.position.z+dz;if(walkable(x,z)&&walkable(x+2.1,z)){P={x,z};break}}
- P=P||{x:igor.position.x+2,z:igor.position.z-1};U.mx=+P.x.toFixed(2);U.mz=+P.z.toFixed(2);fmDirty=true;save();fmRender()}
+ const P=mibSpot(igor.position.x,igor.position.z);U.mx=+P.x.toFixed(2);U.mz=+P.z.toFixed(2);fmDirty=true;save();fmRender()}
 /* who starts the scene: a pending Aliengor, as soon as you are on the island */
 updaters.push(()=>{if(CUT||VISIT||!S.farm)return;const F=FM(),U=F.ufo;if(!U||U.st!=='pending')return;if(!started||where!=='out'||T<4||PL)return;if(!(IGMOVE>Math.max(U.at||0,PAGE0)))return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden})||!sheet.hidden)return;const intro=$('intro');if(intro&&!intro.classList.contains('gone'))return;startCut()});
 
+/* 11 Nov 2026: where the Igor in Black stands: a clear spot (nothing around him and his portal, Igor can reach him), as close as possible to where it happened */
+function mibClear(x,z,c){if(Math.hypot(x,z*1.12)>R-2.2||Math.hypot(x+2.1,z*1.12)>R-1.6)return false;
+ for(const[px,pz,pr]of[[x,z,1.2],[x+2.1,z,1.2],[x-.2,z+1.3,.6],[x+1,z+.4,.6]]){if(!edgeOk(px,pz))return false;for(const b of blocked){if(!(b.r>0))continue;if(Math.hypot(b.x-px,b.z-pz)<b.r+pr+c)return false}}
+ for(const I of ISLES)if(I.on&&isleE1(I,x,z)<1.2)return false;return true}
+function mibSpot(x0,z0){const from=igor.position.clone();for(const c of[1.6,1.1,.6,.2]){for(let r=2.4;r<=14;r+=.6){const n=Math.max(10,Math.round(r*5));for(let k=0;k<n;k++){const a=k/n*TAU+r,x=x0+Math.cos(a)*r,z=z0+Math.sin(a)*r;
+  if(!mibClear(x,z,c))continue;const G=new V3(x-.2,0,z+1.3);if(lineOk(from.x,from.z,G.x,G.z)||findPath(from,G)){return{x:+x.toFixed(2),z:+z.toFixed(2)}}}}}
+ return{x:+(x0+2).toFixed(2),z:+(z0-1).toFixed(2)}}
+let mibChk=false;
 /* --- the Igor in Black and his portal --- */
 const mibG=(()=>{const g=new THREE.Group(),pl=bigPlane('mib',1);g.add(pl);blob(g,.6);
  const por=new THREE.Group();const ringM=glowM('#b06bff',1.1),ring=new THREE.Mesh(new THREE.TorusGeometry(.95,.1,10,36),ringM);ring.position.y=1.15;por.add(ring);
  const swM=curve(new THREE.MeshBasicMaterial({color:'#7fe9ff',transparent:true,opacity:.45,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));const sw=new THREE.Mesh(new THREE.CircleGeometry(.88,32),swM);sw.position.y=1.15;por.add(sw);
  const h=halo('#b06bff',3.2,.35);h.position.y=1.15;por.add(h);por.position.set(2.1,0,0);g.add(por);g.visible=false;world.add(g);
- const go=()=>{const U=FM().ufo;if(!U||!U.mx&&U.mx!==0)return;walkIn(new V3(U.mx-.2,0,U.mz+1.3),()=>mibOpen())};
+ const go=()=>{const U=FM().ufo;if(!U||!U.mx&&U.mx!==0)return;if(where==='out'&&Math.hypot(igor.position.x-U.mx,igor.position.z-U.mz)<3.4){IG.target=null;IG.arrive=null;IG.path=null;IG.pathFor=null;mibOpen();return}walkIn(new V3(U.mx-.2,0,U.mz+1.3),()=>mibOpen())};
  hit(pl,.9,go,'mib',1);hit(por,.9,go,'portal',1.1);const L=label(['Hey you! Come here!','Ehi tu! Vieni qui!'],['Igor in Black · tap me','Igor in Black · toccami'],new V3(0,IH+BIGP/SH*IH+.3,0),go,16);L.far=1;L.hidden=true;
  return{g,pl,por,ring,sw,L,go}})();
 let mibNext=0;
-updaters.push((t,dt)=>{const F=S.farm,U=F&&F.ufo,vis=!!(U&&(U.st==='gone'||U.st==='met')&&where==='out'&&!VISIT&&U.mx!=null);mibG.g.visible=vis;mibG.L.hidden=!vis;if(!vis)return;
+updaters.push((t,dt)=>{const F=S.farm,U=F&&F.ufo,vis=!!(U&&(U.st==='gone'||U.st==='met')&&where==='out'&&!VISIT&&U.mx!=null);mibG.g.visible=vis;mibG.L.hidden=!vis;if(!vis)return;if(!mibChk){mibChk=true;if(!mibClear(U.mx,U.mz,.6)){const P=mibSpot(U.mx,U.mz);U.mx=P.x;U.mz=P.z;fmDirty=true;try{save()}catch(e){}}}
  mibG.g.position.set(U.mx,0,U.mz);mibG.L.pos.set(U.mx,IH*1.2+.3,U.mz);mibG.pl.userData.tx.paint();mibG.pl.quaternion.copy(camera.quaternion);mibG.pl.position.y=Math.abs(Math.sin(t*(U.st==='gone'?4:1.5)))*.05;
  mibG.ring.rotation.z+=dt*2;mibG.sw.material.opacity=.35+.15*Math.sin(t*5);mibG.por.quaternion.copy(camera.quaternion);mibG.por.position.set(2.1,0,0);
  const lt=U.st==='gone'?N(pick([['Hey you! Come here!','Ehi tu! Vieni qui!']])):U.fails0?tt('Practise a bit more and try again!','Esercitati ancora e riprova!'):tt('Ready? The portal is open.','Pronto? Il portale è aperto.');const html=`${lt}<small>${tt('Igor in Black · tap me','Igor in Black · toccami')}</small>`;if(mibG.L.el.innerHTML!==html)mibG.L.el.innerHTML=html;
@@ -5349,7 +5366,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-1800';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-2000';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
