@@ -1293,7 +1293,7 @@ const dsMet=()=>lsMet('igortime_drumschool','drumschool'),ntMet=()=>lsMet('igort
  if(!(hi&1))updaters.push(()=>{if((hi&1)||!started||where!=='school'||leaving)return;hi|=1;try{localStorage.setItem('igortime_new1111',String(hi))}catch(e){}
   setTimeout(()=>say(tt('Two new teachers! Rigor Star, next to the drums, teaches you to play them; Nadia Boulangigor, at the big staff, teaches you to read music.','Due maestri nuovi! Rigor Star, accanto alla batteria, ti insegna a suonarla; Nadia Boulangigor, al pentagramma, ti insegna a leggere le note.'),6.5),1200)});
  if(!(hi&2))updaters.push(()=>{if((hi&2)||!started||where!=='house'||leaving)return;hi|=2;try{localStorage.setItem('igortime_new1111',String(hi))}catch(e){}
-  setTimeout(()=>say(tt('Look: now I have a bathtub too! The bubbles sing… how many?','Guarda: adesso ho anche la vasca da bagno! Le bolle cantano… quante?'),5.5),1200)})}
+  setTimeout(()=>say(tt('Look: now I have a bathroom too, behind the glowing WC door! In the tub the bubbles sing… how many?','Guarda: adesso ho anche il bagno, dietro la porta luminosa WC! Nella vasca le bolle cantano… quante?'),5.5),1200)})}
 const MOUT={x:-9.55,z:-3.55};
 const maestroOut=(()=>{const grp=new THREE.Group();grp.position.set(MOUT.x,0,MOUT.z);
  const mc=document.createElement('canvas');mc.width=IGC;mc.height=IGCH;const tx=new THREE.CanvasTexture(mc);let ok=false,ba=-1;
@@ -1626,18 +1626,19 @@ function room(key,o){BUILD=key;const g=new THREE.Group();g.visible=false;scene.a
  // the way out: a doormat at the front
  const mat=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.7,.05,.85,2,.03),lam('#9c5a3c'));mat.position.set(0,.03,o.d/2-.5);g.add(mat);
  const mat2=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.3,.055,.55,2,.03),lam('#c07a4e'));mat2.position.set(0,.035,o.d/2-.5);g.add(mat2);
- hit(mat,.9,()=>walkIn(new V3(0,0,o.d/2-.55),()=>exitRoom()),'exit',.3);
- const out=label(['Back outside','Torna fuori'],'',new V3(0,.7,o.d/2-.5),()=>walkIn(new V3(0,0,o.d/2-.55),()=>exitRoom()));out.el.classList.add('plot');
- zone(key,0,o.d/2-.55,.62,()=>exitRoom(),'mat');glowObj({traverse:f=>{f(mat);f(mat2)}},key,0,o.d/2-.5,.8,0,1.05,g);
+ if(o.back)Rm.back=o.back;const leave=()=>o.back?enterRoom(o.back,o.backAt):exitRoom();
+ hit(mat,.9,()=>walkIn(new V3(0,0,o.d/2-.55),leave),'exit',.3);
+ const out=label(o.outLabel||['Back outside','Torna fuori'],'',new V3(0,.7,o.d/2-.5),()=>walkIn(new V3(0,0,o.d/2-.55),leave));out.el.classList.add('plot');
+ zone(key,0,o.d/2-.55,.62,leave,'mat');glowObj({traverse:f=>{f(mat);f(mat2)}},key,0,o.d/2-.5,.8,0,1.05,g);
  BUILD='out';return Rm}
 function station(Rm,key,{name,sub,pos,stand,obj,act,r=1.3,y=1,zr}){BUILD=key;obj.position.copy(pos);Rm.g.add(obj);Rm.blocks.push({x:pos.x,z:pos.z,r:r*.75});
  const go=()=>walkIn(stand,act);hit(obj,r,go,name,y);glowObj(obj,key,pos.x,pos.z,1,0,zr||(r*.75+.55),Rm.g);label(name,sub||'',pos.clone().add(new V3(0,y+1.75,0)),go);zone(key,pos.x,pos.z,zr||(r*.75+.55),act,name);BUILD='out'}
 function walkIn(P,then){closeSheet();$('index').hidden=true;IG.target=P.clone();IG.arrive=then;IG.manual=true;mark.position.set(P.x,.04,P.z);mark.material.opacity=.8;poke();if(igor.position.distanceTo(P)<.3){IG.target=null;IG.arrive=null;then&&then()}}
 function syncZones(){for(const Z of zones)Z.in=Math.hypot(igor.position.x-Z.x,igor.position.z-Z.z)<Z.r}
-function enterRoom(k){const Rm=ROOMS[k];if(!Rm||where===k)return;snd('door');closeSheet();where=k;world.visible=false;Rm.g.visible=true;igor.position.copy(Rm.entry);IG.target=null;IG.arrive=null;CURV.value=0;
- scene.background=BG_IN;scene.fog=null;hemi.intensity=.55;moonL.intensity=.25;moonL.color.set('#dfe6ff');skyRoom();camSnap=true;syncZones();say(k==='house'?pick(tt(['Welcome to my house!','Make yourself at home.'],['Benvenuto a casa mia!','Fai come se fossi a casa tua.'])):k==='prizes'?tt('The prize shop! Walk to a vehicle to look at it.','Il negozietto dei premi! Avvicinati a un mezzo per guardarlo.'):k==='toys'?tt('The Toy Store! Walk to a toy to look at it.','Il negozio dei giocattoli! Avvicinati a un oggetto per guardarlo.'):k==='bar'?tt('Barigor’s bar!','Il bar di Barigor!'):tt('Shh… walk to the piano.','Shh… vai al pianoforte.'),3)}
-function exitRoom(quiet){const k=where;if(k==='out')return;snd('door');ROOMS[k].g.visible=false;world.visible=true;where='out';CURV.value=K;hemi.intensity=.9;moonL.intensity=.8;scene.background=BG_OUT;scene.fog=new THREE.Fog(NIGHT,28,66);
- const P=PLACES[k];igor.position.copy(P.pos).add(k==='school'?new V3(.85,0,.4):k==='bar'?new V3(0,0,0):new V3(0,0,.95));IG.target=null;IG.arrive=null;camSnap=true;syncZones();if(!quiet)say(pick(tt(['Fresh air!','Back outside.'],['Aria fresca!','Di nuovo fuori.'])),1.8)}
+function enterRoom(k,at){const Rm=ROOMS[k];if(!Rm||where===k)return;snd('door');closeSheet();if(where!=='out'&&ROOMS[where])ROOMS[where].g.visible=false;where=k;world.visible=false;Rm.g.visible=true;igor.position.copy(at||Rm.entry);IG.target=null;IG.arrive=null;CURV.value=0;
+ scene.background=BG_IN;scene.fog=null;hemi.intensity=.55;moonL.intensity=.25;moonL.color.set('#dfe6ff');skyRoom();camSnap=true;syncZones();if(at)return;say(k==='wc'?tt('Igor’s bathroom! The tub is glowing: walk to it and the bubbles sing.','Il bagno di Igor! La vasca si illumina: vai lì e le bolle cantano.'):k==='house'?pick(tt(['Welcome to my house!','Make yourself at home.'],['Benvenuto a casa mia!','Fai come se fossi a casa tua.'])):k==='prizes'?tt('The prize shop! Walk to a vehicle to look at it.','Il negozietto dei premi! Avvicinati a un mezzo per guardarlo.'):k==='toys'?tt('The Toy Store! Walk to a toy to look at it.','Il negozio dei giocattoli! Avvicinati a un oggetto per guardarlo.'):k==='bar'?tt('Barigor’s bar!','Il bar di Barigor!'):tt('Shh… walk to the piano.','Shh… vai al pianoforte.'),3)}
+function exitRoom(quiet){const k=where;if(k==='out')return;const kb=ROOMS[k].back||k;snd('door');ROOMS[k].g.visible=false;world.visible=true;where='out';CURV.value=K;hemi.intensity=.9;moonL.intensity=.8;scene.background=BG_OUT;scene.fog=new THREE.Fog(NIGHT,28,66);
+ const P=PLACES[kb];igor.position.copy(P.pos).add(kb==='school'?new V3(.85,0,.4):k==='bar'?new V3(0,0,0):new V3(0,0,.95));IG.target=null;IG.arrive=null;camSnap=true;syncZones();if(!quiet)say(pick(tt(['Fresh air!','Back outside.'],['Aria fresca!','Di nuovo fuori.'])),1.8)}
 let camSnap=false;
 const wipSay=t=>{say(t+tt(': coming soon!',': presto!'),3)};
 function rememberSpot(where_,x,z){try{localStorage.setItem('igortime_return',JSON.stringify({where:where_,x,z,t:Date.now()}))}catch(e){}}
@@ -1667,7 +1668,7 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
  // bookshelf on the back wall
  {const sh=new THREE.Group();const wd=lam('#6a4630');const box=new THREE.Mesh(new THREE.BoxGeometry(1.8,2.2,.45),wd);box.position.y=1.1;sh.add(box);const bc=['#a8463c','#4f6f8a','#c9a24a','#5e8a6a','#7b3f4e','#e9d6b0'];
   for(let r=0;r<3;r++){const shelf=new THREE.Mesh(new THREE.BoxGeometry(1.7,.05,.42),lam('#4e3424'));shelf.position.set(0,.45+r*.62,.03);sh.add(shelf);for(let k=0;k<9;k++){if(rnd()<.15)continue;const bh=.32+rnd()*.18;const b=new THREE.Mesh(new THREE.BoxGeometry(.13,bh,.3),lam(bc[Math.floor(rnd()*6)]));b.position.set(-.72+k*.17,.48+r*.62+bh/2,.08);b.rotation.z=rnd()<.15?.2:0;sh.add(b)}}
-  sh.position.set(-1.9,0,-4.25);g.add(sh);Rm.blocks.push({x:-1.9,z:-4.1,r:.8})}
+  sh.scale.x=.7;sh.position.set(-.4,0,-4.25);g.add(sh);Rm.blocks.push({x:-.4,z:-4.1,r:.6})}
  // the staircase: Pitch Stairs
  {const o=new THREE.Group();const wood=lam('#b07a4c'),dark=lam('#6a4630'),run=lam('#a8463c');for(let i=0;i<8;i++){const st=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.7,.26+i*.26,.5,2,.03),i%2?wood:dark);st.position.set(0,(.26+i*.26)/2,1.0-i*.48);o.add(st);
    const rr=new THREE.Mesh(new THREE.BoxGeometry(.8,.02,.5),run);rr.position.set(0,.26+i*.26+.01,1.0-i*.48);o.add(rr)}
@@ -1709,15 +1710,63 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   const zz=[];for(let k=0;k<3;k++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(sleepZ),transparent:true,opacity:0,depthWrite:false}));sp.scale.set(.3,.3,1);o.add(sp);zz.push(sp)}
   updaters.push(t=>{zz.forEach((sp,k)=>{const u=(t*.25+k/3)%1;sp.position.set(.2+u*.5,1.1+u*1.2,-.9);sp.material.opacity=Math.sin(u*Math.PI)*.8})});
   station(Rm,'house',{name:['The bedroom','La camera'],sub:['walk to the bed to play','vai al letto per giocare'],pos:new V3(4.5,0,.8),stand:new V3(2.7,0,1.4),obj:o,act:()=>launch('/bedroom/',tt('To the bedroom!','In camera!'),['house',2.5,1.4]),r:1.6})}
- // 11 Nov 2026: the bathroom corner: tiles, a clawfoot tub with a rubber duck and singing bubbles (The bathtub: how many voices?)
- {const o=new THREE.Group(),BX=-4.2,BZ=3.15;
+ // 11 Nov 2026 (later): a glowing door on the back wall, between the stairs and the bookshelf, "WC · TOILET": behind it, Igor's bathroom with the bathtub game
+ {BUILD='house';const D=new THREE.Group(),DX=-1.95,DZ=-4.47;D.position.set(DX,0,DZ);g.add(D);
+  const fr=lam('#4e3424');for(const[x,y,w,h]of[[-.53,1.08,.1,2.16],[.53,1.08,.1,2.16],[0,2.2,1.16,.12]]){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,.1),fr);b.position.set(x,y,.03);D.add(b)}
+  const dm=lam('#4fb3c4',{emissive:'#2fa3b8',emissiveIntensity:.3});const pan=new THREE.Mesh(new THREE.BoxGeometry(.96,2.1,.05),dm);pan.position.set(0,1.05,.02);D.add(pan);
+  {const ins=new THREE.Mesh(new THREE.BoxGeometry(.66,.62,.02),lam('#8fd6e0',{emissive:'#4fc3d6',emissiveIntensity:.25}));ins.position.set(0,.6,.055);D.add(ins)}
+  const kn=new THREE.Mesh(new THREE.SphereGeometry(.055,10,8),lam('#c9a24a'));kn.position.set(.36,1.02,.09);D.add(kn);
+  const sc=document.createElement('canvas');sc.width=256;sc.height=128;{const q=sc.getContext('2d');q.fillStyle='#fff7e0';q.beginPath();q.roundRect(6,6,244,116,22);q.fill();q.lineWidth=6;q.strokeStyle='#2f8fa0';q.stroke();
+   q.fillStyle='#1f6f7c';q.textAlign='center';q.font='700 58px Fredoka, sans-serif';q.fillText('WC',128,64);q.font='600 30px Fredoka, sans-serif';q.fillText('TOILET',128,104);
+   q.font='34px sans-serif';q.fillText('🛁',36,78);q.fillText('🫧',220,78)}
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(.78,.39),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true}));sign.position.set(0,1.55,.07);D.add(sign);
+  const hl=halo('#7fe3ef',2.6,.55,true);hl.position.set(0,1.2,.25);D.add(hl);const hs=halo('#ffe9a8',1.2,.25,true);hs.position.set(0,1.55,.15);D.add(hs);
+  const dl=new THREE.PointLight('#7fe3ef',.5,4,1.6);dl.position.set(.0,1.6,.7);D.add(dl);
+  const fbm=['#7fe3ef','#ff9ec7','#ffd36a'].map(c=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.5,depthWrite:false}));const fb=[];for(let k=0;k<4;k++){const b=new THREE.Mesh(new THREE.SphereGeometry(.07,12,8),fbm[k%3]);D.add(b);fb.push({b,u:k/4,x:(k%2?.25:-.25)})}
+  updaters.push((t,dt)=>{if(where!=='house')return;const p=.5+.5*Math.sin(t*2.2);dm.emissiveIntensity=.2+p*.45;hl.material.opacity=.18+p*.3;dl.intensity=.25+p*.45;for(const q of fb){q.u=(q.u+dt*.18)%1;q.b.position.set(q.x+Math.sin(t*1.7+q.x*9)*.1,1.0+q.u*1.9,.35);q.b.scale.setScalar(Math.max(.01,q.u<.85?1:1-(q.u-.85)*6.6))}});
+  const go=()=>walkIn(new V3(DX,0,-3.3),()=>enterRoom('wc'));hit(D,.85,go,'wc door',1.1);glowObj(D,'house',DX,-3.5,1,0,.9,g);
+  label(['WC · Toilet','WC · Toilet'],['Igor’s bathroom: the bathtub game','il bagno di Igor: il gioco della vasca'],new V3(DX,3.35,-4.1),go);
+  zone('house',DX,-3.3,.5,()=>enterRoom('wc'),'wc door');BUILD='out'}
+}
+
+/* Igor's bathroom (11 Nov 2026): behind the WC door in the house; the bathtub glows, that is the game */
+{const Rm=room('wc',{w:7,d:6,floor:'#cfe9ec',floorLine:'#9cc6cc',wall:'#e4f4f5',wall2:'#d6eef0',motif:'rgba(127,201,214,.35)',wain:'#7fc9d6',wainD:'#6ab7c4',trim:'#2f8fa0',back:'house',backAt:new V3(-1.95,0,-2.6),outLabel:['Back to the house','Torna in casa']});const g=Rm.g;BUILD='wc';
+ // the toilet, with a roll of paper
+ {const o=new THREE.Group();o.position.set(2.35,0,-2.35);g.add(o);const W=lam('#fbfbf8');
+  const bowl=new THREE.Mesh(new THREE.CylinderGeometry(.3,.22,.42,16),W);bowl.position.set(0,.21,.15);o.add(bowl);
+  const seat=new THREE.Mesh(new THREE.TorusGeometry(.26,.05,8,18),lam('#a8dfe6'));seat.rotation.x=Math.PI/2;seat.position.set(0,.44,.15);o.add(seat);
+  const lid=new THREE.Mesh(new THREE.BoxGeometry(.56,.6,.06),lam('#a8dfe6'));lid.position.set(0,.74,-.13);lid.rotation.x=-.12;o.add(lid);
+  const tank=new THREE.Mesh(new THREE.RoundedBoxGeometry(.62,.5,.26,2,.05),W);tank.position.set(0,.95,-.32);o.add(tank);
+  const btn=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.03,10),lam('#b9c0c6'));btn.position.set(0,1.21,-.32);o.add(btn);
+  const roll=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,.13,12),W);roll.rotation.z=Math.PI/2;roll.position.set(.6,.75,-.35);o.add(roll);
+  Rm.blocks.push({x:2.35,z:-2.2,r:.5})}
+ // the sink, with a mirror and a toothbrush cup
+ {const o=new THREE.Group();o.position.set(.75,0,-2.6);g.add(o);const W=lam('#fbfbf8');
+  const ped=new THREE.Mesh(new THREE.CylinderGeometry(.11,.16,.8,12),W);ped.position.y=.4;o.add(ped);
+  const bas=new THREE.Mesh(new THREE.CylinderGeometry(.34,.22,.18,18),W);bas.position.set(0,.88,.05);o.add(bas);
+  const tap=new THREE.Mesh(new THREE.TorusGeometry(.08,.02,6,10,Math.PI),lam('#b9c0c6'));tap.position.set(0,1.05,-.18);o.add(tap);
+  const mc=document.createElement('canvas');mc.width=64;mc.height=80;{const q=mc.getContext('2d');q.fillStyle='#2f8fa0';q.beginPath();q.roundRect(0,0,64,80,14);q.fill();const gr=q.createLinearGradient(0,0,64,80);gr.addColorStop(0,'#eef9fb');gr.addColorStop(1,'#a9d3df');q.fillStyle=gr;q.beginPath();q.roundRect(5,5,54,70,10);q.fill();q.strokeStyle='#fff';q.lineWidth=3;q.beginPath();q.moveTo(16,22);q.lineTo(26,12);q.stroke()}
+  const mir=new THREE.Mesh(new THREE.PlaneGeometry(.6,.75),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(mc),transparent:true}));mir.position.set(0,1.75,-.33);o.add(mir);
+  const sp=new THREE.Mesh(new THREE.RoundedBoxGeometry(.14,.06,.09,2,.02),lam('#ff9ec7'));sp.position.set(.24,.99,.0);o.add(sp);
+  Rm.blocks.push({x:.75,z:-2.5,r:.4})}
+ // a little window high up with the night outside, a lamp of bubbles and a bath mat
+ {const wc2=document.createElement('canvas');wc2.width=96;wc2.height=96;{const q=wc2.getContext('2d');q.fillStyle='#4e3424';q.fillRect(0,0,96,96);q.fillStyle='#1b2a4a';q.fillRect(8,8,80,80);q.fillStyle='#f4ecd0';q.beginPath();q.arc(64,30,10,0,TAU);q.fill();q.fillStyle='#ffffff';for(const[x,y]of[[20,24],[34,60],[72,70],[50,46]]){q.fillRect(x,y,2,2)}q.fillStyle='#4e3424';q.fillRect(45,8,6,80);q.fillRect(8,45,80,6)}
+  const win=new THREE.Mesh(new THREE.PlaneGeometry(.8,.8),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(wc2)}));win.position.set(3.48,2.2,-.6);win.rotation.y=-Math.PI/2;g.add(win);
+  const mat=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.0,.02,.6,2,.01),lam('#ffd36a'));mat.position.set(1.6,.03,-1.2);g.add(mat);
+  const hook=new THREE.Mesh(new THREE.BoxGeometry(.05,.75,.5),lam('#7fc9a8'));hook.position.set(3.44,1.15,.6);g.add(hook);
+  const bk=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.04,14),lam('#f6d34a'));bk.position.set(2.6,.04,.9);g.add(bk);
+  const bs=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.5,6),lam('#c08a54'));bs.position.set(2.6,.29,.9);g.add(bs)}
+
+ {const o=new THREE.Group(),BX=-1.65,BZ=-1.45;
   const tc=document.createElement('canvas');tc.width=tc.height=128;{const q=tc.getContext('2d');q.fillStyle='#d8eef0';q.fillRect(0,0,128,128);q.strokeStyle='#9cc6cc';q.lineWidth=3;for(let k=0;k<=4;k++){q.beginPath();q.moveTo(k*32,0);q.lineTo(k*32,128);q.moveTo(0,k*32);q.lineTo(128,k*32);q.stroke()}}
-  const tt2=new THREE.CanvasTexture(tc);tt2.wrapS=tt2.wrapT=THREE.RepeatWrapping;tt2.repeat.set(3,2.4);
-  const fl=new THREE.Mesh(new THREE.PlaneGeometry(3.4,2.6).rotateX(-Math.PI/2),texM(tt2));fl.position.set(-.1,.016,-.05);o.add(fl);
-  const white=lam('#fbfbf8'),gold=lam('#c9a24a');
+  const tt2=new THREE.CanvasTexture(tc);tt2.wrapS=tt2.wrapT=THREE.RepeatWrapping;tt2.repeat.set(7,6);
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(7,6).rotateX(-Math.PI/2),texM(tt2));fl.position.set(-BX,.016,-BZ);o.add(fl);
+  const white=lam('#fbfbf8',{emissive:'#7fe3ef',emissiveIntensity:0}),gold=lam('#c9a24a');
   const body=new THREE.Mesh(new THREE.RoundedBoxGeometry(2.0,.62,.95,3,.22),white);body.position.y=.5;o.add(body);
   const rim=new THREE.Mesh(new THREE.RoundedBoxGeometry(2.1,.1,1.04,2,.05),white);rim.position.y=.84;o.add(rim);
-  const water=new THREE.Mesh(new THREE.BoxGeometry(1.8,.04,.78),lam('#bfe6f0',{emissive:'#3a7f8f',emissiveIntensity:.25}));water.position.y=.86;o.add(water);
+  const water=new THREE.Mesh(new THREE.BoxGeometry(1.8,.04,.78),lam('#bfe6f0',{emissive:'#4fc3d6',emissiveIntensity:.6}));water.position.y=.86;o.add(water);
+  const tH=halo('#7fe3ef',5.2,.6,true);tH.position.set(0,1.1,0);o.add(tH);const tR=new THREE.Mesh(new THREE.RingGeometry(1.25,1.55,48).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#7fe3ef',transparent:true,opacity:.5,depthWrite:false}));tR.scale.set(1.15,1,.8);tR.position.y=.03;o.add(tR);const tL=new THREE.PointLight('#7fe3ef',1.1,6,1.5);tL.position.set(0,1.6,.6);o.add(tL);
+  const glowTub=t=>{const p=.5+.5*Math.sin(t*2);water.material.emissiveIntensity=.55+p*.7;white.emissiveIntensity=.08+p*.3;tH.material.opacity=.35+p*.4;tR.material.opacity=.25+p*.45;tL.intensity=.9+p*1.1};
   for(const[a,b]of[[-.82,-.36],[.82,-.36],[-.82,.36],[.82,.36]]){const f=new THREE.Mesh(new THREE.SphereGeometry(.08,10,8),gold);f.position.set(a,.1,b);o.add(f)}
   const fau=new THREE.Mesh(new THREE.TorusGeometry(.16,.03,8,14,Math.PI),lam('#b9c0c6'));fau.position.set(-.95,1.0,0);fau.rotation.y=Math.PI/2;o.add(fau);
   const fp=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.3,8),lam('#b9c0c6'));fp.position.set(-.95,.95,-.16);o.add(fp);
@@ -1731,7 +1780,7 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
   // the singing bubbles float up and pop
   const bm=['#7fe3ef','#ff9ec7','#ffd36a','#9be38a','#c49bff'].map(c=>new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.45,depthWrite:false}));
   const bubs=[];for(let k=0;k<7;k++){const b=new THREE.Mesh(new THREE.SphereGeometry(.09,14,10),bm[k%5]);o.add(b);bubs.push({b,u:k/7,x:-.6+Math.random()*1.2,z:(Math.random()-.5)*.5,s:.6+Math.random()*.8})}
-  updaters.push((t,dt)=>{if(where!=='house')return;duck.position.y=.93+Math.sin(t*2)*.012;duck.rotation.y=Math.sin(t*.7)*.5;for(const q of bubs){q.u=(q.u+dt*.12*q.s)%1;q.b.position.set(q.x+Math.sin(t*1.3+q.x*5)*.08,.95+q.u*1.6,q.z);const sc=(.5+q.s*.6)*(q.u<.9?1:1-(q.u-.9)*10);q.b.scale.setScalar(Math.max(.01,sc));q.b.material.opacity=.45}});
+  updaters.push((t,dt)=>{if(where!=='wc')return;glowTub(t);duck.position.y=.93+Math.sin(t*2)*.012;duck.rotation.y=Math.sin(t*.7)*.5;for(const q of bubs){q.u=(q.u+dt*.12*q.s)%1;q.b.position.set(q.x+Math.sin(t*1.3+q.x*5)*.08,.95+q.u*1.6,q.z);const sc=(.5+q.s*.6)*(q.u<.9?1:1-(q.u-.9)*10);q.b.scale.setScalar(Math.max(.01,sc));q.b.material.opacity=.45}});
   {const sh=new THREE.Mesh(new THREE.BoxGeometry(.25,.05,1.0),lam('#8a5e3a'));sh.position.set(-1.78,1.62,.75);o.add(sh);
    const it=[['#ff9ec7',.4,.09,.12,.2],['#7fe3ef',.62,.07,.3,.07],['#ffd36a',.95,.09,.12,.2],['#9be38a',1.15,.1,.1,.18]];
    for(const[c,z,w,h,d]of it){const m=new THREE.Mesh(new THREE.RoundedBoxGeometry(w*1.4,h,d,2,.02),lam(c));m.position.set(-1.72,1.645+h/2,z);o.add(m)}
@@ -1743,8 +1792,8 @@ function nightWindow(Rm,x,y,z,ry,w=1.5,h=1.25){const G=new THREE.Group();G.posit
    const mat=new THREE.Mesh(new THREE.RoundedBoxGeometry(1.0,.02,.5,2,.01),lam('#7fc9a8'));mat.position.set(.4,.03,.85);o.add(mat);
    const d2=duck.clone();d2.scale.setScalar(.8);d2.position.set(-.75,.91,-.3);d2.rotation.y=2.4;o.add(d2);
    const pot=new THREE.Mesh(new THREE.CylinderGeometry(.14,.11,.24,12),lam('#b8643f'));pot.position.set(1.35,.12,-.85);o.add(pot);for(let k=0;k<5;k++){const l=new THREE.Mesh(new THREE.SphereGeometry(.1,8,6),lam('#4f8a4a'));l.scale.set(.5,1.6,.5);l.position.set(1.35+Math.cos(k*1.3)*.06,.42,-.85+Math.sin(k*1.3)*.06);l.rotation.z=Math.cos(k*1.3)*.4;l.rotation.x=Math.sin(k*1.3)*.4;o.add(l)}}
-  o.rotation.y=0;station(Rm,'house',{name:['The bathtub','La vasca'],sub:['walk to the tub to play','vai alla vasca per giocare'],pos:new V3(BX,0,BZ),stand:new V3(-2.6,0,2.9),obj:o,act:()=>launch('/bath/',tt('Bath time!','Tutti in vasca!'),['house',-2.4,2.9]),r:1.25,zr:1.7})}
-}
+  o.rotation.y=0;station(Rm,'wc',{name:['The bathtub','La vasca'],sub:['how many bubbles are singing?','quante bolle cantano?'],pos:new V3(BX,0,BZ),stand:new V3(-1.3,0,-.35),obj:o,act:()=>launch('/bath/',tt('Bath time!','Tutti in vasca!'),['wc',-1.3,-.35]),r:1.25,zr:1.7})}
+PLACES.wc={pos:PLACES.house.pos.clone(),open:()=>enterRoom('wc'),name:'Igor’s bathroom'};BUILD='out'}
 
 /* the old music school, inside */
 {const Rm=room('school',{w:11,d:8.5,floor:'#8c8174',floorLine:'#5d554c',wall:'#d9cfb8',wall2:'#d1c6ad',motif:null,wain:'#5b4a3c',wainD:'#4e3f33',trim:'#3a2e25'});const g=Rm.g;
@@ -2155,15 +2204,15 @@ const HG={stairs:{stand:new V3(-3,0,.4),url:'/pitch-stairs/',go:['Up the stairs!
  iv:{room:'school',stand:new V3(-3.9,0,1.6),url:'/intervals/',go:['To the lesson!','A lezione!'],ask:['A lesson with Amadigor and Gubaigorina? They train your ears!','Una lezione con Amadigor e Gubaigorina? Ti allenano le orecchie!']},
  ds:{room:'school',stand:new V3(1.95,0,-1.95),url:'/drumschool/',go:['Let’s rock!','Si suona!'],ask:['A drum lesson with Rigor Star? Rock and roll!','Una lezione di batteria con Rigor Star? Rock and roll!']},
  nt:{room:'school',stand:new V3(-4.0,0,-2.5),url:'/notes/',go:['To the staff!','Al pentagramma!'],ask:['Shall we learn to read music with Nadia Boulangigor?','Impariamo a leggere le note con Nadia Boulangigor?']},
- bath:{stand:new V3(-2.6,0,2.9),url:'/bath/',go:['Bath time!','Tutti in vasca!'],ask:['Bath time! How many bubbles are singing?','È l’ora del bagnetto! Quante bolle cantano?']}};
+ bath:{room:'wc',stand:new V3(-1.3,0,-.35),url:'/bath/',go:['Bath time!','Tutti in vasca!'],ask:['Bath time! How many bubbles are singing?','È l’ora del bagnetto! Quante bolle cantano?']}};
 let ASK=null,nextAsk=Date.now()+45000;
 function playHouseGame(k){const G=HG[k];if(!G||PL)return;const rm=G.room||'house',go=()=>walkIn(G.stand.clone(),()=>launch(G.url,N(G.go),[rm,G.stand.x,G.stand.z]));
- if(where===rm){go();return}if(where!=='out')exitRoom(true);GPEND={k,t:T,go,rm};goTo(rm)}
+ if(where===rm){go();return}if(rm==='wc'&&where==='house'){GPEND={k,t:T,go,rm};walkIn(new V3(-1.95,0,-3.3),()=>enterRoom('wc'));return}if(where!=='out')exitRoom(true);GPEND={k,t:T,go,rm};goTo(rm)}
 let GPEND=null;updaters.push(()=>{if(!GPEND)return;if(T-GPEND.t>45){GPEND=null;return}if(where===GPEND.rm&&!IG.target){const g=GPEND;GPEND=null;setTimeout(g.go,350)}});
 function proposeGame(){const ks=Object.keys(HG).filter(k=>!HG[k].room||k==='drums'||k==='iv'||k==='ds'||k==='nt'),k=ks[Math.floor(Math.random()*ks.length)],txt='✨ '+N(HG[k].ask);bubbleQ.length=0;bubbleT=0;say(txt,9);ASK={k,txt};bubble.classList.add('ask')}
 bubble.addEventListener('click',()=>{if(!ASK)return;const k=ASK.k;ASK=null;bubble.classList.remove('ask');bubbleT=0;playHouseGame(k)});
 updaters.push(()=>{if(ASK&&(bubbleT<=0||bubble.textContent!==ASK.txt)){ASK=null;bubble.classList.remove('ask')}
- if(!ASK&&started&&!leaving&&!PL&&(where==='out'||where==='house')&&Date.now()>nextAsk&&T-lastAct>10&&!IG.target&&!RIDE&&sheet.hidden&&bar.hidden&&!CH&&helpC.hidden&&idx.hidden){nextAsk=Date.now()+120000;proposeGame()}});
+ if(!ASK&&started&&!leaving&&!PL&&(where==='out'||where==='house'||where==='wc')&&Date.now()>nextAsk&&T-lastAct>10&&!IG.target&&!RIDE&&sheet.hidden&&bar.hidden&&!CH&&helpC.hidden&&idx.hidden){nextAsk=Date.now()+120000;proposeGame()}});
 /* the compass orb: top left, every 12 s it proposes a different place to jump to; tap it and Igor goes there */
 const ORB=[{k:'stairs',ic:'🎵',n:['Pitch Stairs','Pitch Stairs'],go:()=>playHouseGame('stairs')},{k:'k',ic:'🔥',n:['The kitchen','La cucina'],go:()=>playHouseGame('k')},
  {k:'w',ic:'🌬',n:['The window','La finestra'],go:()=>playHouseGame('w')},{k:'b',ic:'🛏',n:['The bedroom','La camera'],go:()=>playHouseGame('b')},
@@ -2244,7 +2293,7 @@ function staticTexts(){$('index').setAttribute('aria-label',tt('Index','Indice')
   $('goGuest').textContent=gm?tt('Play as a guest','Gioca come ospite'):tt('Explore as a guest','Esplora come ospite');$('goSign').textContent=tt('Sign in / register','Accedi / registrati');$('iSmall').textContent=tt('As a guest your farm and scores stay on this device. With an account you dress up your Igor right away and keep everything everywhere.','Come ospite fattoria e punteggi restano su questo dispositivo. Con un account vesti subito il tuo Igor e ritrovi tutto ovunque.');$('introBack').textContent=tt('← Back','← Indietro');
   const L=$('langIntro');if(L)L.innerHTML=`<button type="button" data-l="en" aria-pressed="${LANG==='en'}">English</button><button type="button" data-l="it" aria-pressed="${LANG==='it'}">Italiano</button>`}}
 idx.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.lang){setLang(b.dataset.lang);return}if(b.dataset.sky){skyMode(b.dataset.sky);return}const k=b.dataset.i;idx.hidden=true;$('indexBtn').setAttribute('aria-expanded','false');
- if(k==='chat'){if(window.IgorChat)window.IgorChat.open();return}if(k==='gamesPage'){toGames();return}if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/',tt('Cadences!','Cadenze!'),['school',0,-0.85]);return}if(k==='drums'){launch('/drums/',tt('The drums!','La batteria!'),['school',3.1,-1.4]);return}if(k==='iv'){launch('/intervals/',tt('To the lesson!','A lezione!'),['school',-3.7,1.6]);return}if(k==='ds'){launch('/drumschool/',tt('Let’s rock!','Si suona!'),['school',1.95,-1.85]);return}if(k==='nt'){launch('/notes/',tt('To the staff!','Al pentagramma!'),['school',-4.0,-2.4]);return}if(k==='bath'){launch('/bath/',tt('Bath time!','Tutti in vasca!'),['house',-2.4,2.9]);return}if(k==='w'){launch('/window/',tt('The window!','La finestra!'),['house',-4.2,1.2]);return}if(k==='k'){launch('/kitchen/',tt('The kitchen!','La cucina!'),['house',3.7,-2.2]);return}if(k==='b'){launch('/bedroom/',tt('The bedroom!','La camera!'),['house',2.5,1.4]);return}if(where!=='out')exitRoom(true);goTo(k)});
+ if(k==='chat'){if(window.IgorChat)window.IgorChat.open();return}if(k==='gamesPage'){toGames();return}if(k==='stairs'){launch('/pitch-stairs/','Pitch Stairs!',['house',-2.6,-0.2]);return}if(k==='cad'){launch('/cadences/',tt('Cadences!','Cadenze!'),['school',0,-0.85]);return}if(k==='drums'){launch('/drums/',tt('The drums!','La batteria!'),['school',3.1,-1.4]);return}if(k==='iv'){launch('/intervals/',tt('To the lesson!','A lezione!'),['school',-3.7,1.6]);return}if(k==='ds'){launch('/drumschool/',tt('Let’s rock!','Si suona!'),['school',1.95,-1.85]);return}if(k==='nt'){launch('/notes/',tt('To the staff!','Al pentagramma!'),['school',-4.0,-2.4]);return}if(k==='bath'){launch('/bath/',tt('Bath time!','Tutti in vasca!'),['wc',-1.3,-.35]);return}if(k==='w'){launch('/window/',tt('The window!','La finestra!'),['house',-4.2,1.2]);return}if(k==='k'){launch('/kitchen/',tt('The kitchen!','La cucina!'),['house',3.7,-2.2]);return}if(k==='b'){launch('/bedroom/',tt('The bedroom!','La camera!'),['house',2.5,1.4]);return}if(where!=='out')exitRoom(true);goTo(k)});
 function toggleIndex(){idx.hidden=!idx.hidden;skyStatus();$('indexBtn').setAttribute('aria-expanded',String(!idx.hidden));if(!idx.hidden)say(pick(tt(['Where to?','Pick a place, I’ll take you.'],['Dove andiamo?','Scegli un posto, ti ci porto.'])),2)}
 $('indexBtn').onclick=toggleIndex;
 $('me').onclick=()=>openAccount();
@@ -3207,7 +3256,7 @@ updaters.push((t,dt)=>{if(DIZZY<=T){if(igPlane.rotation.z){igPlane.rotation.z=0}
   else{pl.position.y=Math.abs(Math.sin(t*3))*.08;if(T>cnext&&igor.position.distanceTo(bo.position)<14){ci=(ci+1)%CALL.length;L.text=CALL[ci];L.el.innerHTML=N(L.text)+`<small>${N(L.sub)}</small>`;cnext=T+3.5}}
   L.pos.copy(bo.position).add(new V3(0,IGH2+.55,0));L.hidden=igor.position.distanceTo(bo.position)>14})}
 /* the first time inside: Barigor says hello */
-{const _er=enterRoom;enterRoom=function(k){_er(k);if(k!=='bar'||VISIT)return;const B=barF();if(!B.met){B.met=Date.now();save();setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`${BARN}: “Here we are! This is my bar. Sit down: the first smoothie is on me!”`,`${BARN}: “Eccoci! Questo è il mio bar. Siediti: il primo frullato lo offro io!”`),4);FM().ants.t+=3;try{hudFarm()}catch(e){}},700)}
+{const _er=enterRoom;enterRoom=function(k,at){_er(k,at);if(k!=='bar'||VISIT)return;const B=barF();if(!B.met){B.met=Date.now();save();setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`${BARN}: “Here we are! This is my bar. Sit down: the first smoothie is on me!”`,`${BARN}: “Eccoci! Questo è il mio bar. Siediti: il primo frullato lo offro io!”`),4);FM().ants.t+=3;try{hudFarm()}catch(e){}},700)}
  }}
 window.IgorBar={go:()=>goTo('bar')};
 /* ================= 11 Nov 2026: coloured bottles and Barigor's shelf (step 3 of the bar plan) =================
@@ -5533,7 +5582,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-2300';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-2330';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
