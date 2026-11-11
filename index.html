@@ -222,7 +222,9 @@ html.touch #zoomB{top:calc(var(--hh,62px) + var(--evh,0px) + 14px)!important;tra
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-const VISIT=(()=>{try{const v=new URLSearchParams(location.search).get('visit');return v&&/^[A-Za-z0-9]{10,40}$/.test(v)?v:null}catch(e){return null}})();
+const VISIT=(()=>{try{const q=new URLSearchParams(location.search),v=q.get('visit')||q.get('inspect');return v&&/^[A-Za-z0-9]{10,40}$/.test(v)?v:null}catch(e){return null}})();
+/* 11 Nov 2026: ?inspect=<uid>: an admin looks at a player's island (a visit that never writes anything) */
+const INSPECT=!!(VISIT&&(()=>{try{return new URLSearchParams(location.search).get('inspect')===VISIT}catch(e){return false}})());if(INSPECT)window.__igInspect=true;
 const TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const pick=a=>a[Math.floor(Math.random()*a.length)];
@@ -252,7 +254,7 @@ function igFreeze(why){if(VISIT||window.__igFrozen)return;window.__igFrozen=true
   <button type="button" style="font:600 17px system-ui,sans-serif;color:#2b2018;background:#d9f2c4;border:3px solid #2b2018;border-radius:12px;padding:12px 18px;cursor:pointer;text-transform:none;letter-spacing:0">▶ ${tt('Play here','Gioca qui')}</button></div>`;
  box.querySelector('button').onclick=go;document.body.appendChild(box)}
 window.IgorFreeze=igFreeze;
-function save(){if(window.__igFrozen)return;if(VISIT){visitSave();return}try{visitPub()}catch(e){}S.at=Date.now();S.dev=IGDEV;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.IgorCloud)window.IgorCloud.push(S)}
+function save(){if(window.__igFrozen||INSPECT)return;if(VISIT){visitSave();return}try{visitPub()}catch(e){}S.at=Date.now();S.dev=IGDEV;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(window.IgorCloud)window.IgorCloud.push(S)}
 /* another tab of this browser saved: take its island if it is newer (works for guests too) */
 addEventListener('storage',e=>{if(VISIT||window.__igFrozen||e.key!==KEY||!e.newValue)return;let v=null;try{v=JSON.parse(e.newValue)}catch(_){}if(v&&v.dev&&v.dev!==IGDEV&&(!S.uid||!v.uid||v.uid===S.uid)){igFreeze('tab');return}if(!v||!v.plots||!((v.at||0)>(S.at||0)))return;if(S.uid&&v.uid&&v.uid!==S.uid)return;
  S=v;ensureFarm();try{fmDirty=true;fmRender()}catch(_){}if(window.IgorUI)IgorUI.refresh()});
@@ -1642,7 +1644,7 @@ function exitRoom(quiet){const k=where;if(k==='out')return;const kb=ROOMS[k].bac
 let camSnap=false;
 const wipSay=t=>{say(t+tt(': coming soon!',': presto!'),3)};
 function rememberSpot(where_,x,z){try{localStorage.setItem('igortime_return',JSON.stringify({where:where_,x,z,t:Date.now()}))}catch(e){}}
-let leaving=false;function launch(url,txt,spot){if(leaving)return;if(VISIT){say(tt('Let’s play the games at home: sail back first!','Ai giochi giochiamo a casa nostra: prima torniamo!'),2.6);return}leaving=true;snd('launch');say(txt,2);toast(txt);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}if(spot)rememberSpot(...spot);else rememberSpot(where,igor.position.x,igor.position.z);setTimeout(()=>{location.href=url},650)}
+let leaving=false;function launch(url,txt,spot){if(leaving)return;if(VISIT){say(tt('Let’s play the games at home: sail back first!','Ai giochi giochiamo a casa nostra: prima torniamo!'),2.6);return}leaving=true;try{window.IgorLive&&IgorLive.leave&&IgorLive.leave(url)}catch(e){}snd('launch');say(txt,2);toast(txt);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}if(spot)rememberSpot(...spot);else rememberSpot(where,igor.position.x,igor.position.z);setTimeout(()=>{location.href=url},650)}
 addEventListener('pageshow',e=>{if(e.persisted)leaving=false});
 function frameOn(Rm,x,y,z,ry,w,h,col,draw){const c=document.createElement('canvas');c.width=128;c.height=Math.round(128*h/w);const g2=c.getContext('2d');g2.fillStyle=col;g2.fillRect(0,0,c.width,c.height);draw&&draw(g2,c.width,c.height);
  const pic=new THREE.Mesh(new THREE.PlaneGeometry(w,h),texM(new THREE.CanvasTexture(c)));const fr=new THREE.Mesh(new THREE.BoxGeometry(w+.14,h+.14,.05),lam('#6a4630'));const G=new THREE.Group();G.add(fr);pic.position.z=.03;G.add(pic);G.position.set(x,y,z);G.rotation.y=ry;Rm.g.add(G);return G}
@@ -3247,10 +3249,10 @@ updaters.push((t,dt)=>{if(DIZZY<=T){if(igPlane.rotation.z){igPlane.rotation.z=0}
 /* --- Barigor the first time: he waits near Igor's house and calls; tap him and he leads the way --- */
 {const H0=new V3(2.3,0,-3.4),bo=new THREE.Group();bo.position.copy(H0);world.add(bo);const pl=barMesh(1);bo.add(pl);blob(bo,.3);bo.visible=false;
  const CALL=[["Psst! I opened a bar on the Caribbean island!","Psst! Ho aperto un bar sull’isola caraibica!"],["Come! The first smoothie is waiting!","Vieni! Il primo frullato ti aspetta!"],["Tap me: I’ll show you the way!","Toccami: ti faccio strada!"]];
- let ci=0,cnext=0,lead=false;const L=label(CALL[0],[BARN+' · barista',BARN+' · barista'],H0.clone().add(new V3(0,IGH2+.55,0)),()=>start(),0);L.hidden=true;
+ let ci=0,cnext=0,lead=false;const L=label(CALL[0],[BARN+' · barista',BARN+' · barista'],H0.clone().add(new V3(0,IGH2+.55,0)),()=>barGo(),0);L.hidden=true;
  const want=()=>!VISIT&&S.farm&&ISL2.on&&!barF().met;
- function start(){if(!want()||lead)return;lead=true;say(tt(`${BARN}: “Follow me!”`,`${BARN}: “Seguimi!”`),2);goTo('bar')}
- hit(bo,.5,()=>start(),'barigor out',.4);
+ function barGo(){if(!want()||lead)return;lead=true;say(tt(`${BARN}: “Follow me!”`,`${BARN}: “Seguimi!”`),2);goTo('bar')}
+ hit(bo,.5,()=>barGo(),'barigor out',.4);
  updaters.push((t,dt)=>{const on=want()&&where==='out';bo.visible=on;if(!on){L.hidden=true;return}barPaint();pl.quaternion.copy(camera.quaternion);
   if(lead){const tg=isleVia(BARDOOR,bo.position),v=tg.clone().sub(bo.position);v.y=0;const d=v.length(),dd=Math.hypot(bo.position.x-BARDOOR.x,bo.position.z-BARDOOR.z);
    const gap=bo.position.distanceTo(igor.position);if(d>.05&&gap<4.5)bo.position.addScaledVector(v.normalize(),Math.min(d,dt*3.2));pl.position.y=Math.abs(Math.sin(t*9))*.06;
@@ -3794,7 +3796,7 @@ let CAM_ON=false;
 function camMode(on){CAM_ON=!!on;camV.hidden=!CAM_ON;{const bx=camV.querySelector('.bx');bx.style.left='50%';bx.style.top='50%';bx.classList.remove('aim')}camB.classList.toggle('on',CAM_ON);if(CAM_ON){hideChips();camV.querySelector('span').textContent=tt('Tap an animal or an Igorlet','Tocca un animale o un Igorlet');say(tt('Click! Look for animals: fish in the sea, birds in the sky…','Clic! Cerca gli animali: pesci nel mare, uccelli in cielo…'),3)}}
 camB.onclick=e=>{e.stopPropagation();if(VISIT&&!camOwned())return;camMode(!CAM_ON)};
 camV.querySelector('button').onclick=e=>{e.stopPropagation();camMode(false)};
-const camOwned=()=>{const H=VISIT&&_HOME?_HOME:S;return!!(H.farm&&H.farm.fun&&H.farm.fun.cam)};
+const camOwned=()=>{if(INSPECT)return false;const H=VISIT&&_HOME?_HOME:S;return!!(H.farm&&H.farm.fun&&H.farm.fun.cam)};
 camV.addEventListener('click',e=>{if(e.target.closest('button')||camV._busy)return;const cx=e.clientX,cy=e.clientY,a=camAim(cx,cy),bx=camV.querySelector('.bx');
  bx.style.left=(a?a.x:cx)+'px';bx.style.top=(a?a.y:cy)+'px';bx.classList.add('aim');camV._busy=1;setTimeout(()=>{camV._busy=0;snapAt(a?a.x:cx,a?a.y:cy);setTimeout(()=>bx.classList.remove('aim'),400)},260)});
 // the viewfinder jumps onto the animal nearest to where you tapped
@@ -4320,10 +4322,10 @@ const GUESTP=[['What a lovely island!','Che bella isola!'],['Hello from a friend
  ['Such green fields!','Che campi rigogliosi!'],['I heard your instruments: lovely!','Ho sentito i tuoi strumenti: bellissimi!'],['Come and visit me too!','Vieni a trovarmi anche tu!']];
 const myNick=()=>(window.IgorCloud&&IgorCloud.user&&IgorCloud.user.nick)||'';
 if(VISIT){VIS={uid:VISIT,nick:'',seeds0:S.seeds|0,ready:false};_HOME=JSON.parse(JSON.stringify(S));document.documentElement.classList.add('visiting')}
-function homeEdit(fn){if(!_HOME)return;fn(_HOME);_HOME.at=Date.now();try{localStorage.setItem(KEY,JSON.stringify(_HOME))}catch(e){}if(window.IgorCloud&&IgorCloud.user)IgorCloud.push()}
+function homeEdit(fn){if(!_HOME||INSPECT)return;fn(_HOME);_HOME.at=Date.now();try{localStorage.setItem(KEY,JSON.stringify(_HOME))}catch(e){}if(window.IgorCloud&&IgorCloud.user)IgorCloud.push()}
 function visitSave(){if(!VIS)return;const d=(S.seeds|0)-VIS.seeds0;VIS.seeds0=S.seeds|0;if(d)homeEdit(H=>{H.seeds=Math.max(0,(H.seeds|0)+d)})}
-function visitHomeIn(d,uid){if(!_HOME||(d.at||0)>(_HOME.at||0)){_HOME={...fresh(),...d};if(uid)_HOME.uid=uid;if(d.at)_HOME.base=d.at;try{localStorage.setItem(KEY,JSON.stringify(_HOME))}catch(e){}
-  if(VIS){S.seeds=_HOME.seeds|0;VIS.seeds0=S.seeds;refresh()}}}
+function visitHomeIn(d,uid){if(!_HOME||(d.at||0)>(_HOME.at||0)){_HOME={...fresh(),...d};if(uid)_HOME.uid=uid;if(d.at)_HOME.base=d.at;if(!INSPECT)try{localStorage.setItem(KEY,JSON.stringify(_HOME))}catch(e){}
+  if(VIS&&!INSPECT){S.seeds=_HOME.seeds|0;VIS.seeds0=S.seeds;refresh()}}}
 const homeFun=()=>{const f=_HOME&&_HOME.farm;if(!f)return{fruit:0,col:{}};f.fun=f.fun||{};f.fun.col=f.fun.col||{};f.fun.colT=f.fun.colT||{};return f.fun};
 let pubAt=0,pubTr=0;function visitPub(){if(VISIT||!window.IgorCloud||!IgorCloud.user||!S.farm)return;const tn=Date.now();if(tn-pubAt<20000){if(!pubTr)pubTr=setTimeout(()=>{pubTr=0;visitPub()},20000-(tn-pubAt)+50);return}pubAt=tn;
  const av=JSON.parse(JSON.stringify({avatar:S.avatar||'igor',head:S.head,hcol:S.hcol,glasses:S.glasses,gcol:S.gcol,ears:S.ears,ecol:S.ecol}));visitMod().then(M=>M.publish(S,IgorCloud.user.nick,av)).catch(e=>console.warn('visit.js',e))}
@@ -4352,7 +4354,7 @@ function renderVisB(){visB.innerHTML=`<span>🏝 ${tt(`${esc(VIS.nick)}’s isla
 visB.addEventListener('click',e=>{const b=e.target.closest('button[data-vb]');if(!b)return;e.stopPropagation();const k=b.dataset.vb;if(k==='home'){visCard('⛵',tt('Sailing home…','Si torna a casa…'));setTimeout(goHome,700)}else if(k==='gift')giftChips();else if(k==='souv')souvChips();else if(k==='book')guestTap()});
 
 /* ---------- opening a friend's island ---------- */
-async function visitOpen(){visCard('⛵',tt('Sailing to your friend’s island…','In viaggio verso l’isola del tuo amico…'));
+async function visitOpen(){if(INSPECT)return inspectOpen();visCard('⛵',tt('Sailing to your friend’s island…','In viaggio verso l’isola del tuo amico…'));
  let k=0;while(!(window.IgorCloud&&IgorCloud.ready&&IgorCloud.user)&&k++<48)await new Promise(r=>setTimeout(r,250));
  if(!(window.IgorCloud&&IgorCloud.user))return visCard('🔑',tt('Sign in to visit your friends’ islands.','Accedi per visitare le isole dei tuoi amici.'),[[tt('Sign in','Accedi'),()=>{location.href='/?signin'}],[tt('My island','La mia isola'),goHome]]);
  let host;try{const M=await visitMod();host=await M.fetchIsland(VISIT)}catch(e){console.warn('visit',e);
@@ -4364,7 +4366,7 @@ async function visitOpen(){visCard('⛵',tt('Sailing to your friend’s island�
 if(VISIT)setTimeout(visitOpen,50);
 
 /* ---------- a kind gesture ---------- */
-async function vSend(k,d,okTxt,after){if(!VIS||!VIS.ready)return false;try{const M=await visitMod(),ok=await M.send(VISIT,k,d,myNick());
+async function vSend(k,d,okTxt,after){if(!VIS||!VIS.ready)return false;if(INSPECT){bubbleQ.length=0;bubbleT=0;say(tt('Here you only look: nothing is sent or saved.','Qui si guarda soltanto: niente viene mandato o salvato.'),2.6);return false}try{const M=await visitMod(),ok=await M.send(VISIT,k,d,myNick());
   if(!ok){bubbleQ.length=0;bubbleT=0;say(tt('You already did this today on this island. Come back tomorrow!','Oggi l’hai già fatto su quest’isola. Torna domani!'),3);return false}
   after&&after();bubbleQ.length=0;bubbleT=0;say(okTxt,3.4);snd('star');return true}
  catch(e){console.warn('visit send',e);bubbleQ.length=0;bubbleT=0;say(tt('Something went wrong: try again.','Qualcosa non ha funzionato: riprova.'),2.6);return false}}
@@ -4427,7 +4429,7 @@ function guestSheet(){const L=FM().guest||[],fmt2=t=>new Date(t).toLocaleDateStr
   chips(P,()=>[{t:'🎵 '+tt('Play','Suona'),main:1,fn:()=>{shellPlaySheet();return false}},{t:'🐚 '+tt('Collection','Collezione'),fn:()=>{caseSheet();return false}},{t:'🔄 '+tt('Propose a trade','Proponi uno scambio'),fn:()=>{tradeSheet();return false}}],'vcase',1);return}
  say(tt(`${N(BLD[k].N)} of ${VIS.nick}.`,`${N(BLD[k].N)} di ${VIS.nick}.`),2.2)}}
 // on a friend's island you may ride their vehicles, on their island; no tofuel is used, neither theirs nor yours (the fuel updater skips visits)
-{const _m=mount;mount=function(k){if(VISIT){const r=_m(k);if(RIDE===k){bubbleQ.length=0;bubbleT=0;say(tt(`${VIS.nick} lends you the ${N(VEH[k].N).toLowerCase()}: let’s go!${MOTOR[k]?' (no tofuel needed here)':''}`,`${VIS.nick} ti presta: ${N(VEH[k].N).toLowerCase()}. Andiamo!${MOTOR[k]?' (qui niente tofuel)':''}`),3)}return r}return _m(k)}}
+{const _m=mount;mount=function(k){if(VISIT){const r=_m(k);if(RIDE===k&&!INSPECT){bubbleQ.length=0;bubbleT=0;say(tt(`${VIS.nick} lends you the ${N(VEH[k].N).toLowerCase()}: let’s go!${MOTOR[k]?' (no tofuel needed here)':''}`,`${VIS.nick} ti presta: ${N(VEH[k].N).toLowerCase()}. Andiamo!${MOTOR[k]?' (qui niente tofuel)':''}`),3)}return r}return _m(k)}}
 {const _lt=igTap;igTap=function(id){if(VISIT){const g=igById(id),o=igObjs.get(id);if(!g)return;if(o)o.showT=T+6;const T0=TRAITS[g.trait]||TRAITS.shy;bubbleQ.length=0;bubbleT=0;if(window.IgorSound&&started)IgorSound.ig('tap',{id,trait:g.trait,pan:0});
   say(tt(`${g.name}, ${VIS.nick}’s Igorlet: “${N(T0.say)}”`,`${g.name}, l’Igorlet di ${VIS.nick}: “${N(T0.say)}”`),3.2);return}return _lt(id)}}
 function visitNo(){say(tt(`That belongs to ${VIS?VIS.nick:'your friend'}!`,`È di ${VIS?VIS.nick:'del tuo amico'}!`),2.2)}
@@ -5374,6 +5376,125 @@ function isleOrphRemove(id){const F=FM();for(const q of F.tasks)q.w=q.w.filter(w
   if(r.og&&!r.had&&r.oid!=null){isleOrphRemove(r.oid);F.orphan=0;tk=1}
   r.back=tk;fmDirty=true;save();fmRender();refresh();if(!quiet&&tk)say(tt('The admins took back a gift.','Gli amministratori hanno ritirato un regalo.'),3);return tk}}
 
+/* ================= 11 Nov 2026: the admins look at a player's island (?inspect=<uid>) =================
+   Opened from the admin panel (🛡 → account → 🔍 Look at the island), in a new tab. Read-only: nothing is saved, nothing is sent.
+   Their own save (users/<uid>) is shown and kept up to date; if they are online, "live": their island sends where Igor is every ~1.5 s
+   (watch/<uid> → live/<uid>, see inspect.js and staff.js), and here Igor follows them (🎯) or you walk around freely (the ghost shows where they are).
+   The player sees nothing of this (decided by Fabio; written in the privacy page). */
+let IXP=null;
+const ixMod=()=>import('/inspect.js?v=1');
+const IXPLACE={'/pitch-stairs/':['Pitch Stairs','Pitch Stairs'],pitch:['Pitch Stairs','Pitch Stairs'],'/cadences/':['Cadences','Cadenze'],cadences:['Cadences','Cadenze'],'/kitchen/':['the kitchen','la cucina'],kitchen:['the kitchen','la cucina'],
+ '/window/':['the window','la finestra'],window:['the window','la finestra'],'/bedroom/':['the bedroom','la camera'],bedroom:['the bedroom','la camera'],'/abyss/':['the abyss','l’abisso'],abyss:['the abyss','l’abisso'],
+ '/drums/':['the drums','la batteria'],drums:['the drums','la batteria'],'/drumschool/':['the drum course','il corso di batteria'],'/notes/':['the note-reading course','il corso di lettura'],'/intervals/':['the intervals lesson','la lezione degli intervalli'],
+ '/bath/':['the bubble bath','la vasca'],bath:['the bubble bath','la vasca'],'/games/':['the games page','la pagina dei giochi'],games:['the games page','la pagina dei giochi']};
+const ixPlace=k=>{const p=IXPLACE[k]||IXPLACE['/'+String(k||'').replace(/^\/|\/$/g,'')+'/'];return p?tt(p[0],p[1]):String(k||'?')};
+const IXROOM={house:['in Igor’s house','in casa di Igor'],school:['in the music school','nella scuola di musica'],bar:['in the bar','al bar'],wc:['in the bathroom','in bagno']};
+const ixHM=t=>t?new Date(t).toLocaleTimeString(LANG==='it'?'it-IT':'en-GB',{hour:'2-digit',minute:'2-digit'}):'—';
+const ixAgo=t=>{if(!t)return'—';const m=Math.round((Date.now()-t)/60000);if(m<1)return tt('just now','adesso');if(m<60)return tt(`${m} min ago`,`${m} min fa`);const h=Math.round(m/60);if(h<48)return tt(`${h} h ago`,`${h} h fa`);return new Date(t).toLocaleDateString(LANG==='it'?'it-IT':'en-GB')};
+const ixNow=()=>performance.now()/1000,IXDELAY=1.7;
+const ixFresh=()=>!!(IXP&&IXP.live&&IXP.buf.length&&ixNow()-IXP.recv<12&&!IXP.gone);
+async function inspectOpen(){window.__igInspect=true;visCard('🔍',tt('Opening the island…','Apro l’isola…'));
+ let k=0;while(!(window.IgorCloud&&IgorCloud.ready&&IgorCloud.user)&&k++<48)await new Promise(r=>setTimeout(r,250));
+ if(!(window.IgorCloud&&IgorCloud.user))return visCard('🔑',tt('Sign in with an admin account.','Accedi con un account da amministratore.'),[[tt('Sign in','Accedi'),()=>{location.href='/?signin'}]]);
+ let M;try{M=await ixMod()}catch(e){console.warn('inspect.js',e);return visCard('🏝',tt('I can’t load the inspector, try again.','Non riesco a caricare l’ispezione, riprova.'),[[tt('Close','Chiudi'),ixClose]])}
+ if(!M.isAdmin())return visCard('🛡',tt('Only the admins can look at other islands.','Solo gli amministratori possono guardare le isole degli altri.'),[[tt('My island','La mia isola'),goHome]]);
+ let d;try{d=await M.load(VISIT)}catch(e){console.warn('inspect',e);return visCard('🏝',tt('This player has no island saved online yet.','Questo giocatore non ha ancora un’isola salvata online.'),[[tt('Close','Chiudi'),ixClose]])}
+ IXP={M,uid:VISIT,nick:d.nick||'?',buf:[],follow:true,live:false,recv:0,gone:'',last:null,pres:[],at:0,savedAt:0,mv:0,html:''};VIS.nick=IXP.nick;
+ if(!ixApply(d,true))return visCard('🏝',tt(`${esc(IXP.nick)}’s island is still empty.`,`L’isola di ${esc(IXP.nick)} è ancora vuota.`),[[tt('Close','Chiudi'),ixClose]]);
+ for(const q of['avatar','head','hcol','glasses','gcol','ears','ecol','ball'])S[q]=d[q];sprKey='';
+ VIS.ready=true;igor.position.set(0,0,-2.6);camSnap=true;if(!started)start();fmRender();refresh();visL.hidden=true;ixBanner(true);
+ M.onSave(VISIT,x=>{ixApply(x,false)});
+ M.onLive(VISIT,x=>ixLive(x));
+ const pr=async()=>{IXP.pres=await M.pres(VISIT);ixBanner(true);return IXP.pres};
+ pr().then(p=>{if(p.length)ixLiveOn(true)});setInterval(pr,30000);
+ addEventListener('pagehide',()=>{if(IXP&&IXP.live)IXP.M.watch(IXP.uid,0).catch(()=>{})});
+ document.addEventListener('visibilitychange',()=>{if(!IXP||!IXP.live)return;if(document.hidden){clearTimeout(IXP.hideT);IXP.hideT=setTimeout(()=>{if(document.hidden&&IXP.live){IXP.paused=true;IXP.M.watch(IXP.uid,0).catch(()=>{})}},60000)}else{clearTimeout(IXP.hideT);if(IXP.paused){IXP.paused=false;IXP.M.watch(IXP.uid,10).catch(()=>{})}}});
+ setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`You are looking at ${IXP.nick}’s island. Touch anything to see how it’s doing: nothing you do here is saved.`,`Stai guardando l’isola di ${IXP.nick}. Tocca le cose per vedere come stanno: niente di quello che fai qui viene salvato.`),5)},800)}
+/* their save → the island here (first time, and every time they save) */
+function ixApply(d,first){const f=d&&d.farm;if(!f||!Array.isArray(f.fields))return false;if(!first&&d.at&&d.at===IXP.at)return true;
+ const seeds0=S.seeds|0;IXP.at=d.at||0;IXP.savedAt=d.savedAt||d.at||0;IXP.save=d;
+ S.farm=JSON.parse(JSON.stringify(f));fixFarm(S.farm);FUN();S.farm.log=[];S.farm.ev=null;S.farm.evDone={};S.seeds=d.seeds|0;
+ try{caseDirty=true}catch(e){}fmDirty=true;simTo(Date.now(),false);S.farm.log=[];S.farm.ev=null;
+ if(!first){fmRender();refresh();const ds=(S.seeds|0)-seeds0;if(ds>0&&IXP.game){bubbleQ.length=0;bubbleT=0;say(tt(`${IXP.nick} came back from ${IXP.game}: +${ds} seeds.`,`${IXP.nick} è tornato da ${IXP.game}: +${ds} semi.`),3.4)}}
+ ixBanner(true);return true}
+function ixLive(x){if(!IXP)return;if(!x){return}if(x.err){IXP.err=x.err;ixBanner(true);return}IXP.err='';
+ const tc=+x.t||0;if(IXP.lastT===tc)return;IXP.lastT=tc;let ig=[];try{ig=JSON.parse(x.ig||'[]')}catch(e){}
+ const s={k:ixNow(),w:x.w||'out',x:+x.x||0,z:+x.z||0,f:x.f<0?-1:1,r:x.r||'',h:+x.h||0,hd:+x.hd||0,sh:x.s||'',i:x.i||'',hid:!!x.hid,ig:new Map(ig.map(a=>[a[0],a])),t:tc};
+ IXP.last=s;
+ if(Date.now()-tc>20000){/* an old one (from before): only where Igor was last time */if(!IXP.live&&!IXP.placed&&s.w==='out'){IXP.placed=true;igor.position.set(s.x,0,s.z);camSnap=true}ixBanner(true);return}
+ if(x.go){IXP.gone=String(x.go);IXP.game=ixPlace(IXP.gone);IXP.buf.length=0;ixBanner(true);return}
+ if(IXP.gone){IXP.gone='';IXP.buf.length=0}
+ IXP.recv=ixNow();IXP.buf.push(s);if(IXP.buf.length>12)IXP.buf.shift();ixBanner(true)}
+async function ixLiveOn(on){if(!IXP)return;IXP.live=on;IXP.buf.length=0;IXP.gone='';clearInterval(IXP.renew);
+ try{await IXP.M.watch(IXP.uid,on?10:0)}catch(e){IXP.err=e&&e.code||'err'}
+ if(on){IXP.startAt=ixNow();IXP.follow=true;IXP.renew=setInterval(()=>{if(IXP.live&&!document.hidden)IXP.M.watch(IXP.uid,10).catch(()=>{})},4*60000)}
+ ixBanner(true)}
+function ixClose(){const go=()=>{try{window.close()}catch(e){}setTimeout(goHome,300)};if(IXP&&IXP.live)IXP.M.watch(IXP.uid,0).catch(()=>{}).finally(go);else go()}
+/* where they are, interpolated a little behind the newest position so it moves smoothly */
+function ixSample(){const B=IXP.buf;if(!B.length)return null;const tr=ixNow()-IXDELAY;let i=B.length-1;while(i>0&&B[i-1].k>tr)i--;
+ const b=B[i],a=i>0?B[i-1]:null;if(!a||tr>=b.k||a.w!==b.w)return b;const u=clamp((tr-a.k)/Math.max(.01,b.k-a.k),0,1);
+ const L=(p,q)=>p+(q-p)*u,ig=new Map();for(const[id,v]of b.ig){const w=a.ig.get(id);ig.set(id,w&&w[3]===v[3]?[id,L(w[1],v[1]),L(w[2],v[2]),v[3]]:v)}
+ return{...b,x:L(a.x,b.x),z:L(a.z,b.z),h:L(a.h,b.h),ig}}
+function ixStatus(){if(!IXP)return'';const on=IXP.pres.length>0;
+ if(IXP.live&&IXP.gone)return`🎮 ${tt(`in a game: ${IXP.game}`,`in un gioco: ${IXP.game}`)}`;
+ if(ixFresh()){const s=IXP.buf[IXP.buf.length-1];let t=s.w!=='out'&&IXROOM[s.w]?N(IXROOM[s.w]):tt('outside','fuori');
+  if(s.r&&VEH[s.r])t+=` · ${N(VEH[s.r].N).toLowerCase()}`;if(s.sh){const I=s.sh==='mar'&&INSK[s.i];t+=` · ${I?'🎵 '+N(I.N):tt('a panel is open','ha un pannello aperto')}`}if(s.hid)t+=` · ${tt('page in the background','pagina in secondo piano')}`;return`🟢 ${t}`}
+ if(IXP.live&&ixNow()-IXP.startAt<10)return`📡 ${tt('connecting…','mi collego…')}`;
+ if(on){const p=IXP.pres[0];if(p.g&&p.g!=='island'&&!p.g.startsWith('island'))return`🎮 ${tt(`in a game: ${ixPlace(p.g)}`,`in un gioco: ${ixPlace(p.g)}`)}`;
+  return IXP.live?`🟡 ${tt('online, the island doesn’t answer yet (old version or another page)','online, l’isola non risponde ancora (versione vecchia o altra pagina)')}`:`🟢 ${tt('online','online')}`}
+ return`⚪ ${tt('offline','offline')}${IXP.last?' · '+tt('last seen ','visto ')+ixAgo(IXP.last.t):''}`}
+function ixBanner(force){if(!IXP)return;const F=S.farm||{},lv=lvlOf();
+ const html=`<span>👁 ${tt(`${esc(IXP.nick)}’s island`,`L’isola di ${esc(IXP.nick)}`)} · ${esc(ixStatus())}</span><small class="ins">${tt('level','liv.')} ${lv} · 🌱 ${S.seeds|0} · 🧊 ${(F.ants&&F.ants.t)|0} · 🐾 ${(F.igs||[]).length} · ${tt('saved','salvata')} ${esc(ixHM(IXP.savedAt))}${IXP.err==='permission-denied'?' · ⚠ '+tt('Firestore rules “watch/live” missing','mancano le regole Firestore “watch/live”'):''}</small>`+
+  `<button type="button" data-ib="live" class="${IXP.live?'on':''}">📡 ${IXP.live?tt('Live: on','Dal vivo: sì'):tt('Live','Dal vivo')}</button>`+
+  (IXP.live&&!IXP.follow&&ixFresh()?`<button type="button" data-ib="follow">🎯 ${tt('Follow','Segui')}</button>`:'')+
+  `<button type="button" data-ib="cmd">🛡 ${tt('Commands','Comandi')}</button><button type="button" class="home" data-ib="close">✕ ${tt('Close','Chiudi')}</button>`;
+ if(!force&&html===IXP.html)return;if(html===IXP.html)return;IXP.html=html;visB.innerHTML=html;visB.hidden=false}
+visB.addEventListener('click',e=>{const b=e.target.closest('button[data-ib]');if(!b||!IXP)return;e.stopPropagation();const k=b.dataset.ib;
+ if(k==='live')ixLiveOn(!IXP.live);else if(k==='follow'){IXP.follow=true;IG.target=null;IG.arrive=null;camSnap=true;ixBanner(true)}else if(k==='close')ixClose();
+ else if(k==='cmd'){if(window.IgorStaff&&IgorStaff.openUser)IgorStaff.openUser(IXP.uid,IXP.nick);else say(tt('The admin panel is still loading…','Il pannello si sta ancora caricando…'),2)}},true);
+{const st=document.createElement('style');st.textContent=`#visB small.ins{flex-basis:100%;text-align:center;font:500 12.5px Fredoka,system-ui,sans-serif;color:#6d5a44}#visB button.on{background:#f6d34a}
+#ixPupL{position:fixed;z-index:3;pointer-events:none;transform:translate(-50%,-100%);font:600 13px Fredoka,system-ui,sans-serif;color:#2b2018;background:rgba(255,247,230,.85);border:2px solid #2b2018;border-radius:999px;padding:2px 9px;white-space:nowrap}#ixPupL[hidden]{display:none}`;document.head.appendChild(st)}
+/* the ghost: where they really are, while you walk around on your own */
+const ixPup=new THREE.Mesh(new THREE.PlaneGeometry(IW,IH).translate(0,IH/2,0),curve(new THREE.MeshBasicMaterial({map:sprTex,transparent:true,opacity:.55,depthWrite:false,side:THREE.DoubleSide,color:new THREE.Color(.93,.95,.97)})));ixPup.visible=false;scene.add(ixPup);
+const ixPupL=document.createElement('div');ixPupL.id='ixPupL';ixPupL.hidden=true;document.body.appendChild(ixPupL);
+const _ixV=new V3();
+window.__ixDbg=()=>({lastT:IXP&&IXP.lastT,last:IXP&&IXP.last&&IXP.last.t,recv:IXP&&IXP.recv,now:ixNow(),gone:IXP&&IXP.gone,err:IXP&&IXP.err,x:+igor.position.x.toFixed(2),z:+igor.position.z.toFixed(2),where,ride:RIDE,follow:IXP&&IXP.follow,live:IXP&&IXP.live,buf:IXP&&IXP.buf.length,fresh:ixFresh(),pup:ixPup.visible});
+if(INSPECT){
+ const _iu0=igorUpdate;igorUpdate=function(t,dt){const s=IXP&&ixFresh()?ixSample():null;
+  if(s&&IXP.follow&&(Math.hypot(IN.x,IN.z)>.12||IG.target)){IXP.follow=false;ixBanner(true)}
+  if(s&&IXP.follow){if(s.w!==where){if(s.w==='out')exitRoom(true);else if(ROOMS[s.w])enterRoom(s.w,new V3(s.x,0,s.z))}
+   if(where==='out'){const r=s.r&&FM().veh&&FM().veh[s.r]?s.r:null;if(r!==RIDE){RIDE=r;camSnap=true}rideH=RIDE?s.h:0;igHead=s.hd}
+   const px=igor.position.x,pz=igor.position.z;igor.position.set(s.x,0,s.z);const d=Math.hypot(s.x-px,s.z-pz);IXP.mv=IXP.mv*.8+(dt>0?d/dt:0)*.2;
+   IG.face=s.f;IG.target=null;IG.arrive=null;lastAct=T;IG.idle=6;_iu0(t,dt);if(IXP.mv>.4){IG.walk+=dt*10;igPlane.position.y+=Math.abs(Math.sin(IG.walk))*.16;igPlane.rotateZ(Math.sin(IG.walk)*.05)}return}
+  _iu0(t,dt)};
+ updaters.push((t,dt)=>{if(!IXP)return;const s=ixFresh()?ixSample():null;
+  const pv=!!(s&&!IXP.follow&&s.w===where);ixPup.visible=pv;
+  if(pv){ixPup.position.set(s.x,(where==='out'&&s.r&&VEH[s.r]&&VEH[s.r].kind==='air'?s.h:0)+.02,s.z);ixPup.quaternion.copy(camera.quaternion);ixPup.scale.set(s.f,1,1);
+   _ixV.set(s.x,IH+.35,s.z);projC(_ixV);const vis=_ixV.z<1&&Math.abs(_ixV.x)<1.1&&Math.abs(_ixV.y)<1.1;ixPupL.hidden=!vis;if(vis){ixPupL.textContent=`📍 ${IXP.nick}`;ixPupL.style.left=((_ixV.x+1)/2*innerWidth)+'px';ixPupL.style.top=((1-_ixV.y)/2*innerHeight)+'px'}}
+  else ixPupL.hidden=true;
+  if(s)for(const[id,a]of s.ig){const o=igObjs.get(id);if(!o)continue;const p=o.grp.position,dx=a[1]-p.x;if(Math.abs(dx)>.01)o.face=dx>0?1:-1;p.x=a[1];p.z=a[2];o.goal.set(a[1],0,a[2]);o.grp.visible=!!a[3];if(o.L&&!a[3])o.L.hidden=true}
+  if((IXP.bt=(IXP.bt||0)+dt)>1){IXP.bt=0;ixBanner(false)}})}
+/* 11 Nov 2026: what an admin who is watching sees of this island (staff.js sends it to live/<uid> every ~1.5 s, only while watch/<uid> is on) */
+if(!VISIT)window.IgorLive={leave:null,snap(){if(!started||!S.farm)return null;const ig=[];for(const[id,o]of igObjs){const p=o.grp.position;ig.push([id,+p.x.toFixed(2),+p.z.toFixed(2),o.grp.visible?1:0])}
+ return{w:where,x:+igor.position.x.toFixed(2),z:+igor.position.z.toFixed(2),f:IG.face<0?-1:1,r:RIDE||'',h:+(rideH||0).toFixed(2),hd:+(igHead||0).toFixed(2),s:sheet.hidden?'':String(sheetKind||'').slice(0,12),i:sheetKind==='mar'?String(INSEL):'',ig:JSON.stringify(ig).slice(0,3000),hid:document.hidden?1:0}}};
+
+/* 11 Nov 2026: the privacy page of Igor Time (from the account sheet) */
+const PRIV=()=>LANG==='it'?`<h2>🔒 Privacy di Igor Time</h2>
+<h4>Cosa salviamo</h4><p>Se crei un account: il nickname, l’email, l’aspetto del tuo Igor, la tua isola e i tuoi progressi (semi, formiche di tofu, oggetti, Igorlets, conchiglie…), i punteggi e le classifiche. Per tutti, anche gli ospiti: quando sei sul sito e in che pagina (isola, quale gioco), da telefono o computer, in che lingua.</p>
+<h4>Cosa vedono gli amministratori</h4><p>Gli amministratori di Igor Time vedono il nickname e l’email degli account e possono guardare la tua isola com’è (campi, Igorlets, edifici, oggetti). Mentre giochi possono anche vedere dal vivo dove si muovono Igor e gli Igorlets sull’isola e a quale gioco stai giocando. Serve per aiutarti quando qualcosa non va, trovare gli errori del gioco e tenerlo sicuro. Non vediamo niente fuori da Igor Time: niente fotocamera, microfono, altre schede o altri siti.</p>
+<h4>Il meteo vero</h4><p>Se scegli il meteo del posto in cui sei, la posizione resta sul tuo dispositivo e serve solo a chiedere il meteo (open-meteo.com).</p>
+<h4>Dove</h4><p>I dati sono su Google Firebase, in Europa. Non li vendiamo e non li usiamo per la pubblicità.</p>
+<h4>Cancellare o chiedere</h4><p>Per vedere o cancellare i tuoi dati scrivi a theigortime@gmail.com. La chat ha anche una sua pagina della privacy, dentro la chat 💬.</p>`
+:`<h2>🔒 Igor Time privacy</h2>
+<h4>What we keep</h4><p>If you create an account: your nickname, your email, your Igor’s look, your island and your progress (seeds, tofu ants, things, Igorlets, shells…), your scores and the leaderboards. For everyone, guests too: when you are on the site and on which page (the island, which game), phone or computer, which language.</p>
+<h4>What the admins see</h4><p>The Igor Time admins see the nickname and email of the accounts and can look at your island as it is (fields, Igorlets, buildings, things). While you play they can also see live where Igor and the Igorlets move on the island and which game you are playing. It helps them help you when something goes wrong, find bugs in the game and keep it safe. We see nothing outside Igor Time: no camera, microphone, other tabs or other sites.</p>
+<h4>The real weather</h4><p>If you choose the weather where you are, your location stays on your device and is only used to ask for the weather (open-meteo.com).</p>
+<h4>Where</h4><p>The data is on Google Firebase, in Europe. We don’t sell it and we don’t use it for ads.</p>
+<h4>Deleting or asking</h4><p>To see or delete your data write to theigortime@gmail.com. The chat also has its own privacy page, inside the chat 💬.</p>`;
+{const _oa=openAccount;openAccount=function(){_oa();if(sheetKind==='acct')sb.insertAdjacentHTML('beforeend',`<p style="margin-top:12px;font-size:13.5px"><button type="button" class="link" data-priv="1">🔒 ${tt('Privacy','Privacy')}</button></p>`)}}
+sb.addEventListener('click',e=>{const b=e.target.closest('button[data-priv]');if(!b)return;e.preventDefault();e.stopPropagation();openSheet('priv',PRIV()+`<div class="row" style="margin-top:12px"><button type="button" data-privback="1">← ${tt('Back','Indietro')}</button></div>`)},true);
+sb.addEventListener('click',e=>{const b=e.target.closest('button[data-privback]');if(!b)return;e.preventDefault();e.stopPropagation();openAccount()},true);
+
 /* --- the spontaneous Aliengor: one roll a day, at a random hour; never in the first week, and never twice within a month --- */
 {let acc=0;updaters.push((t,dt)=>{if((acc+=dt)<5||VISIT||!S.farm)return;acc=0;const F=FM(),now=Date.now(),d=dayIdx(now);
  if(F.ufo||lvlOf()<3||F.igs.length<1)return;if(F.ufoRoll==null){F.ufoRoll=d;fmDirty=true;return}
@@ -5631,7 +5752,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-2400';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-2530';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
@@ -5672,7 +5793,7 @@ const C={user:null,
    While the island is open it also listens to the save, so it follows the other device right away. */
 const mine=new Set();let busy=false,again=false,unSave=null,claimed=false;
 function adopt(c){const d={...c};delete d.updated;delete d.name;delete d.nick;window.IgorSave.adopt(d,C.user&&C.user.uid)}
-async function writeSave(){if(!C.user||window.__igFrozen)return;if(busy){again=true;return}busy=true;
+async function writeSave(){if(!C.user||window.__igFrozen||window.__igInspect)return;if(busy){again=true;return}busy=true;
  try{const uid=C.user.uid,snap=clean(window.IgorSave.get()),at=snap.at,base=snap.base;snap.uid=uid;if(window.IGVER)snap.igv=window.IGVER;if(window.IGDEV&&!window.IgorSave.visiting)snap.dev=window.IGDEV;mine.add(at);const ref=doc(db,'users',uid);
   let theirs,over=null;try{theirs=await runTransaction(db,async tx=>{const cur=await tx.get(ref),c=cur.exists()?cur.data():null;over=null;
    if(c&&c.at&&c.at===at)return'same';
@@ -5696,7 +5817,7 @@ function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
 window.IgorCloud=C;
 /* events forced by the admins for everyone (gev/<id>): every island listens to the last ones */
 try{onSnapshot(query(collection(db,'gev'),orderBy('at','desc'),limit(10)),q=>{if(window.IgorForce)window.IgorForce.global(q.docs.map(d=>{const x=d.data();return{id:d.id,k:x.k,lead:x.lead|0,st:x.st,at:x.at&&x.at.toMillis?x.at.toMillis():0}}))},e=>console.warn('gev',e&&e.code||e))}catch(e){console.warn('gev',e)}
-{const s=document.createElement('script');s.src='/chat.js?v=16';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=17';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
