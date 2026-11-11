@@ -216,8 +216,10 @@ const SFX={
  ufo:()=>{tone(150,190,4.2,{g:.22,type:'triangle',vib:14,vibF:6,at:1});tone(300,380,4.2,{g:.08,type:'sine',vib:20,vibF:6.5,at:1})},
  beam:()=>{tone(300,1400,2.8,{g:.16,type:'sawtooth',lp:1800,vib:30,vibF:9,at:.4});nz(2.8,{f0:900,f1:3500,Q:1.5,g:.12,at:.4})},
  whoosh:()=>{nz(1.1,{f0:400,f1:5000,Q:.8,g:.4,at:.05});tone(500,2400,.9,{g:.12,type:'triangle'})},
- dtom:()=>{tone(210,95,.32,{g:.75,at:.002});nz(.04,{f0:900,Q:1,g:.18})},
- dhat:()=>{nz(.07,{type:'highpass',f0:7000,Q:.7,g:.5,at:.001});nz(.03,{f0:10000,Q:1,g:.2})},
+ // 11 Nov 2026: tom and hi-hat skip the soft lowpass of the little sounds (it ate the hi-hat) and sit where phone and laptop speakers
+ // can play them (the old tom was 95-210 Hz: almost silent on small speakers)
+ dtom:()=>{const b=igOut;tone(330,165,.3,{g:.3,at:.002,bus:b});tone(660,330,.12,{g:.1,at:.002,bus:b});nz(.05,{f0:1300,Q:1.2,g:.2,at:.001,bus:b});nz(.18,{f0:420,Q:1.5,g:.16,at:.002,bus:b})},
+ dhat:()=>{const b=igOut;nz(.09,{type:'highpass',f0:5200,Q:.7,g:.32,at:.001,bus:b});nz(.06,{f0:3600,Q:2.2,g:.24,at:.001,bus:b});tone(5400,5400,.05,{g:.03,type:'square',at:.001,bus:b})},
  marimba:f=>{f=f||523;tone(f,f,1.1,{g:.6,at:.003});tone(f*3.9,f*3.9,.18,{g:.16,at:.002});tone(f*9.2,f*9.2,.05,{g:.05,at:.001});nz(.02,{f0:1800,Q:1,g:.1})},
  wish:()=>{for(let i=0;i<8;i++){const f=st(1047,PENTA[i]);tone(f,f,.6,{g:.22,delay:i*.06,at:.003,pan:R(-.6,.6)})}tone(523,523,1.8,{g:.18,at:.3,type:'triangle'})},
 };
