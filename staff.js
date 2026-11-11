@@ -178,16 +178,17 @@ function userV(){const b=shell(),a=allAccounts().find(x=>x.uid===sel)||{uid:sel,
  <div id="admGifts"></div>`;
  loadSent(sel).then(drawSent);loadGifts(sel).then(drawGifts);loadInv(sel).then(drawInv);loadBk(sel).then(drawBk)}
 let GIFTS=[],INV=null,BKS=[];
-const BKW={day:['daily copy','copia del giorno'],unsynced:['changes not yet online, replaced','modifiche non ancora online, sostituite'],'cloud-replaced':['online island replaced by a device','isola online sostituita da un dispositivo'],'device-replaced':['device island replaced by the online one','isola di un dispositivo sostituita da quella online'],'restored-over':['replaced by a restore','sostituita da un ripristino'],'pre-restore':['before a restore','prima di un ripristino']};
-async function loadBk(uid){try{const s=await getDocs(query(collection(db,'users',uid,'bk'),orderBy('t','desc'),limit(40)));BKS=s.docs.map(d=>({id:d.id,...d.data()}))}catch(e){console.warn('bk',e);BKS=null}}
-function bkSum(b){let I=null;try{I=JSON.parse(b.d)}catch(e){}if(!I)return'';const F=I.farm||{},v=Object.keys(F.veh||{}),h=Object.keys(F.pos||{}).length;
+const BKW={day:['daily copy','copia del giorno'],unsynced:['changes not yet online, replaced','modifiche non ancora online, sostituite'],'cloud-replaced':['island that was behind, replaced by the one with more progress','isola più indietro, sostituita da quella più avanti'],'device-replaced':['device island replaced by the online one','isola di un dispositivo sostituita da quella online'],'restored-over':['replaced by a restore','sostituita da un ripristino'],'pre-restore':['before a restore','prima di un ripristino']};
+async function bkText(b){if(!b.z)return b.d;const bin=Uint8Array.from(atob(b.d),c=>c.charCodeAt(0));return new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}
+async function loadBk(uid){try{const s=await getDocs(query(collection(db,'users',uid,'bk'),orderBy('t','desc'),limit(40)));BKS=s.docs.map(d=>({id:d.id,...d.data()}));for(const b of BKS){try{b.j=await bkText(b)}catch(e){b.j=''}}}catch(e){console.warn('bk',e);BKS=null}}
+function bkSum(b){let I=null;try{I=JSON.parse(b.j)}catch(e){}if(!I)return'';const F=I.farm||{},v=Object.keys(F.veh||{}),h=Object.keys(F.pos||{}).length;
  return`🌱 ${I.seeds|0} · 🧊 ${(F.ants&&F.ants.t)|0} · ${tt('collected','raccolte')} ${F.total|0}${v.length?' · '+v.map(k=>esc(vName(k))+((F.veh[k].n|0)>1?' ×'+F.veh[k].n:'')).join(', '):''} · ${h} ${tt('places on the island','posti sull’isola')}`}
 function drawBk(){const e=$('admBk');if(!e)return;if(BKS===null){e.textContent=tt('Backups: I cannot read them.','Copie di sicurezza: non riesco a leggerle.');return}
  if(!BKS.length){e.innerHTML=`<b>${tt('Backups','Copie di sicurezza')}</b>: ${tt('none yet (one is made every day they play).','ancora nessuna (se ne fa una ogni giorno in cui gioca).')}`;return}
  e.innerHTML=`<b>${tt('Backups','Copie di sicurezza')}</b>`+BKS.map(b=>`<div style="margin:6px 0;padding:6px 0;border-top:1px solid rgba(0,0,0,.12)">${esc(fmtTime(b.t))} · ${esc(BKW[b.why]?tt(...BKW[b.why]):b.why)}<br><small>${bkSum(b)}</small><br><button data-a="restore" data-bk="${esc(b.id)}">${tt('Restore this one','Ripristina questa')}</button></div>`).join('')}
 async function restoreBk(uid,b){const ref=doc(db,'users',uid),cur=await getDoc(ref),now=Date.now(),c=cur.exists()?cur.data():null;
  if(c){const k={...c};delete k.updated;await setDoc(doc(db,'users',uid,'bk','pre-restore-'+now),{why:'pre-restore',t:now,at:c.at||0,lv:(c.farm&&c.farm.total)|0,igv:c.igv||'',d:JSON.stringify(k),made:serverTimestamp()})}
- const d=JSON.parse(b.d);delete d.updated;d.at=now;d.base=c&&c.at||0;d.rst=now;d.uid=uid;
+ const d=JSON.parse(b.j);delete d.updated;d.at=now;d.base=c&&c.at||0;d.rst=now;d.uid=uid;
  await setDoc(ref,{...d,name:c&&c.name||d.name||'',nick:c&&c.nick||d.nick||'',updated:serverTimestamp()})}
 async function loadGifts(uid){try{const s=await getDocs(query(collection(db,'gifts',uid,'g'),orderBy('at','desc'),limit(50)));GIFTS=s.docs.map(d=>({id:d.id,...d.data(),at:ms(d.data().at)}))}catch(e){console.warn('gifts',e);GIFTS=[]}}
 async function loadInv(uid){try{const d=await getDoc(doc(db,'users',uid));INV=d.exists()?d.data():false}catch(e){console.warn('inv',e);INV=null}}
