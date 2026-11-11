@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en"><head><script src="/lang.js?v=3"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The bathtub · Igor time</title>
+<meta name="description" content="An ear-training game in Igor's bathroom: singing bubbles hide behind the shower curtain. How many voices are singing together? Blow the same number of bubbles.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+</head><body>
+<script src="/house/kit.js?v=5"></script>
+<script>
+(()=>{
+const {TAU,clamp,lerp,ease,rr,drawCurtain,drawRoom,panels}=IgorHouse;
+let IT=false;try{IT=(localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en'))==='it'}catch(e){}
+const tt=(en,it)=>IT?it:en;
+const touch=matchMedia('(pointer:coarse)').matches;
+const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* how many voices sing together? easy is really easy: few voices, far apart, all different, entering one by one */
+const LEVELS={
+ easy:   {name:'Easy',   n:[1,3],gap:7,stagger:.45,timbres:'all', dur:3.2,replays:Infinity,info:tt('1 to 3 bubbles · each with its own voice, one after the other · listen as often as you like','Da 1 a 3 bolle · ognuna con la sua voce, una dopo l’altra · ascolta quante volte vuoi')},
+ medium: {name:'Medium', n:[1,4],gap:4,stagger:.12,timbres:'some',dur:2.4,replays:2,       info:tt('1 to 4 bubbles · almost together · you can listen three times','Da 1 a 4 bolle · quasi insieme · puoi ascoltare tre volte')},
+ extreme:{name:'Extreme',n:[2,6],gap:3,stagger:0,  timbres:'one', dur:1.8,replays:1,       info:tt('2 to 6 bubbles · all together, the same voice · you hear them twice','Da 2 a 6 bolle · tutte insieme, la stessa voce · le senti due volte')}};
+const MAXB=6;
+
+/* ---------- the voices of the bubbles ---------- */
+let AC=null,OUT=null;
+const TIMBRES=['flute','clar','bell','reed','vox'];
+const BCOL={flute:'#7fe3ef',clar:'#ffd36a',bell:'#ff9ec7',reed:'#9be38a',vox:'#c49bff'};
+function voice(kind,f,t,dur,vol){const g=AC.createGain(),att=kind==='bell'?.005:.06;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+att);
+ if(kind==='bell')g.gain.exponentialRampToValueAtTime(vol*.15,t+dur);else g.gain.setValueAtTime(vol,t+dur-.12);g.gain.linearRampToValueAtTime(0,t+dur);g.connect(OUT);
+ const add=(r,a,type='sine')=>{const o=AC.createOscillator(),ga=AC.createGain();o.type=type;o.frequency.value=f*r;ga.gain.value=a;o.connect(ga);ga.connect(g);o.start(t);o.stop(t+dur+.05);return o};
+ if(kind==='flute'){add(1,1);add(2,.12);const o=AC.createOscillator(),d=AC.createGain();o.frequency.value=5;d.gain.value=f*.006;o.connect(d);o.start(t);o.stop(t+dur);}
+ else if(kind==='clar'){add(1,.8);add(3,.35);add(5,.18);add(7,.08)}
+ else if(kind==='bell'){add(1,.8);add(2.76,.35);add(5.4,.18);add(.5,.2)}
+ else if(kind==='reed'){const o=add(1,.35,'sawtooth');}
+ else{const o=AC.createOscillator(),bp=AC.createBiquadFilter(),bp2=AC.createBiquadFilter(),ga=AC.createGain();o.type='sawtooth';o.frequency.value=f;bp.type='bandpass';bp.frequency.value=700;bp.Q.value=4;bp2.type='bandpass';bp2.frequency.value=1150;bp2.Q.value=5;ga.gain.value=1.4;
+  o.connect(bp);o.connect(bp2);bp.connect(ga);bp2.connect(ga);ga.connect(g);o.start(t);o.stop(t+dur+.05)}}
+const fOf=m=>440*Math.pow(2,(m-69)/12);
+/* a chord: n notes, at least gap semitones apart, never two notes an octave apart (they melt into one) */
+function chord(LV,n){let ms;for(let k=0;k<400;k++){const lo=ri(50,58);ms=[lo];let ok=true;
+  for(let i=1;i<n;i++){const step=LV.gap+ri(0,LV.gap>5?4:3);ms.push(ms[i-1]+step)}
+  if(ms[n-1]>86)continue;for(let a=0;a<n&&ok;a++)for(let b=a+1;b<n;b++)if((ms[b]-ms[a])%12===0)ok=false;if(ok)break}
+ return ms}
+function timbresFor(LV,n){if(LV.timbres==='one'){const k=pick(TIMBRES.filter(x=>x!=='bell'));return Array(n).fill(k)}
+ const sh=TIMBRES.slice().sort(()=>Math.random()-.5);if(LV.timbres==='all')return sh.slice(0,n);return Array.from({length:n},(_,i)=>sh[i%2])}
+let bag=[];function nextN(LV){if(!bag.length){bag=[];for(let n=LV.n[0];n<=LV.n[1];n++)bag.push(n,n);bag.sort(()=>Math.random()-.5)}return bag.pop()}
+function playChord(R,LV,t0,one){const n=R.ms.length,vol=.22/Math.sqrt(n);const st=one?0:LV.stagger;R.ms.forEach((m,i)=>voice(R.tb[i],fOf(m),t0+R.order[i]*st,LV.dur-R.order[i]*st,vol))}
+function plop(t){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(380,t);o.frequency.exponentialRampToValueAtTime(900,t+.07);g.gain.setValueAtTime(.18,t);g.gain.exponentialRampToValueAtTime(.001,t+.12);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+.14)}
+function pop(t){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.setValueAtTime(1200,t);o.frequency.exponentialRampToValueAtTime(300,t+.05);g.gain.setValueAtTime(.16,t);g.gain.exponentialRampToValueAtTime(.001,t+.07);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+.09)}
+
+/* ---------- Igor's bubbles ---------- */
+let mine=0;const MB=[];// my bubbles, each with its own wobble
+function addB(K,silent){if(K.phase!=='guess'||K.refOn||mine>=MAXB)return;mine++;MB.push({b:K.T,ph:Math.random()*TAU,x:rnd(-.5,.5)});if(!silent&&AC)plop(AC.currentTime);K.moved();K.update()}
+function delB(K){if(K.phase!=='guess'||K.refOn||mine<=0)return;mine--;const b=MB.pop();if(AC)pop(AC.currentTime);K.update()}
+const K=IgorGame({key:'bath',name:tt('The bathtub','La vasca da bagno'),rounds:5,maxRound:100,levels:LEVELS,outfit:'bath',
+ aria:tt('Two bathtubs: behind the shower curtain some bubbles sing together; in front, Igor in the tub blows the same number of bubbles','Due vasche: dietro la tenda della doccia alcune bolle cantano insieme; davanti, Igor nella vasca soffia lo stesso numero di bolle'),
+ title:tt('The <em>bathtub</em>','La <em>vasca</em>'),
+ intro:tt(`<p>Behind the shower curtain, some <b>singing bubbles</b> sing together. <b>How many voices</b> do you hear?</p><p>Blow the same number of bubbles in <span class="nm">Igor</span>’s tub: ${touch?'tap the tub':'tap the tub or press ↑'} to blow one, ${touch?'tap a bubble':'press ↓'} to pop one. Then press <b>That’s it</b>, and the bubbles come out to sing one by one.</p>`,
+  `<p>Dietro la tenda della doccia alcune <b>bolle canterine</b> cantano insieme. <b>Quante voci</b> senti?</p><p>Soffia lo stesso numero di bolle nella vasca di <span class="nm">Igor</span>: ${touch?'tocca la vasca':'tocca la vasca o premi ↑'} per farne una, ${touch?'tocca una bolla':'premi ↓'} per scoppiarla. Poi premi <b>Ecco</b>, e le bolle escono a cantare una alla volta.</p>`),
+ keys:tt('keys: ↑ blow a bubble, ↓ pop one, 1–6 = that many, L = listen, enter = that’s it','tasti: ↑ fai una bolla, ↓ scoppiane una, 1–6 = quante, L = ascolta, invio = ecco'),
+ bar:`<button id="listen" type="button">▶ Listen</button><button id="minus" type="button">− ${tt('pop','scoppia')}</button><button id="plus" type="button">+ ${tt('bubble','bolla')}</button><button id="ok" class="main" type="button">That’s it!</button>`,
+ roundLine:(R,K)=>K.round===1?tt('Shh… the bubbles are singing.','Shh… cantano le bolle.'):K.round===5?tt('Last song. How many?','Ultima canzone. Quante?'):pick([tt('Another song! Count the voices.','Un’altra canzone! Conta le voci.'),tt('Listen… how many bubbles?','Ascolta… quante bolle?'),tt('Here they go again.','Eccole di nuovo.')]),
+ revealMs:5200,msgDelay:900,
+ onAudio(K){AC=K.AC;OUT=K.OUT},
+ newRound(R,LV,K){const n=nextN(LV);R.ms=chord(LV,n);R.tb=timbresFor(LV,n);R.order=R.ms.map((_,i)=>i).sort(()=>Math.random()-.5);mine=0;MB.length=0;R.arp=false;K.update()},
+ playRef(R,LV,K){playChord(R,LV,AC.currentTime+.05);return LV.dur+.1},
+ busy:()=>mine>0,
+ judge(R,LV,K){const n=R.ms.length,d=mine-n,e=Math.abs(d);R.err=d;R.mine=mine;
+  // after the reveal the bubbles sing one by one, then all together
+  const t0=AC.currentTime+1.1,arp=.5;R.ms.forEach((m,i)=>voice(R.tb[i],fOf(m),t0+i*arp,.45,.16));R.arpT=K.T+1.1;R.arpStep=arp;
+  playChordLater(R,LV,t0+n*arp+.15);
+  const pts=e===0?125:e===1?55:e===2?15:0,good=e===0;let msg;const N=n===1?tt('one bubble','una bolla'):tt(`${n} bubbles`,`${n} bolle`);
+  if(e===0)msg=pick([tt(`Yes! ${N}, exactly. What ears!`,`Sì! ${N}, giuste. Che orecchie!`),tt(`Perfect! ${cap(N)} singing together.`,`Perfetto! ${cap(N)} che cantano insieme.`)]);
+  else if(e===1)msg=d>0?tt(`So close! There ${n>1?'were':'was'} ${N}: one less.`,`Ci sei quasi! ${n>1?'Erano':'Era'} ${N}: una in meno.`):tt(`So close! There were ${N}: one more.`,`Ci sei quasi! Erano ${N}: una in più.`);
+  else msg=tt(`Good try! There ${n>1?'were':'was'} ${N}. Listen to them one by one!`,`Bel tentativo! ${n>1?'Erano':'Era'} ${N}. Ascoltale una alla volta!`);
+  return{pts,good,msg}},
+ update(K){const p=document.getElementById('plus'),m=document.getElementById('minus'),ok=document.getElementById('ok');const live=K.phase==='guess'&&!K.refOn;
+  if(p)p.disabled=!live||mine>=MAXB;if(m)m.disabled=!live||mine<=0;if(ok&&K.phase==='guess')ok.disabled=mine===0},
+ key_down(e,K){if(e.key==='ArrowUp'||e.key==='+'){e.preventDefault();addB(K)}else if(e.key==='ArrowDown'||e.key==='-'){e.preventDefault();delB(K)}
+  else{const n=+e.key;if(n>=1&&n<=MAXB&&K.phase==='guess'&&!K.refOn){while(mine<n)addB(K,true);while(mine>n){mine--;MB.pop()}if(AC)plop(AC.currentTime);K.update()}}},
+ draw});
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+function playChordLater(R,LV,t){const n=R.ms.length,vol=.2/Math.sqrt(n);R.ms.forEach((m,i)=>voice(R.tb[i],fOf(m),t,1.4,vol));R.allT=K.T+(t-AC.currentTime)}
+document.getElementById('plus').onclick=()=>addB(K);document.getElementById('minus').onclick=()=>delB(K);
+/* tap the tub to blow a bubble, tap a bubble to pop it */
+let TUB=null,MYB=[];
+K.cv.addEventListener('pointerdown',e=>{if(K.phase!=='guess'||K.refOn||!TUB)return;const x=e.clientX,y=e.clientY;
+ for(let i=MYB.length-1;i>=0;i--){const b=MYB[i];if(Math.hypot(x-b.x,y-b.y)<b.r*1.15){delB(K);return}}
+ if(x>TUB.x-10&&x<TUB.x+TUB.w+10&&y>TUB.y-TUB.h*1.6&&y<TUB.y+TUB.h+10)addB(K)});
+K.update();
+
+/* ---------- drawing ---------- */
+function label(g,x,y,txt,col,size=16){g.save();g.font='600 '+size+'px Fredoka,sans-serif';g.textAlign='center';const w=g.measureText(txt).width+22;
+ g.fillStyle='#f7ecd4';g.strokeStyle='#2b2018';g.lineWidth=2.5;rr(g,x-w/2,y-15,w,28,12);g.fill();g.stroke();g.fillStyle=col||'#2b2018';g.fillText(txt,x,y+5);g.restore()}
+function tiles(g,p,floorY){g.fillStyle='#d8eef0';g.fillRect(p.x,p.y,p.w,floorY-p.y);const s=Math.max(26,p.w/14);g.strokeStyle='rgba(120,170,180,.35)';g.lineWidth=1.5;
+ for(let y=floorY;y>p.y;y-=s){g.beginPath();g.moveTo(p.x,y);g.lineTo(p.x+p.w,y);g.stroke()}for(let x=p.x;x<p.x+p.w;x+=s){g.beginPath();g.moveTo(x,p.y);g.lineTo(x,floorY);g.stroke()}
+ g.fillStyle='#7a9aa6';g.fillRect(p.x,floorY,p.w,p.y+p.h-floorY);g.fillStyle='rgba(255,255,255,.12)';for(let x=p.x;x<p.x+p.w;x+=s*1.4)g.fillRect(x,floorY,2,p.y+p.h-floorY)}
+/* a white clawfoot tub; returns its rim */
+function tub(g,cx,by,w,h,water){const x=cx-w/2,y=by-h;
+ g.fillStyle='#c9a24a';for(const fx of[x+w*.12,x+w*.88]){g.beginPath();g.ellipse(fx,by+h*.06,w*.05,h*.12,0,0,TAU);g.fill()}
+ g.fillStyle='#fbfbf8';g.strokeStyle='#2b2018';g.lineWidth=3;g.beginPath();g.moveTo(x,y);g.lineTo(x+w,y);g.quadraticCurveTo(x+w*.98,by,x+w*.75,by);g.lineTo(x+w*.25,by);g.quadraticCurveTo(x+w*.02,by,x,y);g.closePath();g.fill();g.stroke();
+ g.fillStyle='rgba(120,170,200,.18)';g.fillRect(x+w*.06,y+h*.2,w*.88,h*.08);
+ g.fillStyle='#eef3f4';rr(g,x-w*.03,y-h*.1,w*1.06,h*.16,h*.08);g.fill();g.stroke();
+ // the faucet
+ g.strokeStyle='#9aa1a8';g.lineWidth=Math.max(4,w*.025);g.beginPath();g.moveTo(x+w*.92,y-h*.08);g.lineTo(x+w*.92,y-h*.5);g.quadraticCurveTo(x+w*.92,y-h*.7,x+w*.8,y-h*.66);g.stroke();
+ return{x,y,w,h}}
+function bubble(g,x,y,r,col,glow,face,t){g.save();if(glow>0){g.shadowColor=col;g.shadowBlur=24*glow}
+ const gr=g.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);gr.addColorStop(0,'rgba(255,255,255,.85)');gr.addColorStop(.35,'rgba(255,255,255,.18)');gr.addColorStop(.85,col+'55');gr.addColorStop(1,col+'cc');
+ g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,TAU);g.fill();g.shadowBlur=0;g.strokeStyle=col;g.globalAlpha=.8;g.lineWidth=Math.max(1.5,r*.06);g.stroke();g.globalAlpha=1;
+ g.fillStyle='rgba(255,255,255,.9)';g.beginPath();g.ellipse(x-r*.38,y-r*.42,r*.18,r*.1,-.6,0,TAU);g.fill();
+ if(face){g.fillStyle='#2b2018';for(const s of[-1,1]){g.beginPath();g.arc(x+s*r*.22,y-r*.02,Math.max(1.5,r*.07),0,TAU);g.fill()}
+  const sing=glow>.3;g.beginPath();if(sing)g.ellipse(x,y+r*.25,r*.11,r*.14,0,0,TAU);else g.arc(x,y+r*.16,r*.13,.2,Math.PI-.2);sing?g.fill():(g.lineWidth=Math.max(1.5,r*.05),g.strokeStyle='#2b2018',g.stroke())}
+ g.restore()}
+/* ---------- the bathroom: a shelf with soaps and bottles, a mirror, a towel, a plant, a bath mat, a duck ---------- */
+function duckAt(g,x,y,s,t,ph){const b=Math.sin(t*2+ph)*s*.06;g.save();g.translate(x,y+b);g.rotate(Math.sin(t*1.3+ph)*.08);g.strokeStyle='#2b2018';g.lineWidth=Math.max(1.5,s*.07);
+ g.fillStyle='#f6d34a';g.beginPath();g.ellipse(0,0,s*.9,s*.55,0,0,TAU);g.fill();g.stroke();g.beginPath();g.arc(s*.45,-s*.6,s*.42,0,TAU);g.fill();g.stroke();
+ g.fillStyle='#f08a24';g.beginPath();g.moveTo(s*.82,-s*.62);g.lineTo(s*1.22,-s*.5);g.lineTo(s*.82,-s*.42);g.closePath();g.fill();g.stroke();
+ g.fillStyle='#2b2018';g.beginPath();g.arc(s*.58,-s*.72,s*.07,0,TAU);g.fill();g.fillStyle='#e8b830';g.beginPath();g.ellipse(-s*.2,-s*.05,s*.4,s*.22,-.3,0,TAU);g.fill();g.restore()}
+function decorBath(g,p,floorY,T_,t,tall){const s=clamp(Math.min(p.w/600,p.h/700),.45,1.3);
+ // bath mat
+ g.fillStyle='#7fc9a8';rr(g,T_.x+T_.w*.15,floorY+(p.y+p.h-floorY)*.25,T_.w*.5,Math.max(10,(p.y+p.h-floorY)*.35),8);g.fill();g.strokeStyle='rgba(255,255,255,.5)';g.setLineDash([4,4]);g.lineWidth=2;g.stroke();g.setLineDash([]);
+ // mirror
+ const mx=T_.x+T_.w*.75,my=p.y+p.h*(tall?.1:.16),mw=70*s,mh=90*s;if(!tall||p.w>300){g.fillStyle='#c9a24a';g.beginPath();g.ellipse(mx,my+mh/2,mw/2+6*s,mh/2+6*s,0,0,TAU);g.fill();
+  const gr=g.createLinearGradient(mx-mw/2,my,mx+mw/2,my+mh);gr.addColorStop(0,'#e8f6fa');gr.addColorStop(1,'#a9d3df');g.fillStyle=gr;g.beginPath();g.ellipse(mx,my+mh/2,mw/2,mh/2,0,0,TAU);g.fill();
+  g.strokeStyle='rgba(255,255,255,.8)';g.lineWidth=3*s;g.beginPath();g.moveTo(mx-mw*.2,my+mh*.25);g.lineTo(mx-mw*.05,my+mh*.12);g.stroke()}
+ // the shelf with soaps, a shampoo, a sponge, a cup with toothbrushes
+ const sx=T_.x+T_.w*.05,sy=T_.y-T_.h*(tall?1.1:1.35),sw=T_.w*.45;g.fillStyle='#8a5e3a';rr(g,sx,sy,sw,7*s,3);g.fill();
+ const items=[['#ff9ec7',.08,'soap'],['#7fe3ef',.24,'bottle'],['#ffd36a',.42,'soap'],['#9be38a',.58,'sponge'],['#f3efe2',.78,'cup']];
+ for(const[c,f,k]of items){const x=sx+sw*f,b=sy;g.fillStyle=c;g.strokeStyle='#2b2018';g.lineWidth=2;
+  if(k==='soap'){rr(g,x,b-11*s,24*s,11*s,4*s);g.fill();g.stroke();g.fillStyle='rgba(255,255,255,.7)';for(let i=0;i<3;i++){g.beginPath();g.arc(x+6*s+i*6*s,b-15*s-i*3*s-Math.sin(t*2+i)*2*s,2.5*s,0,TAU);g.fill()}}
+  else if(k==='bottle'){rr(g,x,b-34*s,18*s,34*s,5*s);g.fill();g.stroke();g.fillStyle='#2f6fd6';g.fillRect(x+5*s,b-42*s,8*s,8*s);g.fillStyle='#fff';g.fillRect(x+3*s,b-24*s,12*s,10*s)}
+  else if(k==='sponge'){rr(g,x,b-14*s,26*s,14*s,4*s);g.fill();g.stroke();g.fillStyle='rgba(43,32,24,.25)';for(let i=0;i<5;i++){g.beginPath();g.arc(x+4*s+i*4.5*s,b-7*s+(i%2)*3*s,1.5*s,0,TAU);g.fill()}}
+  else{rr(g,x,b-20*s,16*s,20*s,3*s);g.fill();g.stroke();for(const[dx,col]of[[4,'#e0463c'],[10,'#2f6fd6']]){g.strokeStyle=col;g.lineWidth=3*s;g.beginPath();g.moveTo(x+dx*s,b-18*s);g.lineTo(x+dx*s+2*s,b-36*s);g.stroke()}}}
+ // a towel on a ring and a plant
+ const tx=p.x+p.w*(tall?.9:.92),ty=p.y+p.h*(tall?.3:.36);g.strokeStyle='#b9c0c6';g.lineWidth=4*s;g.beginPath();g.arc(tx,ty,14*s,0,TAU);g.stroke();
+ g.fillStyle='#ff9ec7';g.strokeStyle='#2b2018';g.lineWidth=2;rr(g,tx-18*s,ty+6*s,36*s,62*s,6*s);g.fill();g.stroke();g.fillStyle='#ffc4dc';g.fillRect(tx-18*s,ty+50*s,36*s,6*s);
+ const px=p.x+p.w*.06,py=floorY;g.fillStyle='#b8643f';g.strokeStyle='#2b2018';rr(g,px,py-30*s,30*s,30*s,4);g.fill();g.stroke();g.fillStyle='#4f8a4a';for(let i=0;i<5;i++){g.save();g.translate(px+15*s,py-30*s);g.rotate(-1+i*.5+Math.sin(t*.8+i)*.04);g.beginPath();g.ellipse(0,-22*s,6*s,22*s,0,0,TAU);g.fill();g.restore()}}
+function draw(K,dt){const g=K.g,W=K.W,H=K.H,t=K.T,R=K.R,{tall,P}=panels(W,H);
+ const open=K.phase==='reveal'||K.phase==='end'?clamp(K.revT/.9,0,1):0,rev=R&&(K.phase==='reveal'||K.phase==='end')&&R.err!=null;
+ g.fillStyle='#140d09';g.fillRect(0,0,W,H);
+ const refK=K.refOn?clamp(Math.min((K.now()-K.refT0)/.1,(K.refT0+K.refDur-K.now())/.1),0,1):0;
+ P.forEach((p,side)=>{const floorY=p.y+p.h*(tall?.88:.82);g.save();g.beginPath();g.rect(p.x,p.y,p.w,p.h);g.clip();tiles(g,p,floorY);
+  const tw=tall?Math.min(p.w*.62,p.h*.9):Math.min(p.w*.66,p.h*.6),th=tw*.36,cx=p.x+p.w*(side?.46:.5);decorBath(g,p,floorY,{x:cx-tw/2,y:floorY-th*1.1,w:tw,h:th},t,tall);const T_=tub(g,cx,floorY-th*.1,tw,th);
+  if(side){TUB=T_;
+   // Igor in the tub, only his head out of the water
+   const ih=tall?clamp(p.h*.5,80,190):clamp(Math.min(p.w*.42,p.h*.36),90,230);// only what is above the water shows: the tip of the snout and the tongue stay in the tub
+   g.save();g.beginPath();g.rect(p.x,p.y,p.w,T_.y-p.y);g.clip();K.drawIgor(T_.x+T_.w*.62,T_.y-ih*.18,ih,-1,{shadow:false});g.restore();
+   duckAt(g,T_.x+T_.w*.2,T_.y-T_.h*.08,T_.h*.2,t,1);
+   // the water and the foam in front of Igor
+   g.fillStyle='#bfe6f0';g.beginPath();g.ellipse(T_.x+T_.w/2,T_.y+T_.h*.02,T_.w*.47,T_.h*.12,0,0,TAU);g.fill();
+   g.fillStyle='#ffffff';for(let i=0;i<9;i++){const fx=T_.x+T_.w*(.1+i*.1),fy=T_.y-T_.h*.02+Math.sin(t*2+i)*2;g.beginPath();g.arc(fx,fy,T_.h*(.09+.04*((i*7)%3)),0,TAU);g.fill()}
+   g.fillStyle='#fbfbf8';g.strokeStyle='#2b2018';g.lineWidth=3;rr(g,T_.x-T_.w*.03,T_.y-T_.h*.04,T_.w*1.06,T_.h*.16,T_.h*.08);g.fill();g.stroke();
+   // my bubbles, floating above the tub
+   MYB=[];const r0=clamp(T_.w*.085,16,44),n=MB.length;MB.forEach((b,i)=>{const age=t-b.b,k=ease(clamp(age/.35,0,1)),col=i%2?'#7fe3ef':'#ff9ec7';
+    const x=T_.x+T_.w*(.06+.46*((i+.5)/Math.max(n,1)))+b.x*r0*.4+Math.sin(t*1.3+b.ph)*r0*.12,y=T_.y-r0*1.4-k*r0*(.8+(i%2)*1.1)+Math.sin(t*1.9+b.ph)*r0*.1;
+    bubble(g,x,y,r0*k,col,0,false,t);MYB.push({x,y,r:r0})});
+   const live=K.phase==='guess'&&!K.refOn;
+   if(live||K.phase==='reveal'||K.phase==='end'){label(g,T_.x+T_.w/2,T_.y+T_.h+(tall?16:30),(mine===1?tt('1 bubble','1 bolla'):tt(`${mine} bubbles`,`${mine} bolle`))+(rev?' · +'+R.pts:''),rev?(R.good?'#2a8a3a':'#9a5d2c'):'#2b2018',tall?14:16)}
+   if(live&&K.round===1&&mine===0&&K.T%4<2.4){g.fillStyle='rgba(43,32,24,.85)';g.font='600 13px Fredoka,sans-serif';g.textAlign='center';g.fillText(touch?tt('tap the tub to blow a bubble','tocca la vasca per fare una bolla'):tt('tap the tub, or press ↑','tocca la vasca, o premi ↑'),T_.x+T_.w/2,T_.y-T_.h*1.9)}
+   if(R&&R.good&&rev&&!R.ate&&K.revT>1.4){R.ate=1;K.eat(T_.x+T_.w*.4,T_.y-T_.h*.6,Math.max(1.2,tw/120),'#f8f5ec')}}
+  else{// the singing bubbles: behind the curtain while you listen, then they come out and sing one at a time
+   if(R){const n=R.ms.length,r0=clamp(T_.w*.085,16,44);R.ms.forEach((m,i)=>{const x=T_.x+T_.w*(.18+.64*((i+.5)/n)),y=T_.y-r0*1.6-(i%2)*r0*1.1+Math.sin(t*1.7+i)*r0*.1;
+     let glow=refK;if(rev&&R.arpT){const a=t-R.arpT;if(a>=i*R.arpStep&&a<i*R.arpStep+.45)glow=1;if(R.allT&&t>=R.allT&&t<R.allT+1.4)glow=1}
+     bubble(g,x,y,r0*(1+.08*glow*Math.sin(t*14)),BCOL[R.tb[i]]||'#7fe3ef',glow,true,t);
+     if(rev&&R.arpT&&t-R.arpT>=i*R.arpStep){g.fillStyle='#2b2018';g.font=`700 ${Math.round(r0*.5)}px Fredoka,sans-serif`;g.textAlign='center';g.fillText(String(i+1),x,y-r0*1.25)}})}
+   drawCurtain(g,p.x+p.w*.04,p.x+p.w*.96,p.y+p.h*(tall?.06:.12),floorY-p.h*.02,open,refK,t,'150,220,240');
+   if(rev){const k=ease(clamp((K.revT-.9)/.4,0,1));if(k>0){g.globalAlpha=k;label(g,T_.x+T_.w/2,T_.y+T_.h+(tall?16:30),R.ms.length===1?tt('1 bubble','1 bolla'):tt(`${R.ms.length} bubbles`,`${R.ms.length} bolle`),'#2f6fd6',tall?14:16);g.globalAlpha=1}}}
+  g.restore()});
+ if(!tall){g.strokeStyle='rgba(43,32,24,.18)';g.setLineDash([4,7]);g.beginPath();g.moveTo(W/2,H*.2);g.lineTo(W/2,H-80);g.stroke();g.setLineDash([])}
+ else{g.fillStyle='#3b2416';g.fillRect(0,P[1].y-2,W,4)}}
+})();
+</script>
+</body></html>
