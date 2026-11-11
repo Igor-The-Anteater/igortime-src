@@ -2477,7 +2477,7 @@ function shellPlaySheet(){const U=FUN(),own=SHELLS.filter(x=>U.col[x.id]).length
  const grid=SHELLS.map(x=>{const o=U.col[x.id];return`<button type="button" ${o?`data-shp="${x.id}"`:'disabled'} class="r${shellRow(x.id)}" aria-label="${o?esc(N(x.N))+' · '+shellNote(x.id):'?'}">${o?`<i style="background:${x.c}"></i><b>${shellNote(x.id)}</b>`:'·'}</button>`}).join('');
  const rows=ROWN.map((r,k)=>`<span class="r${k}">${N(r)}</span>`).join('');
  const rec=REC?`<button type="button" data-rec="stop" class="m">■ ${tt('Stop','Ferma')} · <b id="recN">${REC.ev.length}</b> ${tt('notes','note')}</button>`:`<button type="button" data-rec="go">● ${tt('Record','Registra')}</button>`;
- const list=L.length?`<ul class="mell">${L.map((m,i)=>`<li><button type="button" data-mel="${i}">▶ ${esc(melName(m))} <small>${m.ev.length} ${tt('notes','note')}</small></button>${VISIT?'':`<button type="button" data-meld="${i}" aria-label="${tt('Delete','Cancella')}">🗑</button>`}</li>`).join('')}</ul>`:`<p class="shn">${tt('No melodies yet: press Record and play the shells.','Ancora nessuna melodia: premi Registra e suona le conchiglie.')}</p>`;
+ const list=L.length?`<ul class="mell">${L.map((m,i)=>`<li><button type="button" data-mel="${i}">▶ ${esc(melName(m))} <small>${m.ev.length} ${tt('notes','note')}</small></button>${VISIT?'':`<button type="button" data-mels="${i}" aria-label="${tt('Score','Partitura')}">📜</button><button type="button" data-meld="${i}" aria-label="${tt('Delete','Cancella')}">🗑</button>`}</li>`).join('')}</ul>`:`<p class="shn">${tt('No melodies yet: press Record and play the shells.','Ancora nessuna melodia: premi Registra e suona le conchiglie.')}</p>`;
  openSheet('shplay',`<h2>🎵 ${VISIT?tt(`${esc(VIS.nick)}’s shell instrument`,`Lo strumento delle conchiglie di ${esc(VIS.nick)}`):tt('The shell instrument','Lo strumento delle conchiglie')}</h2>${VISIT?`<p class="shn">${tt(`Record a melody and leave it here: ${esc(VIS.nick)} will find it as “${esc(myNick())}’s melody”. One a day.`,`Registra una melodia e lasciala qui: ${esc(VIS.nick)} la troverà come «Melodia di ${esc(myNick())}». Una al giorno.`)}</p>`:''}<p class="shn">${tt(`${own} notes collected out of 50. Every shell you find is a new note; each shelf breathes differently.`,`${own} note raccolte su 50. Ogni conchiglia che trovi è una nota nuova; ogni ripiano ha il suo fiato.`)}</p>
  <div class="shrow">${rows}</div><div class="shg shp">${grid}</div><div class="row recr">${rec}<button type="button" data-shback="1">🐚 ${tt('Collection','Collezione')}</button></div><div class="k">${VISIT?tt(`${esc(VIS.nick)}’s melodies`,`Le melodie di ${esc(VIS.nick)}`):tt('Your melodies','Le tue melodie')} · ${L.length}</div>${list}`)}
 sb.addEventListener('click',e=>{const b=e.target.closest('button[data-marmel]');if(!b)return;e.stopPropagation();const m=pick(MEL());if(m){melPlay(m,'mar');say(tt(`“${melName(m)}” on the marimba.`,`«${melName(m)}» alla marimba.`),2.4)}});
@@ -3193,7 +3193,7 @@ updaters.push(()=>{if(where==='bar'&&S.farm)btlSync()});
    (and 4 more whenever a new note arrives; B.tkg remembers which notes were given). Step 5 will make more out of glass.
    The piece on the counter is kept (B.pr = 16 lists of notes, B.bpm); up to 8 pieces saved (B.pz = [{n, s, b}]). */
 const PR_N=16,PR_MAX=8;
-const prNum=i=>{const pc=i%12,W=[0,2,4,5,7,9,11],o=i>=12?7:0,k=W.indexOf(pc);return k>=0?String(k+1+o):(W.indexOf(pc-1)+1+o)+'♯'};
+const prNum=i=>{const pc=i%12,W=[0,2,4,5,7,9,11],o=i>=12?7:0,k=W.indexOf(pc);return k>=0?String(k+1+o):pc===1||pc===6?(W.indexOf(pc-1)+1+o)+'♯':(W.indexOf(pc+1)+1+o)+'♭'};
 const prB=()=>{const B=barF();B.tk=B.tk||{};B.tkg=B.tkg||{};if(!Array.isArray(B.pr)||B.pr.length!==PR_N)B.pr=Array.from({length:PR_N},()=>[]);if(!B.bpm)B.bpm=100;B.pz=B.pz||[];return B};
 const prUsed=i=>prB().pr.reduce((a,c)=>a+(c.includes(i)?1:0),0);
 const prFree=i=>(prB().tk[i]|0)-prUsed(i);
@@ -3225,7 +3225,7 @@ function counterSheet(){const sh=btlShelf(),notes=Object.keys(sh).map(Number).so
  <div class="prnum">${Array.from({length:PR_N},(_,c)=>`<span${c%4?'':' class="q"'}>${c+1}</span>`).join('')}</div>
  <div class="prctl"><button type="button" data-pa="play" class="m">${PR.on?'■ '+tt('Stop','Ferma'):'▶ '+tt('Play','Suona')}</button>
  <label class="prsp">🐢<input type="range" min="60" max="180" step="5" value="${B.bpm}" data-psp aria-label="${tt('Speed','Velocità')}">🐇<span>${B.bpm}</span></label>
- <button type="button" data-pa="clear">🧹 ${tt('Clear','Svuota')}</button><button type="button" data-pa="save">💾 ${tt('Save','Salva')}</button></div>
+ <button type="button" data-pa="clear">🧹 ${tt('Clear','Svuota')}</button><button type="button" data-pa="save">💾 ${tt('Save','Salva')}</button><button type="button" data-pa="score">📜 ${tt('Score','Partitura')}</button></div>
  ${B.pz.length?`<div class="prpz"><span>${tt('Your pieces','I tuoi pezzi')}:</span>${B.pz.map((p,k)=>`<span class="pz${k===prSel?' on':''}"><button type="button" data-pl="${k}">🎵 ${p.n}</button><button type="button" data-pd="${k}" aria-label="${tt('Delete','Elimina')}">✕</button></span>`).join('')}</div>`:''}`);
  sheet.classList.add('wide');prMark()}
 sb.addEventListener('click',e=>{if(sheetKind!=='counter')return;const b=e.target.closest('button');if(!b)return;const B=prB();
@@ -3331,6 +3331,143 @@ sb.addEventListener('click',e=>{if(sheetKind!=='glass')return;const b=e.target.c
 .sheet h3.glh{font-size:18px;margin:14px 0 6px}.gls{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.gst{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px;border:1px solid rgba(219,231,234,.16);border-radius:10px;text-align:center;font-size:11px}.gst span{font-size:22px}.gst.on{border-color:#9ccfef}.gst button{text-transform:none;letter-spacing:0}.gst button[disabled]{opacity:.45}`;document.head.appendChild(st)}
 updaters.push(t=>{if(where!=='bar')return;glassSync();const F=ROOMS.bar&&ROOMS.bar.glassF;if(!F)return;const fl=F.userData.flare,u=fl?(performance.now()-fl)/900:9;F.userData.mouth.material.emissiveIntensity=1.1+Math.sin(t*5)*.15+(u<1?(1-u)*1.6:0);
  for(const k in statObjs)statObjs[k].position.y=Math.sin(t*1.3+k.length)*.012});
+/* ================= 11 Nov 2026: scores, step 6 of the bar plan =================
+   Every piece of the counter (B.pz) and every shell melody (MEL()) can be downloaded at once, free:
+   a MIDI file and a PDF "coloured score" (the piece drawn like the counter: rows = notes, coloured tokens).
+   For 20 tofu ants + 1 seed, Maestro Igor Stravigor transcribes it on the staff (PDF, treble clef, 4/4, rests, beams, ties)
+   with "Music by <nickname> · transcription by Maestro Igor Stravigor". Paid once per piece (piece.tr = 1), then free.
+   The PDF is written by hand: every page is drawn on a canvas (A4, 150 dpi) and embedded as a JPEG. */
+const SC_PG=[1240,1754];
+/* --- the piece, in eighths: {title, by, bpm, kind, ev:[{s, d, m:[midi…]}], col(m), lab(m)} --- */
+function scPiece(src){
+ if(src.k==='pz'){const p=prB().pz[src.i];if(!p)return null;const ev=[];p.s.forEach((c,s)=>{if(c.length)ev.push({s,d:1,m:[...new Set(c)].map(i=>BTL_BASE+i).sort((a,b)=>a-b)})});
+  return{src,obj:p,title:p.n,by:myNick()||tt('a friend of Igor','un amico di Igor'),bpm:p.b||100,kind:'glass',len:PR_N,ev,col:m=>btlCol(m-BTL_BASE),lab:m=>prNum(m-BTL_BASE),name:m=>btlName(m-BTL_BASE)}}
+ const M=MEL()[src.i];if(!M||!M.ev||M.ev.length<2)return null;const t0=M.ev[0][0],io=[];for(let k=1;k<M.ev.length;k++){const d=M.ev[k][0]-M.ev[k-1][0];if(d>60)io.push(d)}io.sort((a,b)=>a-b);
+ const base=clamp(io.length?io[Math.floor(io.length/2)]:300,150,700),ev=[],cols={};
+ for(const[t,id]of M.ev){const s=Math.round((t-t0)/base),m=shellMidi(id),x=SHELLS.find(o=>o.id===id);if(x)cols[m]=x.c;const L=ev[ev.length-1];if(L&&L.s===s){if(!L.m.includes(m))L.m.push(m)}else ev.push({s,d:2,m:[m]})}
+ for(let k=0;k<ev.length;k++){ev[k].m.sort((a,b)=>a-b);ev[k].d=k+1<ev.length?Math.min(8,ev[k+1].s-ev[k].s):2}
+ const nm=m=>NNAME[m%12][LANG==='it'?1:0]+(Math.floor(m/12)-1);
+ return{src,obj:M,title:melName(M),by:M.by||myNick()||tt('a friend of Igor','un amico di Igor'),bpm:clamp(Math.round(60000/(base*2)),40,200),kind:'shell',len:ev[ev.length-1].s+ev[ev.length-1].d,ev,col:m=>cols[m]||'#9ccfef',lab:()=>'',name:nm}}
+/* --- MIDI (type 0, 480 ticks per quarter) --- */
+function scMidi(P){const T=240,vlq=n=>{const b=[n&127];while(n>>=7)b.unshift((n&127)|128);return b},E=[];
+ for(const e of P.ev)for(const m of e.m){E.push([e.s*T,1,[0x90,m,90]]);E.push([(e.s+e.d)*T-10,0,[0x80,m,0]])}E.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+ const tr=[],nm=[...new TextEncoder().encode(P.title)].slice(0,60),us=Math.round(60000000/P.bpm);
+ tr.push(0,0xFF,0x03,...vlq(nm.length),...nm,0,0xFF,0x51,3,us>>16&255,us>>8&255,us&255,0,0xFF,0x58,4,4,2,24,8,0,0xC0,P.kind==='glass'?14:73);
+ let last=0;for(const[t,,b]of E){tr.push(...vlq(Math.max(0,t-last)),...b);last=Math.max(last,t)}tr.push(0,0xFF,0x2F,0);
+ const h=[0x4D,0x54,0x68,0x64,0,0,0,6,0,0,0,1,0x01,0xE0],L=tr.length;return new Blob([new Uint8Array([...h,0x4D,0x54,0x72,0x6B,L>>>24&255,L>>16&255,L>>8&255,L&255,...tr])],{type:'audio/midi'})}
+/* --- a PDF made of JPEG pages --- */
+function scPdf(cs){const enc=new TextEncoder(),parts=[],offs=[];let len=0;const push=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length};
+ const obj=(id,body)=>{offs[id]=len;push(id+' 0 obj\n'+body+'\nendobj\n')};push('%PDF-1.4\n');
+ obj(1,'<< /Type /Catalog /Pages 2 0 R >>');obj(2,`<< /Type /Pages /Count ${cs.length} /Kids [${cs.map((_,i)=>(3+3*i)+' 0 R').join(' ')}] >>`);
+ cs.forEach((c,i)=>{const P=3+3*i,s=`q 595.28 0 0 841.89 0 0 cm /Im${i} Do Q`;obj(P,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im${i} ${P+2} 0 R >> >> /Contents ${P+1} 0 R >>`);
+  obj(P+1,`<< /Length ${s.length} >>\nstream\n${s}\nendstream`);const a=atob(c.toDataURL('image/jpeg',.9).split(',')[1]),j=new Uint8Array(a.length);for(let k=0;k<a.length;k++)j[k]=a.charCodeAt(k);
+  offs[P+2]=len;push(`${P+2} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${c.width} /Height ${c.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${j.length} >>\nstream\n`);push(j);push('\nendstream\nendobj\n')});
+ const N=3+3*cs.length,x=len;push(`xref\n0 ${N}\n0000000000 65535 f \n`);for(let i=1;i<N;i++)push(String(offs[i]).padStart(10,'0')+' 00000 n \n');push(`trailer\n<< /Size ${N} /Root 1 0 R >>\nstartxref\n${x}\n%%EOF\n`);
+ return new Blob(parts,{type:'application/pdf'})}
+function scPage(){const c=document.createElement('canvas');[c.width,c.height]=SC_PG;const q=c.getContext('2d');q.fillStyle='#fff';q.fillRect(0,0,c.width,c.height);q.fillStyle='#1b1b1b';q.strokeStyle='#1b1b1b';return[c,q]}
+function scFoot(q,n,N){q.font='20px Georgia,serif';q.fillStyle='#777';q.textAlign='center';q.fillText(`Igor Time · igortime.com${N>1?` · ${n}/${N}`:''}`,SC_PG[0]/2,SC_PG[1]-60);q.textAlign='left';q.fillStyle='#1b1b1b'}
+function scHead(q,P,sub){q.textAlign='center';q.font='bold 64px Georgia,serif';q.fillText(P.title,SC_PG[0]/2,190);q.font='italic 30px Georgia,serif';q.fillText(sub,SC_PG[0]/2,240);q.textAlign='right';q.font='28px Georgia,serif';
+ q.fillText(tt(`Music by ${P.by}`,`Musica di ${P.by}`),SC_PG[0]-110,310);q.textAlign='left'}
+/* --- the coloured score (free): the counter drawn on paper --- */
+function scColour(P){const rows=[...new Set(P.ev.flatMap(e=>e.m))].sort((a,b)=>b-a),per=16,sys=Math.max(1,Math.ceil(P.len/per)),cs=[];
+ const cell=Math.min(56,Math.floor(820/Math.max(rows.length,1)/1)),gx=230,gw=SC_PG[0]-110-gx,cw=gw/per,sh=rows.length*cell+70;
+ let c,q,y=0,pg=0;const newPage=()=>{[c,q]=scPage();cs.push(c);pg++;if(pg===1){scHead(q,P,tt('Coloured score','Partitura colorata'));q.font='26px Georgia,serif';q.fillText(`♩ = ${P.bpm}`,110,310);y=380}else y=140};newPage();
+ for(let s=0;s<sys;s++){if(y+sh>SC_PG[1]-130)newPage();
+  rows.forEach((m,r)=>{const yy=y+r*cell;q.fillStyle=r%2?'#f6f3ee':'#fbfaf7';q.fillRect(gx,yy,gw,cell);q.fillStyle=P.col(m);q.beginPath();q.arc(132,yy+cell/2,Math.min(18,cell*.36),0,TAU);q.fill();
+   q.fillStyle='#1b1b1b';q.font=`bold ${Math.round(Math.min(18,cell*.34))}px sans-serif`;q.textAlign='center';q.textBaseline='middle';q.fillText(P.lab(m),132,yy+cell/2+1);q.textAlign='left';q.font=`${Math.round(Math.min(26,cell*.5))}px Georgia,serif`;q.fillText(P.name(m),160,yy+cell/2+1)});
+  q.textBaseline='alphabetic';for(let k=0;k<=per;k++){q.strokeStyle=k%4?'#ddd5c8':'#a99c86';q.lineWidth=k%4?1:2.5;q.beginPath();q.moveTo(gx+k*cw,y);q.lineTo(gx+k*cw,y+rows.length*cell);q.stroke()}
+  for(const e of P.ev){const k=e.s-s*per;if(k<0||k>=per)continue;for(const m of e.m){const r=rows.indexOf(m),cx=gx+(k+.5)*cw,cy=y+(r+.5)*cell,rr=Math.min(cw,cell)*.38;
+   if(P.kind==='shell'&&e.d>1){q.fillStyle=P.col(m);q.globalAlpha=.35;q.fillRect(cx,cy-rr*.45,Math.min(e.d,per-k)*cw-cw*.5,rr*.9);q.globalAlpha=1}
+   q.fillStyle=P.col(m);q.beginPath();q.arc(cx,cy,rr,0,TAU);q.fill();q.strokeStyle='rgba(0,0,0,.25)';q.lineWidth=2;q.stroke();if(P.lab(m)){q.fillStyle='#1b1b1b';q.font=`bold ${Math.round(rr*.95)}px sans-serif`;q.textAlign='center';q.textBaseline='middle';q.fillText(P.lab(m),cx,cy+1);q.textAlign='left';q.textBaseline='alphabetic'}}}
+  q.fillStyle='#888';q.font='18px sans-serif';q.textAlign='center';for(let k=0;k<per;k++)q.fillText(String(s*per+k+1),gx+(k+.5)*cw,y+rows.length*cell+28);q.textAlign='left';q.fillStyle='#1b1b1b';y+=sh}
+ cs.forEach((c,i)=>scFoot(c.getContext('2d'),i+1,cs.length));return cs}
+/* --- Maestro Stravigor's transcription: real staff notation --- */
+const SPELL=[[0,0],[0,1],[1,0],[2,-1],[2,0],[3,0],[3,1],[4,0],[5,-1],[5,0],[6,-1],[6,0]];
+function scBars(P){const B=8,nb=Math.max(1,Math.ceil(P.len/B)),bars=Array.from({length:nb},()=>[]);
+ // notes, split at bar lines and into writable values (1,2,3,4,6,8) with ties
+ const okD=[8,6,4,3,2,1],put=(s,d,m)=>{while(d>0){const b=Math.floor(s/B),p=s%B;let r=Math.min(d,B-p),v=okD.find(x=>x<=r&&(x<4||p%2===0)&&(x<8||p===0)&&(x!==6||p===0)&&(x!==4||p%4===0||p===2)&&(x!==3||p%2===0));if(!v)v=1;bars[b].push({p,d:v,m,tie:d-v>0});s+=v;d-=v}};
+ for(const e of P.ev)put(e.s,e.d,e.m);
+ for(const bar of bars){bar.sort((a,b)=>a.p-b.p);let p=0;const out=[];const rest=(a,z)=>{while(a<z){const v=[8,4,2,1].find(x=>x<=z-a&&a%x===0);out.push({p:a,d:v,m:null});a+=v}};
+  for(const n of bar){if(n.p>p)rest(p,n.p);if(n.p>=p){out.push(n);p=n.p+n.d}}rest(p,B);bar.splice(0,bar.length,...out)}
+ return bars}
+function scClef(q,x,yT,sp,oct){const yB=yT+4*sp,yG=yT+3*sp;q.save();q.lineWidth=4.5;q.lineCap='round';q.beginPath();
+ q.moveTo(x+4,yB+2.6*sp);q.quadraticCurveTo(x+14,yB+3.3*sp,x+12,yB+1.4*sp);q.lineTo(x+3,yT-1.2*sp);q.quadraticCurveTo(x+16,yT-2.6*sp,x+14,yT-.6*sp);q.quadraticCurveTo(x+10,yT+1.2*sp,x-10,yG-.6*sp);
+ q.quadraticCurveTo(x-22,yG+.6*sp,x-12,yB+.4*sp);q.quadraticCurveTo(x+4,yB+1*sp,x+18,yB-.2*sp);q.quadraticCurveTo(x+26,yG-.4*sp,x+12,yG-1*sp);q.quadraticCurveTo(x-2,yG-.9*sp,x-1,yG+.15*sp);q.quadraticCurveTo(x+1,yG+.6*sp,x+6,yG+.55*sp);q.stroke();
+ q.beginPath();q.arc(x+1,yB+2.5*sp,5.5,0,TAU);q.fill();if(oct){q.font='bold 22px Georgia,serif';q.textAlign='center';q.fillText(String(Math.abs(oct)*7+1),x+6,oct>0?yT-2.9*sp:yB+4.2*sp);q.textAlign='left'}q.restore()}
+function scAcc(q,x,y,a,sp){q.save();q.lineWidth=2.4;if(a>0){q.beginPath();q.moveTo(x-4,y-1.4*sp);q.lineTo(x-4,y+1.5*sp);q.moveTo(x+4,y-1.6*sp);q.lineTo(x+4,y+1.3*sp);q.stroke();q.lineWidth=5;q.beginPath();q.moveTo(x-9,y-.35*sp);q.lineTo(x+9,y-.65*sp);q.moveTo(x-9,y+.55*sp);q.lineTo(x+9,y+.25*sp);q.stroke()}
+ else if(a<0){q.beginPath();q.moveTo(x-5,y-2*sp);q.lineTo(x-5,y+.55*sp);q.quadraticCurveTo(x+12,y-.2*sp,x+6,y-.55*sp);q.quadraticCurveTo(x,y-.75*sp,x-5,y-.15*sp);q.stroke()}
+ else{q.beginPath();q.moveTo(x-5,y-1.5*sp);q.lineTo(x-5,y+.6*sp);q.moveTo(x+5,y-.6*sp);q.lineTo(x+5,y+1.5*sp);q.stroke();q.lineWidth=5;q.beginPath();q.moveTo(x-5,y+.5*sp);q.lineTo(x+5,y+.25*sp);q.moveTo(x-5,y-.25*sp);q.lineTo(x+5,y-.5*sp);q.stroke()}q.restore()}
+function scRest(q,x,yT,d,sp){q.save();const yM=yT+2*sp;if(d===8){q.fillRect(x-14,yT+sp,28,sp*.55)}else if(d>=4){q.fillRect(x-14,yM-sp*.55,28,sp*.55)}
+ else if(d>=2){q.lineWidth=4;q.beginPath();q.moveTo(x-4,yM-1.6*sp);q.lineTo(x+6,yM-.6*sp);q.lineTo(x-4,yM+.3*sp);q.lineTo(x+6,yM+1.2*sp);q.quadraticCurveTo(x-10,yM+.9*sp,x-1,yM+2*sp);q.stroke()}
+ else{q.beginPath();q.arc(x-5,yM-.55*sp,5,0,TAU);q.fill();q.lineWidth=3;q.beginPath();q.moveTo(x-5,yM-.3*sp);q.quadraticCurveTo(x+4,yM-.2*sp,x+8,yM-.9*sp);q.lineTo(x-2,yM+1.4*sp);q.stroke()}
+ if(d===3||d===6){q.beginPath();q.arc(x+20,yM-.5*sp,4,0,TAU);q.fill()}q.restore()}
+function scStrav(P){const sp=24,mid=[...P.ev.flatMap(e=>e.m)].sort((a,b)=>a-b),med=mid[Math.floor(mid.length/2)]||72,oct=med>=88?2:med>=77?1:med<55?-1:0,bars=scBars(P),cs=[];
+ const step=m=>{m-=oct*12;const [l,a]=SPELL[m%12];return{st:(Math.floor(m/12)-1)*7+l,a}};
+ const L=110,R=SC_PG[0]-110,perSys=2,headW=170,sysH=330;let c,q,y,pg=0;
+ const newPage=()=>{[c,q]=scPage();cs.push(c);pg++;if(pg===1){scHead(q,P,tt('transcription by Maestro Igor Stravigor','trascrizione di Maestro Igor Stravigor'));
+   // tempo mark
+   q.font='bold 30px Georgia,serif';q.fillText('♩ = '+P.bpm,L,310);y=460}else y=180};newPage();
+ for(let b0=0;b0<bars.length;b0+=perSys){if(y+sysH>SC_PG[1]-170)newPage();const yT=y,yB=yT+4*sp,first=b0===0,hw=headW-(first?0:40),bw=(R-L-hw)/perSys,nB=Math.min(perSys,bars.length-b0);
+  q.lineWidth=1.6;for(let k=0;k<5;k++){q.beginPath();q.moveTo(L,yT+k*sp);q.lineTo(L+hw+bw*nB,yT+k*sp);q.stroke()}
+  scClef(q,L+36,yT,sp,oct);if(first){q.font='bold 60px Georgia,serif';q.textAlign='center';q.fillText('4',L+110,yT+2*sp-5);q.fillText('4',L+110,yT+4*sp-5);q.textAlign='left'}
+  q.lineWidth=2;q.beginPath();q.moveTo(L,yT);q.lineTo(L,yB);q.stroke();
+  const ties=[];
+  for(let k=0;k<nB;k++){const bi=b0+k,bar=bars[bi],bx=L+hw+k*bw,slot=(bw-34)/8,acc={},beams=[];
+   const last=bi===bars.length-1;q.lineWidth=last?2:2;q.beginPath();q.moveTo(bx+bw,yT);q.lineTo(bx+bw,yB);q.stroke();if(last){q.lineWidth=7;q.beginPath();q.moveTo(bx+bw+8,yT);q.lineTo(bx+bw+8,yB);q.stroke()}
+   q.font='16px Georgia,serif';q.fillStyle='#999';if(k===0)q.fillText(String(bi+1),bx-hw+2,yT-14);q.fillStyle='#1b1b1b';
+   for(const n of bar){const x=bx+22+n.p*slot+(n.d===8?bw/2-30:0);
+    if(!n.m){scRest(q,x+6,yT,n.d,sp);continue}
+    const ps=n.m.map(step),ys=ps.map(p=>yB-(p.st-30)*sp/2),avg=ps.reduce((a,p)=>a+p.st,0)/ps.length,up=avg<34,filled=n.d<4;
+    // ledger lines
+    q.lineWidth=1.6;for(const p of ps){for(let s=28;s>=p.st;s-=2){const yy=yB-(s-30)*sp/2;q.beginPath();q.moveTo(x-16,yy);q.lineTo(x+16,yy);q.stroke()}for(let s=40;s<=p.st;s+=2){const yy=yB-(s-30)*sp/2;q.beginPath();q.moveTo(x-16,yy);q.lineTo(x+16,yy);q.stroke()}}
+    ps.forEach((p,j)=>{const yy=ys[j],key=p.st,sh=j>0&&ps[j-1].st===p.st-1?(up?22:-22):0;
+     if(!n.cont&&acc[key]!==p.a&&(p.a!==0||acc[key]!==undefined)){scAcc(q,x-30-(j%2)*14,yy,p.a,sp)}acc[key]=p.a;
+     q.save();q.translate(x+sh,yy);q.rotate(-.35);q.beginPath();q.ellipse(0,0,11,7.6,0,0,TAU);if(filled)q.fill();else{q.lineWidth=3.2;q.stroke()}q.restore();
+     if(n.d===3||n.d===6){q.beginPath();q.arc(x+22,yy-((p.st%2===0)?sp/2:0),3.6,0,TAU);q.fill()}
+     if(n.tie)ties.push({x:x+sh,y:yy,st:p.st,up,sys:yT})});
+    if(n.d<8){const sx=up?x+10:x-10,top=Math.min(...ys),bot=Math.max(...ys),ex=up?top-3.4*sp:bot+3.4*sp;q.lineWidth=2.4;q.beginPath();q.moveTo(sx,up?bot:top);q.lineTo(sx,ex);q.stroke();
+     if(n.d===1)beams.push({p:n.p,sx,ex,up,n})}}
+   // beams: two eighths in the same beat, otherwise a flag
+   const done=new Set();for(const a of beams){if(done.has(a))continue;const b=beams.find(o=>o!==a&&!done.has(o)&&o.p===a.p+1&&a.p%2===0);
+    if(b){done.add(a);done.add(b);const e=a.up?Math.min(a.ex,b.ex):Math.max(a.ex,b.ex);q.lineWidth=2.4;for(const o of[a,b]){q.beginPath();q.moveTo(o.sx,o.ex);q.lineTo(o.sx,e);q.stroke()}q.beginPath();q.moveTo(a.sx-1,e);q.lineTo(b.sx+1,e);q.lineTo(b.sx+1,e+(a.up?7:-7));q.lineTo(a.sx-1,e+(a.up?7:-7));q.fill()}
+    else{done.add(a);q.lineWidth=3;q.beginPath();q.moveTo(a.sx,a.ex);q.quadraticCurveTo(a.sx+18,a.ex+(a.up?16:-16),a.sx+12,a.ex+(a.up?38:-38));q.stroke()}}}
+  // ties (to the next note on the same line, or to the end of the system)
+  q.lineWidth=2.2;for(const t of ties){const x2=t.x+Math.min(80,(R-L-hw)/perSys/4);const dy=t.up?14:-14;q.beginPath();q.moveTo(t.x+8,t.y+dy*.6);q.quadraticCurveTo((t.x+x2)/2,t.y+dy*1.6,x2-6,t.y+dy*.6);q.stroke()}
+  y+=sysH}
+ // Stravigor's seal at the end
+ {const q=cs[cs.length-1].getContext('2d'),sx=SC_PG[0]-250,sy=SC_PG[1]-230;q.save();q.strokeStyle='#a3262a';q.fillStyle='#a3262a';q.lineWidth=4;q.beginPath();q.arc(sx,sy,78,0,TAU);q.stroke();q.lineWidth=1.5;q.beginPath();q.arc(sx,sy,66,0,TAU);q.stroke();
+  q.font='bold 17px Georgia,serif';q.textAlign='center';q.fillText('MAESTRO',sx,sy-30);q.font='bold 22px Georgia,serif';q.fillText('IGOR',sx,sy-4);q.fillText('STRAVIGOR',sx,sy+22);q.font='italic 15px Georgia,serif';q.fillText('fecit',sx,sy+46);q.restore();
+  q.font='italic 22px Georgia,serif';q.fillStyle='#555';q.fillText(tt('Transcribed with care by Maestro Igor Stravigor','Trascritto con cura da Maestro Igor Stravigor'),110,SC_PG[1]-230)}
+ cs.forEach((c,i)=>scFoot(c.getContext('2d'),i+1,cs.length));return cs}
+function scSave(blob,name){const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000)}
+const scFile=P=>String(P.title).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^\w]+/g,'-').replace(/^-|-$/g,'').toLowerCase()||'igortime';
+/* --- the panel --- */
+let SCSRC=null;
+function scoreSheet(src){SCSRC=src;const P=scPiece(src);if(!P){say(tt('This piece is empty.','Questo pezzo è vuoto.'),2.2);return}const paid=!!P.obj.tr;
+ openSheet('score',`<h2>📜 ${tt('The score','La partitura')}</h2><p class="shn">«${esc(P.title)}» · ${tt(`music by ${esc(P.by)}`,`musica di ${esc(P.by)}`)}</p>
+ <div class="scb"><button type="button" data-sc="midi">🎹 MIDI <small>${tt('free','gratis')}</small></button><button type="button" data-sc="col">🎨 ${tt('Coloured score (PDF)','Partitura colorata (PDF)')} <small>${tt('free','gratis')}</small></button></div>
+ <p>${tt('MIDI opens in any music program. The coloured score is your piece drawn like the counter, ready to print.','Il MIDI si apre con qualsiasi programma musicale. La partitura colorata è il tuo pezzo disegnato come sul bancone, pronto da stampare.')}</p>
+ <div class="scs"><span>🎩</span><div><b>Maestro Igor Stravigor</b><p>${paid?tt('He has already transcribed this piece on the staff: download it whenever you like.','Ha già trascritto questo pezzo sul pentagramma: scaricalo quando vuoi.'):tt('He transcribes your piece on the staff, in real musical notation, with your name: “music by … · transcription by Maestro Igor Stravigor”.','Trascrive il tuo pezzo sul pentagramma, in vera notazione musicale, con il tuo nome: «musica di … · trascrizione di Maestro Igor Stravigor».')}</p>
+ <button type="button" class="m" data-sc="strav">${paid?'📜 '+tt('Download the transcription','Scarica la trascrizione'):'✍️ '+tt('Ask for the transcription','Chiedi la trascrizione')+' '+cst({t:20,s:1})}</button></div></div>
+ <div class="row"><button type="button" data-sc="back">← ${src.k==='pz'?tt('The counter','Il bancone'):tt('The shells','Le conchiglie')}</button></div>`)}
+let scBusy=false;
+sb.addEventListener('click',e=>{if(sheetKind!=='score')return;const b=e.target.closest('button[data-sc]');if(!b)return;e.stopPropagation();const k=b.dataset.sc,src=SCSRC;
+ if(k==='back'){src.k==='pz'?counterSheet():shellPlaySheet();return}
+ const P=scPiece(src);if(!P||scBusy)return;
+ try{if(k==='midi'){scSave(scMidi(P),scFile(P)+'.mid');snd('pop');say(tt('Here is the MIDI file!','Ecco il file MIDI!'),2);return}
+  if(k==='col'){scSave(scPdf(scColour(P)),scFile(P)+'.pdf');snd('pop');say(tt('Here is the coloured score!','Ecco la partitura colorata!'),2.2);return}
+  if(k==='strav'){if(!P.obj.tr){if(!pay({t:20,s:1})){say(tt('Maestro Stravigor asks 20 tofu ants and 1 seed.','Maestro Stravigor chiede 20 formiche di tofu e 1 seme.'),2.8);return}P.obj.tr=1;fmDirty=true;save();try{hudFarm()}catch(_){}}
+   scBusy=true;bubbleQ.length=0;bubbleT=0;say(tt('Maestro Stravigor dips his pen in the ink… scratch, scratch…','Maestro Stravigor intinge la penna nel calamaio… scritch, scritch…'),2.4);snd('bell',523);
+   setTimeout(()=>{scBusy=false;try{scSave(scPdf(scStrav(P)),scFile(P)+'-stravigor.pdf');say(tt('“Here you are. Bravo!” (Maestro Igor Stravigor)','«Ecco a lei. Bravo!» (Maestro Igor Stravigor)'),3)}catch(err){console.error(err)}if(sheetKind==='score')scoreSheet(src)},1500)}}
+ catch(err){console.error(err);say(tt('Oops, the file did not come out. Try again!','Ops, il file non è uscito. Riprova!'),2.4)}});
+/* from the counter and from the shell melodies */
+sb.addEventListener('click',e=>{const b=e.target.closest('button[data-pa="score"],button[data-mels]');if(!b)return;
+ if(b.dataset.mels!=null&&sheetKind==='shplay'){e.stopPropagation();if(REC)recStop();melStop();scoreSheet({k:'mel',i:+b.dataset.mels});return}
+ if(sheetKind!=='counter')return;e.stopPropagation();const B=prB();if(!B.pr.some(c=>c.length)){say(tt('The counter is empty: put some tokens first!','Il bancone è vuoto: metti prima qualche pedina!'),2.4);return}
+ const same=prSel>=0&&B.pz[prSel]&&JSON.stringify(B.pz[prSel].s)===JSON.stringify(B.pr)&&B.pz[prSel].b===B.bpm;if(!same){const s=sb.querySelector('button[data-pa="save"]');if(s)s.click()}
+ if(prSel>=0&&B.pz[prSel])scoreSheet({k:'pz',i:prSel})});
+{const st=document.createElement('style');st.textContent=`.scb{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.scb button small{opacity:.7;margin-left:4px;text-transform:none;letter-spacing:0}.scb button{text-transform:none;letter-spacing:0}
+.scs{display:flex;gap:12px;align-items:flex-start;padding:12px;margin:8px 0 12px;border:1px solid rgba(219,231,234,.18);border-radius:12px}.scs>span{font-size:30px}.scs p{margin:4px 0 10px}.scs button{text-transform:none;letter-spacing:0}`;document.head.appendChild(st)}
 /* ---------- fish around the island, birds in the sky ---------- */
 const FISHW=[['clown',3],['blue',3],['puffer',2],['sunfish',1],['dolphin',.7]];
 const pickW=L=>{let t=L.reduce((a,x)=>a+x[1],0)*Math.random();for(const[k,w]of L){if((t-=w)<=0)return k}return L[0][0]};
@@ -5154,7 +5291,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-1600';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-1700';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
