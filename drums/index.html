@@ -15,16 +15,19 @@ let IT=false;try{IT=(localStorage.getItem('igortime_lang')||((navigator.language
 const tt=(en,it)=>IT?it:en;
 const touch=matchMedia('(pointer:coarse)').matches;
 
-/* the four pieces of the drum kit, left to right: keys A S D F */
+/* the six pieces of the drum kit: keys A S D F G, and the bass drum on the space bar (a pedal for your thumb) */
 const P=[
  {id:'hh',name:tt('hi-hat','charleston'),key:'A',col:'#f6d34a'},
- {id:'t1',name:tt('high tom','tom alto'),key:'S',col:'#ff6a5e'},
- {id:'t2',name:tt('low tom','tom basso'),key:'D',col:'#6f9bff'},
- {id:'cr',name:tt('cymbal','piatto'),key:'F',col:'#7fe08a'}];
+ {id:'sn',name:tt('snare','rullante'),key:'S',col:'#ff9f43'},
+ {id:'t1',name:tt('high tom','tom alto'),key:'D',col:'#ff6a5e'},
+ {id:'t2',name:tt('low tom','tom basso'),key:'F',col:'#6f9bff'},
+ {id:'cr',name:tt('cymbal','piatto'),key:'G',col:'#7fe08a'},
+ {id:'bd',name:tt('bass drum','cassa'),key:tt('SPACE','SPAZIO'),col:'#c49bff'}];
+const KEYS='asdfg ';
 const LEVELS={
  easy:   {name:'Easy',   bpm:84, bars:2,grid:2,e8:0,  s16:0,  n:[3,3],repeat:1,  pieces:2,tol:.25, replays:Infinity,down:2,gap:2,off:0,metro:1,info:tt('The same bar twice, on two drums, every hit on the beat, with a click · listen as often as you like','La stessa battuta due volte, su due pezzi, tutti i colpi sul tempo, con il metronomo · ascolta quante volte vuoi')},
  medium: {name:'Medium', bpm:92, bars:2,grid:2,e8:.5, s16:0,  n:[6,8],  pieces:3,tol:.18, replays:2,down:2,gap:2,off:3,metro:1,info:tt('Three drums, a few off-beats, with a click · you can listen three times','Tre pezzi, qualche controtempo, con il metronomo · puoi ascoltarlo tre volte')},
- extreme:{name:'Extreme',bpm:100,bars:2,grid:4,e8:.8, s16:.25,n:[8,10], pieces:4,tol:.13, replays:1,down:1,gap:2,off:6,metro:1,info:tt('All four drums, off-beats and a few sixteenths, with a click · you hear it twice','Tutti e quattro i pezzi, controtempi e qualche semicroma, con il metronomo · lo senti due volte')}};
+ extreme:{name:'Extreme',bpm:100,bars:2,grid:4,e8:.8, s16:.25,n:[8,10], pieces:4,tol:.13, replays:1,down:1,gap:2,off:6,metro:1,info:tt('Four drums, off-beats and a few sixteenths, with a click · you hear it twice','Quattro pezzi, controtempi e qualche semicroma, con il metronomo · lo senti due volte')}};
 
 /* ---------- sounds: synthesized drums ---------- */
 let AC=null,OUT=null;
@@ -41,8 +44,17 @@ function tom(t,f0,dur){const o=AC.createOscillator(),g=AC.createGain();o.type='s
  noise(t,.035,.35,'lowpass',2500)}
 function click(t,acc){t=Math.max(t,AC.currentTime);const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(acc?1900:1400,t);
  g.gain.setValueAtTime(acc?.22:.13,t);g.gain.exponentialRampToValueAtTime(.001,t+.05);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+.06)}
+function snare(t){const o=AC.createOscillator(),g=AC.createGain();o.type='triangle';o.frequency.setValueAtTime(330,t);o.frequency.exponentialRampToValueAtTime(185,t+.04);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.55,t+.002);g.gain.exponentialRampToValueAtTime(.001,t+.12);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+.15);
+ noise(t,.2,.62,'bandpass',3200,.55);noise(t,.09,.3,'highpass',6000)}
+function kick(t){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(155,t);o.frequency.exponentialRampToValueAtTime(52,t+.12);
+ g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(1.15,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+.42);o.connect(g);g.connect(OUT);o.start(t);o.stop(t+.45);
+ const o2=AC.createOscillator(),g2=AC.createGain();o2.type='triangle';o2.frequency.setValueAtTime(110,t);g2.gain.setValueAtTime(.35,t);g2.gain.exponentialRampToValueAtTime(.001,t+.25);o2.connect(g2);g2.connect(OUT);o2.start(t);o2.stop(t+.3);
+ noise(t,.012,.4,'lowpass',3000)} // the beater click: you hear it on phone speakers too
 function sound(id,t){t=Math.max(t,AC.currentTime);
  if(id==='hh'){metal(t,1,.07,.5,7000);noise(t,.05,.18,'highpass',8000)}
+ else if(id==='sn')snare(t);
+ else if(id==='bd')kick(t);
  else if(id==='t1')tom(t,205,.3);
  else if(id==='t2')tom(t,118,.48);
  else{metal(t,1.55,1.5,.32,3500);noise(t,1.3,.22,'highpass',5000);noise(t,.02,.3,'bandpass',4000,1)}}
@@ -58,7 +70,8 @@ const steps=4*LV.grid*LV.bars,dt=60/LV.bpm/LV.grid,n=LV.n[0]+Math.floor(Math.ran
   while(pos.length<n){let tot=0;const c=cand.filter(x=>!pos.includes(x.s)&&x.w>0);for(const x of c)tot+=x.w;let r=Math.random()*tot;for(const x of c){r-=x.w;if(r<=0){pos.push(x.s);break}}}
   pos.sort((a,b)=>a-b);tries++}
  while(tries<300&&!(pos.every((v,i)=>(i?v-pos[i-1]:0)<=LV.gap*LV.grid)&&steps-pos[pos.length-1]<=LV.gap*LV.grid+LV.grid&&pos.filter(v=>v%LV.grid).length<=LV.off));
- const ids=P.map(p=>p.id).sort(()=>Math.random()-.5).slice(0,LV.pieces);
+ // the pieces of the round: the snare and the bass drum come up more often (they are the heart of a groove)
+ const ids=P.map(p=>p.id).map(id=>({id,w:Math.random()*(id==='sn'||id==='bd'?1.8:1)})).sort((a,b)=>b.w-a.w).slice(0,LV.pieces).map(o=>o.id);
  let pcs;do{pcs=pos.map(()=>ids[Math.floor(Math.random()*ids.length)]);
   // a cymbal is a nice way to start or finish; avoid four of the same in a row; use every chosen drum
  }while(!ids.every(i=>pcs.includes(i))||/(.)\1\1\1/.test(pcs.map(x=>x[1]).join('')));
@@ -90,11 +103,11 @@ function hit(K,idx){const p=P[idx];if(!p||!K.AC)return;const now=K.AC.currentTim
 function again(K){if(K.phase!=='guess')return;clearTimeout(endT);mine=[];K.R.moved=false;K.update();K.say(tt('From the top!','Da capo!'),1.6)}
 
 const K=IgorGame({key:'drums',name:tt('The drums','La batteria'),rounds:5,maxRound:100,levels:LEVELS,
- aria:tt('A drum kit with hi-hat, high tom, low tom and cymbal, in front of a blackboard covered by a curtain','Una batteria con charleston, tom alto, tom basso e piatto, davanti a una lavagna coperta da una tenda'),
+ aria:tt('A drum kit with hi-hat, snare, high tom, low tom, cymbal and bass drum, in front of a blackboard covered by a curtain','Una batteria con charleston, rullante, tom alto, tom basso, piatto e cassa, davanti a una lavagna coperta da una tenda'),
  title:tt('The <em>drums</em>','La <em>batteria</em>'),
- intro:tt(`<p>Listen to a <b>groove</b> on the drums. Watch the drums light up. Then play it back: <b>same rhythm, same drums</b>. A count-in (1 2 3 4) and a soft click keep the beat for you.</p><p>Four pieces: <b style="color:#f6d34a">hi-hat</b>, <b style="color:#ff6a5e">high tom</b>, <b style="color:#6f9bff">low tom</b>, <b style="color:#7fe08a">cymbal</b>. ${touch?'Tap them':'Keys <b>A S D F</b>, or click them'}. When you’ve played as many hits as you heard, the blackboard shows how it went.</p>`,
-  `<p>Ascolta un <b>ritmo</b> sulla batteria. Guarda i pezzi che si illuminano. Poi rifallo: <b>stesso ritmo, stessi pezzi</b>. Il conteggio (1 2 3 4) e un clic leggero ti tengono il tempo.</p><p>Quattro pezzi: <b style="color:#f6d34a">charleston</b>, <b style="color:#ff6a5e">tom alto</b>, <b style="color:#6f9bff">tom basso</b>, <b style="color:#7fe08a">piatto</b>. ${touch?'Toccali':'Tasti <b>A S D F</b>, oppure cliccali'}. Quando hai suonato tanti colpi quanti ne hai sentiti, la lavagna mostra com’è andata.</p>`),
- keys:tt('keys: A S D F = drums, L = listen, R = start again, enter = that’s it','tasti: A S D F = batteria, L = ascolta, R = da capo, invio = fatto'),
+ intro:tt(`<p>Listen to a <b>groove</b> on the drums. Watch the drums light up. Then play it back: <b>same rhythm, same drums</b>. A count-in (1 2 3 4) and a soft click keep the beat for you.</p><p>Six pieces: <b style="color:#f6d34a">hi-hat</b>, <b style="color:#ff9f43">snare</b>, <b style="color:#ff6a5e">high tom</b>, <b style="color:#6f9bff">low tom</b>, <b style="color:#7fe08a">cymbal</b> and the <b style="color:#c49bff">bass drum</b>. ${touch?'Tap them, with more fingers if you like':'Keys <b>A S D F G</b>, the <b>space bar</b> for the bass drum, or click them'}. When you’ve played as many hits as you heard, the blackboard shows how it went.</p>`,
+  `<p>Ascolta un <b>ritmo</b> sulla batteria. Guarda i pezzi che si illuminano. Poi rifallo: <b>stesso ritmo, stessi pezzi</b>. Il conteggio (1 2 3 4) e un clic leggero ti tengono il tempo.</p><p>Sei pezzi: <b style="color:#f6d34a">charleston</b>, <b style="color:#ff9f43">rullante</b>, <b style="color:#ff6a5e">tom alto</b>, <b style="color:#6f9bff">tom basso</b>, <b style="color:#7fe08a">piatto</b> e la <b style="color:#c49bff">cassa</b>. ${touch?'Toccali, anche con più dita':'Tasti <b>A S D F G</b>, la <b>barra spaziatrice</b> per la cassa, oppure cliccali'}. Quando hai suonato tanti colpi quanti ne hai sentiti, la lavagna mostra com’è andata.</p>`),
+ keys:tt('keys: A S D F G = drums, space = bass drum, L = listen, R = start again, enter = that’s it','tasti: A S D F G = batteria, spazio = cassa, L = ascolta, R = da capo, invio = fatto'),
  bar:`<button id="listen" type="button">▶ Listen</button><button id="redo" type="button">${tt('↺ Again','↺ Da capo')}</button><button id="ok" class="main" type="button">That’s it!</button>`,
  roundLine:(R,K)=>K.round===1?tt('Listen to the groove…','Ascolta il ritmo…'):K.round===5?tt('Last groove. Play it like a pro.','Ultimo ritmo. Suonalo da professionista.'):[tt('New groove! Listen…','Nuovo ritmo! Ascolta…'),tt('Shh. Count with your ears.','Shh. Conta con le orecchie.'),tt('Here comes another one.','Eccone un altro.')][K.round%3],
  revealMs:5600,msgDelay:1100,bubble:1.3,
@@ -119,7 +132,7 @@ const K=IgorGame({key:'drums',name:tt('The drums','La batteria'),rounds:5,maxRou
   return{pts:res.pts,good,msg}},
  update(K){const r=document.getElementById('redo');if(r)r.disabled=!(K.phase==='guess'&&mine.length>0);const ok=document.getElementById('ok');if(ok&&K.phase==='guess')ok.disabled=mine.length===0},
  onAudio(K){AC=K.AC;OUT=K.OUT},
- key_down(e,K){const k=e.key.toLowerCase(),i='asdf'.indexOf(k);if(i>=0){e.preventDefault();hit(K,i);return}if(k==='r')again(K)},
+ key_down(e,K){if(e.repeat)return;const k=e.key.toLowerCase(),i=KEYS.indexOf(k);if(i>=0){e.preventDefault();hit(K,i);return}if(k==='r')again(K)},
  draw});
 document.getElementById('redo').onclick=()=>again(K);
 /* tap or click a drum (several fingers at once are fine) */
@@ -131,6 +144,8 @@ K.update();
 function glyph(g,id,x,y,r,col,hollow){g.save();g.strokeStyle=col;g.fillStyle=col;g.lineWidth=Math.max(2,r*.32);g.lineCap='round';
  if(id==='hh'){g.beginPath();g.moveTo(x-r,y-r);g.lineTo(x+r,y+r);g.moveTo(x+r,y-r);g.lineTo(x-r,y+r);g.stroke()}
  else if(id==='cr'){g.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,q=i%2?r*.5:r*1.25;g.lineTo(x+q*Math.cos(a),y+q*Math.sin(a))}g.closePath();hollow?g.stroke():g.fill()}
+ else if(id==='sn'){g.beginPath();g.moveTo(x,y-r*1.1);g.lineTo(x+r*1.1,y);g.lineTo(x,y+r*1.1);g.lineTo(x-r*1.1,y);g.closePath();hollow?g.stroke():g.fill()}
+ else if(id==='bd'){const q=r*.95;hollow?g.strokeRect(x-q,y-q,2*q,2*q):g.fillRect(x-q,y-q,2*q,2*q)}
  else{const rr2=id==='t2'?r*1.05:r*.75;g.beginPath();g.arc(x,y,rr2,0,TAU);hollow?g.stroke():g.fill()}
  g.restore()}
 function blackboard(g,x,y,w,h,K){const R=K.R;g.fillStyle='#6b4a2e';rr(g,x-10,y-10,w+20,h+20,8);g.fill();g.fillStyle='#2f4a3a';g.fillRect(x,y,w,h);
@@ -163,7 +178,7 @@ function cymbal(g,x,y,r,tilt,hitK,top){const wob=Math.sin(hitK*20)*hitK*.12;g.sa
  g.fillStyle='#8a6a20';g.beginPath();g.ellipse(0,0,r*.12,r*tilt*.12,0,0,TAU);g.fill();
  if(hitK>0){g.fillStyle=`rgba(255,250,220,${.55*hitK})`;g.beginPath();g.ellipse(0,0,r,r*tilt,0,0,TAU);g.fill()}g.restore()}
 function stand(g,x,y0,y1){g.strokeStyle='#5a5f66';g.lineWidth=3;g.beginPath();g.moveTo(x,y0);g.lineTo(x,y1);g.moveTo(x,y1);g.lineTo(x-16,y1+10);g.moveTo(x,y1);g.lineTo(x+16,y1+10);g.stroke()}
-function badge(g,x,y,txt,col){g.save();g.font='700 15px "IBM Plex Mono",monospace';g.textAlign='center';g.fillStyle='rgba(20,13,9,.75)';rr(g,x-13,y-12,26,24,7);g.fill();g.strokeStyle=col;g.lineWidth=2;g.stroke();g.fillStyle=col;g.fillText(txt,x,y+5);g.restore()}
+function badge(g,x,y,txt,col){g.save();g.font=(txt.length>1?'700 12px':'700 15px')+' "IBM Plex Mono",monospace';g.textAlign='center';g.fillStyle='rgba(20,13,9,.75)';const bw=Math.max(26,g.measureText(txt).width+14);rr(g,x-bw/2,y-12,bw,24,7);g.fill();g.strokeStyle=col;g.lineWidth=2;g.stroke();g.fillStyle=col;g.fillText(txt,x,y+5);g.restore()}
 
 /* ---------- the music room: a poster, drumsticks on the wall, a framed record, a rug, an amp ---------- */
 function poster(g,x,y,w,h){g.fillStyle='rgba(40,25,10,.25)';g.fillRect(x+4,y+5,w,h);g.fillStyle='#1f2a44';g.fillRect(x,y,w,h);
@@ -216,17 +231,20 @@ function draw(K,dt){const g=K.g,W=K.W,H=K.H,t=K.T,R=K.R;
  K.drawIgor(cx,top-ih*.12-bob*ih,ih,-1,{shadow:false});
  const ac=K.AC?K.AC.currentTime:0;for(let q=refLit.length-1;q>=0;q--){const r=refLit[q];if(ac>r.at+.4){refLit.splice(q,1);continue}if(ac>=r.at&&!r.done){r.done=1;flash[r.id]=t;pops.push({p:P.findIndex(x=>x.id===r.id),t})}}
  const hk=id=>{const a=t-(flash[id]??-9);return a<.32?1-a/.32:0};
- // bass drum in the middle (not played: just to make it a kit)
- g.fillStyle='#7a2d2a';g.beginPath();g.arc(cx,base-u*.55,u*.62,0,TAU);g.fill();g.fillStyle='#efe4cf';g.beginPath();g.arc(cx,base-u*.55,u*.5,0,TAU);g.fill();
- g.fillStyle='#2b2018';g.font=`700 ${Math.round(u*.16)}px Fredoka,sans-serif`;g.textAlign='center';g.fillText('IGOR',cx,base-u*.14);
- const pos=[{x:cx-u*1.55,y:top-u*.05},{x:cx-u*.6,y:top+u*.12},{x:cx+u*.62,y:top+u*.32},{x:cx+u*1.55,y:top-u*.35}];
- stand(g,pos[0].x,pos[0].y,base);stand(g,pos[3].x,pos[3].y,base);
- cymbal(g,pos[0].x,pos[0].y,u*.5,.22,hk('hh'),true);
- drum(g,pos[1].x,pos[1].y,u*.42,u*.13,u*.38,'#b8402f','#f2eadb',hk('t1'));
- g.strokeStyle='#5a5f66';g.lineWidth=3;g.beginPath();g.moveTo(pos[2].x,pos[2].y+u*.6);g.lineTo(pos[2].x,base);g.stroke();
- drum(g,pos[2].x,pos[2].y,u*.52,u*.16,u*.58,'#b8402f','#f2eadb',hk('t2'));
- cymbal(g,pos[3].x,pos[3].y,u*.62,.24,hk('cr'),false);
- SPOTS=pos.map((p,i)=>({i,x:p.x,y:p.y+(i===2?u*.15:0),rx:u*(i===3?.75:.6),ry:u*.48}));
+ // the kit: hi-hat, snare, two toms on the bass drum, cymbal; the bass drum in the middle is played too (space bar)
+ const bdY=base-u*.55,bk=hk('bd'),bs=1+bk*.05;
+ const pos=[{x:cx-u*1.6,y:top+u*.02},{x:cx-u*1.0,y:top+u*.62},{x:cx-u*.42,y:top-u*.1},{x:cx+u*.62,y:top+u*.3},{x:cx+u*1.6,y:top-u*.35},{x:cx,y:bdY}];
+ g.save();g.translate(cx,bdY);g.scale(bs,bs);g.fillStyle='#7a2d2a';g.beginPath();g.arc(0,0,u*.62,0,TAU);g.fill();g.fillStyle='#efe4cf';g.beginPath();g.arc(0,0,u*.5,0,TAU);g.fill();
+ if(bk>0){g.fillStyle=`rgba(196,155,255,${.45*bk})`;g.beginPath();g.arc(0,0,u*.5,0,TAU);g.fill()}
+ g.fillStyle='#2b2018';g.font=`700 ${Math.round(u*.16)}px Fredoka,sans-serif`;g.textAlign='center';g.fillText('IGOR',0,u*.41);g.restore();
+ stand(g,pos[0].x,pos[0].y,base);stand(g,pos[4].x,pos[4].y,base);stand(g,pos[1].x,pos[1].y+u*.25,base);
+ cymbal(g,pos[0].x,pos[0].y,u*.46,.22,hk('hh'),true);
+ drum(g,pos[2].x,pos[2].y,u*.38,u*.12,u*.34,'#b8402f','#f2eadb',hk('t1'));
+ g.strokeStyle='#5a5f66';g.lineWidth=3;g.beginPath();g.moveTo(pos[3].x,pos[3].y+u*.6);g.lineTo(pos[3].x,base);g.stroke();
+ drum(g,pos[3].x,pos[3].y,u*.5,u*.16,u*.56,'#b8402f','#f2eadb',hk('t2'));
+ drum(g,pos[1].x,pos[1].y,u*.42,u*.13,u*.22,'#c9ccd1','#fbf8f0',hk('sn'));
+ cymbal(g,pos[4].x,pos[4].y,u*.6,.24,hk('cr'),false);
+ SPOTS=pos.map((p,i)=>i===5?{i,x:cx,y:bdY+u*.12,rx:u*.5,ry:u*.38}:{i,x:p.x,y:p.y+(i===3?u*.15:0),rx:u*(i===4?.7:i===2?.42:.5),ry:u*(i===2?.36:.42)});
  const live=canPlay(K);
  // the pulse: keeps ticking while it's your turn (easy and medium), and four dots show where the beat is
  if(K.AC&&K.LV){const LV=K.LV,bt=60/LV.bpm,now=K.AC.currentTime;
@@ -239,12 +257,13 @@ function draw(K,dt){const g=K.g,W=K.W,H=K.H,t=K.T,R=K.R;
    g.restore()}}
  pos.forEach((p,i)=>{const c=P[i].col,h=hk(P[i].id);if(h>0){g.save();g.globalCompositeOperation='lighter';const gr=g.createRadialGradient(p.x,p.y,4,p.x,p.y,u*.95);gr.addColorStop(0,c);gr.addColorStop(1,'rgba(0,0,0,0)');g.globalAlpha=.85*h;g.fillStyle=gr;g.beginPath();g.ellipse(p.x,p.y,u*.95,u*.7,0,0,TAU);g.fill();g.restore();g.strokeStyle=c;g.lineWidth=5;g.globalAlpha=h;g.beginPath();g.ellipse(p.x,p.y,SPOTS[i].rx*.95,SPOTS[i].ry*.6,0,0,TAU);g.stroke();g.globalAlpha=1}
   if(live){g.strokeStyle=c;g.globalAlpha=.35+.25*Math.sin(t*4+i);g.lineWidth=3;g.beginPath();g.ellipse(p.x,p.y,SPOTS[i].rx*.85,SPOTS[i].ry*.5,0,0,TAU);g.stroke();g.globalAlpha=1}
-  if(!touch)badge(g,p.x,p.y-u*.42,P[i].key,c);
-  g.fillStyle='rgba(43,32,24,.8)';g.font=`600 ${Math.max(11,Math.round(u*.12))}px Fredoka,sans-serif`;g.textAlign='center';g.fillText(P[i].name,p.x,base+18)});
+  if(!touch)badge(g,p.x,i===5?p.y+u*.12:p.y-u*.4,P[i].key,c);
+  {const lx=clamp(i===5?cx:p.x,36,W-36),ly=base+(i===5?34:i%2?30:14);g.font=`600 ${Math.max(10,Math.round(u*.11))}px Fredoka,sans-serif`;const lw=g.measureText(P[i].name).width+12;
+   g.fillStyle='rgba(250,244,230,.82)';rr(g,lx-lw/2,ly-11,lw,15,7);g.fill();g.fillStyle=c==='#f6d34a'?'#8a6a10':'rgba(43,32,24,.9)';g.textAlign='center';g.fillText(P[i].name,lx,ly)}});
  // little notes popping out of the drums you hit
- for(let k=pops.length-1;k>=0;k--){const q=pops[k],a=t-q.t;if(a>.9){pops.splice(k,1);continue}const p=pos[q.p];g.globalAlpha=1-a/.9;g.fillStyle=P[q.p].col;g.font=`700 ${Math.round(u*.28)}px serif`;g.fillText('♪',p.x+(q.p-1.5)*8,p.y-u*.3-a*u*.6);g.globalAlpha=1}
- if(K.phase==='guess'&&R&&R.played&&!K.refOn&&mine.length){g.fillStyle='#e0463c';g.beginPath();g.arc(cx-u*.35,base+42,6,0,TAU);g.fill();g.fillStyle='rgba(43,32,24,.85)';g.font='600 13px Fredoka,sans-serif';g.textAlign='left';g.fillText(tt('playing…','suoni…'),cx-u*.35+12,base+47)}
- if(R&&R.res&&R.res.good&&!R.ate&&K.revT>1.4){R.ate=1;K.eat(pos[1].x,pos[1].y,Math.max(1.4,u/60),'#f8f5ec')}}
+ for(let k=pops.length-1;k>=0;k--){const q=pops[k],a=t-q.t;if(a>.9){pops.splice(k,1);continue}const p=pos[q.p];g.globalAlpha=1-a/.9;g.fillStyle=P[q.p].col;g.font=`700 ${Math.round(u*.28)}px serif`;g.fillText('♪',p.x+(q.p-2.5)*5,p.y-u*.3-a*u*.6);g.globalAlpha=1}
+ if(K.phase==='guess'&&R&&R.played&&!K.refOn&&mine.length){g.fillStyle='#e0463c';g.beginPath();g.arc(cx-u*.35,base+54,6,0,TAU);g.fill();g.fillStyle='rgba(43,32,24,.85)';g.font='600 13px Fredoka,sans-serif';g.textAlign='left';g.fillText(tt('playing…','suoni…'),cx-u*.35+12,base+59)}
+ if(R&&R.res&&R.res.good&&!R.ate&&K.revT>1.4){R.ate=1;K.eat(pos[2].x,pos[2].y,Math.max(1.4,u/60),'#f8f5ec')}}
 })();
 </script>
 </body></html>
