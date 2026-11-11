@@ -3064,7 +3064,7 @@ const barF=()=>{const F=FM();F.bar=F.bar||{};return F.bar};
  // the TV on the right wall (off for now)
  {const tv=new THREE.Group();tv.position.set(4.82,1.9,.4);tv.rotation.y=-Math.PI/2;g.add(tv);const fr=new THREE.Mesh(new THREE.BoxGeometry(1.7,1.05,.12),lam('#2a3036'));tv.add(fr);const sc=new THREE.Mesh(new THREE.PlaneGeometry(1.52,.88),lam('#10161c'));sc.position.z=.065;tv.add(sc);Rm.tvScreen=sc;
   const shine=new THREE.Mesh(new THREE.PlaneGeometry(.5,.08),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.12}));shine.position.set(-.35,.28,.07);shine.rotation.z=.4;tv.add(shine);
-  hit(tv,.8,()=>say(tt('The TV is off. Barigor says it will be on soon, with the weather and some funny ads!','La TV è spenta. Barigor dice che presto si accende, con il meteo e qualche pubblicità buffa!'),3.2),'bar tv',0)}
+  hit(tv,.8,()=>walkIn(new V3(3.2,0,.4),()=>tvOn()),'bar tv',0)}
  // plants, string lights, a tiki mask
  for(const[x,z]of[[-4.3,-3.1],[4.3,-3.1],[-4.3,2.6]]){const p=new THREE.Group();const pot=new THREE.Mesh(new THREE.CylinderGeometry(.28,.22,.45,10),lam('#c0703a'));pot.position.y=.22;p.add(pot);for(let k=0;k<6;k++){const l=new THREE.Mesh(new THREE.ConeGeometry(.12,.9,4),lam(k%2?'#4f9a54':'#3f8a48'));l.position.set(Math.cos(k)*.18,.85,Math.sin(k)*.18);l.rotation.set(Math.sin(k)*.5,0,Math.cos(k)*.5);p.add(l)}p.position.set(x,0,z);g.add(p);Rm.blocks.push({x,z,r:.35})}
  const BL=[];for(let k=0;k<14;k++){const u=k/13,b=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),glowM(['#f25c78','#f2c230','#4fb7a0','#5cc2f2'][k%4],1));b.position.set(-4.6+u*9.2,3.0-Math.sin(u*Math.PI)*.35,-3.3);g.add(b);BL.push(b)}
@@ -3084,6 +3084,7 @@ function barMenu(){const P=new V3(-.4,2.0,-1.0);
  chips(P,()=>{CH.title='🍹 '+BARN;return[
   {t:`🥭 ${tt('Tofu & mango smoothie','Frullato tofu e mango')} ${cst({t:2})}`,main:1,fn:()=>{barDrink('mango');return false}},
   {t:`🫧 ${tt('Fizzy smoothie','Frullato frizzante')} ${cst({t:3})}`,fn:()=>{barDrink('fizz');return false}},
+  {t:`📺 ${tt('The TV','La TV')}`,fn:()=>{tvOn();return false}},
   ...(btlPocketN()||(FUN().btlOld|0)?[{t:`🍾 ${tt('Here are my bottles','Ecco le mie bottiglie')} (${btlPocketN()+Math.min(8,FUN().btlOld|0)})`,main:1,fn:()=>{btlDeliver();return false}}]:[]),
   ...(Object.keys(btlShelf()).length?[{t:`🎚 ${tt('The shelf','Lo scaffale')}`,fn:()=>{btlSync();shelfSheet();return false}},{t:`🎹 ${tt('The counter','Il bancone')}`,main:1,fn:()=>{btlSync();counterSheet();return false}}]:[]),
   ...(glDoubles().length||glB().gl||Object.keys(glB().st).length?[{t:`♻️ ${tt('Glass','Il vetro')}${glDoubles().length?` (${glDoubles().reduce((a,[,n])=>a+n,0)})`:''}`,fn:()=>{glassSheet();return false}}]:[])]},'bar',1)}
@@ -3468,6 +3469,63 @@ sb.addEventListener('click',e=>{const b=e.target.closest('button[data-pa="score"
  if(prSel>=0&&B.pz[prSel])scoreSheet({k:'pz',i:prSel})});
 {const st=document.createElement('style');st.textContent=`.scb{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.scb button small{opacity:.7;margin-left:4px;text-transform:none;letter-spacing:0}.scb button{text-transform:none;letter-spacing:0}
 .scs{display:flex;gap:12px;align-items:flex-start;padding:12px;margin:8px 0 12px;border:1px solid rgba(219,231,234,.18);border-radius:12px}.scs>span{font-size:30px}.scs p{margin:4px 0 10px}.scs button{text-transform:none;letter-spacing:0}`;document.head.appendChild(st)}
+/* ================= 11 Nov 2026: the TV in the bar, step 7 of the bar plan =================
+   "Igor TV": tap the TV (or "📺 The TV" at Barigor's) and it turns on. The programme goes round:
+   the Igor TV logo, two funny made-up ads (they can be skipped after 3 s), "and now… the weather!", then Meteogor
+   with the same forecast as the cinema in the sea (drawBoard into its canvas, copied here). The 3D screen shows the same picture
+   while you stay in the bar; it turns off when you leave. Real ads and "no ads if you paid" will come later. */
+const TVC=document.createElement('canvas');TVC.width=640;TVC.height=384;const TVX=TVC.getContext('2d');const TVT=new THREE.CanvasTexture(TVC);
+const TVADS=[
+ {bg:['#ffe08a','#ff9f43'],ic:'🐜',t:['Tofu Croc','Tofu Croc'],s:['The crunchiest tofu ants on the island!','Le formiche di tofu più croccanti dell’isola!'],f:['Now with 30% more crunch.','Ora con il 30% di croc in più.'],j:[72,76,79,84]},
+ {bg:['#a8e6ff','#4f8fd9'],ic:'🎵',t:['Tuner 3000','Accordator 3000'],s:['It tunes your marimba while you sleep!','Accorda la tua marimba mentre dormi!'],f:['*Does not work while you sleep.','*Non funziona mentre dormi.'],j:[67,72,71,72]},
+ {bg:['#ffd1e8','#d96aa6'],ic:'🧴',t:['Bushy Tail','Coda Folta'],s:['The shampoo for a dreamy anteater tail.','Lo shampoo per una coda da formichiere da sogno.'],f:['Tested on Igor. Igor approves.','Testato su Igor. Igor approva.'],j:[76,79,83,88]},
+ {bg:['#c9f7c4','#3fae6a'],ic:'🫧',t:['Barigor’s Fizz','Frizz di Barigor'],s:['The smoothie that makes your head spin. Really.','Il frullato che fa girare la testa. Davvero.'],f:['One at a time, please: hic!','Uno alla volta, mi raccomando: hic!'],j:[79,78,79,74]},
+ {bg:['#d9d4ff','#7a6ad9'],ic:'☂️',t:['Meteogor Umbrellas','Ombrelli Meteogor'],s:['Rain puts instruments out of tune. Not you.','La pioggia stona gli strumenti. Tu no.'],f:['Umbrella not included in the forecast.','Ombrello non incluso nella previsione.'],j:[74,72,69,72]},
+ {bg:['#bff3ef','#2fa59a'],ic:'🍾',t:['Sea Bottles Ltd','Bottiglie del Mare Srl'],s:['Every bottle a note. Collect them all!','Ogni bottiglia una nota. Raccoglile tutte!'],f:['Free delivery by the sea, whenever it likes.','Il mare consegna gratis, ma quando vuole lui.'],j:[72,74,76,77]},
+ {bg:['#ffe3c2','#c9763a'],ic:'🎩',t:['Stravigor Conducting School','Scuola di Direzione Stravigor'],s:['Learn to conduct: a baton and lots of confidence.','Impara a dirigere: una bacchetta e tanta fiducia.'],f:['Lesson 1: no baton near the cake.','Lezione 1: niente bacchetta vicino alla torta.'],j:[67,71,74,79]}];
+const TVD={logo:2.2,ad:7,bump:2.6,meteo:15};
+const TV={on:false,seg:'logo',ad:0,t0:0,q:[]};
+function tvNext(){const s=TV.seg;TV.t0=performance.now()/1000;
+ if(s==='logo'){if(!TV.q.length){const a=[...TVADS.keys()].sort(()=>Math.random()-.5);TV.q=a.slice(0,2)}TV.seg='ad';TV.ad=TV.q.shift();tvJingle(TVADS[TV.ad].j)}
+ else if(s==='ad'){if(TV.q.length){TV.ad=TV.q.shift();tvJingle(TVADS[TV.ad].j)}else{TV.seg='bump';snd('bell',659)}}
+ else if(s==='bump'){TV.seg='meteo';const B=boardInfo(Date.now());if(where==='bar'){bubbleQ.length=0;bubbleT=0;say(`📺 ${METEO}: “${B.say.trim()}”`,5)}}
+ else{TV.seg='logo';tvJingle([72,79,84])}tvBtn()}
+function tvJingle(ns){ns.forEach((m,i)=>setTimeout(()=>{if(TV.on)snd('marimba',440*Math.pow(2,(m-69)/12))},i*170))}
+function tvOn(){const Rm=ROOMS.bar;if(!Rm||!Rm.tvScreen)return;if(!TV.on){TV.on=true;TV.seg='logo';TV.q=[];TV.t0=performance.now()/1000;snd('pop');tvJingle([72,79,84]);
+  Rm.tvScreen.userData.off=Rm.tvScreen.material;Rm.tvScreen.material=new THREE.MeshBasicMaterial({map:TVT})}
+ openSheet('tv',`<h2>📺 Igor TV</h2><canvas id="tvView" width="640" height="384" class="tvv"></canvas><div class="row"><button type="button" data-tv="skip" hidden>⏭ ${tt('Skip the ad','Salta la pubblicità')}</button><button type="button" data-tv="off">⏻ ${tt('Turn off','Spegni')}</button></div>
+ <p class="shn">${tt('Igor TV: funny ads (they are made up!) and the weather with Meteogor.','Igor TV: pubblicità buffe (sono inventate!) e il meteo con Meteogor.')}</p>`);tvBtn()}
+function tvOff(){const Rm=ROOMS.bar;TV.on=false;if(Rm&&Rm.tvScreen&&Rm.tvScreen.userData.off){Rm.tvScreen.material=Rm.tvScreen.userData.off}}
+function tvBtn(){const b=sheetKind==='tv'&&sb.querySelector('button[data-tv="skip"]');if(b)b.hidden=!(TV.seg==='ad'&&performance.now()/1000-TV.t0>3)}
+sb.addEventListener('click',e=>{if(sheetKind!=='tv')return;const b=e.target.closest('button[data-tv]');if(!b)return;e.stopPropagation();
+ if(b.dataset.tv==='off'){tvOff();snd('close');closeSheet();return}
+ if(b.dataset.tv==='skip'){TV.q=[];TV.seg='ad';tvNext()}});
+function tvWrap(g,txt,x,y,maxW,lh){const w=txt.split(' ');let line='',n=0;for(const k of w){const tst=line?line+' '+k:k;if(g.measureText(tst).width>maxW&&line){g.fillText(line,x,y+n*lh);line=k;n++}else line=tst}g.fillText(line,x,y+n*lh);return n+1}
+function tvDraw(t,dt){const g=TVX,W=640,H=384,u=performance.now()/1000-TV.t0;g.textAlign='center';g.textBaseline='middle';
+ if(TV.seg==='logo'){const gr=g.createLinearGradient(0,0,W,H);gr.addColorStop(0,'#1d2b6b');gr.addColorStop(1,'#5a2d82');g.fillStyle=gr;g.fillRect(0,0,W,H);
+  for(let i=0;i<14;i++){g.fillStyle=`hsla(${i*26+t*40},80%,70%,.25)`;g.beginPath();g.arc(W/2+Math.cos(i+t)*240,H/2+Math.sin(i*1.7+t)*140,10+i%4*6,0,7);g.fill()}
+  const sc=Math.min(1,u*2.2);g.save();g.translate(W/2,H/2-14);g.scale(sc,sc);g.font='700 96px Fredoka, sans-serif';const L='IGOR TV';let x=-g.measureText(L).width/2;g.textAlign='left';
+  for(let i=0;i<L.length;i++){const ch=L[i];g.fillStyle=`hsl(${i*48},85%,66%)`;g.fillText(ch,x,Math.sin(t*4+i)*6);x+=g.measureText(ch).width}g.restore();g.textAlign='center';
+  g.fillStyle='#fff8e8';g.font='500 26px Fredoka, sans-serif';g.fillText(tt('the island’s TV','la TV dell’isola'),W/2,H/2+70)}
+ else if(TV.seg==='ad'){const A=TVADS[TV.ad],gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,A.bg[0]);gr.addColorStop(1,A.bg[1]);g.fillStyle=gr;g.fillRect(0,0,W,H);
+  g.save();g.translate(150,190);g.rotate(t*.4);g.fillStyle='rgba(255,255,255,.22)';for(let i=0;i<12;i++){g.rotate(Math.PI/6);g.beginPath();g.moveTo(0,0);g.lineTo(420,-40);g.lineTo(420,40);g.closePath();g.fill()}g.restore();
+  g.save();g.translate(150,185+Math.abs(Math.sin(t*4))*-18);g.rotate(Math.sin(t*3)*.12);g.font='120px serif';g.fillText(A.ic,0,0);g.restore();
+  g.fillStyle='rgba(0,0,0,.45)';g.beginPath();g.roundRect(14,14,150,30,8);g.fill();g.fillStyle='#fff';g.font='700 16px Fredoka, sans-serif';g.fillText(tt('ADVERTISEMENT','PUBBLICITÀ'),89,30);
+  const tx=Math.max(0,1-u*2.5)*300;g.textAlign='left';g.fillStyle='#2b2018';g.font='700 44px Fredoka, sans-serif';let ty=96;const n1=tvWrap(g,tt(...A.t),290+tx,ty,330,46);ty+=n1*46+18;
+  if(u>1.2){g.globalAlpha=Math.min(1,(u-1.2)*2);g.font='600 26px Fredoka, sans-serif';g.fillStyle='#3a2a1c';tvWrap(g,tt(...A.s),290,ty,330,32);g.globalAlpha=1}
+  if(u>3){g.fillStyle='rgba(0,0,0,.6)';g.font='italic 500 16px Fredoka, sans-serif';tvWrap(g,tt(...A.f),24,H-28,W-48,18)}
+  if(u>2.2&&u<6.5){g.fillStyle='#fff';for(let i=0;i<6;i++){const a=t*3+i;g.globalAlpha=.6+.4*Math.sin(a*2);g.beginPath();g.arc(300+((i*97)%320),70+((i*53)%230),3+i%3,0,7);g.fill()}g.globalAlpha=1}
+  g.textAlign='center'}
+ else if(TV.seg==='bump'){g.fillStyle='#0b1c2e';g.fillRect(0,0,W,H);const ic=['☀️','🌧️','💨','⛈️'];g.font='64px serif';ic.forEach((c,i)=>g.fillText(c,110+i*140,130+Math.sin(t*3+i)*10));
+  g.fillStyle='#ffd27a';g.font='700 40px Fredoka, sans-serif';g.fillText(tt('And now… the weather','E ora… il meteo'),W/2,250);g.fillStyle='#f6f1e3';g.font='500 28px Fredoka, sans-serif';g.fillText(tt('with Meteogor','con Meteogor'),W/2,300)}
+ else{cinTick+=dt*70;drawBoard(Date.now(),Math.sin(t*5)>0,t);g.drawImage(boardC,0,0,W,H)}
+ // a little channel logo in the corner
+ if(TV.seg!=='logo'&&TV.seg!=='meteo'){g.fillStyle='rgba(255,255,255,.7)';g.font='700 15px Fredoka, sans-serif';g.textAlign='right';g.fillText('IGOR TV',W-14,24);g.textAlign='center'}
+ g.textBaseline='alphabetic';TVT.needsUpdate=true;
+ const v=sheetKind==='tv'&&document.getElementById('tvView');if(v)v.getContext('2d').drawImage(TVC,0,0)}
+let tvAcc=0;updaters.push((t,dt)=>{if(!TV.on)return;if(where!=='bar'){tvOff();return}
+ if(performance.now()/1000-TV.t0>TVD[TV.seg])tvNext();if(TV.seg==='ad')tvBtn();if((tvAcc+=dt)<.04)return;tvAcc=0;tvDraw(t,.04)});
+{const st=document.createElement('style');st.textContent=`.tvv{display:block;width:100%;height:auto;aspect-ratio:640/384;border-radius:10px;border:6px solid #2a3036;background:#000;margin:6px 0 4px;box-sizing:border-box}`;document.head.appendChild(st)}
 /* ---------- fish around the island, birds in the sky ---------- */
 const FISHW=[['clown',3],['blue',3],['puffer',2],['sunfish',1],['dolphin',.7]];
 const pickW=L=>{let t=L.reduce((a,x)=>a+x[1],0)*Math.random();for(const[k,w]of L){if((t-=w)<=0)return k}return L[0][0]};
@@ -5291,7 +5349,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-1700';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-1800';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
