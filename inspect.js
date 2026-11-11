@@ -11,10 +11,10 @@ const ADMINS=['suJRvYnJ8TZsrtggf88oxTCgKI42','vKhCdacBFoOn8al4qCMz9VioWle2'];
 const me=()=>auth.currentUser&&auth.currentUser.uid;
 export const isAdmin=()=>ADMINS.includes(me());
 const ms=t=>t&&t.toMillis?t.toMillis():(typeof t==='number'?t:0);
-export async function load(uid){const s=await getDoc(doc(db,'users',uid));if(!s.exists())throw new Error('none');const d=s.data();let nick=d.nick||d.name||'';
+export async function load(uid){const s=await getDoc(doc(db,'users',uid));if(!s.exists())throw new Error('none');const d=window.IgorFS?window.IgorFS.dec(s.data()):s.data();let nick=d.nick||d.name||'';
  if(!nick)try{const a=await getDoc(doc(db,'accts',uid));if(a.exists())nick=a.data().nick||''}catch(e){}
  d.savedAt=ms(d.updated)||d.at||0;delete d.updated;return{...d,nick:nick||'?'}}
-export function onSave(uid,cb){return onSnapshot(doc(db,'users',uid),s=>{if(!s.exists())return;const d=s.data();d.savedAt=ms(d.updated)||d.at||0;delete d.updated;cb(d)},e=>console.warn('inspect save',e&&e.code||e))}
+export function onSave(uid,cb){return onSnapshot(doc(db,'users',uid),s=>{if(!s.exists())return;const d=window.IgorFS?window.IgorFS.dec(s.data()):s.data();d.savedAt=ms(d.updated)||d.at||0;delete d.updated;cb(d)},e=>console.warn('inspect save',e&&e.code||e))}
 export function onLive(uid,cb){return onSnapshot(doc(db,'live',uid),s=>cb(s.exists()?s.data():null),e=>{console.warn('inspect live',e&&e.code||e);cb({err:e&&e.code||'err'})})}
 /* min = 0 stops watching */
 export async function watch(uid,min){if(!isAdmin())return;try{await setDoc(doc(db,'watch',uid),{until:min>0?Date.now()+min*60000:0,by:me(),at:serverTimestamp()})}catch(e){console.warn('watch',e&&e.code||e);throw e}}
