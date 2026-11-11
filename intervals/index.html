@@ -383,7 +383,7 @@ function finish(){SES.phase='end';hdr();say('');setBar('');const si=SES.si,r=SES
  <div class="row">${isNew&&!fin?`<button class="main" id="nx">${tt('Next stage ▸','Prossima tappa ▸')}</button>`:''}<button ${isNew&&!fin?'':'class="main"'} id="again">${tt('Play this stage again','Rigioca questa tappa')}</button><button id="map">${tt('All the stages','Tutte le tappe')}</button></div>
  <p class="small"><a href="${document.querySelector('a.igback').href}">${tt('← back to the island','← torna all’isola')}</a></p>`;
  $('end').hidden=false;if($('nx'))$('nx').onclick=()=>begin(PR.done);$('again').onclick=()=>begin(si);$('map').onclick=openMap;
- if(PR.done>0)import('/board.js?v=4').then(B=>B.show($('endCard'),'intervals','all',PR.done,ME.avatar,tt('How far everyone got · stages','Fin dove siete arrivati · tappe'))).catch(()=>{})}
+ if(PR.done>0)import('/board.js?v=5').then(B=>B.show($('endCard'),'intervals','all',PR.done,ME.avatar,tt('How far everyone got · stages','Fin dove siete arrivati · tappe'))).catch(()=>{})}
 
 addEventListener('keydown',e=>{if(!SES||e.repeat)return;if(SES.phase==='q'){if(e.key===' '||e.key==='r'||e.key==='R'){e.preventDefault();playQ();return}const n=+e.key;if(n>=1){const b=bar.querySelectorAll('[data-a]')[n-1];if(b)b.click()}}
  else if((SES.phase==='fb'||SES.phase==='lesson')&&e.key==='Enter'){e.preventDefault();const b=$('next');b&&b.click()}});
