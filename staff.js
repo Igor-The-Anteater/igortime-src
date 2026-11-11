@@ -97,6 +97,20 @@ function gifts(){if(unG)unG(),unG=null;if(onReady)removeEventListener('igor-read
   unG=onSnapshot(collection(db,'gifts',ME.uid,'g'),s=>s.docs.forEach(d=>handleGift({id:d.id,...d.data()})),e=>console.warn('gifts',e));return true};
  if(!go()){onReady=()=>{if(go()){removeEventListener('igor-ready',onReady);onReady=null}};addEventListener('igor-ready',onReady)}}
 
+/* ================= 11 Nov 2026: an admin is looking at this island live (every player, only on the island) =================
+   watch/<uid> {until, by, at} written by an admin (inspect.js) → while until is in the future, live/<uid> every ~1.5 s with what window.IgorLive.snap() gives
+   (only when something changed, or every 6 s), plus a save every 20 s so the admin also sees fields and purchases change. Stops by itself at "until". */
+let unW=null,wT=0,wUntil=0,wLast='',wLastAt=0,wTouch=0;
+function liveSend(extra){const L=window.IgorLive,s=L&&L.snap&&L.snap();if(!ME||!s)return Promise.resolve();
+ return setDoc(doc(db,'live',ME.uid),{...s,go:'',...(extra||{}),t:Date.now(),at:serverTimestamp()}).catch(e=>console.warn('live',e&&e.code||e))}
+function liveTick(){if(!ME||Date.now()>wUntil)return liveStop();const L=window.IgorLive,s=L&&L.snap&&L.snap();if(!s)return;const j=JSON.stringify(s),now=Date.now();
+ if(j===wLast&&now-wLastAt<6000)return;wLast=j;wLastAt=now;liveSend();
+ if(now-wTouch>20000){wTouch=now;try{window.IgorSave&&window.IgorSave.touch&&window.IgorSave.touch()}catch(e){}}}
+function liveStart(){if(wT)return;wLast='';wTouch=Date.now();liveTick();wT=setInterval(liveTick,1500);if(window.IgorLive)window.IgorLive.leave=u=>{liveSend({go:String(u||'').slice(0,40)})}}
+function liveStop(){if(wT){clearInterval(wT);wT=0}if(window.IgorLive)window.IgorLive.leave=null}
+function watchMe(){if(unW)unW(),unW=null;liveStop();if(!ME||window.__igInspect||!window.IgorLive||(window.IgorSave&&window.IgorSave.visiting))return;
+ unW=onSnapshot(doc(db,'watch',ME.uid),s=>{const d=s.exists()?s.data():null;wUntil=d&&typeof d.until==='number'?d.until:0;if(wUntil>Date.now())liveStart();else liveStop()},e=>{if(e&&e.code!=='permission-denied')console.warn('watch',e&&e.code||e)})}
+
 /* ================= the admins' panel ================= */
 const PLACE={island:['Island · outside','Isola · fuori'],'island:house':['Island · Igor’s house','Isola · casa di Igor'],'island:school':['Island · music school','Isola · scuola di musica'],'island:prizes':['Island · prize shop','Isola · negozio dei premi'],
  games:['Games page','Pagina dei giochi'],kitchen:['Kitchen (duration)','Cucina (durata)'],window:['Window (volume)','Finestra (volume)'],bedroom:['Bedroom (timbre)','Camera (timbro)'],drums:['Drums','Batteria'],pitch:['Pitch Stairs','Pitch Stairs'],cadences:['Cadences','Cadenze'],abyss:['The abyss','L’abisso'],other:['Other page','Altra pagina']};
@@ -164,7 +178,7 @@ function userV(){const b=shell(),a=allAccounts().find(x=>x.uid===sel)||{uid:sel,
  <div class="row" style="cursor:default;margin:0;border:0;background:none;padding:0"><div class="ini${on?' on':''}">${esc((a.nick||'?').slice(0,1).toUpperCase())}</div><div class="nm"><b style="font-size:19px">${esc(a.nick||tt('(no nickname)','(senza nickname)'))}</b><small>${on?tt('online now','online ora')+(where?' · '+esc(where):''):tt('last seen ','visto ')+ago(a.seen)}</small></div>${bl?`<span class="tag bl">${tt('blocked','bloccato')}</span>`:''}</div>
  <dl><dt>Email</dt><dd>${a.email?esc(a.email):`<span class="mute">${tt('not known yet (comes with the next visit)','non ancora nota (arriva con la prossima visita)')}</span>`}</dd>
  <dt>${tt('Sign-in','Accesso')}</dt><dd>${esc(prov)}</dd><dt>${tt('Joined','Iscritto')}</dt><dd>${esc(fmtDate(a.made))}</dd><dt>${tt('Last visit','Ultima visita')}</dt><dd>${esc(fmtTime(a.seen))}</dd><dt>uid</dt><dd style="font-size:12px">${esc(a.uid)}</dd></dl>
- <div class="acts">${me?`<span class="mute">${tt('This is you.','Sei tu.')}</span>`:bl?`<button class="go" data-a="unblock">✓ ${tt('Unblock','Sblocca')}</button>`:`<button class="no" data-a="block">🚫 ${tt('Block','Blocca')}</button>`}${a.email?`<button data-a="copy">${tt('Copy email','Copia email')}</button>`:''}</div>
+ <div class="acts"><button class="go" data-a="inspect">🔍 ${tt('Look at the island','Guarda l’isola')}</button></div><div class="acts">${me?`<span class="mute">${tt('This is you.','Sei tu.')}</span>`:bl?`<button class="go" data-a="unblock">✓ ${tt('Unblock','Sblocca')}</button>`:`<button class="no" data-a="block">🚫 ${tt('Block','Blocca')}</button>`}${a.email?`<button data-a="copy">${tt('Copy email','Copia email')}</button>`:''}</div>
  <p class="mute">${tt('Blocking closes the chat for this account, removes them from all the leaderboards and stops new records. They can still play.','Bloccare chiude la chat a questo account, lo toglie da tutte le classifiche e non gli fa registrare nuovi record. Può comunque giocare.')}</p></div>
  <h4>✉️ ${tt('Send a message','Manda un messaggio')}</h4><textarea id="admMsg" maxlength="1000" placeholder="${tt('It appears on the island the next time they open it (or right away if they are there).','Compare sull’isola la prossima volta che la aprono (o subito, se ci sono).')}"></textarea>
  <div style="display:flex;justify-content:flex-end;margin:8px 0 4px"><button class="go" data-a="send">${tt('Send','Manda')}</button></div>
@@ -217,6 +231,7 @@ async function onClick(e){const t=e.target.closest('[data-a],[data-tab],[data-f]
  if(t.classList.contains('row')&&t.dataset.uid&&!t.dataset.a){sel=t.dataset.uid;return render()}
  const a=t.dataset.a;try{
  if(a==='close')return close();
+ if(a==='inspect'){const w=window.open('/?inspect='+encodeURIComponent(sel),'_blank');if(!w)location.href='/?inspect='+encodeURIComponent(sel);return}
  if(a==='reload'){t.disabled=true;return reload()}
  if(a==='back'){sel=null;return render()}
  if(a==='reports'){close();if(window.IgorChat){window.IgorChat.open();if(window.IgorChat.show)window.IgorChat.show('reports')}return}
@@ -261,6 +276,7 @@ function invIsles(F){const lv=LVX.filter(x=>(F.total|0)>=x).length,g=F.ig||{},L=
 const vName=k=>ISLS[k]?tt(ISLS[k][0],ISLS[k][1]):/^h\w+\.\d+$/.test(k)?hName(k):/^d:/.test(k)?dName(k.slice(2)):VEHS[k]?VEHS[k][0]+' '+tt(VEHS[k][1],VEHS[k][2]):k;
 const ADMINS=['suJRvYnJ8TZsrtggf88oxTCgKI42','vKhCdacBFoOn8al4qCMz9VioWle2'];
 
-export function init(u){ME=u&&u.uid?u:null;inbox();gifts();
+export function init(u){ME=u&&u.uid?u:null;if(!window.__igInspect){inbox();gifts();watchMe()}
+ if(ME&&ME.admin)window.IgorStaff={openUser:(uid,nick)=>{if(!panel)makePanel();sel=uid;if(nick&&!allAccounts().some(x=>x.uid===uid))(ACC=ACC||[]).push({uid,nick,email:'',prov:'',made:0,seen:0});open()}};
  const b=$('admB');if(ME&&ME.admin){adminButton()}else{if(b)b.remove();close()}}
 export{open as openAdmin};
