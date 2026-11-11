@@ -3085,7 +3085,8 @@ function barMenu(){const P=new V3(-.4,2.0,-1.0);
   {t:`🥭 ${tt('Tofu & mango smoothie','Frullato tofu e mango')} ${cst({t:2})}`,main:1,fn:()=>{barDrink('mango');return false}},
   {t:`🫧 ${tt('Fizzy smoothie','Frullato frizzante')} ${cst({t:3})}`,fn:()=>{barDrink('fizz');return false}},
   ...(btlPocketN()||(FUN().btlOld|0)?[{t:`🍾 ${tt('Here are my bottles','Ecco le mie bottiglie')} (${btlPocketN()+Math.min(8,FUN().btlOld|0)})`,main:1,fn:()=>{btlDeliver();return false}}]:[]),
-  ...(Object.keys(btlShelf()).length?[{t:`🎚 ${tt('The shelf','Lo scaffale')}`,fn:()=>{btlSync();shelfSheet();return false}},{t:`🎹 ${tt('The counter','Il bancone')}`,main:1,fn:()=>{btlSync();counterSheet();return false}}]:[])]},'bar',1)}
+  ...(Object.keys(btlShelf()).length?[{t:`🎚 ${tt('The shelf','Lo scaffale')}`,fn:()=>{btlSync();shelfSheet();return false}},{t:`🎹 ${tt('The counter','Il bancone')}`,main:1,fn:()=>{btlSync();counterSheet();return false}}]:[]),
+  ...(glDoubles().length||glB().gl||Object.keys(glB().st).length?[{t:`♻️ ${tt('Glass','Il vetro')}${glDoubles().length?` (${glDoubles().reduce((a,[,n])=>a+n,0)})`:''}`,fn:()=>{glassSheet();return false}}]:[])]},'bar',1)}
 let DIZZY=0,hicT=0;
 function barDrink(k){if(!pay({t:k==='fizz'?3:2})){say(tt('Not enough tofu ants for a smoothie!','Non ci sono abbastanza formiche di tofu per un frullato!'),2.4);return}
  save();try{hudFarm()}catch(e){}snd('munch');
@@ -3265,6 +3266,71 @@ sb.addEventListener('change',e=>{if(sheetKind==='counter'&&e.target.closest('inp
 {const Rm=ROOMS.bar;if(Rm){BUILD='bar';const C=new THREE.Group();C.position.set(-2.3,0,-1.25);Rm.g.add(C);const go=()=>walkIn(new V3(-2.3,0,-.4),()=>{btlSync();counterSheet()});
   hit(C,.75,go,'bar counter',1.1);label(['🎹 The counter','🎹 Il bancone'],tt('piano roll','piano roll'),new V3(-2.3,1.75,-1.25),go);BUILD='out'}}
 updaters.push(()=>{if(where!=='bar')return;const now=performance.now();for(const k in btlObjs){const o=btlObjs[k],h=o.userData.hop;if(!h)continue;const u=(now-h)/260;o.position.y=(+k<12?1.59:2.19)+(u<1?Math.sin(u*Math.PI)*.09:0);if(u>=1)o.userData.hop=0}});
+/* ================= 11 Nov 2026: glass, step 5 of the bar plan =================
+   In the bar, on the left, Barigor's glass furnace. Every double bottle on the shelf (n > 1) can be recycled:
+   it becomes 3 tokens of its own colour (for the counter) and 1 piece of glass (S.farm.bar.gl).
+   With the pieces of glass you build glass statues (S.farm.bar.st = {key: 1}) that stand on the pedestals along the right wall:
+   Igor, Mozart, Beethoven, Bach and Maestro Igor Stravigor. Tap a statue: Igor tells something about it. */
+const GL_TK=3;
+const STATS=[
+ {k:'igor',c:2,e:'🐜',n:['Glass Igor','Igor di vetro'],f:['Glass Igor: he shines like a real anteater!','Igor di vetro: brilla come un formichiere vero!']},
+ {k:'mozart',c:4,e:'🎼',n:['Mozart','Mozart'],f:['Wolfgang Amadeus Mozart wrote his first little pieces when he was five.','Wolfgang Amadeus Mozart ha scritto i suoi primi pezzettini a cinque anni.']},
+ {k:'beethoven',c:5,e:'🎹',n:['Beethoven','Beethoven'],f:['Ludwig van Beethoven wrote the Ninth Symphony when he could hardly hear anymore.','Ludwig van Beethoven ha scritto la Nona sinfonia quando ormai non sentiva quasi più.']},
+ {k:'bach',c:6,e:'🎻',n:['Bach','Bach'],f:['Johann Sebastian Bach had twenty children, and several became musicians.','Johann Sebastian Bach ebbe venti figli, e diversi diventarono musicisti.']},
+ {k:'stravigor',c:8,e:'🎩',n:['Maestro Igor Stravigor','Maestro Igor Stravigor'],f:['Maestro Igor Stravigor: they say he conducts even in his sleep.','Maestro Igor Stravigor: dicono che diriga anche quando dorme.']}];
+const glB=()=>{const B=prB();B.gl=B.gl|0;B.st=B.st||{};return B};
+const glDoubles=()=>Object.entries(btlShelf()).filter(([,s])=>s.n>1).map(([k,s])=>[+k,s.n-1]);
+function glRecycle(i){const sh=btlShelf(),s=sh[i],B=glB();if(!s||s.n<2)return 0;s.n--;B.tk[i]=(B.tk[i]|0)+GL_TK;B.gl++;fmDirty=true;return 1}
+/* the furnace */
+{const Rm=ROOMS.bar;if(Rm){BUILD='bar';const g=Rm.g,F=new THREE.Group();F.position.set(-3.95,0,1.0);F.rotation.y=Math.PI/2;g.add(F);
+  const brick=(()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const q=c.getContext('2d');q.fillStyle='#d9c2a0';q.fillRect(0,0,128,128);for(let r=0;r<8;r++)for(let k=-1;k<5;k++){q.fillStyle=['#b5523a','#a8472f','#c2603f'][(r+k+9)%3];q.fillRect(k*32+(r%2?16:0)+1,r*16+1,30,14)}return new THREE.CanvasTexture(c)})();
+  const body=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.0,.8),texM(brick));body.position.y=.5;F.add(body);
+  const dome=new THREE.Mesh(new THREE.SphereGeometry(.55,14,8,0,TAU,0,Math.PI/2),texM(brick));dome.scale.set(1,.55,.73);dome.position.y=1.0;F.add(dome);
+  const ch=new THREE.Mesh(new THREE.CylinderGeometry(.11,.13,1.1,10),lam('#5a4a40'));ch.position.set(.25,1.65,-.15);F.add(ch);
+  const mouth=new THREE.Mesh(new THREE.CircleGeometry(.24,16,0,Math.PI),glowM('#ff8a3a',1.2));mouth.position.set(0,.38,.405);F.add(mouth);
+  const fire=new THREE.Mesh(new THREE.PlaneGeometry(.4,.07),glowM('#ffd27a',1.4));fire.position.set(0,.42,.41);F.add(fire);F.userData.mouth=mouth;
+  const bin=new THREE.Group();bin.position.set(-.8,0,.15);F.add(bin);const bb=new THREE.Mesh(new THREE.CylinderGeometry(.22,.19,.55,12),lam('#3f9a5a'));bb.position.y=.27;bin.add(bb);
+  {const c=document.createElement('canvas');c.width=64;c.height=64;const q=c.getContext('2d');q.fillStyle='#fff';q.font='bold 44px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText('♻',32,34);const p=new THREE.Mesh(new THREE.PlaneGeometry(.26,.26),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true}));p.position.set(0,.3,.225);bin.add(p)}
+  for(let k=0;k<4;k++){const sh=new THREE.Mesh(new THREE.OctahedronGeometry(.05,0),lam(['#8fd6a8','#e0a03c','#9ccfef','#e0463c'][k],{transparent:true,opacity:.8}));sh.position.set(-.07+(k%2)*.12,.58,(k>>1)*.1-.05);sh.rotation.set(k,k*2,0);bin.add(sh)}
+  Rm.blocks.push({x:-3.95,z:1.0,r:.6},{x:-4.1,z:1.8,r:.3});Rm.glassF=F;
+  const go=()=>walkIn(new V3(-3.05,0,1.0),()=>glassSheet());hit(F,.7,go,'bar furnace',.7);label(['♻️ Glass','♻️ Il vetro'],tt('recycling','riciclo'),new V3(-3.95,2.0,1.0),go);
+  // five pedestals along the right wall, for the statues
+  Rm.peds=[];STATS.forEach((S0,k)=>{const P=new THREE.Group();P.position.set(4.2,0,-2.15+k*1.0);g.add(P);const pd=new THREE.Mesh(new THREE.CylinderGeometry(.2,.24,.55,14),lam('#efe6d6'));pd.position.y=.275;P.add(pd);const tp=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.05,14),lam('#d9cdb8'));tp.position.y=.575;P.add(tp);
+   Rm.blocks.push({x:4.2,z:-2.15+k*1.0,r:.32});Rm.peds.push(P);
+   hit(P,.45,()=>{const B=glB();if(B.st[S0.k]){bubbleQ.length=0;bubbleT=0;say(tt(...S0.f),3.6);snd('glass',btlF(k*2,0))}else say(tt(`An empty pedestal: here goes ${S0.n[0]} (${S0.c} pieces of glass).`,`Un piedistallo vuoto: qui va ${S0.n[1]} (${S0.c} pezzi di vetro).`),3)},'statue '+S0.k,.75)});
+  BUILD='out'}}
+/* the glass statues */
+const GLM=()=>lam('#c8ecff',{transparent:true,opacity:.62,emissive:'#4aa0c8',emissiveIntensity:.35});
+function statueMesh(k){const g=new THREE.Group(),m=GLM(),S=(r,x,y,z,sx=1,sy=1,sz=1)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(r,12,9),m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);g.add(o);return o};
+ if(k==='igor'||k==='stravigor'){S(.16,0,.78,0,1,.85,1.35);S(.09,0,.9,.2);const sn=new THREE.Mesh(new THREE.ConeGeometry(.04,.3,10),m);sn.rotation.x=Math.PI/2;sn.position.set(0,.86,.42);g.add(sn);
+  const tl=new THREE.Mesh(new THREE.ConeGeometry(.07,.36,10),m);tl.position.set(0,.98,-.24);tl.rotation.x=-.6;g.add(tl);for(const x of[-.08,.08])for(const z of[-.12,.12]){const l=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.16,6),m);l.position.set(x,.66,z);g.add(l)}
+  if(k==='stravigor'){for(const x of[-.04,.04]){const r=new THREE.Mesh(new THREE.TorusGeometry(.03,.008,6,14),m);r.position.set(x,.94,.28);g.add(r)}const bt=new THREE.Mesh(new THREE.CylinderGeometry(.006,.01,.32,6),m);bt.position.set(.17,.92,.12);bt.rotation.z=-.9;g.add(bt);const hat=new THREE.Mesh(new THREE.CylinderGeometry(.06,.07,.1,12),m);hat.position.set(0,1.04,.18);g.add(hat)}}
+ else{S(.2,0,.66,0,1.15,.55,.75);const nk=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,.08,10),m);nk.position.y=.76;g.add(nk);S(.11,0,.87,0,.92,1.05,1);
+  if(k==='mozart'){for(const x of[-.11,.11]){const c=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.08,10),m);c.rotation.x=Math.PI/2;c.position.set(x,.84,-.01);g.add(c)}S(.04,0,.82,-.12);S(.03,0,.74,-.13,1,1.4,1)}
+  if(k==='beethoven'){for(let j=0;j<11;j++){const a=j/11*Math.PI*1.6-Math.PI*.8;S(.045,Math.sin(a)*.1,.93+Math.cos(a)*.05+(j%3)*.012,-Math.abs(Math.cos(a))*.06-.02)}}
+  if(k==='bach'){S(.14,0,.92,-.03,1.05,.8,1);for(const x of[-.11,.11])S(.06,x,.74,-.02,.8,2,.9)}}
+ return g}
+const statObjs={};
+function glassSync(){const Rm=ROOMS.bar;if(!Rm||!Rm.peds)return;const B=glB();STATS.forEach((S0,k)=>{if(B.st[S0.k]&&!statObjs[S0.k]){const s=statueMesh(S0.k);s.rotation.y=-Math.PI/2+.35;s.scale.setScalar(1.35);s.position.y=-.23;Rm.peds[k].add(s);statObjs[S0.k]=s}})}
+/* the glass panel */
+function glassSheet(){glassSync();const B=glB(),d=glDoubles(),nd=d.reduce((a,[,n])=>a+n,0);
+ openSheet('glass',`<h2>♻️ ${tt('Barigor’s glass','Il vetro di Barigor')}</h2>
+ <p class="shn">🧊 ${B.gl} ${tt(B.gl===1?'piece of glass':'pieces of glass',B.gl===1?'pezzo di vetro':'pezzi di vetro')}</p>
+ <p>${tt(`Every double bottle on the shelf goes into the furnace and becomes ${GL_TK} tokens of its colour (for the counter) and 1 piece of glass. With the glass you build statues for the bar.`,`Ogni bottiglia doppia dello scaffale va nella fornace e diventa ${GL_TK} pedine del suo colore (per il bancone) e 1 pezzo di vetro. Con il vetro costruisci le statue del bar.`)}</p>
+ ${nd?`<div class="glr">${d.map(([i,n])=>`<button type="button" class="glb" data-gr="${i}" style="--c:${btlCol(i)}"><i>${prNum(i)}</i>♻️ ${btlName(i)} <small>×${n}</small></button>`).join('')}${nd>1?`<button type="button" class="m" data-gr="all">♻️ ${tt(`All the doubles (${nd})`,`Tutti i doppioni (${nd})`)}</button>`:''}</div>`
+  :`<p><b>${tt('No double bottles on the shelf yet: when the sea brings a bottle of a note you already have, it becomes a double.','Ancora nessuna bottiglia doppia sullo scaffale: quando il mare porta una bottiglia di una nota che hai già, diventa un doppione.')}</b></p>`}
+ <h3 class="glh">${tt('Glass statues','Le statue di vetro')}</h3><div class="gls">${STATS.map(S0=>{const has=B.st[S0.k];return`<div class="gst${has?' on':''}"><span>${S0.e}</span><b>${tt(...S0.n)}</b>${has?`<small>✓ ${tt('in the bar','nel bar')}</small>`:`<button type="button" data-gs="${S0.k}"${B.gl<S0.c?' disabled':''}>🧊 ${S0.c}</button>`}</div>`}).join('')}</div>`)}
+sb.addEventListener('click',e=>{if(sheetKind!=='glass')return;const b=e.target.closest('button[data-gr],button[data-gs]');if(!b)return;e.stopPropagation();const B=glB();
+ if(b.dataset.gr!=null){let n=0;if(b.dataset.gr==='all'){for(const[i,k]of glDoubles())for(let j=0;j<k;j++)n+=glRecycle(i)}else n=glRecycle(+b.dataset.gr);
+  if(n){save();snd('bottle');setTimeout(()=>snd('glass',1400),180);btlSync();const M=ROOMS.bar&&ROOMS.bar.glassF;if(M)M.userData.flare=performance.now();bubbleQ.length=0;bubbleT=0;
+   say(tt(`Into the furnace! +${n*GL_TK} tokens and +${n} piece${n>1?'s':''} of glass.`,`Nella fornace! +${n*GL_TK} pedine e +${n} pezz${n>1?'i':'o'} di vetro.`),2.8)}glassSheet();return}
+ const S0=STATS.find(s=>s.k===b.dataset.gs);if(!S0||B.st[S0.k])return;if(B.gl<S0.c){say(tt(`You need ${S0.c} pieces of glass.`,`Servono ${S0.c} pezzi di vetro.`),2.4);return}
+ B.gl-=S0.c;B.st[S0.k]=1;fmDirty=true;save();glassSync();snd('seeds',3);setTimeout(()=>snd('glass',btlF(STATS.indexOf(S0)*2,0)),300);bubbleQ.length=0;bubbleT=0;
+ say(tt(`${BARN}: “Here it is, ${S0.n[0]} in glass! I’ll put it on the pedestal.”`,`${BARN}: “Ecco ${S0.n[1]} di vetro! Lo metto sul piedistallo.”`),3.2);glassSheet()});
+{const st=document.createElement('style');st.textContent=`.glr{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.glb{display:inline-flex;align-items:center;gap:5px;text-transform:none;letter-spacing:0}.glb i{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:var(--c);color:#2b2018;font:700 9px/1 inherit;font-style:normal}.glb small{opacity:.7}
+.sheet h3.glh{font-size:18px;margin:14px 0 6px}.gls{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.gst{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 6px;border:1px solid rgba(219,231,234,.16);border-radius:10px;text-align:center;font-size:11px}.gst span{font-size:22px}.gst.on{border-color:#9ccfef}.gst button{text-transform:none;letter-spacing:0}.gst button[disabled]{opacity:.45}`;document.head.appendChild(st)}
+updaters.push(t=>{if(where!=='bar')return;glassSync();const F=ROOMS.bar&&ROOMS.bar.glassF;if(!F)return;const fl=F.userData.flare,u=fl?(performance.now()-fl)/900:9;F.userData.mouth.material.emissiveIntensity=1.1+Math.sin(t*5)*.15+(u<1?(1-u)*1.6:0);
+ for(const k in statObjs)statObjs[k].position.y=Math.sin(t*1.3+k.length)*.012});
 /* ---------- fish around the island, birds in the sky ---------- */
 const FISHW=[['clown',3],['blue',3],['puffer',2],['sunfish',1],['dolphin',.7]];
 const pickW=L=>{let t=L.reduce((a,x)=>a+x[1],0)*Math.random();for(const[k,w]of L){if((t-=w)<=0)return k}return L[0][0]};
@@ -5088,7 +5154,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-1500';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-1600';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
