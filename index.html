@@ -5596,22 +5596,27 @@ visB.addEventListener('click',e=>{const b=e.target.closest('button[data-ib]');if
 {const st=document.createElement('style');st.textContent=`#visB small.ins{flex-basis:100%;text-align:center;font:500 12.5px Fredoka,system-ui,sans-serif;color:#6d5a44}#visB button.on{background:#f6d34a}
 #ixPupL{position:fixed;z-index:3;pointer-events:none;transform:translate(-50%,-100%);font:600 13px Fredoka,system-ui,sans-serif;color:#2b2018;background:rgba(255,247,230,.85);border:2px solid #2b2018;border-radius:999px;padding:2px 9px;white-space:nowrap}#ixPupL[hidden]{display:none}`;document.head.appendChild(st)}
 /* the ghost: where they really are, while you walk around on your own */
-const ixPup=new THREE.Mesh(new THREE.PlaneGeometry(IW,IH).translate(0,IH/2,0),curve(new THREE.MeshBasicMaterial({map:sprTex,transparent:true,opacity:.55,depthWrite:false,side:THREE.DoubleSide,color:new THREE.Color(.93,.95,.97)})));ixPup.visible=false;scene.add(ixPup);
+const ixPup=new THREE.Mesh(new THREE.PlaneGeometry(IW,IH).translate(0,IH/2,0),curve(new THREE.MeshBasicMaterial({map:sprTex,transparent:true,alphaTest:.15,depthWrite:true,color:new THREE.Color(.93,.95,.97),side:THREE.DoubleSide})));ixPup.visible=false;scene.add(ixPup);
+/* like igBring: a little towards the camera, so the curved ground doesn't cut its feet */
+const _ixC=new V3(),_ixU=new V3(),_ixP=new V3();function ixBring(m,x,y,z){m.position.set(x,y,z);const d0=-_ixP.set(x,y,z).applyMatrix4(camera.matrixWorldInverse).z;if(!(d0>1))return;_ixC.copy(camera.position).sub(m.position);const Ld=_ixC.length();_ixC.divideScalar(Ld);
+ const off=Math.min(1.2,Ld*.09),d1=d0-off,F=FOC.value,c=CURV.value,dl=c*((Math.max(0,d0-F))**2-(Math.max(0,d1-F))**2);_ixU.setFromMatrixColumn(camera.matrixWorld,1);m.position.addScaledVector(_ixC,off).addScaledVector(_ixU,-dl);const k=d1/d0;m.scale.x*=k;m.scale.y*=k}
 const ixPupL=document.createElement('div');ixPupL.id='ixPupL';ixPupL.hidden=true;document.body.appendChild(ixPupL);
 const _ixV=new V3();
-window.__ixDbg=()=>({lastT:IXP&&IXP.lastT,last:IXP&&IXP.last&&IXP.last.t,recv:IXP&&IXP.recv,now:ixNow(),gone:IXP&&IXP.gone,err:IXP&&IXP.err,x:+igor.position.x.toFixed(2),z:+igor.position.z.toFixed(2),where,ride:RIDE,follow:IXP&&IXP.follow,live:IXP&&IXP.live,buf:IXP&&IXP.buf.length,fresh:ixFresh(),pup:ixPup.visible});
+window.__ixDbg=()=>({lastT:IXP&&IXP.lastT,last:IXP&&IXP.last&&IXP.last.t,recv:IXP&&IXP.recv,now:ixNow(),gone:IXP&&IXP.gone,err:IXP&&IXP.err,x:+igor.position.x.toFixed(2),z:+igor.position.z.toFixed(2),where,ride:RIDE,follow:IXP&&IXP.follow,live:IXP&&IXP.live,buf:IXP&&IXP.buf.length,fresh:ixFresh(),pup:ixPup.visible,walker:igor.visible});
 if(INSPECT){
  const _iu0=igorUpdate;igorUpdate=function(t,dt){const s=IXP&&ixFresh()?ixSample():null;
   if(s&&IXP.follow&&(Math.hypot(IN.x,IN.z)>.12||IG.target)){IXP.follow=false;ixBanner(true)}
   if(s&&IXP.follow){if(s.w!==where){if(s.w==='out')exitRoom(true);else if(ROOMS[s.w])enterRoom(s.w,new V3(s.x,0,s.z))}
    if(where==='out'){const r=s.r&&FM().veh&&FM().veh[s.r]?s.r:null;if(r!==RIDE){RIDE=r;camSnap=true}rideH=RIDE?s.h:0;igHead=s.hd}
    const px=igor.position.x,pz=igor.position.z;igor.position.set(s.x,0,s.z);const d=Math.hypot(s.x-px,s.z-pz);IXP.mv=IXP.mv*.8+(dt>0?d/dt:0)*.2;
-   IG.face=s.f;IG.target=null;IG.arrive=null;lastAct=T;IG.idle=6;_iu0(t,dt);if(IXP.mv>.4){IG.walk+=dt*10;igPlane.position.y+=Math.abs(Math.sin(IG.walk))*.16;igPlane.rotateZ(Math.sin(IG.walk)*.05)}return}
+   IG.face=s.f;IG.target=null;IG.arrive=null;lastAct=T;IG.idle=6;igor.visible=true;_iu0(t,dt);if(IXP.mv>.4){IG.walk+=dt*10;igPlane.position.y+=Math.abs(Math.sin(IG.walk))*.16;igPlane.rotateZ(Math.sin(IG.walk)*.05)}return}
+  /* 11 Nov 2026 (Fabio): no Igor for the admin — when not following them, you only move the camera */
+  igor.visible=false;lastAct=T;IG.idle=6;if(RIDE){RIDE=null;rideH=0;camSnap=true}
   _iu0(t,dt)};
  updaters.push((t,dt)=>{if(!IXP)return;const s=ixFresh()?ixSample():null;
-  const pv=!!(s&&!IXP.follow&&s.w===where);ixPup.visible=pv;
-  if(pv){ixPup.position.set(s.x,(where==='out'&&s.r&&VEH[s.r]&&VEH[s.r].kind==='air'?s.h:0)+.02,s.z);ixPup.quaternion.copy(camera.quaternion);ixPup.scale.set(s.f,1,1);
-   _ixV.set(s.x,IH+.35,s.z);projC(_ixV);const vis=_ixV.z<1&&Math.abs(_ixV.x)<1.1&&Math.abs(_ixV.y)<1.1;ixPupL.hidden=!vis;if(vis){ixPupL.textContent=`📍 ${IXP.nick}`;ixPupL.style.left=((_ixV.x+1)/2*innerWidth)+'px';ixPupL.style.top=((1-_ixV.y)/2*innerHeight)+'px'}}
+  const q=s&&!IXP.follow?s:(!s&&IXP.last?IXP.last:null),pv=!!(q&&q.w===where);ixPup.visible=pv;
+  if(pv){const s=q;ixPup.quaternion.copy(camera.quaternion);ixPup.scale.set(s.f,1,1);ixBring(ixPup,s.x,(where==='out'&&s.r&&VEH[s.r]&&VEH[s.r].kind==='air'?s.h:0)+.02,s.z);
+   _ixV.set(s.x,IH+.35,s.z);projC(_ixV);const vis=_ixV.z<1&&Math.abs(_ixV.x)<1.1&&Math.abs(_ixV.y)<1.1;ixPupL.hidden=!vis;if(vis){ixPupL.textContent=`📍 ${IXP.nick}`+(q===IXP.last&&!ixFresh()?` · ${ixAgo(q.t)}`:'');ixPupL.style.left=((_ixV.x+1)/2*innerWidth)+'px';ixPupL.style.top=((1-_ixV.y)/2*innerHeight)+'px'}}
   else ixPupL.hidden=true;
   if(s)for(const[id,a]of s.ig){const o=igObjs.get(id);if(!o)continue;const p=o.grp.position,dx=a[1]-p.x;if(Math.abs(dx)>.01)o.face=dx>0?1:-1;p.x=a[1];p.z=a[2];o.goal.set(a[1],0,a[2]);o.grp.visible=!!a[3];if(o.L&&!a[3])o.L.hidden=true}
   if((IXP.bt=(IXP.bt||0)+dt)>1){IXP.bt=0;ixBanner(false)}})}
@@ -5894,7 +5899,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-2600';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-2610';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
