@@ -605,7 +605,7 @@ const SPC={t:{N:['Tofu','Tofu'],seeds:1,germ:30,ready:120,yield:6,win:480,care:n
  p:{N:['Tomato','Pomodoro'],seeds:3,germ:60,ready:360,yield:20,win:720,care:'water',lv:3},
  c:{N:['Carrot','Carota'],seeds:5,germ:120,ready:720,yield:45,win:1440,care:'weed',lv:5}};
 const LVX=[0,20,60,150,300,500,800,1200];
-const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes and the tool shed!','Pomodori e capanno degli attrezzi!'],['Field 4 and the sand island!','Il campo 4 e l’isola di sabbia!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6 and bigger buildings!','Il campo 6 ed edifici più grandi!'],['Field 7!','Il campo 7!'],['Field 8 and the lake island!','Il campo 8 e l’isola del lago!']];
+const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes, the tool shed and the Caribbean island with its bar!','Pomodori, capanno degli attrezzi e l’isola caraibica con il bar!'],['Field 4!','Il campo 4!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6 and bigger buildings!','Il campo 6 ed edifici più grandi!'],['Field 7!','Il campo 7!'],['Field 8 and the lake island!','Il campo 8 e l’isola del lago!']];
 const FCOST=[null,{t:15},{t:35},{t:90},{t:160},{t:260},{t:400},{t:600}];
 const MAXF=8,CAPS=[30,80,200,500,2000,6000],PENCAP=[0,2,4,6],WATERCAP=[0,3,8],IGMAX=12;
 const igCap=()=>IGMAX; // a little house appears with every new Igorlet (hired, adopted, stray, orphan)
@@ -1615,9 +1615,9 @@ function station(Rm,key,{name,sub,pos,stand,obj,act,r=1.3,y=1,zr}){BUILD=key;obj
 function walkIn(P,then){closeSheet();$('index').hidden=true;IG.target=P.clone();IG.arrive=then;IG.manual=true;mark.position.set(P.x,.04,P.z);mark.material.opacity=.8;poke();if(igor.position.distanceTo(P)<.3){IG.target=null;IG.arrive=null;then&&then()}}
 function syncZones(){for(const Z of zones)Z.in=Math.hypot(igor.position.x-Z.x,igor.position.z-Z.z)<Z.r}
 function enterRoom(k){const Rm=ROOMS[k];if(!Rm||where===k)return;snd('door');closeSheet();where=k;world.visible=false;Rm.g.visible=true;igor.position.copy(Rm.entry);IG.target=null;IG.arrive=null;CURV.value=0;
- scene.background=BG_IN;scene.fog=null;hemi.intensity=.55;moonL.intensity=.25;moonL.color.set('#dfe6ff');skyRoom();camSnap=true;syncZones();say(k==='house'?pick(tt(['Welcome to my house!','Make yourself at home.'],['Benvenuto a casa mia!','Fai come se fossi a casa tua.'])):k==='prizes'?tt('The prize shop! Walk to a vehicle to look at it.','Il negozietto dei premi! Avvicinati a un mezzo per guardarlo.'):k==='toys'?tt('The Toy Store! Walk to a toy to look at it.','Il negozio dei giocattoli! Avvicinati a un oggetto per guardarlo.'):tt('Shh… walk to the piano.','Shh… vai al pianoforte.'),3)}
+ scene.background=BG_IN;scene.fog=null;hemi.intensity=.55;moonL.intensity=.25;moonL.color.set('#dfe6ff');skyRoom();camSnap=true;syncZones();say(k==='house'?pick(tt(['Welcome to my house!','Make yourself at home.'],['Benvenuto a casa mia!','Fai come se fossi a casa tua.'])):k==='prizes'?tt('The prize shop! Walk to a vehicle to look at it.','Il negozietto dei premi! Avvicinati a un mezzo per guardarlo.'):k==='toys'?tt('The Toy Store! Walk to a toy to look at it.','Il negozio dei giocattoli! Avvicinati a un oggetto per guardarlo.'):k==='bar'?tt('Barigor’s bar!','Il bar di Barigor!'):tt('Shh… walk to the piano.','Shh… vai al pianoforte.'),3)}
 function exitRoom(quiet){const k=where;if(k==='out')return;snd('door');ROOMS[k].g.visible=false;world.visible=true;where='out';CURV.value=K;hemi.intensity=.9;moonL.intensity=.8;scene.background=BG_OUT;scene.fog=new THREE.Fog(NIGHT,28,66);
- const P=PLACES[k];igor.position.copy(P.pos).add(k==='school'?new V3(.85,0,.4):new V3(0,0,.95));IG.target=null;IG.arrive=null;camSnap=true;syncZones();if(!quiet)say(pick(tt(['Fresh air!','Back outside.'],['Aria fresca!','Di nuovo fuori.'])),1.8)}
+ const P=PLACES[k];igor.position.copy(P.pos).add(k==='school'?new V3(.85,0,.4):k==='bar'?new V3(0,0,0):new V3(0,0,.95));IG.target=null;IG.arrive=null;camSnap=true;syncZones();if(!quiet)say(pick(tt(['Fresh air!','Back outside.'],['Aria fresca!','Di nuovo fuori.'])),1.8)}
 let camSnap=false;
 const wipSay=t=>{say(t+tt(': coming soon!',': presto!'),3)};
 function rememberSpot(where_,x,z){try{localStorage.setItem('igortime_return',JSON.stringify({where:where_,x,z,t:Date.now()}))}catch(e){}}
@@ -2826,12 +2826,12 @@ function pengTick(I,dt){for(const p of I.pengs){const q=p.g.position,v=p.goal.cl
 {const _rs=rideSp;rideSp=function(){const I=ISLES&&ISLES[3];if(!RIDE&&I&&I.on&&I.pond&&Math.hypot((igor.position.x-I.pond.x)/I.pond.rx,(igor.position.z-I.pond.z)/I.pond.rz)<1)return _rs()*1.8;return _rs()}}
 
 /* ---------- the new islands: each rises from the sea at its level, joined to the first island by a strip of land ----------
-   level 4: the sand island, with palms and little crabs that wander and now and then pinch an Igorlet (it tickles!); an orphan Igorlet waits there
+   level 3 (was 4 until 11 Nov 2026): the sand island, with palms and little crabs that wander and now and then pinch an Igorlet (it tickles!); an orphan Igorlet waits there
    level 8: the lake island, a very shallow lake you can walk across, with lily pads and frogs
    level 12: the firefly forest, giant mushrooms and fireflies that sing a note when you touch them
    level 16: the ice island, snow, an igloo, a frozen pond to slide on, penguins */
 const ISLES=[
- {lv:4,kind:'sand',cx:27,cz:-20,rx:8.5,rz:7.2,A:new V3(12,0,-10.6),B:new V3(22.5,0,-17.5),k:0,on:false,shown:false,risingT:-1},
+ {lv:3,sk:4,kind:'sand',cx:27,cz:-20,rx:8.5,rz:7.2,A:new V3(12,0,-10.6),B:new V3(22.5,0,-17.5),k:0,on:false,shown:false,risingT:-1},
  {lv:8,kind:'lake',cx:-27,cz:-20,rx:8.5,rz:7.2,A:new V3(-12,0,-10.6),B:new V3(-22.5,0,-17.5),k:0,on:false,shown:false,risingT:-1},
  {lv:12,kind:'forest',cx:0,cz:-31.5,rx:8,rz:6.5,A:new V3(0,0,-15.5),B:new V3(0,0,-26.5),k:0,on:false,shown:false,risingT:-1},
  {lv:16,kind:'ice',cx:27,cz:21,rx:8.5,rz:7.2,A:new V3(12,0,10.5),B:new V3(22.5,0,17.5),k:0,on:false,shown:false,risingT:-1}];
@@ -2876,18 +2876,33 @@ function palmG(){const p=new THREE.Group();let y=0,lx=0;const lean=(Math.random(
 function isleSand2(I,G){const W=lam('#9d7a50'),Wd=lam('#7a5a36'),straw=lam('#d9b56a'),straw2=lam('#c79f52');
  const add=(m,x,y,z)=>{m.position.set(x,y,z);G.add(m);return m};
  for(const[x,z,s]of[[22.2,-23.6,.9],[32.2,-25,1],[25.5,-14.2,.85]])palm(G,x,z,s);
- // tiki bar: thatched cone on four poles, a counter, coconut cups, two torches
- {const g=new THREE.Group();g.position.set(30.6,0,-21.2);g.rotation.y=-2.4;
-  for(const[x,z]of[[-.85,-.65],[.85,-.65],[-.85,.65],[.85,.65]]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.06,.07,1.8,6),Wd);p.position.set(x,.9,z);g.add(p)}
-  const r1=new THREE.Mesh(new THREE.ConeGeometry(1.55,.9,10),straw);r1.position.y=2.15;g.add(r1);const r2=new THREE.Mesh(new THREE.CylinderGeometry(1.42,1.6,.16,10),straw2);r2.position.y=1.72;g.add(r2);
-  for(let k=0;k<20;k++){const f=new THREE.Mesh(new THREE.ConeGeometry(.07,.32,4),k%2?straw:straw2);const a=k/20*TAU;f.position.set(Math.cos(a)*1.52,1.52,Math.sin(a)*1.52);f.rotation.x=Math.PI;g.add(f)}
-  const ct=new THREE.Mesh(new THREE.BoxGeometry(1.7,.75,.38),W);ct.position.set(0,.38,.55);g.add(ct);const top=new THREE.Mesh(new THREE.BoxGeometry(1.85,.07,.5),Wd);top.position.set(0,.78,.55);g.add(top);
-  for(const[x,c]of[[-.5,'#6b4a2e'],[.05,'#6b4a2e'],[.5,'#8a5a3a']]){const cup=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6,0,TAU,0,Math.PI*.6),lam(c));cup.rotation.x=Math.PI;cup.position.set(x,.88,.55);g.add(cup);const st=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.22,4),lam(x>0?'#f25c78':'#5cc2f2'));st.position.set(x+.03,.98,.55);st.rotation.z=.3;g.add(st)}
-  const sg=new THREE.Mesh(new THREE.BoxGeometry(.9,.26,.04),lam('#f2e6c8'));sg.position.set(0,1.45,.68);g.add(sg);
-  for(const[x,c]of[[-.28,'#e0563c'],[0,'#f2c230'],[.28,'#4fb7a0']]){const d=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),glowM(c,.4));d.position.set(x,1.45,.71);g.add(d)}
-  for(const x of[-1.25,1.25]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,1.5,6),Wd);t.position.set(x,.75,1.05);g.add(t);const cp=new THREE.Mesh(new THREE.CylinderGeometry(.1,.07,.22,8),straw2);cp.position.set(x,1.55,1.05);g.add(cp);
-   const fl=new THREE.Mesh(new THREE.ConeGeometry(.09,.3,8),glowM('#ffb347',1.2));fl.position.set(x,1.78,1.05);g.add(fl);const h=halo('#ffb347',1.6,0);h.position.set(x,1.8,1.05);g.add(h);(I.torch=I.torch||[]).push({fl,h})}
-  blob(g,1.5);G.add(g);block(30.6,-21.2,1.15);I.bar=g}
+ // 11 Nov 2026: the tiki bar becomes a real bar you walk into: a bamboo hut with a thatched roof, a door with a bead curtain,
+ // a serving window with a counter (the Igorlets still get their drinks there), the BAR sign and two torches
+ {const g=new THREE.Group();g.position.set(30.6,0,-21.2);g.rotation.y=-.8;
+  const bc=document.createElement('canvas');bc.width=256;bc.height=128;{const q=bc.getContext('2d');q.fillStyle='#d8b26a';q.fillRect(0,0,256,128);for(let k=0;k<16;k++){const x=k*16;q.fillStyle=k%2?'#cfa65c':'#e0bd77';q.fillRect(x,0,15,128);q.fillStyle='#a8823f';q.fillRect(x+15,0,1,128);for(const y of[30+k%3*6,82+k%2*9]){q.fillRect(x,y,15,2)}}}
+  const bt=new THREE.CanvasTexture(bc);bt.wrapS=bt.wrapT=THREE.RepeatWrapping;bt.repeat.set(2,1.2);const bam=texM(bt);
+  const body=new THREE.Mesh(new THREE.BoxGeometry(3.2,2.15,2.5),bam);body.position.y=1.07;g.add(body);
+  const base=new THREE.Mesh(new THREE.BoxGeometry(3.5,.18,2.8),Wd);base.position.y=.09;g.add(base);
+  for(const[x,z]of[[-1.6,-1.25],[1.6,-1.25],[-1.6,1.25],[1.6,1.25]]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.09,.1,2.3,7),Wd);p.position.set(x,1.15,z);g.add(p)}
+  const r1=new THREE.Mesh(new THREE.ConeGeometry(2.55,1.35,4),straw);r1.rotation.y=Math.PI/4;r1.position.y=2.85;r1.scale.set(1,1,.82);g.add(r1);
+  const r2=new THREE.Mesh(new THREE.BoxGeometry(3.7,.14,3.05),straw2);r2.position.y=2.2;g.add(r2);
+  for(let k=0;k<26;k++){const f=new THREE.Mesh(new THREE.ConeGeometry(.08,.34,4),k%2?straw:straw2);const u=k/26,side=Math.floor(u*4),v=(u*4)%1;const[x,z]=side===0?[-1.85+v*3.7,1.52]:side===1?[1.85,1.52-v*3.04]:side===2?[1.85-v*3.7,-1.52]:[-1.85,-1.52+v*3.04];f.position.set(x,2.02,z);f.rotation.x=Math.PI;g.add(f)}
+  // the door (right) with its bead curtain
+  const df=new THREE.Mesh(new THREE.BoxGeometry(1.05,1.75,.08),Wd);df.position.set(.85,.95,1.27);g.add(df);
+  const dk=new THREE.Mesh(new THREE.BoxGeometry(.85,1.6,.06),lam('#3a2414'));dk.position.set(.85,.9,1.3);g.add(dk);
+  const BEAD=['#e0563c','#f2c230','#4fb7a0','#f25c78','#5cc2f2'];for(let k=0;k<9;k++){const s=new THREE.Mesh(new THREE.BoxGeometry(.035,1.5,.035),lam(BEAD[k%5]));s.position.set(.47+k*.095,.93,1.35);g.add(s)}
+  // the serving window (left) with a little counter and three coconut cups
+  const wn=new THREE.Mesh(new THREE.BoxGeometry(1.35,.72,.06),lam('#3a2414'));wn.position.set(-.75,1.3,1.27);g.add(wn);
+  const ct=new THREE.Mesh(new THREE.BoxGeometry(1.6,.08,.5),Wd);ct.position.set(-.75,.95,1.45);g.add(ct);
+  for(const[x,c]of[[-1.2,'#6b4a2e'],[-.75,'#6b4a2e'],[-.3,'#8a5a3a']]){const cup=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6,0,TAU,0,Math.PI*.6),lam(c));cup.rotation.x=Math.PI;cup.position.set(x,1.07,1.48);g.add(cup);const st=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.22,4),lam(x>-.7?'#f25c78':'#5cc2f2'));st.position.set(x+.03,1.17,1.48);st.rotation.z=.3;g.add(st)}
+  // the BAR sign over the door, with coloured lights
+  const sc=document.createElement('canvas');sc.width=256;sc.height=96;{const q=sc.getContext('2d');q.fillStyle='#2a1a10';q.fillRect(0,0,256,96);q.fillStyle='#ffd27a';q.font='700 62px Fredoka, sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText('BAR',128,52)}
+  const sign=new THREE.Mesh(new THREE.BoxGeometry(1.15,.42,.08),[Wd,Wd,Wd,Wd,new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),toneMapped:false}),Wd]);sign.position.set(.85,2.0,1.32);g.add(sign);
+  for(const[x,c]of[[.35,'#e0563c'],[.6,'#f2c230'],[.85,'#4fb7a0'],[1.1,'#f25c78'],[1.35,'#5cc2f2']]){const d=new THREE.Mesh(new THREE.SphereGeometry(.05,8,6),glowM(c,.5));d.position.set(x,2.27,1.36);g.add(d)}
+  for(const[x,z]of[[-1.85,1.95],[2.0,1.75]]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,1.5,6),Wd);t.position.set(x,.75,z);g.add(t);const cp=new THREE.Mesh(new THREE.CylinderGeometry(.1,.07,.22,8),straw2);cp.position.set(x,1.55,z);g.add(cp);
+   const fl=new THREE.Mesh(new THREE.ConeGeometry(.09,.3,8),glowM('#ffb347',1.2));fl.position.set(x,1.78,z);g.add(fl);const h=halo('#ffb347',1.6,0);h.position.set(x,1.8,z);g.add(h);(I.torch=I.torch||[]).push({fl,h})}
+  hit(dk,.75,()=>{if(window.IgorBar)IgorBar.go()},'bar door',.1);
+  blob(g,1.9);G.add(g);block(30.6,-21.2,1.75);I.bar=g}
  // hammock between the palm at (24.5,-24.2) and the new one at (22.2,-23.6): a sagging striped cloth on two ropes
  {const ax=24.5,az=-24.2,bx=22.2,bz=-23.6,L=Math.hypot(bx-ax,bz-az),g=new THREE.Group();g.position.set(ax,0,az);g.rotation.y=-Math.atan2(bz-az,bx-ax);
   const yAt=x=>1.35-.75*Math.sin(Math.PI*Math.min(1,Math.max(0,(x-.35)/(L-.7))));const N=12,x0=.35,x1=L-.35,cols=['#e8664a','#ffffff','#f6d34a','#ffffff','#4fb7a0'];
@@ -3003,7 +3018,7 @@ function frogTick(I,dt){for(const f of I.frogs){const g=f.g;
 // the islands rise at their level (once, with Igor watching if he is there), then stay
 updaters.push((t,dt)=>{if(!S.farm)return;const F=FM(),lv=lvlOf();F.isles=F.isles||{};if(F.isle2&&!F.isles[4])F.isles[4]=F.isle2;
  ISLES.forEach((I,i)=>{if(lv<I.lv){I.G.visible=false;I.on=false;I.k=0;I.shown=false;return}
-  if(!I.shown){I.shown=true;I.G.visible=true;const fresh=!F.isles[I.lv];if(fresh&&!VISIT){F.isles[I.lv]=Date.now();if(i===0)F.isle2=F.isles[4];fmDirty=true}
+  if(!I.shown){I.shown=true;I.G.visible=true;const fresh=!F.isles[I.sk||I.lv];if(fresh&&!VISIT){F.isles[I.sk||I.lv]=Date.now();if(i===0)F.isle2=F.isles[4];fmDirty=true}
    if(fresh&&!VISIT&&started){I.risingT=T;setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(i===2?tt('Look! A forest of giant mushrooms is rising from the sea… full of fireflies!','Guarda! Dal mare emerge un bosco di funghi giganti… pieno di lucciole!'):i===3?tt('Brrr! An island of ice is coming up, with an igloo and penguins!','Brrr! Sta emergendo un’isola di ghiaccio, con un igloo e i pinguini!'):i===0?tt('Look over there! A sandy island is rising from the sea… and someone is waiting on it!','Guarda laggiù! Dal mare sta emergendo un’isola di sabbia… e qualcuno ci aspetta!'):tt('Look! Another island is coming up, with a little lake you can walk across… and frogs!','Guarda! Sta emergendo un’altra isola, con un laghetto basso basso da attraversare a piedi… e le ranocchie!'),5);snd('wish')},600)}
    else I.k=1}
   if(I.risingT>=0){const u=Math.min(1,(T-I.risingT)/7);I.k=u<1?1-Math.pow(1-u,3):1;if(u>=1)I.risingT=-1;if(Math.random()<.03&&u<1)snd('water')}
@@ -3012,6 +3027,87 @@ updaters.push((t,dt)=>{if(!S.farm)return;const F=FM(),lv=lvlOf();F.isles=F.isles
  const adopted=!!F.orphan||VISIT;orphO.grp.visible=!adopted;orphO.L.hidden=adopted||where!=='out'||!ISL2.G.visible||Math.hypot(igor.position.x-ORPH.x,igor.position.z-ORPH.z)>7;
  if(!adopted&&ISL2.G.visible){orphO.pl.quaternion.copy(camera.quaternion);orphO.pl.position.y=Math.abs(Math.sin(T*1.6))*.03;if(!orphO.ok&&igorOK){orphO.ok=true;orphO.m.map=igTex(orphG,'');orphO.m.needsUpdate=true}
   if(ISL2.on&&started&&T-orphSaid>40&&Math.hypot(igor.position.x-ORPH.x,igor.position.z-ORPH.z)<3.2){orphSaid=T;orphTap()}}});
+/* ================= 11 Nov 2026: the bar on the Caribbean island (step 2 of the bar plan) =================
+   The sand island now rises at level 3. The first time, Barigor (the barista Igorlet: red bow tie, a hibiscus flower) waits near
+   Igor's house and calls; tap him and he leads the way to the bar. The bar is a room you walk into: counter with stools, Barigor
+   behind it, the bottle shelf (empty for now: the bottles come in step 3), a TV (off: step 7), lights and plants.
+   Barigor serves smoothies: tofu & mango (Igor is happy) and the fizzy one (Igor walks crooked and hiccups for a while).
+   Saved in S.farm.bar = {met: time of the first visit}. */
+const BARN='Barigor';
+// where the bar door is in the world (the hut is rotated)
+const BARDOOR=(()=>{const th=-.8,c=Math.cos(th),s=Math.sin(th),lx=.85,lz=2.35;return new V3(30.6+lx*c+lz*s,0,-21.2-lx*s+lz*c)})();
+PLACES.bar={pos:BARDOOR,open:()=>{if(ISL2.on)enterRoom('bar')},name:'Bar'};
+zone('out',BARDOOR.x,BARDOOR.z,.55,()=>{if(ISL2.on&&where==='out'&&!leaving)enterRoom('bar')},'bar door');
+// Barigor's picture: Igor's face, a hibiscus flower on the head, a red bow tie
+const barC=document.createElement('canvas');barC.width=IGC;barC.height=IGCH;const barT=new THREE.CanvasTexture(barC);let barOK=false;
+function barPaint(){if(!igorOK||barOK)return;barOK=true;const c2=barC.getContext('2d');c2.setTransform(SCI,0,0,SCI,0,IGPAD*SCI);c2.filter=canFilter?'hue-rotate(10deg)':'none';c2.drawImage(igorImg,0,0,663,730);c2.filter='none';
+ try{igorAcc(c2,EYES,{head:'flower',hcol:'#f25c78'})}catch(e){}
+ c2.save();c2.translate(318,452);c2.rotate(.35);c2.fillStyle='#e0463c';c2.strokeStyle='#7a1a12';c2.lineWidth=4;c2.lineJoin='round';
+ c2.beginPath();c2.moveTo(0,0);c2.lineTo(-46,-24);c2.lineTo(-46,24);c2.closePath();c2.fill();c2.stroke();c2.beginPath();c2.moveTo(0,0);c2.lineTo(46,-24);c2.lineTo(46,24);c2.closePath();c2.fill();c2.stroke();c2.beginPath();c2.arc(0,0,11,0,TAU);c2.fill();c2.restore();
+ barT.needsUpdate=true}
+const barMesh=s=>new THREE.Mesh(new THREE.PlaneGeometry(IGW*s,IGH2*s).translate(0,IGH2*s/2,0),curve(new THREE.MeshBasicMaterial({map:barT,transparent:true,alphaTest:.15,side:THREE.DoubleSide,color:new THREE.Color(.95,.96,.98)})));
+const barF=()=>{const F=FM();F.bar=F.bar||{};return F.bar};
+/* --- the bar, inside --- */
+{const Rm=room('bar',{w:10,d:7.5,floor:'#b98a55',floorLine:'#7a5530',wall:'#ffe9c2',wall2:'#ffdcae',motif:'rgba(79,183,160,.22)',wain:'#4fb7a0',wainD:'#3d9583',trim:'#2e6f62'}),g=Rm.g;BUILD='bar';
+ const W=lam('#9d7a50'),Wd=lam('#6b4a2e'),straw=lam('#d9b56a');
+ // the counter across the room, with a dark top, and five stools in front
+ const ctr=new THREE.Mesh(new THREE.BoxGeometry(6.2,1.0,.75),texM((()=>{const c=document.createElement('canvas');c.width=256;c.height=64;const q=c.getContext('2d');q.fillStyle='#c9a15a';q.fillRect(0,0,256,64);for(let k=0;k<32;k++){q.fillStyle=k%2?'#b88f4a':'#d6b06a';q.fillRect(k*8,0,7,64)}return new THREE.CanvasTexture(c)})()));ctr.position.set(-.4,.5,-1.25);g.add(ctr);
+ const top=new THREE.Mesh(new THREE.BoxGeometry(6.5,.1,.95),lam('#5a3a22'));top.position.set(-.4,1.05,-1.25);g.add(top);Rm.blocks.push({x:-2.6,z:-1.25,r:.6},{x:-1.4,z:-1.25,r:.6},{x:-.2,z:-1.25,r:.6},{x:1,z:-1.25,r:.6},{x:2.2,z:-1.25,r:.6});
+ for(let k=0;k<5;k++){const s=new THREE.Group();const seat=new THREE.Mesh(new THREE.CylinderGeometry(.24,.24,.09,14),lam(['#e0563c','#f2c230','#4fb7a0','#f25c78','#5cc2f2'][k]));seat.position.y=.72;s.add(seat);const leg=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,.7,6),lam('#3a3f45'));leg.position.y=.35;s.add(leg);const ft=new THREE.Mesh(new THREE.CylinderGeometry(.2,.22,.04,12),lam('#3a3f45'));ft.position.y=.02;s.add(ft);s.position.set(-3+k*1.25,0,-.4);g.add(s)}
+ // things on the counter: a blender, cups with straws, a bowl of mangoes
+ {const bl=new THREE.Group();const bb=new THREE.Mesh(new THREE.CylinderGeometry(.13,.15,.18,10),lam('#3a3f45'));bb.position.y=.09;bl.add(bb);const jar=new THREE.Mesh(new THREE.CylinderGeometry(.13,.1,.36,12),lam('#ffd9a8',{transparent:true,opacity:.75}));jar.position.y=.36;bl.add(jar);const lid=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.04,12),lam('#e0563c'));lid.position.y=.56;bl.add(lid);bl.position.set(1.7,1.1,-1.35);g.add(bl)}
+ for(const[x,c]of[[-2.2,'#f25c78'],[-1.9,'#5cc2f2']]){const cup=new THREE.Mesh(new THREE.CylinderGeometry(.08,.06,.2,10),lam('#ffe9c2'));cup.position.set(x,1.2,-1.1);g.add(cup);const st=new THREE.Mesh(new THREE.CylinderGeometry(.01,.01,.26,4),lam(c));st.position.set(x+.03,1.33,-1.1);st.rotation.z=.3;g.add(st)}
+ {const bw=new THREE.Mesh(new THREE.SphereGeometry(.22,12,8,0,TAU,Math.PI/2,Math.PI/2),lam('#8a5a3a'));bw.position.set(-3.2,1.32,-1.25);g.add(bw);for(let k=0;k<3;k++){const m=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),lam(k?'#f2a630':'#e8c040'));m.scale.set(1,.8,1.2);m.position.set(-3.27+k*.08,1.2+(k%2)*.05,-1.25+(k-1)*.05);g.add(m)}}
+ // the bottle shelf on the back wall (empty for now: three planks)
+ const SH=new THREE.Group();SH.position.set(-.4,0,-3.55);g.add(SH);for(const y of[1.55,2.15,2.75]){const p=new THREE.Mesh(new THREE.BoxGeometry(5.2,.07,.32),Wd);p.position.y=y;SH.add(p)}for(const x of[-2.6,2.6]){const s=new THREE.Mesh(new THREE.BoxGeometry(.07,1.4,.32),Wd);s.position.set(x,2.15,0);SH.add(s)}
+ Rm.shelf=SH;
+ // the TV on the right wall (off for now)
+ {const tv=new THREE.Group();tv.position.set(4.82,1.9,.4);tv.rotation.y=-Math.PI/2;g.add(tv);const fr=new THREE.Mesh(new THREE.BoxGeometry(1.7,1.05,.12),lam('#2a3036'));tv.add(fr);const sc=new THREE.Mesh(new THREE.PlaneGeometry(1.52,.88),lam('#10161c'));sc.position.z=.065;tv.add(sc);Rm.tvScreen=sc;
+  const shine=new THREE.Mesh(new THREE.PlaneGeometry(.5,.08),new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.12}));shine.position.set(-.35,.28,.07);shine.rotation.z=.4;tv.add(shine);
+  hit(tv,.8,()=>say(tt('The TV is off. Barigor says it will be on soon, with the weather and some funny ads!','La TV è spenta. Barigor dice che presto si accende, con il meteo e qualche pubblicità buffa!'),3.2),'bar tv',0)}
+ // plants, string lights, a tiki mask
+ for(const[x,z]of[[-4.3,-3.1],[4.3,-3.1],[-4.3,2.6]]){const p=new THREE.Group();const pot=new THREE.Mesh(new THREE.CylinderGeometry(.28,.22,.45,10),lam('#c0703a'));pot.position.y=.22;p.add(pot);for(let k=0;k<6;k++){const l=new THREE.Mesh(new THREE.ConeGeometry(.12,.9,4),lam(k%2?'#4f9a54':'#3f8a48'));l.position.set(Math.cos(k)*.18,.85,Math.sin(k)*.18);l.rotation.set(Math.sin(k)*.5,0,Math.cos(k)*.5);p.add(l)}p.position.set(x,0,z);g.add(p);Rm.blocks.push({x,z,r:.35})}
+ const BL=[];for(let k=0;k<14;k++){const u=k/13,b=new THREE.Mesh(new THREE.SphereGeometry(.06,6,5),glowM(['#f25c78','#f2c230','#4fb7a0','#5cc2f2'][k%4],1));b.position.set(-4.6+u*9.2,3.0-Math.sin(u*Math.PI)*.35,-3.3);g.add(b);BL.push(b)}
+ {const mk=document.createElement('canvas');mk.width=128;mk.height=192;const q=mk.getContext('2d');q.fillStyle='#8a5a3a';q.beginPath();q.roundRect(14,8,100,176,30);q.fill();q.fillStyle='#2a1a10';q.fillRect(34,50,22,14);q.fillRect(72,50,22,14);q.fillRect(40,110,48,20);q.fillStyle='#f2c230';for(let k=0;k<5;k++)q.fillRect(44+k*9,112,5,16);q.strokeStyle='#2a1a10';q.lineWidth=4;q.beginPath();q.moveTo(64,66);q.lineTo(56,96);q.lineTo(70,96);q.stroke();
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(.6,.9),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(mk),transparent:true}));m.position.set(-4.83,2.1,-.6);m.rotation.y=Math.PI/2;g.add(m)}
+ // Barigor behind the counter
+ const bpl=barMesh(1.35);bpl.position.set(-.4,.5,-2.15);g.add(bpl);{const stp=new THREE.Mesh(new THREE.BoxGeometry(1.4,.5,.9),Wd);stp.position.set(-.4,.25,-2.2);g.add(stp)}Rm.blocks.push({x:-.4,z:-2.2,r:.4});
+ const BS=[["Welcome to the bar! What can I get you?","Benvenuto al bar! Cosa ti preparo?"],["A smoothie? The fizzy one is… lively!","Un frullato? Quello frizzante è… vivace!"],["Bring me empty bottles one day: I have plans for this shelf!","Un giorno portami le bottiglie vuote: ho dei progetti per questo scaffale!"],["Mango, tofu, a little umbrella. Perfect.","Mango, tofu, un ombrellino. Perfetto."]];
+ let bi=0,bnear=false,bnext=0;const BL1=label(BS[0],[BARN+' · barista',BARN+' · barista'],new V3(-.4,IGH2*1.35+1.05,-2.2),()=>barMenu(),0);BL1.hidden=true;
+ hit(bpl,.6,()=>{walkIn(new V3(-.4,0,-.55),()=>barMenu())},'barigor',.6);
+ BUILD='bar';label(['Smoothies','Frullati'],BARN,new V3(1.7,1.9,-1.35),()=>walkIn(new V3(-.4,0,-.55),()=>barMenu()));
+ BUILD='out';
+ updaters.push(t=>{if(where!=='bar')return;barPaint();bpl.quaternion.copy(camera.quaternion);bpl.position.y=.5+Math.abs(Math.sin(t*2.4))*.04;
+  BL.forEach((b,i)=>{b.visible=Math.sin(t*2+i*1.3)>-.6});
+  const d=Math.hypot(igor.position.x+.4,igor.position.z+1.2),n=d<2.6;if(n&&(!bnear||T>bnext)){bi=(bi+1)%BS.length;BL1.text=BS[bi];BL1.el.innerHTML=N(BL1.text)+`<small>${N(BL1.sub)}</small>`;bnext=T+7}bnear=n;BL1.hidden=!n})}
+function barMenu(){const P=new V3(-.4,2.0,-1.0);
+ chips(P,()=>{CH.title='🍹 '+BARN;return[
+  {t:`🥭 ${tt('Tofu & mango smoothie','Frullato tofu e mango')} ${cst({t:2})}`,main:1,fn:()=>{barDrink('mango');return false}},
+  {t:`🫧 ${tt('Fizzy smoothie','Frullato frizzante')} ${cst({t:3})}`,fn:()=>{barDrink('fizz');return false}}]},'bar',1)}
+let DIZZY=0,hicT=0;
+function barDrink(k){if(!pay({t:k==='fizz'?3:2})){say(tt('Not enough tofu ants for a smoothie!','Non ci sono abbastanza formiche di tofu per un frullato!'),2.4);return}
+ save();try{hudFarm()}catch(e){}snd('munch');
+ if(k==='mango'){say(pick(tt(['Mmm! Tofu and mango: delicious!','Slurp! Now I feel great.'],['Mmm! Tofu e mango: buonissimo!','Slurp! Adesso sto benissimo.'])),2.6);IG.jv=4;IG.jy=.001}
+ else{DIZZY=T+12;hicT=T+1.4;say(tt('Wow… it’s fizzy! Everything is spinning… hic!','Uau… è frizzante! Gira tutto… hic!'),2.6)}}
+updaters.push((t,dt)=>{if(DIZZY<=T){if(igPlane.rotation.z){igPlane.rotation.z=0}return}const k=Math.min(1,(DIZZY-T)/3);igPlane.rotation.z=Math.sin(t*3.1)*.2*k;
+ if(T>hicT){hicT=T+1.3+Math.random()*1.2;if(IG.jy===0){IG.jv=2.6;IG.jy=.001}snd('pop');if(Math.random()<.5)say(pick(['hic!','hic… hic!','*hic*']),1)}});
+/* --- Barigor the first time: he waits near Igor's house and calls; tap him and he leads the way --- */
+{const H0=new V3(2.3,0,-3.4),bo=new THREE.Group();bo.position.copy(H0);world.add(bo);const pl=barMesh(1);bo.add(pl);blob(bo,.3);bo.visible=false;
+ const CALL=[["Psst! I opened a bar on the Caribbean island!","Psst! Ho aperto un bar sull’isola caraibica!"],["Come! The first smoothie is waiting!","Vieni! Il primo frullato ti aspetta!"],["Tap me: I’ll show you the way!","Toccami: ti faccio strada!"]];
+ let ci=0,cnext=0,lead=false;const L=label(CALL[0],[BARN+' · barista',BARN+' · barista'],H0.clone().add(new V3(0,IGH2+.55,0)),()=>start(),0);L.hidden=true;
+ const want=()=>!VISIT&&S.farm&&lvlOf()>=3&&ISL2.on&&!barF().met;
+ function start(){if(!want()||lead)return;lead=true;say(tt(`${BARN}: “Follow me!”`,`${BARN}: “Seguimi!”`),2);goTo('bar')}
+ hit(bo,.5,()=>start(),'barigor out',.4);
+ updaters.push((t,dt)=>{const on=want()&&where==='out';bo.visible=on;if(!on){L.hidden=true;return}barPaint();pl.quaternion.copy(camera.quaternion);
+  if(lead){const tg=isleVia(BARDOOR,bo.position),v=tg.clone().sub(bo.position);v.y=0;const d=v.length(),dd=Math.hypot(bo.position.x-BARDOOR.x,bo.position.z-BARDOOR.z);
+   const gap=bo.position.distanceTo(igor.position);if(d>.05&&gap<4.5)bo.position.addScaledVector(v.normalize(),Math.min(d,dt*3.2));pl.position.y=Math.abs(Math.sin(t*9))*.06;
+   if(dd<.4){bo.visible=false}if(!IG.target&&dd>.6&&igor.position.distanceTo(bo.position)>.8)goTo('bar')}
+  else{pl.position.y=Math.abs(Math.sin(t*3))*.08;if(T>cnext&&igor.position.distanceTo(bo.position)<14){ci=(ci+1)%CALL.length;L.text=CALL[ci];L.el.innerHTML=N(L.text)+`<small>${N(L.sub)}</small>`;cnext=T+3.5}}
+  L.pos.copy(bo.position).add(new V3(0,IGH2+.55,0));L.hidden=igor.position.distanceTo(bo.position)>14})}
+/* the first time inside: Barigor says hello */
+{const _er=enterRoom;enterRoom=function(k){_er(k);if(k!=='bar'||VISIT)return;const B=barF();if(!B.met){B.met=Date.now();save();setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`${BARN}: “Here we are! This is my bar. Sit down: the first smoothie is on me!”`,`${BARN}: “Eccoci! Questo è il mio bar. Siediti: il primo frullato lo offro io!”`),4);FM().ants.t+=3;try{hudFarm()}catch(e){}},700)}
+ }}
+window.IgorBar={go:()=>goTo('bar')};
 /* ---------- fish around the island, birds in the sky ---------- */
 const FISHW=[['clown',3],['blue',3],['puffer',2],['sunfish',1],['dolphin',.7]];
 const pickW=L=>{let t=L.reduce((a,x)=>a+x[1],0)*Math.random();for(const[k,w]of L){if((t-=w)<=0)return k}return L[0][0]};
@@ -4062,7 +4158,7 @@ function islSpot(I,A,o,t,dt){const n=A.n||0;
  switch(A.s){
   case'ham':return{p:islW(I.hammock,HAML/2,A.st?hamSway():.9),y:.6+IGW*.2,ic:'z',pose:'lie'};
   case'push':return{p:islW(I.hammock,HAML/2,.95),ic:'heart',hop:.5};
-  case'bar':{const p=islW(I.bar,[-.55,.05,.62][n%3],1.45);if(A.st&&!A.cup&&t-A.t0>1.6){A.cup=1;o.jump=.5;islSay(o,'bar')}return{p,ic:A.cup?'heart':'q',pose:A.cup?'cup':'',quiet:1}}
+  case'bar':{const p=islW(I.bar,[-1.2,-.75,-.3][n%3],1.95);if(A.st&&!A.cup&&t-A.t0>1.6){A.cup=1;o.jump=.5;islSay(o,'bar')}return{p,ic:A.cup?'heart':'q',pose:A.cup?'cup':'',quiet:1}}
   case'chest':return{p:islW(I.chest,[0,-.85,.85][n%3],[1,.62,.62][n%3]),ic:Math.sin(t*.9+o.ph)>0?'heart':'q',hop:.7};
   case'castle':return{p:islW(I.castle,[-.1,.9][n%2],[.9,.5][n%2]),ic:'heart',pose:'work'};
   case'canoe':return{p:islW(I.canoe.g,-.15,0),y:.16,pose:'row',ic:'heart'};
@@ -4835,7 +4931,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-1200';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261111-1300';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
