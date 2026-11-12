@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=16"></script>
+<script src="/sound.js?v=17"></script>
 <script src="/intervals/wig.js?v=2"></script>
 <script src="/drumschool/rigor.js?v=1"></script>
 <script src="/notes/nadia.js?v=1"></script>
@@ -5131,9 +5131,9 @@ function islOff(o){if(o._cup)o._cup.visible=false;o.pl.position.x=0;o.pl.positio
  const taken={};for(const[,o]of igObjs){const A=o.act;if(A&&A.k==='isl')(taken[A.i+A.s]=taken[A.i+A.s]||[]).push(A.n||0)}
  for(const o of L){const A=o.act;if(A&&/^(ride|wh|lead|rope|ball|ring|deco)$/.test(A.k))continue;const g=igById(o.id)||{},tr=g.trait;let i=-1;
   if(A&&A.k==='beach')i=0;else if(A&&A.k==='lake')i=1;
-  else{const ex=tr==='explorer'||tr==='sporty',ord=[0,1,2,3].sort(()=>Math.random()-.5);for(const j of ord)if(ISLES[j].on&&Math.random()<(j>1?(ex?.1:.05):(ex?.05:.025))){i=j;break}}
+  else{const ex=tr==='explorer'||tr==='sporty',ord=[0,1,2,3].sort(()=>Math.random()-.5);for(const j of ord)if(ISLES[j].on&&Math.random()<(j>1?(ex?.1:.05):j===1?(ex?.1:.06):(ex?.05:.025))){i=j;break}}
   if(i<0||!ISLES[i].on)continue;const I=ISLES[i],SP=ISPOT[ISLKIND[i]];
-  const C=Object.keys(SP).filter(s=>(taken[i+s]||[]).length<SP[s][0]&&(s!=='push'||(taken[i+'ham']||[]).length)&&(s!=='ham'&&s!=='push'||I.hammock)&&(s!=='turtle'||I.turtle)&&(s!=='canoe'||I.canoe));
+  const C=Object.keys(SP).filter(s=>(taken[i+s]||[]).length<SP[s][0]&&(s!=='push'||(taken[i+'ham']||[]).length)&&(s!=='ham'&&s!=='push'||I.hammock)&&(s!=='turtle'||I.turtle)&&(s!=='canoe'||I.canoe)&&islOk(I,s));
   if(!C.length)continue;let tot=0;const w=C.map(s=>{const v=s==='push'?3:SP[s][1][tr]||.8;tot+=v;return v});let r=Math.random()*tot,s=C[0];for(let k=0;k<C.length;k++){r-=w[k];if(r<=0){s=C[k];break}}
   const tk=taken[i+s]=taken[i+s]||[];let n=0;while(tk.includes(n))n++;tk.push(n);
   const d=o.grp.position.distanceTo(new V3(I.cx,0,I.cz));o.act={k:'isl',i,s,n,st:0,until:T+d/1.9*1.3+35+Math.random()*30,goal:new V3(I.cx,0,I.cz)}}}}
@@ -5173,6 +5173,383 @@ updaters.push((t,dt)=>{let ham=0,canoe=0,chest=0;
 {const _it=igTap;igTap=function(id){const o=igObjs.get(id),A=o&&o.act;
  if(!PL&&!VISIT&&A&&A.k==='isl'&&A.st&&o.mode==='idle'&&!A.hid&&!(whCall&&whCall.id===id)&&!hungry(id)&&!(ROPE.call&&ROPE.call.id===id)){const g=igById(id);if(g){o.showT=T+6;if(window.IgorSound&&started)IgorSound.ig('tap',{id,trait:g.trait,pan:0});bubbleQ.length=0;bubbleT=0;say(`${g.name}: “${islLine(A.s)}”`,3.2);islSayT=T+8;return}}
  return _it(id)}}
+/* ================= 12 Nov 2026: the lake island comes alive =================
+   Gondoligor, the gondolier Igorlet (straw boater, red scarf), with his Venetian gondola moored on the lake. Talking to him:
+   - 🐸 the frogs' choir: the frogs sing a chord, you say what it is like (happy = major, sad = minor…), 7 levels, more frogs = harder chords;
+   - 🌊 the lake's echo: Gondoligor sings a phrase, you repeat it on the lily pads, one note longer each time;
+   - 🚣 a trip around the lake in his gondola (the gondola stays his: it is not a vehicle), while he sings a barcarole;
+   - 🎼 our chord: you compose a chord for the frogs, they sing it in the evening choir;
+   - 📖 the frogs: the collection of frogs (common, toad, flute, cello, bell, golden) and the tadpoles.
+   Tadpoles (they look like quavers with a tail) appear in the lake, one every 3 hours (up to 3). Feed them duckweed
+   (tap them): every 4 hours they are hungry again, at the third meal they become a frog and join the choir (3 → 12 frogs).
+   Rimbalzello: a pile of flat stones on the shore; every bounce plays a note of the scale, 8 bounces = the octave.
+   At sunset the frogs sing the evening choir (your chord if you composed one) and the free Igorlets come to the shore to listen.
+   The Igorlets play here too: leapfrog with the frogs, skipping stones, faces in the water, a nap under the weeping willows,
+   watching the heron, listening to Gondoligor, feeding the tadpoles (one meal per tadpole at most).
+   Saved in S.farm.lake = {met, fr:[{sp,at}], xtra, tad:[{id,x,z,f:[times],ig}], tn, st, best:{}, eb, sk, skD, own:[midi], eve, seen:{sp:n}} */
+const LKI=ISLES[1],GONDN='Gondoligor';
+const TADH=3*3600e3,FEEDH=4*3600e3,TADMAX=3,CHOIRMAX=12;
+const lkE=(a,e)=>new V3(LKI.cx+Math.cos(a)*LKI.rx*e,0,LKI.cz+Math.sin(a)*LKI.rz*e);
+const LK_AD=1.4,LK_AS=2.4,LK_GE=.58;
+const mf=m=>440*Math.pow(2,(m-69)/12);
+function lkF(){const F=FM();if(!F.lake||typeof F.lake!=='object')F.lake={};const L=F.lake;
+ if(!Array.isArray(L.fr)||!L.fr.length)L.fr=[{sp:'frog',at:0},{sp:'frog',at:0},{sp:'toad',at:0}];
+ if(!Array.isArray(L.tad))L.tad=[];if(!L.seen){L.seen={};for(const f of L.fr)L.seen[f.sp]=(L.seen[f.sp]|0)+1}
+ if(L.st==null)L.st=0;if(!L.best)L.best={};if(!Array.isArray(L.own))L.own=[];return L}
+const lkVis=()=>LKI.on&&LKI.G.visible&&where==='out';
+const FSP={frog:{N:['Frog','Rana'],c:['#5fb34a','#a6d97a'],w:60,low:2,d:['The heart of the choir: a warm, buzzing voice.','Il cuore del coro: una voce calda che ronza.']},
+ toad:{N:['Toad','Rospo'],c:['#8a6a3e','#c9ad7a'],w:15,low:0,d:['The bass: low and round.','Il basso: grave e rotondo.']},
+ cello:{N:['Cello frog','Rana-violoncello'],c:['#9a4a32','#e2b38f'],w:8,low:1,d:['Sings like a cello, with a bit of vibrato.','Canta come un violoncello, con un po’ di vibrato.']},
+ flute:{N:['Flute frog','Rana-flauto'],c:['#7cc9ea','#d4f1fb'],w:8,low:4,d:['A breathy voice, like a flute.','Una voce col fiato, come un flauto.']},
+ bell:{N:['Bell frog','Rana-campana'],c:['#a98be0','#e6dcfa'],w:7,low:5,d:['Ding! Every note rings like a bell.','Din! Ogni nota suona come una campana.']},
+ gold:{N:['Golden frog','Rana d’oro'],c:['#f2c230','#fff0a0'],w:2,low:3,d:['Very, very rare. Its voice sparkles.','Rarissima. La sua voce luccica.']}};
+const FSPK=['frog','toad','cello','flute','bell','gold'];
+function lkRoll(){let tot=0;for(const k of FSPK)tot+=FSP[k].w;let r=Math.random()*tot;for(const k of FSPK){r-=FSP[k].w;if(r<=0)return k}return'frog'}
+function mkFrogSp(sp){const g=mkFrog(sp==='toad'?'toad':sp==='gold'?'gfrog':'frog');
+ if(sp==='flute'||sp==='cello'||sp==='bell'){const[c0,c1]=FSP[sp].c,a=new THREE.Color('#5fb34a').getHex(),b=new THREE.Color('#a6d97a').getHex(),seen=new Set();
+  g.traverse(m=>{if(!m.isMesh||seen.has(m.material))return;seen.add(m.material);const h=m.material.color.getHex();if(h===a)m.material.color.set(c0);else if(h===b)m.material.color.set(c1)})}
+ g.scale.setScalar(1.25);return g}
+const LK={frogs:[],tads:new Map(),gG:null,gPl:null,gL:null,oar:null,stones:[],rip:[]};
+/* more lily pads: up to 12 frogs and some Igorlets hopping */
+{const PADX=[[.3,.25],[1.2,.62],[2.1,.4],[2.9,.68],[3.7,.3],[4.6,.6],[5.5,.45]];
+ for(const[a,r]of PADX){const p=lkE(a,r);const pd=new THREE.Mesh(new THREE.CircleGeometry(.36,14,.3,TAU-.6).rotateX(-Math.PI/2),lam('#4f9a3e',{side:THREE.DoubleSide}));pd.position.set(p.x,.075,p.z);pd.rotation.y=a*2.3;LKI.G.add(pd);LKI.pads.push(pd)}}
+/* two weeping willows on the shore */
+{LKI.willows=[];for(const a of[3.3,-1.6]){const p=lkE(a,.83),g=skinG('lake');g.position.copy(p);g.scale.setScalar(.95);LKI.G.add(g);block(p.x,p.z,.35);LKI.willows.push({p,a})}}
+/* the choir frogs (they replace the four frogs that were there: one of them was a toad, so the choir starts with frog, frog, toad) */
+function lkFrogsSync(force){const L=lkF(),want=L.fr.slice(0,CHOIRMAX).map(f=>f.sp),have=LK.frogs.map(f=>f.sp);
+ if(!force&&want.length===have.length&&want.every((s,i)=>s===have[i]))return;
+ for(const f of LKI.frogs){LKI.G.remove(f.g);if(f.hit){const k=clickables.indexOf(f.hit);if(k>=0)clickables.splice(k,1)}}
+ LKI.frogs.length=0;LK.frogs.length=0;
+ want.forEach((sp,i)=>{const g=mkFrogSp(sp),used=LKI.frogs.map(f=>f.pad);let pad=LKI.pads.findIndex((p,j)=>!used.includes(j)&&j%2===i%2);if(pad<0)pad=LKI.pads.findIndex((p,j)=>!used.includes(j));if(pad<0)pad=0;
+  const pp=LKI.pads[pad].position;g.position.set(pp.x,.08,pp.z);g.rotation.y=Math.random()*TAU;LKI.G.add(g);
+  const E={g,pad,hop:null,next:2+Math.random()*6,croak:3+Math.random()*8,sp,i};BUILD='out';E.hit=hit(g,.32,()=>lkFrogTap(E),'lake frog',.15);LKI.frogs.push(E);LK.frogs.push(E)})}
+function lkFrogTap(E){if(!lkVis())return;const m=pick([60,62,64,67,69,72]);E.cT=1.2;snd('croak',{f:mf(m),d:1.1,sp:E.sp});E.g.userData.jumpT=T;
+ bubbleQ.length=0;bubbleT=0;say(tt(`${N(FSP[E.sp].N)}: “${NNAME[m%12][0]}!”`,`${N(FSP[E.sp].N)}: “${NNAME[m%12][1]}!”`),2)}
+lkFrogsSync(true);
+/* ---------- the tadpoles: a black head and a wiggling tail, like a quaver ---------- */
+const lkLeafTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='rgba(247,236,212,.95)';g.beginPath();g.arc(32,32,28,0,TAU);g.fill();g.strokeStyle='#2b2018';g.lineWidth=3;g.stroke();g.font='34px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('🌿',32,35);return new THREE.CanvasTexture(c)})();
+function lkTadMesh(id){const g=new THREE.Group(),blk=lam('#1d2226');const hd=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),blk);hd.scale.set(1.25,.85,1);g.add(hd);
+ const tl=new THREE.Group();tl.position.x=-.07;const tm=new THREE.Mesh(new THREE.PlaneGeometry(.2,.07).translate(-.1,0,0),lam('#2a3036',{side:THREE.DoubleSide}));tm.rotation.x=-Math.PI/2;tl.add(tm);g.add(tl);
+ const eye=new THREE.Mesh(new THREE.SphereGeometry(.018,6,5),lam('#f4f4f4'));eye.position.set(.05,.03,.035);g.add(eye);
+ const legs=new THREE.Group();for(const s of[-1,1]){const l=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.08,4),blk);l.rotation.x=Math.PI/2;l.rotation.z=s*.6;l.position.set(-.06,0,s*.05);legs.add(l)}legs.visible=false;g.add(legs);
+ const lf=new THREE.Mesh(new THREE.PlaneGeometry(.32,.32),curve(new THREE.MeshBasicMaterial({map:lkLeafTex,transparent:true,depthWrite:false,side:THREE.DoubleSide})));lf.position.y=.42;lf.visible=false;g.add(lf);
+ LKI.G.add(g);BUILD='out';const ht=hit(g,.42,()=>lkTadTap(id),'tadpole',.05);return{g,tl,legs,lf,ht,ph:Math.random()*TAU}}
+const lkFeedable=(t,now)=>!t.f.length||now-t.f[t.f.length-1]>=FEEDH;
+function lkTadSync(){const L=lkF(),ids=new Set(L.tad.map(t=>t.id));
+ for(const[id,o]of LK.tads)if(!ids.has(id)){LKI.G.remove(o.g);const k=clickables.indexOf(o.ht);if(k>=0)clickables.splice(k,1);LK.tads.delete(id)}
+ for(const t of L.tad)if(!LK.tads.has(t.id))LK.tads.set(t.id,lkTadMesh(t.id))}
+function lkSpawn(L,now){let p=null;for(let k=0;k<30&&!p;k++){const a=Math.random()*TAU,e=.22+Math.random()*.36,q=lkE(a,e);if(q.distanceTo(lkE(LK_AD,LK_GE))<2.2)continue;if(L.tad.some(t=>Math.hypot(t.x-q.x,t.z-q.z)<1.3))continue;p=q}
+ if(!p)p=lkE(Math.random()*TAU,.3);L.tad.push({id:'t'+now.toString(36)+Math.floor(Math.random()*999),x:+p.x.toFixed(2),z:+p.z.toFixed(2),f:[],b:now})}
+function lkTadTick(){if(VISIT||!LKI.on||!S.farm)return;const L=lkF(),now=Date.now();let ch=false;if(!L.tn){L.tn=now;ch=true}
+ while(L.tad.length<TADMAX&&now>=L.tn){lkSpawn(L,now);L.tn+=TADH;ch=true}
+ if(L.tad.length>=TADMAX&&L.tn<now){L.tn=now+TADH;ch=true}
+ if(ch){fmDirty=true;save()}}
+function lkTadPos(t){const o=LK.tads.get(t.id);return o?o.g.position.clone().setY(0):new V3(t.x,0,t.z)}
+function lkTadTap(id){if(!lkVis())return;const L=lkF(),i=L.tad.findIndex(t=>t.id===id);if(i<0)return;const t=L.tad[i];
+ walkNear(lkTadPos(t),.7,()=>{const L=lkF(),j=L.tad.findIndex(q=>q.id===id);if(j<0)return;const t=L.tad[j],now=Date.now();
+  if(VISIT){say(tt('A tadpole! It looks like a quaver with a tail.','Un girino! Sembra una croma con la coda.'),2.6);return}
+  if(!lkFeedable(t,now)){say(tt(`It has just eaten: it will be hungry again in ${fmtL(t.f[t.f.length-1]+FEEDH-now)}.`,`Ha appena mangiato: avrà di nuovo fame tra ${fmtL(t.f[t.f.length-1]+FEEDH-now)}.`),3);return}
+  lkFeed(j,false)})}
+function lkFeed(i,byIg,o){const L=lkF(),t=L.tad[i];if(!t)return;const now=Date.now();t.f.push(now);if(byIg)t.ig=1;snd('munch');
+ const n=t.f.length;let msg='';
+ if(n>=3){L.tad.splice(i,1);msg=lkBorn(byIg)}
+ else if(!byIg)msg=n===1?tt('Yum! A bit of duckweed. It will be hungry again in 4 hours.','Gnam! Un po’ di lenticchie d’acqua. Avrà di nuovo fame tra 4 ore.'):tt('Look: its little legs are coming out! One more meal and it’s a frog.','Guarda: gli spuntano le zampette! Ancora un pasto e diventa una rana.');
+ fmDirty=true;save();lkTadSync();if(msg){bubbleQ.length=0;bubbleT=0;say(msg,4.2)}}
+function lkBorn(byIg){const L=lkF(),sp=lkRoll(),first=!L.seen[sp];L.seen[sp]=(L.seen[sp]|0)+1;let extra='';
+ if(L.fr.length<CHOIRMAX)L.fr.push({sp,at:Date.now()});
+ else{const k=sp!=='frog'?L.fr.findIndex(f=>f.sp==='frog'):-1;L.xtra=(L.xtra|0)+1;
+  if(k>=0){L.fr[k]={sp,at:Date.now()};extra=tt(' A common frog lets it have its place and goes to sing among the reeds.',' Una rana comune lascia il posto e va a cantare tra le canne.')}
+  else extra=tt(' The choir is full: it sings among the reeds.',' Il coro è al completo: canta tra le canne.')}
+ lkFrogsSync();snd('star');const E=LK.frogs[LK.frogs.length-1];if(E&&L.fr.length<=CHOIRMAX)setTimeout(()=>{E.cT=1.4;snd('croak',{f:mf(64),d:1.2,sp})},700);
+ const n=Math.min(L.fr.length,CHOIRMAX),nk=STG.findIndex(s=>s.fr===n),nx=nk>0&&nk<=L.st?nk:0;
+ return(sp==='frog'?tt(`A tadpole became a frog! It joins the choir: now there are ${n} of them.`,`Un girino è diventato una rana! Entra nel coro: ora sono ${n}.`)
+  :tt(`${first?'Wow! ':''}A tadpole became a ${N(FSP[sp].N).toLowerCase()}! ${N(FSP[sp].d)}`,`${first?'Uau! ':''}Un girino è diventato ${sp==='toad'?'un':'una'} ${N(FSP[sp].N).toLowerCase()}! ${N(FSP[sp].d)}`))
+  +extra+(nx?tt(` Level ${nx+1} of the choir is open!`,` Si apre il livello ${nx+1} del coro!`):'')}
+/* ---------- Gondoligor and his gondola ---------- */
+const gnC=document.createElement('canvas');gnC.width=IGC;gnC.height=IGCH;const gnT=new THREE.CanvasTexture(gnC);let gnOK=false;
+function gnPaint(){if(!igorOK||gnOK)return;gnOK=true;const c2=gnC.getContext('2d');c2.setTransform(SCI,0,0,SCI,0,IGPAD*SCI);c2.filter=canFilter?'hue-rotate(-14deg) saturate(1.1)':'none';c2.drawImage(igorImg,0,0,663,730);c2.filter='none';
+ // a red scarf knotted at the neck
+ c2.save();c2.translate(318,452);c2.rotate(.3);c2.fillStyle='#d8392f';c2.strokeStyle='#6a1712';c2.lineWidth=4;c2.lineJoin='round';
+ c2.beginPath();c2.moveTo(-50,-14);c2.quadraticCurveTo(0,8,50,-14);c2.lineTo(8,48);c2.closePath();c2.fill();c2.stroke();c2.beginPath();c2.arc(0,-6,12,0,TAU);c2.fill();c2.stroke();
+ c2.beginPath();c2.moveTo(4,0);c2.lineTo(30,40);c2.lineTo(14,44);c2.closePath();c2.fill();c2.stroke();c2.restore();
+ // the straw boater with a red ribbon
+ c2.save();accMap(c2,EYES);c2.translate(384,124);c2.rotate(.42);c2.lineJoin='round';c2.strokeStyle='#141414';c2.lineWidth=6;
+ c2.fillStyle='#e7c979';c2.beginPath();c2.ellipse(0,4,128,24,0,0,TAU);c2.fill();c2.stroke();
+ c2.fillStyle='#f0d68d';c2.beginPath();c2.moveTo(-78,6);c2.lineTo(-74,-58);c2.quadraticCurveTo(0,-70,74,-58);c2.lineTo(78,6);c2.quadraticCurveTo(0,16,-78,6);c2.closePath();c2.fill();c2.stroke();
+ c2.fillStyle='#c8322e';c2.beginPath();c2.moveTo(-77,-6);c2.quadraticCurveTo(0,4,77,-6);c2.lineTo(76,-24);c2.quadraticCurveTo(0,-14,-76,-24);c2.closePath();c2.fill();c2.lineWidth=4;c2.stroke();
+ c2.strokeStyle='rgba(120,90,30,.5)';c2.lineWidth=2.5;for(let k=-3;k<=3;k++){c2.beginPath();c2.moveTo(k*20,-60);c2.lineTo(k*21,-28);c2.stroke()}
+ c2.restore();gnT.needsUpdate=true}
+const gnMesh=s=>new THREE.Mesh(new THREE.PlaneGeometry(IGW*s,IGH2*s).translate(0,IGH2*s/2,0),curve(new THREE.MeshBasicMaterial({map:gnT,transparent:true,alphaTest:.15,side:THREE.DoubleSide,color:new THREE.Color(.95,.96,.98)})));
+function mkGondola(){const g=new THREE.Group(),blk=lam('#16181c'),gold=glowM('#d9b44a',.25),wood=lam('#7a5530'),red=lam('#a8232c');
+ const hull=new THREE.Mesh(new THREE.SphereGeometry(.5,24,10,0,TAU,Math.PI/2,Math.PI/2),blk);hull.scale.set(3.3,.62,.78);hull.position.y=.2;g.add(hull);
+ const rim=new THREE.Mesh(new THREE.TorusGeometry(.5,.035,6,32),blk);rim.scale.set(3.3,.78,1);rim.rotation.x=Math.PI/2;rim.position.y=.2;g.add(rim);
+ const deck=new THREE.Mesh(new THREE.CircleGeometry(.5,24),lam('#2a2420'));deck.scale.set(3.2,.72,1);deck.rotation.x=-Math.PI/2;deck.position.y=.19;g.add(deck);
+ // the bow rises and carries the "ferro", the stern curls up
+ const bow=new THREE.Mesh(new THREE.CylinderGeometry(.04,.09,.7,8),blk);bow.position.set(1.62,.45,0);bow.rotation.z=-.5;g.add(bow);
+ const fe=new THREE.Group();fe.position.set(1.85,.72,0);const bl=new THREE.Mesh(new THREE.BoxGeometry(.06,.42,.03),gold);bl.position.y=.08;fe.add(bl);
+ for(let k=0;k<6;k++){const tth=new THREE.Mesh(new THREE.BoxGeometry(.13,.035,.025),gold);tth.position.set(.06,-.08+k*.055,0);fe.add(tth)}const tp=new THREE.Mesh(new THREE.BoxGeometry(.16,.06,.03),gold);tp.position.set(.03,.3,0);fe.add(tp);fe.rotation.z=-.15;g.add(fe);
+ const st=new THREE.Mesh(new THREE.TorusGeometry(.16,.04,6,12,Math.PI),blk);st.position.set(-1.62,.42,0);st.rotation.z=1.2;g.add(st);
+ // the red seat with the golden edge, a little seahorse on each side
+ const seat=new THREE.Mesh(new THREE.BoxGeometry(.62,.16,.5),red);seat.position.set(.15,.28,0);g.add(seat);const back=new THREE.Mesh(new THREE.BoxGeometry(.1,.32,.5),red);back.position.set(-.13,.42,0);g.add(back);
+ const edge=new THREE.Mesh(new THREE.BoxGeometry(.64,.025,.52),gold);edge.position.set(.15,.37,0);g.add(edge);
+ for(const s of[-1,1]){const h=new THREE.Mesh(new THREE.TorusGeometry(.06,.02,5,10,Math.PI*1.4),gold);h.position.set(.32,.42,s*.27);g.add(h)}
+ // the forcola (oarlock) and the oar
+ const fc=new THREE.Mesh(new THREE.BoxGeometry(.08,.42,.08),wood);fc.position.set(-.95,.4,.3);g.add(fc);
+ const oar=new THREE.Group();oar.position.set(-.95,.6,.3);const sh=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,2.4,5),wood);sh.rotation.z=Math.PI/2;sh.position.x=.2;oar.add(sh);
+ const bd=new THREE.Mesh(new THREE.BoxGeometry(.38,.03,.1),wood);bd.position.x=1.35;oar.add(bd);oar.rotation.set(.0,-.55,-.32);g.add(oar);
+ blob(g,1.4,.3);return{g,oar}}
+{const M=mkGondola();LK.gG=M.g;LK.oar=M.oar;LKI.G.add(M.g);
+ LK.gPl=gnMesh(1);LKI.G.add(LK.gPl);BUILD='out';
+ hit(M.g,1.05,()=>gondTap(),'gondola',.4);hit(LK.gPl,.45,()=>gondTap(),'gondoligor',.5)}
+const GS=[["Welcome to the lake! Shall the frogs sing for you?","Benvenuto sul lago! Facciamo cantare le rane?"],["My frogs sing better than any choir in Venice!","Le mie rane cantano meglio di qualsiasi coro di Venezia!"],["The tadpoles look like quavers. Feed them and they sing!","I girini sembrano crome. Dagli da mangiare e canteranno!"],["A trip in the gondola? It comes with a song.","Un giro in gondola? La canzone è compresa."],["Ooooh… sorry, I was warming up my voice.","Ooooh… scusa, scaldavo la voce."]];
+let gnSay=0,gnNext=0;
+const gnLbl=label(GS[0],[GONDN+' · gondolier',GONDN+' · gondoliere'],new V3(),()=>gondTap(),6);
+const GR={on:false,u:0,a:LK_AD,sing:0};
+function gondPos(a,out){return lkE(a,LK_GE)}
+function gondPlace(a,dt){const g=LK.gG,p=gondPos(a),tx=-Math.sin(a)*LKI.rx,tz=Math.cos(a)*LKI.rz;g.position.set(p.x,.02+Math.sin(T*1.3)*.02,p.z);g.rotation.y=Math.atan2(-tz,tx);g.rotation.z=Math.sin(T*1.1)*.025;g.updateMatrixWorld()}
+const _gw=new V3();const gondW=(x,y,z)=>LK.gG.localToWorld(_gw.set(x,y,z)).clone();
+const gondBoard=()=>lkE(LK_AD,.79);
+PLACES.gond={get pos(){return gondBoard()},open:()=>gondMenu(),name:GONDN};
+function gondTap(){if(!lkVis())return;if(GR.on){gondRideChips();return}walkNear(gondBoard(),.7,()=>gondMenu())}
+function gondMenu(){if(!lkVis()||GR.on)return;const L=lkF();if(!L.met&&!VISIT)lkMeet();
+ chips(gondBoard().add(new V3(0,2.1,0)),()=>{CH.title='🎶 '+GONDN;const st=lkStage();return[
+  {t:`🐸 ${tt('The frogs’ choir','Il coro delle rane')} <small>${tt('level','liv.')} ${st+1}</small>`,main:1,fn:()=>{lkcOpen();return false}},
+  {t:`🌊 ${tt('The lake’s echo','L’eco del lago')}`,fn:()=>{lkeOpen();return false}},
+  {t:`🚣 ${tt('A trip in the gondola','Un giro in gondola')}`,fn:()=>{gondRide();return false}},
+  {t:`🎼 ${tt('Our chord','Il nostro accordo')}`,fn:()=>{lkoOpen();return false}},
+  {t:`📖 ${tt('The frogs','Le rane')} <small>${Math.min(CHOIRMAX,L.fr.length)}/${CHOIRMAX}</small>`,fn:()=>{lkbOpen();return false}}]},'gond')}
+function lkMeet(){const L=lkF();if(L.met)return;L.met=Date.now();if(L.tad.length<TADMAX){lkSpawn(L,Date.now());lkTadSync()}fmDirty=true;save();
+ setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`${GONDN}: “Ciao! I’m Gondoligor. On this lake the frogs sing: they are my choir! Look, there’s a tadpole too: feed it and it will sing with us.”`,`${GONDN}: “Ciao! Sono Gondoligor. Su questo lago le rane cantano: sono il mio coro! Guarda, c’è anche un girino: dagli da mangiare e canterà con noi.”`),6)},300)}
+/* a song: [midi, beats] (0 = rest); Gondoligor sings it */
+const BARC=[[67,.6],[76,.3],[74,.3],[72,.9],[76,.6],[74,.3],[72,.3],[71,.9],[69,.6],[72,.3],[71,.3],[69,.6],[67,.3],[67,1.2],[0,.3],[72,.6],[74,.3],[76,.3],[77,.9],[76,.6],[74,.3],[72,.3],[74,.9],[71,.6],[74,.3],[72,.3],[71,.6],[67,.3],[72,1.5]];
+function gnSing(mel,k){let t=0;const g=k||1;for(const[m,b]of mel){if(m)snd('gsing',{f:mf(m),d:b*.95+.08,delay:t,g});t+=b}gnSay=T+t;return t}
+function gondRide(){if(GR.on||!lkVis())return;hideChips();closeSheet();GR.on=true;GR.u=0;GR.a=LK_AD;GR.sing=T+1.2;GR.sang=0;IG.target=null;IG.arrive=null;
+ bubbleQ.length=0;bubbleT=0;say(tt(`${GONDN}: “All aboard! Sit on the red seat.”`,`${GONDN}: “Si parte! Siediti sul sedile rosso.”`),3);gondRideChips()}
+function gondRideChips(){chips(LK.gG.position.clone().add(new V3(0,1.9,0)),()=>[{t:'🛑 '+tt('Get off here','Scendo qui'),fn:()=>{gondEnd(true);return false}}],'gride',1)}
+function gondEnd(early){if(!GR.on)return;GR.on=false;const P=early?gondW(.15,0,.9):gondBoard();P.y=0;if(!walkable(P.x,P.z))P.copy(gondBoard());igor.position.set(P.x,0,P.z);IG.target=null;hideChips();camSnap=false;
+ say(early?tt('Thanks for the ride!','Grazie del passaggio!'):tt(`${GONDN}: “Here we are. Come back whenever you like!”`,`${GONDN}: “Eccoci. Torna quando vuoi!”`),3)}
+updaters.push((t,dt)=>{const on=LKI.on&&LKI.G.visible;if(!on){gnLbl.hidden=true;if(GR.on)GR.on=false;return}gnPaint();
+ if(GR.on){GR.u+=dt/34;const u=Math.min(1,GR.u),e=u-Math.sin(TAU*u)/TAU;GR.a=LK_AD-e*TAU;
+  if(where!=='out'){GR.on=false}else{gondPlace(GR.a,dt);const s=gondW(.15,.27,0);igor.position.set(s.x,s.y,s.z);IG.target=null;IG.arrive=null;if(CH&&CH.key==='gride')CH.pos.copy(LK.gG.position).add(new V3(0,1.9,0));
+   if(T>GR.sing&&GR.sang<2){GR.sing=T+gnSing(BARC)+2;GR.sang++}
+   if(u>=1){GR.a=LK_AD;gondEnd(false)}}}
+ else{const da=GR.a-LK_AD;GR.a=LK_AD+da*Math.max(0,1-dt*1.5);gondPlace(GR.a,dt)}
+ const s=gondW(-1.18,.24,0);LK.gPl.position.copy(s);LK.gPl.quaternion.copy(camera.quaternion);LK.gPl.position.y+=Math.abs(Math.sin(t*(GR.on?4:2.2)))*.03;
+ LK.oar.rotation.y=-.55+(GR.on?Math.sin(t*2.2)*.35:Math.sin(t*.6)*.05);
+ const near=where==='out'&&igor.position.distanceTo(LK.gPl.position)<6;gnLbl.pos.copy(LK.gPl.position).add(new V3(0,IGH2+.45,0));gnLbl.hidden=GR.on||!near||!!(CH&&CH.key==='gond')||bubbleT>0||!sheet.hidden;
+ if(near&&T>gnNext&&!GR.on){gnNext=T+7;const L1=GS[Math.floor(Math.random()*GS.length)];gnLbl.text=L1;gnLbl.el.innerHTML=N(L1)+`<small>${N(gnLbl.sub)}</small>`}});
+/* the first time: Gondoligor waits near Igor's house and calls; tap him and he leads the way to the lake */
+{const H0=new V3(-2.4,0,-3.2),bo=new THREE.Group();bo.position.copy(H0);world.add(bo);const pl=gnMesh(1);bo.add(pl);blob(bo,.3);bo.visible=false;
+ const CALL=[["Ahoy! The frogs on the lake are singing!","Ehilà! Sul lago le rane cantano!"],["Come to the lake: my gondola is waiting!","Vieni al lago: la mia gondola ti aspetta!"],["Tap me: I’ll show you the way!","Toccami: ti faccio strada!"]];
+ let ci=0,cnext=0,lead=false;const L=label(CALL[0],[GONDN+' · gondolier',GONDN+' · gondoliere'],H0.clone().add(new V3(0,IGH2+.55,0)),()=>go(),0);L.hidden=true;
+ const want=()=>!VISIT&&S.farm&&LKI.on&&!lkF().met&&!(typeof barF==='function'&&ISL2.on&&!barF().met);
+ function go(){if(!want()||lead)return;lead=true;say(tt(`${GONDN}: “Follow me!”`,`${GONDN}: “Seguimi!”`),2);goTo('gond')}
+ BUILD='out';hit(bo,.5,()=>go(),'gondoligor out',.4);
+ updaters.push((t,dt)=>{const on=want()&&where==='out';bo.visible=on;if(!on){L.hidden=true;return}gnPaint();pl.quaternion.copy(camera.quaternion);const B=gondBoard();
+  if(lead){const tg=isleVia(B,bo.position),v=tg.clone().sub(bo.position);v.y=0;const d=v.length(),dd=Math.hypot(bo.position.x-B.x,bo.position.z-B.z);
+   const gap=bo.position.distanceTo(igor.position);if(d>.05&&gap<4.5)bo.position.addScaledVector(v.normalize(),Math.min(d,dt*3.2));pl.position.y=Math.abs(Math.sin(t*9))*.06;
+   if(dd<.8){bo.visible=false}if(!IG.target&&dd>1&&igor.position.distanceTo(bo.position)>.8)goTo('gond')}
+  else{pl.position.y=Math.abs(Math.sin(t*3))*.08;if(T>cnext&&igor.position.distanceTo(bo.position)<14){ci=(ci+1)%CALL.length;L.text=CALL[ci];L.el.innerHTML=N(L.text)+`<small>${N(L.sub)}</small>`;cnext=T+3.5}}
+  L.pos.copy(bo.position).add(new V3(0,IGH2+.55,0));L.hidden=lead||igor.position.distanceTo(bo.position)>14})}
+/* ---------- the chords ---------- */
+const CHT={maj:{n:[0,4,7],e:'😊',N:['Happy · major','Allegro · maggiore'],s:['major','maggiore']},min:{n:[0,3,7],e:'😢',N:['Sad · minor','Triste · minore'],s:['minor','minore']},
+ dim:{n:[0,3,6],e:'😨',N:['Tense · diminished','Teso · diminuito'],s:['diminished','diminuito']},aug:{n:[0,4,8],e:'😲',N:['Mysterious · augmented','Misterioso · aumentato'],s:['augmented','aumentato']},
+ dom7:{n:[0,4,7,10],e:'🤔',N:['Waiting · dominant 7th','In attesa · settima di dominante'],s:['7','7']},maj7:{n:[0,4,7,11],e:'😌',N:['Dreamy · major 7th','Sognante · settima maggiore'],s:['maj7','maj7']},
+ min7:{n:[0,3,7,10],e:'🥺',N:['Wistful · minor 7th','Malinconico · settima minore'],s:['m7','m7']},hdim:{n:[0,3,6,10],e:'🕵️',N:['Puzzled · half-diminished','Enigmatico · semidiminuito'],s:['ø7','ø7']}};
+const STG=[{fr:3,ty:['maj','min']},{fr:4,ty:['maj','min','dim']},{fr:5,ty:['maj','min','dim','aug']},{fr:6,ty:['maj','min','dom7','maj7']},{fr:8,ty:['dom7','maj7','min7','hdim']},{fr:10,ty:['maj','min','dim','aug'],inv:1},{fr:12,ty:['maj','min','dim','aug','dom7','maj7','min7','hdim'],inv:1}];
+const STGH=[['Happy or sad?','Allegro o triste?'],['A tense chord arrives','Arriva l’accordo teso'],['And a mysterious one','E uno misterioso'],['Four frogs at once: the sevenths','Quattro rane insieme: le settime'],['Only sevenths','Solo settime'],['Upside down: the inversions','A testa in giù: i rivolti'],['All the chords, upside down too','Tutti gli accordi, anche a testa in giù']];
+const lkNFr=()=>Math.min(CHOIRMAX,lkF().fr.length);
+function lkStage(){const L=lkF(),n=lkNFr();let s=0;for(let k=0;k<=Math.min(L.st,STG.length-1);k++)if(STG[k].fr<=n)s=k;return s}
+function lkVoices(n){const L=lkF(),fr=L.fr.slice(0,CHOIRMAX).map((f,i)=>({sp:f.sp,i}));const pickN=fr.slice().sort(()=>Math.random()-.5).slice(0,n);return pickN.sort((a,b)=>FSP[a.sp].low-FSP[b.sp].low)}
+let lkSingIdx=[];
+function lkChord(ms,d,o={}){const notes=ms.slice().sort((a,b)=>a-b),V=lkVoices(notes.length),k=o.g||1;lkSingIdx=V.map(v=>v.i);
+ notes.forEach((m,j)=>{const v=V[j]||V[V.length-1]||{sp:'frog',i:0};const dl=(o.arp?j*.55:j*.02)+(o.delay||0);snd('croak',{f:mf(m),d:o.arp?Math.max(.9,d-j*.55):d,sp:v.sp,delay:dl,g:k*(notes.length>3?.8:1)});
+  const E=LK.frogs[v.i];if(E)setTimeout(()=>{E.cT=d},dl*1000)});
+ if(sheetKind==='lkc'||sheetKind==='lko'){const set=new Set(lkSingIdx);sb.querySelectorAll('.lkfr i').forEach((e,i)=>{e.classList.toggle('sing',set.has(i))});clearTimeout(lkChord._t);lkChord._t=setTimeout(()=>sb.querySelectorAll('.lkfr i.sing').forEach(e=>e.classList.remove('sing')),(d+(o.arp?notes.length*.55:0))*1000)}}
+function chordOf(ty,root,inv){let ns=CHT[ty].n.map(x=>x+root);for(let k=0;k<inv;k++){ns.sort((a,b)=>a-b);ns.push(ns.shift()+12)}return ns}
+function chordName(ms){if(!ms.length)return'';const pcs=[...new Set(ms.map(m=>m%12))];if(pcs.length===1)return NNAME[pcs[0]][LANG==='it'?1:0];
+ const low=Math.min(...ms)%12,roots=[low,...pcs.filter(p=>p!==low)];
+ for(const r of roots){const iv=pcs.map(p=>(p-r+12)%12).sort((a,b)=>a-b).join(',');for(const k in CHT)if(CHT[k].n.join(',')===iv)return`${NNAME[r][LANG==='it'?1:0]} ${N(CHT[k].s)}`}
+ return tt(`${pcs.length} notes`,`${pcs.length} note`)}
+const lkFrRow=()=>`<div class="lkfr">${lkF().fr.slice(0,CHOIRMAX).map(f=>`<i style="--c:${FSP[f.sp].c[0]}" title="${N(FSP[f.sp].N)}">🐸</i>`).join('')}</div>`;
+/* ---------- 🐸 the frogs' choir ---------- */
+let CG=null;
+const LKOK=[['Bravo!','Bravo!'],['Exactly!','Esatto!'],['The frogs applaud!','Le rane applaudono!'],['Perfect ear!','Orecchio perfetto!'],['Ribbit, yes!','Cra cra, sì!']];
+const LKNO=[['Almost! It was','Quasi! Era'],['Good try! It was','Bel tentativo! Era'],['Nearly there! It was','Ci sei quasi! Era']];
+function lkcOpen(st){const s0=lkStage();CG={st:st!=null?Math.min(st,s0):s0,i:0,ok:0,q:null,busy:false,on:false};lkcIntro()}
+function lkcIntro(){const L=lkF(),n=lkNFr(),s0=lkStage(),nx=STG[L.st+1];
+ openSheet('lkc',`<h2>🐸 ${tt('The frogs’ choir','Il coro delle rane')}</h2>${lkFrRow()}
+ <p class="shn">${tt('The frogs sing a chord all together: tell me what it is like! Every chord has a feeling.','Le rane cantano un accordo tutte insieme: dimmi com’è! Ogni accordo ha un carattere.')}</p>
+ <p class="lkst">${tt('Level','Livello')} <b>${CG.st+1}</b>/7 · ${N(STGH[CG.st])} · ${n} ${tt('frogs','rane')}</p>
+ <div class="lkans">${STG[CG.st].ty.map(k=>`<button type="button" data-lkh="${k}">${CHT[k].e} ${N(CHT[k].N)}</button>`).join('')}</div>
+ <p class="shn">${tt('Tap a feeling to hear it first.','Tocca un carattere per sentirlo prima.')}${L.st>=STG.length-1?'':nx&&nx.fr>n&&L.st>s0?' '+tt(`The next level needs ${nx.fr} frogs: raise the tadpoles!`,`Per il prossimo livello servono ${nx.fr} rane: fai crescere i girini!`):''}</p>
+ ${s0>0?`<div class="lklv">${Array.from({length:s0+1},(_,k)=>`<button type="button" data-lkl="${k}"${k===CG.st?' class="on"':''}>${k+1}</button>`).join('')}</div>`:''}
+ <div class="lkctl"><button type="button" class="m" data-lk="go">▶ ${tt('Start: 8 chords','Inizia: 8 accordi')}</button></div>`)}
+function lkcNext(){if(CG.i>=8){lkcEnd();return}const S0=STG[CG.st];let ty=pick(S0.ty);if(CG.q&&ty===CG.q.ty&&Math.random()<.5)ty=pick(S0.ty);
+ const root=48+Math.floor(Math.random()*8),inv=S0.inv?Math.floor(Math.random()*CHT[ty].n.length):0;CG.q={ty,ms:chordOf(ty,root,inv)};CG.busy=false;
+ openSheet('lkc',`<h2>🐸 ${tt('The frogs’ choir','Il coro delle rane')}</h2>${lkFrRow()}
+ <p class="lkst">${tt('Chord','Accordo')} <b>${CG.i+1}</b>/8 · ✔ ${CG.ok}</p><p class="shn lkmsg">${tt('Listen… what is it like?','Ascolta… com’è?')}</p>
+ <div class="lkans">${S0.ty.map(k=>`<button type="button" data-lka="${k}">${CHT[k].e} ${N(CHT[k].N)}</button>`).join('')}</div>
+ <div class="lkctl"><button type="button" data-lk="again">🔁 ${tt('Again','Ancora')}</button><button type="button" data-lk="arp">🎵 ${tt('One frog at a time','Una rana alla volta')}</button></div>`);
+ setTimeout(()=>{if(sheetKind==='lkc'&&CG&&CG.q)lkChord(CG.q.ms,1.9)},350)}
+function lkcAns(k){if(!CG||!CG.q||CG.busy)return;CG.busy=true;const q=CG.q,ok=k===q.ty,m=sb.querySelector('.lkmsg');
+ sb.querySelectorAll('[data-lka]').forEach(b=>{if(b.dataset.lka===q.ty)b.classList.add('ok');else if(b.dataset.lka===k)b.classList.add('no')});
+ if(ok){CG.ok++;snd('star');if(m)m.textContent=N(pick(LKOK));sb.querySelectorAll('.lkfr i').forEach((e,i)=>{e.style.animationDelay=(i*.04)+'s';e.classList.add('hop')})}
+ else{if(m)m.textContent=`${N(pick(LKNO))} ${CHT[q.ty].e} ${N(CHT[q.ty].N).toLowerCase()}. ${tt('Listen again:','Riascoltalo:')}`;setTimeout(()=>{if(sheetKind==='lkc')lkChord(q.ms,1.7)},500)}
+ CG.i++;setTimeout(()=>{if(sheetKind==='lkc'&&CG)lkcNext()},ok?1300:3000)}
+function lkcEnd(){const L=lkF(),st=CG.st,ok=CG.ok,seeds=ok?Math.min(10,Math.max(1,Math.round(ok*(st+4)/8))):0;let up='';
+ if(!VISIT){L.best[st]=Math.max(L.best[st]|0,ok);if(ok>=7&&st===L.st&&L.st<STG.length-1){L.st++;const nx=STG[L.st];up=nx.fr<=lkNFr()?tt(`Level ${L.st+1} is open: ${N(STGH[L.st]).toLowerCase()}!`,`Si apre il livello ${L.st+1}: ${N(STGH[L.st]).toLowerCase()}!`):tt(`Level ${L.st+1} is waiting for you: it needs ${nx.fr} frogs. Raise the tadpoles!`,`Il livello ${L.st+1} ti aspetta: servono ${nx.fr} rane. Fai crescere i girini!`)}
+  if(seeds){S.seeds=(S.seeds|0)+seeds}fmDirty=true;save()}
+ openSheet('lkc',`<h2>🐸 ${tt('The frogs’ choir','Il coro delle rane')}</h2>${lkFrRow()}
+ <p class="lkbig">${ok}/8</p><p class="shn">${ok===8?tt('All right! The frogs are proud of you.','Tutti giusti! Le rane sono fiere di te.'):ok>=6?tt('Great ear!','Che orecchio!'):tt('Every time you play, your ear gets sharper.','Ogni volta che giochi, l’orecchio diventa più fino.')} ${up}</p>
+ ${seeds&&!VISIT?`<p class="lkst">🌱 +${seeds} ${tt('seeds','semi')}</p>`:''}
+ <div class="lkctl"><button type="button" class="m" data-lk="replay">▶ ${tt('Play again','Gioca ancora')}</button><button type="button" data-lk="close">${tt('Close','Chiudi')}</button></div>`);
+ if(ok)lkChord(chordOf('maj',48,0).concat([60]),2.4);if(seeds&&!VISIT){window._fromGame='';setTimeout(()=>{try{seedParty(seeds)}catch(e){}},400)}CG.q=null}
+/* ---------- 🌊 the lake's echo ---------- */
+const EPAD=[[67,'#7fd35a'],[69,'#5cc2f2'],[72,'#f2c230'],[74,'#f25c78'],[76,'#b48cf2']];
+let EG=null;
+function lkeOpen(){EG={seq:[],pos:0,ph:'idle',round:0,tm:[]};const L=lkF();
+ openSheet('lke',`<h2>🌊 ${tt('The lake’s echo','L’eco del lago')}</h2>
+ <p class="shn">${tt(`${GONDN} sings a phrase on the lily pads: sing it back, tapping the same pads in the same order. Every time it gets one note longer.`,`${GONDN} canta una frase sulle ninfee: ricantala toccando le stesse ninfee nello stesso ordine. Ogni volta si allunga di una nota.`)}</p>
+ <div class="lkep">${EPAD.map(([m,c],i)=>`<button type="button" data-ep="${i}" style="--c:${c}" aria-label="${NNAME[m%12][LANG==='it'?1:0]}"><span>${NNAME[m%12][LANG==='it'?1:0]}</span></button>`).join('')}</div>
+ <p class="lkst lkmsg">${L.eb?tt(`Your record: ${L.eb} phrases`,`Il tuo record: ${L.eb} frasi`):tt('Tap the pads to try the notes.','Tocca le ninfee per provare le note.')}</p>
+ <div class="lkctl"><button type="button" class="m" data-lk="ego">▶ ${tt('Start','Inizia')}</button></div>`)}
+function lkeFlash(i,ms){const b=sb.querySelector(`[data-ep="${i}"]`);if(!b)return;b.classList.add('on');setTimeout(()=>b.classList.remove('on'),ms||300)}
+function lkeNote(i,d){snd('gsing',{f:mf(EPAD[i][0]),d:d||.42});lkeFlash(i,d?d*1000:320)}
+function lkeClear(){if(EG)for(const t of EG.tm)clearTimeout(t);if(EG)EG.tm=[]}
+function lkePlay(slow){lkeClear();EG.ph='listen';const gap=slow?640:Math.max(330,560-EG.round*18),m=sb.querySelector('.lkmsg');if(m&&!slow)m.textContent=tt(`${GONDN} sings…`,`${GONDN} canta…`);
+ EG.seq.forEach((p,k)=>EG.tm.push(setTimeout(()=>{if(sheetKind==='lke')lkeNote(p,gap/1000*.85)},300+k*gap)));
+ EG.tm.push(setTimeout(()=>{if(sheetKind!=='lke'||!EG)return;if(slow){lkeEnd();return}EG.ph='you';EG.pos=0;const m=sb.querySelector('.lkmsg');if(m)m.textContent=tt('Your turn!','Tocca a te!')},300+EG.seq.length*gap))}
+function lkeStart(){EG.seq=[];EG.round=0;for(let k=0;k<3;k++)EG.seq.push(Math.floor(Math.random()*5));const b=sb.querySelector('[data-lk="ego"]');if(b)b.hidden=true;lkePlay()}
+function lkeTap(i){if(!EG)return;if(EG.ph==='idle'||EG.ph==='end'){lkeNote(i);return}if(EG.ph!=='you')return;lkeNote(i);
+ if(i===EG.seq[EG.pos]){EG.pos++;if(EG.pos>=EG.seq.length){EG.round++;EG.ph='wait';const m=sb.querySelector('.lkmsg');if(m)m.textContent=N(pick(LKOK))+' '+tt('One more note…','Una nota in più…');
+   EG.tm.push(setTimeout(()=>{if(sheetKind!=='lke')return;let n=Math.floor(Math.random()*5);if(n===EG.seq[EG.seq.length-1]&&Math.random()<.6)n=(n+1+Math.floor(Math.random()*4))%5;EG.seq.push(n);lkePlay()},900))}}
+ else{EG.ph='end2';const m=sb.querySelector('.lkmsg');if(m)m.textContent=tt('The lake’s echo sings you the right phrase…','L’eco del lago ti ricanta la frase giusta…');EG.tm.push(setTimeout(()=>{if(sheetKind==='lke')lkePlay(true)},700))}}
+function lkeEnd(){const L=lkF(),r=EG.round,seeds=Math.min(10,r);EG.ph='end';let rec='';
+ if(!VISIT){if(r>(L.eb|0)){L.eb=r;rec=tt(' A new record!',' Nuovo record!')}if(seeds)S.seeds=(S.seeds|0)+seeds;fmDirty=true;save()}
+ const m=sb.querySelector('.lkmsg');if(m)m.innerHTML=`${r?tt(`${r} phrase${r>1?'s':''} sung back!`,`${r} fras${r>1?'i ricantate':'e ricantata'}!`):tt('The next one will go better!','La prossima andrà meglio!')}${rec}${seeds&&!VISIT?` · 🌱 +${seeds}`:''}`;
+ const b=sb.querySelector('[data-lk="ego"]');if(b){b.hidden=false;b.textContent='▶ '+tt('Again','Ancora')}
+ if(seeds&&!VISIT){window._fromGame='';setTimeout(()=>{try{seedParty(seeds)}catch(e){}},300)}}
+/* ---------- 🎼 our chord ---------- */
+let OWN=null;
+function lkoOpen(){const L=lkF();OWN=L.own.slice();lkoDraw()}
+function lkoDraw(){const mx=Math.min(6,lkNFr()),blackK=[1,3,6,8,10];
+ const keys=Array.from({length:13},(_,k)=>{const m=60+k,bk=blackK.includes(m%12);return`<button type="button" data-ok="${m}" class="${bk?'b':'w'}${OWN.includes(m)?' on':''}">${NNAME[m%12][LANG==='it'?1:0]}${m===72?'²':''}</button>`}).join('');
+ openSheet('lko',`<h2>🎼 ${tt('Our chord','Il nostro accordo')}</h2>${lkFrRow()}
+ <p class="shn">${tt(`Choose the notes (up to ${mx}: one for each frog that sings). In the evening the frogs sing it in the sunset choir.`,`Scegli le note (fino a ${mx}: una per ogni rana che canta). La sera le rane lo cantano nel coro del tramonto.`)}</p>
+ <div class="lkkb">${keys}</div><p class="lkst lkcn">${OWN.length?chordName(OWN):tt('No notes yet','Ancora nessuna nota')}</p>
+ <div class="lkctl"><button type="button" class="m" data-lk="olisten">▶ ${tt('Listen','Ascolta')}</button><button type="button" data-lk="osave">💾 ${tt('This is our chord','È il nostro accordo')}</button><button type="button" data-lk="oclear">🧹 ${tt('Clear','Svuota')}</button></div>`)}
+/* ---------- 📖 the frogs ---------- */
+function lkbOpen(){const L=lkF(),now=Date.now(),cnt={};for(const f of L.fr.slice(0,CHOIRMAX))cnt[f.sp]=(cnt[f.sp]|0)+1;
+ const sp=FSPK.map(k=>L.seen[k]?`<div class="lksp"><i style="--c:${FSP[k].c[0]}">🐸</i><div><b>${N(FSP[k].N)}</b> <small>${cnt[k]?`× ${cnt[k]} ${tt('in the choir','nel coro')}`:tt('found','trovata')}</small><span>${N(FSP[k].d)}</span></div></div>`:`<div class="lksp q"><i>❓</i><div><b>???</b><span>${k==='gold'?tt('Very, very rare…','Rarissima…'):tt('Who knows how it sings…','Chissà come canta…')}</span></div></div>`).join('');
+ const td=L.tad.map(t=>{const fd=lkFeedable(t,now);return`<li>${['🫧','🐟','🦵'][Math.min(2,t.f.length)]} ${t.f.length}/3 ${tt('meals','pasti')} · ${fd?`<b>${tt('hungry!','ha fame!')}</b>`:tt(`hungry again in ${fmtL(t.f[t.f.length-1]+FEEDH-now)}`,`di nuovo fame tra ${fmtL(t.f[t.f.length-1]+FEEDH-now)}`)}</li>`}).join('');
+ openSheet('lkb',`<h2>📖 ${tt('The frogs of the lake','Le rane del lago')}</h2>${lkFrRow()}
+ <p class="lkst">${tt('Choir','Coro')}: <b>${Math.min(CHOIRMAX,L.fr.length)}/${CHOIRMAX}</b>${L.xtra?` · ${L.xtra} ${tt('among the reeds','tra le canne')}`:''} · ${tt('choir level','livello del coro')} <b>${lkStage()+1}</b>/7</p>
+ ${sp}<p class="lkst"><b>${tt('Tadpoles','Girini')}</b></p>${td?`<ul class="lktd">${td}</ul>`:`<p class="shn">${tt('No tadpoles right now: a new one comes every 3 hours.','Nessun girino adesso: ne arriva uno nuovo ogni 3 ore.')}</p>`}
+ <p class="shn">${tt('Feed a tadpole three times (it is hungry every 4 hours) and it becomes a frog. Some frogs are rare!','Dai da mangiare a un girino tre volte (ha fame ogni 4 ore) e diventa una rana. Alcune rane sono rare!')}</p>
+ <p class="lkst">🌊 ${tt('Echo record','Record dell’eco')}: ${L.eb|0} · 🪨 ${tt('best skip','rimbalzello migliore')}: ${L.sk|0}/8</p>`)}
+/* ---------- the panels' buttons ---------- */
+sb.addEventListener('click',e=>{if(!/^lk[cekob]$/.test(sheetKind||''))return;const b=e.target.closest('button');if(!b)return;e.stopPropagation();const L=lkF();
+ if(b.dataset.lkh){const k=b.dataset.lkh;lkChord(chordOf(k,48+Math.floor(Math.random()*5),0),1.6);return}
+ if(b.dataset.lkl!=null){CG.st=+b.dataset.lkl;lkcIntro();return}
+ if(b.dataset.lka){lkcAns(b.dataset.lka);return}
+ if(b.dataset.ep!=null){lkeTap(+b.dataset.ep);return}
+ if(b.dataset.ok!=null){const m=+b.dataset.ok,k=OWN.indexOf(m),mx=Math.min(6,lkNFr());if(k>=0)OWN.splice(k,1);else{if(OWN.length>=mx){say(tt(`Only ${mx} frogs can sing together: take one note away first.`,`Solo ${mx} rane possono cantare insieme: togli prima una nota.`),2.6);return}OWN.push(m);snd('croak',{f:mf(m),d:.8,sp:'frog'})}
+  b.classList.toggle('on',k<0);const c=sb.querySelector('.lkcn');if(c)c.textContent=OWN.length?chordName(OWN):tt('No notes yet','Ancora nessuna nota');return}
+ switch(b.dataset.lk){
+  case'go':CG.i=0;CG.ok=0;lkcNext();return;
+  case'again':if(CG&&CG.q)lkChord(CG.q.ms,1.9);return;
+  case'arp':if(CG&&CG.q)lkChord(CG.q.ms,2.6,{arp:1});return;
+  case'replay':lkcOpen(CG?CG.st:null);return;
+  case'close':closeSheet();return;
+  case'ego':lkeStart();return;
+  case'olisten':if(OWN.length)lkChord(OWN,2.2);return;
+  case'osave':if(!OWN.length){say(tt('Choose at least one note!','Scegli almeno una nota!'),2);return}if(!VISIT){L.own=OWN.slice().sort((a,b)=>a-b);fmDirty=true;save()}lkChord(OWN,2.2);bubbleQ.length=0;bubbleT=0;say(tt(`${GONDN}: “Bellissimo! Tonight the frogs will sing it at sunset.”`,`${GONDN}: “Bellissimo! Stasera le rane lo canteranno al tramonto.”`),3.4);return;
+  case'oclear':OWN=[];lkoDraw();return}});
+{const st=document.createElement('style');st.textContent=`.lkfr{display:flex;flex-wrap:wrap;gap:3px;margin:2px 0 8px}.lkfr i{font-style:normal;font-size:19px;line-height:26px;width:28px;text-align:center;border-radius:50%;background:color-mix(in srgb,var(--c) 55%,transparent);transition:transform .15s}
+.lkfr i.sing{transform:scale(1.25);box-shadow:0 0 0 2px #fff3b0}.lkfr i.hop{animation:lkhop .5s ease}@keyframes lkhop{40%{transform:translateY(-9px)}}
+.lkst{font-size:13px;margin:6px 0}.lkbig{font-size:34px;font-weight:700;margin:6px 0;text-align:center}
+.lkans{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin:8px 0}.lkans button{text-transform:none;letter-spacing:0;font-size:13px;padding:10px 8px}.lkans button.ok{background:#3f8a48;color:#fff}.lkans button.no{opacity:.55}
+.lkctl{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.lklv{display:flex;gap:4px;margin:6px 0}.lklv button{min-width:32px;padding:4px 8px}.lklv button.on{outline:2px solid #fff3b0}
+.lkep{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:12px 0}.lkep{gap:8px}.lkep button{width:56px;height:50px;border-radius:50%;border:0;background:radial-gradient(circle at 40% 40%,color-mix(in srgb,var(--c) 70%,#fff),var(--c));box-shadow:inset 0 -4px 0 rgba(0,0,0,.25);color:#2b2018;font-weight:700;font-size:12px;text-transform:none;letter-spacing:0;transition:transform .1s,filter .1s}
+.lkep button.on{transform:scale(1.15);filter:brightness(1.35);box-shadow:0 0 14px var(--c)}
+.lkkb{display:flex;gap:2px;margin:8px 0}.lkkb button{flex:1 1 0;min-width:0;height:74px;padding:0 0 5px;display:flex;align-items:flex-end;justify-content:center;font-size:9px;border-radius:0 0 6px 6px;text-transform:none;letter-spacing:0}
+.lkkb button.w{background:#f7f2e4;color:#2b2018}.lkkb button.b{background:#2b2b2e;color:#ddd;height:56px}.lkkb button.on{background:#5fb34a;color:#fff}
+.lksp{display:flex;gap:8px;align-items:center;margin:6px 0;font-size:13px}.lksp>div{flex:1;min-width:0}.lksp span{display:block}.lksp i{flex:none;width:30px;font-style:normal;font-size:19px;line-height:28px;text-align:center;border-radius:50%;background:color-mix(in srgb,var(--c,#888) 55%,transparent)}.lksp span{font-size:11px;opacity:.75}.lksp.q{opacity:.6}
+.lktd{margin:4px 0 6px 18px;padding:0;font-size:12px}`;document.head.appendChild(st)}
+/* ---------- 🪨 rimbalzello: flat stones on the shore ---------- */
+const SKP=lkE(LK_AS,.83),SKSTAND=lkE(LK_AS,.74);
+{const g=new THREE.Group();g.position.copy(SKP);for(let k=0;k<6;k++){const s=new THREE.Mesh(new THREE.CylinderGeometry(.13+Math.random()*.05,.15+Math.random()*.05,.05,10),lam(pick(['#9aa0a6','#8a9096','#b0b4b8','#7e858c'])));s.position.set((k%3-1)*.17,.03+Math.floor(k/3)*.05,(k>2?.05:-.05));s.rotation.set(Math.random()*.2,Math.random()*TAU,Math.random()*.2);g.add(s)}
+ LKI.G.add(g);block(SKP.x,SKP.z,.3);BUILD='out';hit(g,.5,()=>{if(!lkVis())return;walkNear(SKSTAND,.45,()=>lkSkip(igor.position.clone(),1))},'skip stones',.2);
+ LK.skL=label(['🪨 Skipping stones','🪨 Rimbalzello'],tt('8 bounces = the octave','8 rimbalzi = l’ottava'),SKP.clone().add(new V3(0,1.1,0)),()=>{if(lkVis())walkNear(SKSTAND,.45,()=>lkSkip(igor.position.clone(),1))},4)}
+const SKN=[72,74,76,77,79,81,83,84];
+function lkRoll8(isIg){const w=isIg?[8,14,17,16,13,9,6]:[14,20,20,16,10,5,2];let tot=0;for(const x of w)tot+=x;let r=Math.random()*tot;for(let k=0;k<w.length;k++){r-=w[k];if(r<=0)return k+2}return 2}
+function lkSkip(from,isIgor,o){if(!lkVis()&&isIgor)return;const C=new V3(LKI.cx,0,LKI.cz),dir=C.clone().sub(from).setY(0).normalize();dir.applyAxisAngle(new V3(0,1,0),(Math.random()-.5)*.5);
+ const n=lkRoll8(isIgor),loud=isIgor?1:Math.max(0,1-igor.position.distanceTo(from)/14)*.7,st=new THREE.Mesh(new THREE.CylinderGeometry(.07,.08,.03,8),lam('#9aa0a6'));
+ const P=[from.clone().add(dir.clone().multiplyScalar(.3)).setY(.9)];let d=1.5,x=P[0].clone().setY(.07);for(let k=0;k<n;k++){x=x.clone().add(dir.clone().multiplyScalar(d));P.push(x);d*=.82}
+ st.position.copy(P[0]);LKI.G.add(st);LK.stones.push({m:st,P,k:0,u:0,n,loud,isIgor,dur:.42});if(isIgor){IG.face=dir.x>0?1:-1;snd('whoosh')}if(o)o.jump=.4}
+function lkRipple(p,big){const m=new THREE.Mesh(new THREE.RingGeometry(.12,.17,24).rotateX(-Math.PI/2),curve(new THREE.MeshBasicMaterial({color:'#e8f6fb',transparent:true,opacity:.7,depthWrite:false})));m.position.set(p.x,.085,p.z);LKI.G.add(m);LK.rip.push({m,u:0,big})}
+updaters.push((t,dt)=>{for(let i=LK.stones.length-1;i>=0;i--){const S0=LK.stones[i];S0.u+=dt/S0.dur;const a=S0.P[S0.k],b=S0.P[S0.k+1];
+  if(!b){LKI.G.remove(S0.m);LK.stones.splice(i,1);continue}const u=Math.min(1,S0.u),h=(S0.k===0?.5:.42*Math.pow(.78,S0.k));S0.m.position.lerpVectors(a,b,u);S0.m.position.y=(S0.k===0?a.y*(1-u)+.07*u:.07)+Math.sin(u*Math.PI)*h;S0.m.rotation.y+=dt*20;
+  if(u>=1){S0.k++;S0.u=0;S0.dur*=.86;const last=S0.k>=S0.P.length-1;lkRipple(b,last);
+   if(S0.loud>0.02&&where==='out'){if(last)snd('plunk',{g:S0.loud});else snd('skip',{f:mf(SKN[S0.k-1]),g:S0.loud})}
+   if(last&&S0.isIgor)lkSkipDone(S0.n-1)}}
+ for(let i=LK.rip.length-1;i>=0;i--){const r=LK.rip[i];r.u+=dt/(r.big?1.4:.9);const s=1+r.u*(r.big?7:4);r.m.scale.set(s,1,s);r.m.material.opacity=.7*(1-r.u);if(r.u>=1){LKI.G.remove(r.m);r.m.geometry.dispose();LK.rip.splice(i,1)}}});
+function lkSkipDone(n){const L=lkF();let msg;
+ if(n>=7){msg=tt('Eight notes: the whole octave! Do re mi fa sol la si do!','Otto note: l’ottava completa! Do re mi fa sol la si do!');const td=new Date().toDateString();if(!VISIT&&L.skD!==td){L.skD=td;S.seeds=(S.seeds|0)+2;msg+=' '+tt('+2 seeds (once a day).','+2 semi (una volta al giorno).');setTimeout(()=>{try{hudFarm()}catch(e){}},50)}}
+ else msg=pick(tt([`${n} bounces! The scale stops at ${NNAME[SKN[n-1]%12][0]}…`,`${n} bounces. Let’s try for the octave!`,`${n}! A bit flatter and it goes further.`],[`${n} rimbalzi! La scala si ferma al ${NNAME[SKN[n-1]%12][1]}…`,`${n} rimbalzi. Proviamo a fare l’ottava!`,`${n}! Un po’ più piatto e va più lontano.`]));
+ if(!VISIT&&n>(L.sk|0)){L.sk=n;fmDirty=true}if(!VISIT)save();bubbleQ.length=0;bubbleT=0;say(msg,3.2)}
+/* ---------- tadpoles and frogs every frame ---------- */
+let lkTk=0;
+updaters.push((t,dt)=>{if(!LKI.on)return;if((lkTk-=dt)<=0){lkTk=2;lkTadTick();lkTadSync();lkFrogsSync()}
+ if(!LKI.G.visible)return;const L=lkF(),now=Date.now();
+ for(const tp of L.tad){const o=LK.tads.get(tp.id);if(!o)continue;const n=tp.f.length,s=1.5+n*.35,a=t*.55+o.ph,r=.35;o.g.position.set(tp.x+Math.cos(a)*r,.07,tp.z+Math.sin(a)*r);o.g.rotation.y=Math.atan2(-Math.cos(a),-Math.sin(a));o.g.scale.setScalar(s);
+  o.tl.rotation.y=Math.sin(t*14+o.ph)*.45;o.legs.visible=n>=2;const fd=!VISIT&&lkFeedable(tp,now);o.lf.visible=fd&&where==='out';if(fd){o.lf.position.y=.42/s+Math.sin(t*2.5+o.ph)*.04;o.lf.quaternion.copy(o.g.quaternion).invert().multiply(camera.quaternion);o.lf.scale.setScalar(1/s)}}
+ for(const E of LK.frogs){const j=E.g.userData.jumpT;if(j&&T-j<.4)E.g.position.y=.08+Math.sin((T-j)/.4*Math.PI)*.25}});
+/* ---------- to do: a hungry tadpole ---------- */
+{const _ti=todoItems;todoItems=function(){const L0=_ti();try{if(VISIT||!LKI.on||!S.farm)return L0;const L=lkF(),now=Date.now(),hg=L.tad.filter(t=>lkFeedable(t,now));
+  if(hg.length&&L0.length<6){const t=hg[0];L0.splice(Math.min(2,L0.length),0,{k:'tad',ic:'🐸',t:hg.length>1?tt(`${hg.length} hungry tadpoles`,`${hg.length} girini hanno fame`):tt('A hungry tadpole','Un girino ha fame'),go:outFirst(()=>lkTadTap(t.id))})}}catch(e){}return L0}}
+/* ---------- 🌅 the evening choir: at sunset the frogs sing, the free Igorlets come to the shore to listen ---------- */
+const LKE={on:false,t0:0,step:0,next:0};let lkEvT=0;
+const EVPROG=[[48,52,55,60],[53,57,60,65],[55,59,62,65],[48,52,55,60,64]];
+updaters.push((t,dt)=>{if(!LKI.on||VISIT||!S.farm||!started)return;
+ if(!LKE.on){if((lkEvT-=dt)>0)return;lkEvT=5;if(where!=='out')return;const L=lkF(),td=new Date().toDateString();
+  if(L.eve===td||!(SKY.ha>0&&SKY.el<5&&SKY.el>-4))return;L.eve=td;fmDirty=true;save();LKE.on=true;LKE.t0=T;LKE.step=0;LKE.next=T+18;
+  let n=0;for(const[,o]of igObjs){if(o.mode!=='idle'||!o.grp.visible)continue;const A=o.act;if(A&&/^(ride|wh|lead|rope|ball|ring)$/.test(A.k))continue;if(A&&A.k==='isl')islOff(o);
+   o.act={k:'isl',i:1,s:'choir',n:n++,st:0,until:T+80,goal:new V3(LKI.cx,0,LKI.cz)}}
+  const near=igor.position.distanceTo(new V3(LKI.cx,0,LKI.cz))<16;bubbleQ.length=0;bubbleT=0;
+  if(near)say(tt('Listen: the sun is setting… the frogs are about to sing the evening choir!','Ascolta: il sole tramonta… le rane stanno per cantare il coro della sera!'),4);
+  else toast(tt('🐸 At the lake the frogs are singing the evening choir','🐸 Al lago le rane cantano il coro della sera'));return}
+ if(T>LKE.t0+80){LKE.on=false;return}
+ if(T>LKE.next&&LKE.step<8){const near=where==='out'&&igor.position.distanceTo(new V3(LKI.cx,0,LKI.cz))<20,L=lkF();
+  if(near){if(L.own.length){lkChord(L.own,LKE.step%2?1.6:2.6)}else lkChord(EVPROG[LKE.step%4],2.3)}LKE.step++;LKE.next=T+(L.own.length?(LKE.step%2?2:3):2.6)+(LKE.step%4===0?3:0)}});
+/* ---------- the Igorlets on the lake ---------- */
+Object.assign(ISPOT.lake,{pads:[3,{music:2,sporty:2}],leap:[2,{sporty:6,keen:2,explorer:1}],skip:[2,{sporty:3,explorer:3,keen:2}],mirror:[1,{shy:4,lazy:2,music:1}],willow:[2,{sleepy:7,lazy:5}],heron:[1,{explorer:5,shy:2}],gond:[3,{music:8,keen:1,foodie:1}],tad:[1,{keen:3,foodie:4,shy:1}]});
+Object.assign(ISAY,{
+ leap:[['Leapfrog with a frog! It’s the best at it.','Hop! Over the frog!','Your turn, little frog!'],['Cavallina con la rana! È bravissima.','Hop! Sopra la rana!','Tocca a te, ranocchia!']],
+ skip:[['Watch this stone: plip, plip, plip!','Every bounce is a note!','Did you hear? Do, re, mi!'],['Guarda che sasso: plip, plip, plip!','Ogni rimbalzo è una nota!','Hai sentito? Do, re, mi!']],
+ mirror:[['Who is that handsome Igorlet in the water?','A funny face… and another one!','The lake makes faces back at me!'],['Chi è quel bell’Igorlet nell’acqua?','Una faccia buffa… e un’altra!','Il lago mi rifà le facce!']],
+ willow:[['The willow is crying… no, it’s just shade.','A nap under the willow. Zzz…','The leaves tickle my nose.'],['Il salice piange… no, fa solo ombra.','Un pisolino sotto il salice. Zzz…','Le foglie mi fanno il solletico al naso.']],
+ heron:[['It’s been standing still for an hour… a musician waiting for the downbeat?','Shh! The heron is concentrating.','On one leg! I can do it too… almost.'],['Sta fermo da un’ora… sarà un musicista che aspetta l’attacco?','Shh! L’airone è concentrato.','Su una zampa! Ci riesco anch’io… quasi.']],
+ gond:[['Sing again, Gondoligor!','What a voice! Like in Venice.','I’m listening to the barcarole.'],['Canta ancora, Gondoligor!','Che voce! Come a Venezia.','Ascolto la barcarola.']],
+ tad:[['Here’s some duckweed, little quaver!','It swims like a note on the stave!','Grow up fast, you’ll sing in the choir!'],['Ecco le lenticchie, piccola croma!','Nuota come una nota sul pentagramma!','Cresci presto, canterai nel coro!']],
+ choir:[['Shh… the frogs are singing!','What a chord!','The most beautiful sunset of the day.'],['Shh… cantano le rane!','Che accordo!','Il tramonto più bello della giornata.']]});
+function islOk(I,s){if(I!==LKI)return true;switch(s){case'leap':return LKI.frogs.length>0;case'heron':return!!heron.visible;case'tad':return!!(S.farm&&lkF().tad.length);case'willow':return!!LKI.willows;case'gond':return!GR.on;default:return true}}
+const LKS={
+ leap(I,A,o,t,dt){const fr=I.frogs;if(!fr.length)return{p:new V3(I.cx,0,I.cz)};if(A.f==null){A.f=(A.n*5+Math.floor(Math.random()*3))%fr.length;const a=Math.random()*TAU;A.dx=Math.cos(a);A.dz=Math.sin(a);A.sd=1}
+  const f=fr[A.f%fr.length],fp=f.g.position,base=new V3(fp.x+A.dx*.5*A.sd,0,fp.z+A.dz*.5*A.sd);if(!A.st)return{p:base};
+  if(A.hop){A.hop.u+=dt/.6;const u=Math.min(1,A.hop.u),p=A.hop.a.clone().lerp(A.hop.b,u);if(u>=1)A.hop=null;return{p,y:.05+Math.sin(u*Math.PI)*.62,ctl:1,quiet:1}}
+  if(!A.next)A.next=t+1.5;if(t>A.next){A.next=t+2.2+Math.random()*1.8;const b=new V3(fp.x-A.dx*.5*A.sd,0,fp.z-A.dz*.5*A.sd);A.hop={a:base.clone(),b,u:0};A.sd=-A.sd;f.cT=.5;if(where==='out'&&igor.position.distanceTo(base)<10)snd('frog')}
+  return{p:base,ctl:1,ic:'heart',quiet:1}},
+ skip(I,A,o,t){const p=lkE(LK_AS+(A.n%2?.16:-.16),.74);if(A.st&&t>(A.next||0)){if(A.next)lkSkip(o.grp.position.clone(),0,o);A.next=t+4+Math.random()*4}return{p,ic:'heart'}},
+ mirror(I,A,o,t){if(A.a==null){A.a=LK_AD+1+Math.random()*(TAU-2)}if(A.st&&t>(A.fl||0)){A.fl=t+1+Math.random()*1.2;o.face=-(o.face||1)}return{p:lkE(A.a,.72),pose:'work',ic:'heart'}},
+ willow(I,A,o,t){const W=I.willows[A.n%I.willows.length],p=lkE(W.a,.7);return{p,y:.12,pose:'lie',ic:'z'}},
+ heron(I,A,o,t){const h=heron.position;return{p:new V3(h.x-1.3-A.n*.5,0,h.z+.8),ic:'q',hop:.08}},
+ gond(I,A,o,t,dt){const p=lkE(LK_AD+(A.n-1)*.14,.8);if(A.st&&!GR.on&&T>gnSay+30&&igor.position.distanceTo(p)<12&&Math.random()<dt*.2){gnSing(BARC.slice(0,14),.8)}return{p,ic:'note',hop:.35}},
+ tad(I,A,o,t){const L=lkF();let tp=L.tad.find(x=>x.id===A.tid);if(!tp){tp=L.tad[A.n%Math.max(1,L.tad.length)];if(tp)A.tid=tp.id}if(!tp)return{p:new V3(I.cx,0,I.cz)};
+  const q=lkTadPos(tp),p=new V3(q.x+.45,0,q.z+.3);if(A.st&&!A.fed){A.fed=1;const j=L.tad.indexOf(tp);if(!VISIT&&j>=0&&!tp.ig&&tp.f.length<2&&lkFeedable(tp,Date.now()))lkFeed(j,true,o)}return{p,ic:'heart'}},
+ choir(I,A,o,t){const p=lkE(.5+(A.n%9)*.26,.7+(A.n>=9?.08:0));return{p,ic:'note',hop:LKE.on?.3:0,quiet:A.n>0}}};
+{const _isp=islSpot;islSpot=function(I,A,o,t,dt){if(I===LKI&&LKS[A.s])return LKS[A.s](I,A,o,t,dt);return _isp(I,A,o,t,dt)}}
 // a shell that left the collection is silent in the melodies
 {const _mp=melPlay;melPlay=function(m,how){if(!m||!m.ev)return _mp(m,how);const U=FUN();const ev=m.ev.map(([t,id])=>[t,id]);const keep=ev.filter(([,id])=>(U.col[id]|0)>0);if(!keep.length){melStop();return}
  melStop();const t0=ev[0][0];keep.forEach(([t,id])=>PLAYT.push(setTimeout(()=>{if(how==='mar'){let f=shellF(id);while(f<262)f*=2;while(f>1050)f/=2;snd('marimba',f)}else shPlay(id,sheetKind==='shplay')},t-t0)))}}
@@ -6100,7 +6477,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-0600';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-0700';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
