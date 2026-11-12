@@ -1129,7 +1129,7 @@ function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>
  for(const[id,o]of igObjs)if(!seen.has(id)){world.remove(o.grp);o.L.el.remove();labels.splice(labels.indexOf(o.L),1);igObjs.delete(id)}
  idleT-=dt;if(idleT<=0||idle.some(o=>!o.act)&&!snow)idleDirector(idle);
  for(const o of idle){const A=o.act;if(!A)continue;
-  if(A.k==='ring'){const a=t*.8+A.i/A.n*TAU;o.goal.set(A.c.x+Math.cos(a)*1,0,A.c.z+Math.sin(a)*1)}
+  if(A.k==='ring'){if(idle.filter(q=>q.act&&q.act.k==='ring').length<3){o.act=null;continue}const a=t*.8+A.i/A.n*TAU;o.goal.set(A.c.x+Math.cos(a)*1,0,A.c.z+Math.sin(a)*1)}
   else if(A.k==='wave'){o.goal.copy(igor.position).add(new V3(1.2,0,.6));if(o.grp.position.distanceTo(o.goal)<.4&&o.jump<=0&&Math.random()<dt*.8)o.jump=.5}
   else if(A.k==='ride'){if(!o.ride){if(o.grp.position.distanceTo(A.goal)<.35){A.t0=t;o.ride=ridePath(A,t)}else o.goal.copy(A.goal)}if(o.ride){o.ride=ridePath(A,t);if(!o.ride){o.act=null;o.grp.position.copy(parkOf(A.v,A.j||0)).add(new V3(.8,0,.6));o.goal.copy(o.grp.position)}else{o.grp.position.copy(o.ride.pos);o.goal.copy(o.ride.pos)}}}
   else if(A.goal)o.goal.copy(A.goal);
@@ -2727,7 +2727,7 @@ bells.addEventListener('pointerdown',e=>e.stopPropagation());
 bells.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();if(b.dataset.b!=null){whBell(+b.dataset.b);return}if(b.dataset.w==='x'){whEnd();return}if(b.dataset.w==='again'&&WH.st==='play')whPlay()});
 let whNext=fT(75),whCall=null;
 function whTick(t){if(WH.st)return;if(whCall){const o=igObjs.get(whCall.id);if(!o||o.mode!=='idle'||T-whCall.t>fT(80)||!o.act||o.act.k!=='wh'){if(o&&o.act&&o.act.k==='wh')o.act=null;whCall=null;whNext=T+fT(60)}return}
- if(T<whNext||!funOK()||igSleep())return;const cand=[...igObjs.values()].filter(o=>o.mode==='idle'&&o.grp.visible&&!(o.act&&o.act.k==='ride'));
+ if(T<whNext||!funOK()||igSleep())return;const cand=[...igObjs.values()].filter(o=>o.mode==='idle'&&o.grp.visible&&!(o.act&&(o.act.k==='ride'||o.act.k==='lead'))&&!(window._wishOut&&window._wishOut.id===o.id&&T<window._wishOut.until));
  if(!cand.length){whNext=T+fT(20);return}const o=pick(cand);o.act={k:'wh',goal:o.grp.position.clone()};whCall={id:o.id,t:T};
  const g=igById(o.id);setTimeout(()=>{if(whCall&&whCall.id===o.id)say(tt(`${g.name} wants to sing with you: tap it!`,`${g.name} vuole cantare con te: toccalo!`),3)},2500)}
 
@@ -2893,9 +2893,24 @@ function wishChips(id){if(VISIT){return}const g=igById(id),o=igObjs.get(id),w=wi
   if(w.k==='jump')L.push({t:'⤴ '+tt('Let’s jump!','Saltiamo!'),main:1,fn:()=>{JW={id,n:0,t:T};window._wishOut={id,until:T+90,jump:1};say(matchMedia('(pointer:coarse)').matches?tt('Double-tap the joystick: three jumps!','Doppio tocco sul joystick: tre salti!'):tt('Press space: three jumps!','Premi spazio: tre salti!'),3);return false}});
   L.push({t:tt('Later','Dopo'),fn:()=>false});return L},'wish'+id)}
 function wishSea(id){const o=igObjs.get(id);if(!o)return;const p=o.grp.position,a=Math.atan2(p.z*1.12,p.x),r=R-1.3;let P=null;for(let k=0;k<16&&!P;k++){const b=a+(k%2?1:-1)*Math.ceil(k/2)*.18,x=Math.cos(b)*r,z=Math.sin(b)*r/1.12;if(!blocked.some(q=>Math.hypot(q.x-x,q.z-z)<q.r+.6))P=new V3(x,0,z)}
- if(!P)return wishDone(id);window._wishOut={id,until:T+65};o.act={k:'lead',goal:P.clone().add(new V3(.5,0,0))};LEAD={id,P,t:T};say(tt('Follow me!','Seguimi!'),1.8);walkNear(P,.6,null)}
+ if(!P)return wishDone(id);if(whCall&&whCall.id===id)whCall=null;if(ROPE.call&&ROPE.call.id===id)ROPE.call=null;if(o.act&&o.act.k==='isl'&&typeof islOff==='function')islOff(o);window._wishOut={id,until:T+150};o.act={k:'lead',goal:seaGoal(o)};LEAD={id,P,t:T};say(tt('Follow me!','Seguimi!'),1.8);walkNear(P,.6,null)}
 {const _j=jump;jump=function(){const was=IG.jy;_j();if(!JW||was>.05||IG.jy<=0)return;const o=igObjs.get(JW.id);if(!o||o.grp.position.distanceTo(igor.position)>4.5)return;JW.n++;setTimeout(()=>{if(o)o.jump=.5},120);if(JW.n>=3){const id=JW.id;JW=null;setTimeout(()=>wishDone(id,tt('Boing boing boing!','Boing boing boing!')),600)}}}
-updaters.push(()=>{if(JW&&T-JW.t>90)JW=null;if(LEAD){const o=igObjs.get(LEAD.id);if(!o||T-LEAD.t>60){if(o&&o.act&&o.act.k==='lead')o.act=null;LEAD=null;return}if(o.grp.position.distanceTo(o.act&&o.act.goal||LEAD.P)<.4&&igor.position.distanceTo(LEAD.P)<1.6){const id=LEAD.id;LEAD=null;wishDone(id,tt('Look how beautiful the sea is!','Guarda che bello il mare!'))}}});
+/* 12 Nov 2026, evening: an Igorlet that wanted the sea kept dancing on the spot. Now, after "Let's go!", it follows Igor
+   (whatever else was going on) and the wish comes true as soon as the two of them are at the water's edge, wherever
+   that is: walking it there by hand works too */
+const atSea=p=>Math.hypot(p.x,p.z*1.12)>R-2.9||ISLES.some(I=>I.on&&isleE1(I,p.x,p.z)<1.05&&isleE1(I,p.x,p.z)>.62);
+function seaGoal(o){const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0);cr.y=0;cr.normalize();const G=igor.position.clone().addScaledVector(cr,-1.05);G.y=0;if(!walkable(G.x,G.z)){G.copy(igor.position).addScaledVector(cr,1.05);G.y=0}return G}
+updaters.push(()=>{if(JW&&T-JW.t>90)JW=null;
+ if(LEAD){const o=igObjs.get(LEAD.id),w=wishOf(LEAD.id);if(!o||!w||w.k!=='sea'||where!=='out'&&T-LEAD.t>8||T-LEAD.t>150){if(o&&o.act&&o.act.k==='lead')o.act=null;LEAD=null;return}
+  if(window._wishOut&&window._wishOut.id===LEAD.id)window._wishOut.until=Math.max(window._wishOut.until,T+2);else window._wishOut={id:LEAD.id,until:T+2};
+  const far=o.grp.position.distanceTo(igor.position);
+  if(!o.act||o.act.k!=='lead')o.act={k:'lead',goal:new V3()};
+  o.act.goal.copy(far>2.2||!atSea(igor.position)?seaGoal(o):LEAD.P.clone().add(new V3(.5,0,0)));if(where!=='out')o.act.goal.copy(o.grp.position);
+  if(where==='out'&&atSea(o.grp.position)&&atSea(igor.position)&&far<2.6){const id=LEAD.id;LEAD=null;wishDone(id,tt('Look how beautiful the sea is!','Guarda che bello il mare!'))}
+  return}
+ // brought by hand: an Igorlet who wants the sea, next to Igor at the water's edge
+ if(where!=='out'||VISIT||!atSea(igor.position))return;const U=FUN();if(!U.wish)return;
+ for(const id of Object.keys(U.wish)){if(U.wish[id].k!=='sea')continue;const o=igObjs.get(+id);if(o&&o.mode==='idle'&&o.grp.visible&&atSea(o.grp.position)&&o.grp.position.distanceTo(igor.position)<2.4){wishDone(+id,tt('Look how beautiful the sea is!','Guarda che bello il mare!'));break}}});
 
 /* ================= 9 Nov 2026: instruments to tune (one more at every level), timers over the things that work,
    snacks for tired Igorlets, the to-do list, the prize shop you walk into, more vehicles ================= */
@@ -4586,7 +4601,7 @@ const ropeG=(()=>{const outer=new THREE.Group(),spin=new THREE.Group(),pts=[];fo
 function ropeSpot(){const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0);cr.y=0;cr.normalize();const ok=P=>[-1.9,0,1.9].every(d=>walkable(P.x+cr.x*d,P.z+cr.z*d));
  const P=igor.position.clone();P.y=0;if(ok(P))return P;const Q=penFront().add(new V3(0,0,1.4));return ok(Q)?Q:P}
 function ropeInvite(){window.__ri=[ROPE.on,!!ROPE.call,VISIT,!!PL,RIDE,started,where,SKY.nk,SKY.W.rain,sheet.hidden,!!CH];if(ROPE.on||ROPE.call||VISIT||PL||RIDE||!started||where!=='out'||igSleep()||SKY.W.rain>.35||!sheet.hidden||CH)return;
- const F=FM(),c=F.igs.filter(g=>g.trait==='sporty'&&!g.task&&!g.rest&&igObjs.get(g.id)&&!(igObjs.get(g.id).act&&igObjs.get(g.id).act.k==='ride'));if(!c.length)return;
+ const F=FM(),c=F.igs.filter(g=>g.trait==='sporty'&&!g.task&&!g.rest&&igObjs.get(g.id)&&!(igObjs.get(g.id).act&&/^(ride|lead)$/.test(igObjs.get(g.id).act.k))&&!(window._wishOut&&window._wishOut.id===g.id&&T<window._wishOut.until));if(!c.length)return;
  const g=pick(c),o=igObjs.get(g.id);o.act={k:'rope',goal:igor.position.clone().add(new V3(1.1,0,.7))};ROPE.call={id:g.id,t:T}}
 function ropeAsk(id){const g=igById(id),o=igObjs.get(id);if(!g||!o)return;bubbleQ.length=0;bubbleT=0;say(tt(`${g.name}: “Jump rope challenge? Bet I can turn it faster than you can jump!”`,`${g.name}: “Sfida alla corda? Scommetto che giro più veloce di quanto salti!”`),3.4);
  chips(o.grp.position.clone().add(new V3(0,1.3,0)),()=>[{t:'🪢 '+tt('Challenge accepted!','Sfida accettata!'),main:1,fn:()=>{ropeStart(id);return false}},{t:tt('Later','Dopo'),fn:()=>{ropeCancel(4);return false}}],'rope'+id)}
@@ -7491,7 +7506,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-1940';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-2000';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
