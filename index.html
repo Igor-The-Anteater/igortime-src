@@ -1232,8 +1232,8 @@ function applyCuts(){const F=S.farm;if(!F||!F.cut)return;const gone=o=>{for(cons
 
 /* ================= rewards: vehicles. Igor rides them; the Igorlets take them for a lap when he doesn't ================= */
 const JET_A=Math.atan2(5.5*1.12,-11.5);
-const VANG={boat:JET_A,row:JET_A+.9,raft:JET_A-.9},wpos=a=>new V3(Math.cos(a)*22.6,0,Math.sin(a)*22.6/1.12);
-const VPARK={raft:wpos(VANG.raft),row:wpos(VANG.row),scooter:new V3(1.6,0,8.3),tractor:new V3(-2.9,0,8.6),bike:new V3(2.4,0,7.6),moto:new V3(3.5,0,7.2),car:new V3(4.6,0,6.6),boat:new V3(Math.cos(JET_A)*22.6,0,Math.sin(JET_A)*22.6/1.12),heli:new V3(-1.2,0,10.2),plane:new V3(3.6,0,10.4)};
+const VANG={boat:JET_A,row:JET_A+.9,raft:JET_A-.9},wpos=a=>new V3(Math.cos(a)*(R+3.6),0,Math.sin(a)*(R+3.6)/1.12); /* 12 Nov 2026: R+3.6 (was 22.6, when the island was 19 wide) */
+const VPARK={raft:wpos(VANG.raft),row:wpos(VANG.row),scooter:new V3(1.6,0,8.3),tractor:new V3(-2.9,0,8.6),bike:new V3(2.4,0,7.6),moto:new V3(3.5,0,7.2),car:new V3(4.6,0,6.6),boat:wpos(JET_A),heli:new V3(-1.2,0,10.2),plane:new V3(3.6,0,10.4)};
 const VC={land:new V3(0,0,3),water:new V3(0,0,0),air:new V3(0,0,0)};
 function mkVeh(k){const g=new THREE.Group(),paint=lam(VEH[k].c),dark=lam('#2b2b2e'),light=lam('#e9efe8'),glass=lam('#a9d4ea',{emissive:'#1d3a52',emissiveIntensity:.3}),spin=[];
  const wheel=(x,z,r,tube)=>{const w=new THREE.Mesh(new THREE.TorusGeometry(r,tube,8,20),dark);w.position.set(x,r+tube,z);g.add(w);return w};
@@ -1276,7 +1276,18 @@ function dismount(quiet){if(!RIDE)return;bubbleQ.length=0;bubbleT=0;const V=VEH[
   for(const m of[1,-1,1.6,-1.6]){const x=P.x+sx*d*m,z=P.z+sz*d*m;if(walkable(x,z)){spot={x,z};break}}if(!spot)spot={x:P.x,z:P.z};
   const F=FM();F.vpos=F.vpos||{};F.vpos[vk]={x:+spot.x.toFixed(2),z:+spot.z.toFixed(2),a:+(-igHead).toFixed(2)};fmDirty=true}
  IG.target=null;IG.arrive=null;if(!quiet)say(tt('Back on my feet.','Di nuovo a piedi.'),1.8)}
+/* 12 Nov 2026: boats ridden by the Igorlets stay on the water: they go round only along the stretch of sea that is free
+   (no beach, isthmuses, islets, the walkway to the abyss, the cinema), back and forth if the ring is cut somewhere. */
+const WARC={};
+function wOk(x,z){if(Math.hypot(x,z*1.12)<R+1.8)return false;try{if(isleE(x,z)<1.35||isleNeck(x,z)<2.1)return false}catch(e){}
+ if(jettyD(x,z)<2.1||Math.hypot(x-POOL.x,z-POOL.z)<3.9)return false;try{if(Math.hypot(x-EVBOARD.x,z-EVBOARD.z)<4.4)return false}catch(e){}return true}
+function wArc(a0,r){const key=a0.toFixed(3)+'|'+r.toFixed(2)+'|'+ISLES.map(I=>I.on?1:0).join('');if(WARC[key])return WARC[key];
+ const ok=a=>wOk(Math.cos(a)*r,Math.sin(a)*r/1.12),st=.03;let hi=0,lo=0,c;while(hi<TAU&&ok(a0+hi+st))hi+=st;
+ if(hi>=TAU)c={full:1};else{while(lo<TAU&&ok(a0-lo-st))lo+=st;c={lo:-lo,hi}}return WARC[key]=c}
 function ridePath(A,t){const V=VEH[A.v],C=VC[V.kind],P0=parkOf(A.v,A.j||0),ez=V.kind==='water'?1/1.12:1,r=Math.hypot(P0.x-C.x,(P0.z-C.z)/ez),a0=Math.atan2((P0.z-C.z)/ez,P0.x-C.x),w=V.sp*1.6/r,u=(t-A.t0)*w,laps=V.kind==='air'?1:2;
+ if(V.kind==='water'){const c=wArc(a0,r);if(!c.full){const L=c.hi-c.lo;if(L<.25)return null;const D=2*L*(L<2.5?2:1);if(u>=D)return null;
+   const tri=v=>{const m=((v%(2*L))+2*L)%(2*L);return m<=L?m:2*L-m},v0=-c.lo,v=v0+u*A.dir,x=tri(v),x2=tri(v+.01*A.dir),sg=x2>=x?1:-1,a=a0+c.lo+x;
+   return{pos:new V3(C.x+Math.cos(a)*r,0,C.z+Math.sin(a)*r*ez),y:-.5,head:a+sg*Math.PI/2}}}
  if(u>=TAU*laps)return null;const a=a0+u*A.dir;const x=C.x+Math.cos(a)*r,z=C.z+Math.sin(a)*r*ez,dur=TAU*laps/w,el=t-A.t0;
  const h=V.kind==='air'?V.h*Math.min(1,el/3,(dur-el)/3):0;return{pos:new V3(x,0,z),y:(V.kind==='water'?-.5:0)+h,head:a+A.dir*Math.PI/2}}
 // tapping a parked vehicle: Igor walks to it and gets on (on a friend's island too)
@@ -3263,7 +3274,12 @@ function isleSand2(I,G){const W=lam('#9d7a50'),Wd=lam('#7a5a36'),straw=lam('#d9b
   const yAt=x=>1.35-.75*Math.sin(Math.PI*Math.min(1,Math.max(0,(x-.35)/(L-.7))));const N=12,x0=.35,x1=L-.35,cols=['#e8664a','#ffffff','#f6d34a','#ffffff','#4fb7a0'];
   for(let i=0;i<N;i++){const u0=x0+(x1-x0)*i/N,u1=x0+(x1-x0)*(i+1)/N,y0=yAt(u0),y1=yAt(u1),seg=Math.hypot(u1-u0,y1-y0);const m=new THREE.Mesh(new THREE.BoxGeometry(seg+.01,.025,.62),lam(cols[i%5]));m.position.set((u0+u1)/2,(y0+y1)/2,0);m.rotation.z=Math.atan2(y1-y0,u1-u0);g.add(m)}
   for(const[xa,xb]of[[.08,x0],[L-.08,x1]]){const ya=1.55,yb=yAt(xb),r=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,Math.hypot(xb-xa,yb-ya),4),Wd);r.position.set((xa+xb)/2,(ya+yb)/2,0);r.rotation.z=Math.atan2(yb-ya,xb-xa)+Math.PI/2;g.add(r)}
-  G.add(g);I.hammock=g}
+  G.add(g);I.hammock=g;
+  /* 12 Nov 2026: two wooden posts hold the hammock (it was hanging in the air) */
+  {const tk=lam('#7a5a3a'),tk2=lam('#5e4329');for(const[px,pz,sg]of[[ax,az,-1],[bx,bz,1]]){const d=new V3(bx-ax,0,bz-az).normalize(),q=new THREE.Group();q.position.set(px+d.x*.02*sg,0,pz+d.z*.02*sg);
+    const p1=new THREE.Mesh(new THREE.CylinderGeometry(.08,.11,1.8,8),tk);p1.position.y=.9;q.add(p1);const cap=new THREE.Mesh(new THREE.CylinderGeometry(.095,.08,.08,8),tk2);cap.position.y=1.82;q.add(cap);
+    const kn=new THREE.Mesh(new THREE.TorusGeometry(.1,.025,6,12),tk2);kn.rotation.x=Math.PI/2;kn.position.y=1.55;q.add(kn);
+    q.rotation.z=-d.x*sg*.08;q.rotation.x=d.z*sg*.08;blob(q,.35);G.add(q);block(px,pz,.18)}}}
  // sandcastle
  {const g=new THREE.Group(),sd=lam('#e2cf98'),sd2=lam('#d4bd82');g.position.set(33.32,0,-20.8);const b=new THREE.Mesh(new THREE.BoxGeometry(.8,.3,.8),sd);b.position.y=.15;g.add(b);
   for(const[x,z]of[[-.4,-.4],[.4,-.4],[-.4,.4],[.4,.4]]){const t=new THREE.Mesh(new THREE.CylinderGeometry(.13,.16,.5,8),sd2);t.position.set(x,.25,z);g.add(t);const c=new THREE.Mesh(new THREE.ConeGeometry(.15,.2,8),sd);c.position.set(x,.6,z);g.add(c)}
@@ -6588,7 +6604,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-1540';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-1620';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
