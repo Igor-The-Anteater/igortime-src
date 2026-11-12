@@ -284,7 +284,7 @@ async function start(){if(started)return;started=true;
  B=window.IgorChatFake?window.IgorChatFake:await firestoreBackend();
  B.onAuth(async u=>{subs.splice(0).forEach(f=>{try{f()}catch(e){}});clearInterval(pingT);ME=u;PROF=null;FR=[];RIN=[];ROUT=[];BL=[];REP=[];PCACHE={};chatWith=null;
   NETERR=false;if(u){if(!u.nick&&window.IgorCloud&&window.IgorCloud.user&&window.IgorCloud.user.nick)u.nick=window.IgorCloud.user.nick.slice(0,16);try{PROF=await B.profile()}catch(e){PROF=null;NETERR=true}if(PROF){SUSP=await B.suspended();live()}}
-  if(!window.IgorChatFake&&(u||staffOn)){staffOn=true;import('/staff.js?v=13').then(M=>M.init(u?{uid:u.uid,nick:u.nick,admin:!!u.admin}:null)).catch(e=>console.warn('staff',e))}
+  if(!window.IgorChatFake&&(u||staffOn)){staffOn=true;import('/staff.js?v=14').then(M=>M.init(u?{uid:u.uid,nick:u.nick,admin:!!u.admin}:null)).catch(e=>console.warn('staff',e))}
   badge();if(!panel.hidden)render()})}
 function live(){const av=myAv();B.syncMe(PROF,av).catch(e=>console.warn('sync',e));PROF.av=av;PROF.nick=ME.nick;
  const ping=()=>{if(document.visibilityState==='visible')B.ping().catch(()=>{})};ping();pingT=setInterval(ping,60000);
