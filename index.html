@@ -948,8 +948,8 @@ function fieldHint(){const F=FM(),t=Date.now();for(const[f,i]of F.fields.map((f,
  return pick(tt(['The fields are growing.','Tap a field!'],['I campi crescono.','Tocca un campo!']))}
 
 /* buildings: each has a spot, its levels, a building site and a "coming soon" sign */
-const SPOT={pen:new V3(-7,0,9)};
-const SPOTR={pen:3.1,store:1.4,shop:1.4,tank:.9,green:1.4,met:1.3};
+const SPOT={pen:new V3(-7,0,9),prizes:new V3(15.8,0,-5.2)};
+const SPOTR={prizes:1.4,pen:3.1,store:1.4,shop:1.4,tank:.9,green:1.4,met:1.3};
 function spotOf(k){const p=S.farm&&S.farm.pos&&S.farm.pos[k];return p?new V3(p.x,0,p.z):(SPOT[k]||new V3(0,0,0)).clone()}
 function fieldsMid(){const F=FM(),P=new V3();F.fields.forEach((f,i)=>P.add(fieldPos(i)));return P.divideScalar(Math.max(1,F.fields.length))}
 const BOBJ={};
@@ -1020,7 +1020,7 @@ mkBuilding('green',[
   for(let k=0;k<5;k++){const pot=new THREE.Mesh(new THREE.CylinderGeometry(.1,.08,.15,10),lam('#b8643f'));pot.position.set(-.7+k*.35,.45,0);p.add(pot);const lf=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),leafM2);lf.position.set(-.7+k*.35,.6,0);p.add(lf)}
   const tb=new THREE.Mesh(new THREE.BoxGeometry(1.8,.06,.5),woodB);tb.position.y=.36;p.add(tb)},
  p=>{for(let k=0;k<4;k++){const lf=new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),lam('#79b35a'));lf.position.set(-.6+k*.4,.25,.45);p.add(lf)}}]);
-const SHOPV=new V3(15.8,0,-5.2);
+const SHOPV=new V3(15.8,0,-5.2),SHOP0=SHOPV.clone();let SHOPO=null; /* 12 Nov 2026: the prize shop can be moved (S.farm.pos.prizes) */
 {const g=new THREE.Group();g.position.copy(SHOPV);g.rotation.y=-.75;const wall=lam('#f3e3c3'),wood=lam('#6a4c34');
  const b=new THREE.Mesh(new THREE.RoundedBoxGeometry(2.2,1.5,1.5,2,.06),wall);b.position.y=.75;g.add(b);
  const st=document.createElement('canvas');st.width=128;st.height=32;{const q=st.getContext('2d');for(let k=0;k<8;k++){q.fillStyle=k%2?'#ffffff':'#e0463c';q.fillRect(k*16,0,16,32)}}
@@ -1031,10 +1031,10 @@ const SHOPV=new V3(15.8,0,-5.2);
  const sc=document.createElement('canvas');sc.width=256;sc.height=64;const scD=()=>{const q=sc.getContext('2d');q.fillStyle='#2b2018';q.fillRect(0,0,256,64);q.fillStyle='#f6d34a';q.font='600 34px Fredoka, sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText(tt('★ PRIZES ★','★ PREMI ★'),128,34)};scD();
  const scT=new THREE.CanvasTexture(sc);SIGNS.push(()=>{scD();scT.needsUpdate=true});const sign=new THREE.Mesh(new THREE.PlaneGeometry(1.6,.4),curve(new THREE.MeshBasicMaterial({map:scT})));sign.position.set(0,1.95,.4);g.add(sign);
  const tr=new THREE.Mesh(new THREE.TorusGeometry(.22,.04,8,18),lam('#2b2b2e'));tr.position.set(-.55,.3,1.05);g.add(tr);const tr2=tr.clone();tr2.position.x=-.05;g.add(tr2);
- blob(g,1.6,.8);scene.add(g);block(SHOPV.x,SHOPV.z,1.3);hit(g,1.4,()=>vehShop(),'prizes',.8);glowObj(g,'out',SHOPV.x-.9,SHOPV.z+1.1,.6,8,1.1);
- label(['Prize shop','Negozietto dei premi'],['bike, car, plane…','bici, auto, aereo…'],SHOPV.clone().add(new V3(0,2.9,0)),()=>vehShop(),5.5)}
+ blob(g,1.6,.8);scene.add(g);block(SHOPV.x,SHOPV.z,1.3);const sb=blocked[blocked.length-1];hit(g,1.4,()=>vehShop(),'prizes',.8);const gl=glowObj(g,'out',SHOPV.x-.9,SHOPV.z+1.1,.6,8,1.1);
+ const sl=label(['Prize shop','Negozietto dei premi'],['bike, car, plane…','bici, auto, aereo…'],SHOPV.clone().add(new V3(0,2.9,0)),()=>vehShop(),5.5);SHOPO={g,sb,gl,sl}}
 setTimeout(()=>{for(const L of labels)if(!L.room||L.room==='out'){if(L.near===0||L.near>7)L.near=7}},0);
-PLACES.prizes={pos:SHOPV.clone().add(new V3(-1.3,0,1.6)),open:()=>enterRoom('prizes'),name:'Prize shop'};zone('out',SHOPV.x-1.3,SHOPV.z+1.6,.6,()=>enterRoom('prizes'),'prizes door');
+PLACES.prizes={get pos(){return SHOPV.clone().add(new V3(-1.3,0,1.6))},open:()=>enterRoom('prizes'),name:'Prize shop'};SHOPO.z=zone('out',SHOPV.x-1.3,SHOPV.z+1.6,.6,()=>enterRoom('prizes'),'prizes door');
 PLACES.pen={get pos(){return spotOf('pen').add(new V3(.6,0,3))},open:()=>bldTap('pen'),name:'Igorlet houses'};
 const CLEAR_SPOTS=[{x:SPOT.pen.x,z:SPOT.pen.z,r:4},{x:15.8,z:-5.2,r:2.2},{x:-13.5,z:-6,r:2.6},{x:-11.4,z:-4.9,r:1.2}];
 
@@ -2332,8 +2332,15 @@ function ariaTexts(){const A=[['seeds',tt('Tofu seeds','Semi di tofu')],['ants',
 const _farmRelabel=farmRelabel;farmRelabel=function(){_farmRelabel();renderOrb(false);hudIgs();renderLangB();ariaTexts();if(!helpC.hidden)renderHelp()};
 hudIgs();
 
-function vehShop(){if(PL)return;goTo('prizes');return;say(tt('Prizes! Save up tofu ants.','Premi! Metti da parte formiche di tofu.'),2.6);
+function vehShop(){if(PL)return;if(VISIT||!S.farm){goTo('prizes');return}doorChips('prizes');return;say(tt('Prizes! Save up tofu ants.','Premi! Metti da parte formiche di tofu.'),2.6);
  chips(SHOPV.clone().add(new V3(0,2.2,0)),()=>{const F=FM();return VKEYS.map(k=>{const V=VEH[k];return F.veh[k]?{t:`${V.ic} ${N(V.N)} ✓`,fn:()=>{mount(k);return false}}:{t:`${V.ic} ${N(V.N)} ${cst(dual({t:V.cost}))}`,main:F.ants.t>=V.cost,fn:()=>{buyVeh(k);return true}}})},'shopv')}
+/* 12 Nov 2026 (Fabio): the prize shop and the toy store work the same way: walk through the door and you are in; tap the building and
+   Igor goes next to the door and offers "Go in" or "Move" */
+function doorChips(k){const D=PLACES[k].pos,top=(k==='prizes'?SHOPV.clone():spotOf(k)).add(new V3(0,2.8,0));
+ walkNear(D,1.3,()=>chips(top,()=>[{t:'🚪 '+tt('Go in','Entra'),main:1,fn:()=>{goTo(k);return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace(k==='prizes'?{k:'move',key:'prizes',fx:FIXB[0]}:{k:'move',key:k});return false}}],'b'+k))}
+updaters.push(()=>{if(!S.farm||!SHOPO)return;const p=spotOf('prizes');if(Math.abs(p.x-SHOPV.x)<1e-4&&Math.abs(p.z-SHOPV.z)<1e-4)return;
+ SHOPV.set(p.x,0,p.z);SHOPO.g.position.copy(SHOPV);SHOPO.sb.x=p.x;SHOPO.sb.z=p.z;FIXB[0][0]=p.x;FIXB[0][1]=p.z;SHOPO.gl.x=p.x-.9;SHOPO.gl.z=p.z+1.1;if(SHOPO.gl.ring)SHOPO.gl.ring.position.set(SHOPO.gl.x,SHOPO.gl.ring.position.y,SHOPO.gl.z);
+ SHOPO.sl.pos.set(p.x,2.9,p.z);if(SHOPO.z){SHOPO.z.x=p.x-1.3;SHOPO.z.z=p.z+1.6;SHOPO.z.in=Math.hypot(igor.position.x-SHOPO.z.x,igor.position.z-SHOPO.z.z)<SHOPO.z.r}});
 function vehChips(){chips(igor.position.clone().add(new V3(0,2.4,0)),()=>{CH.title=(RIDE?VEH[RIDE].ic:'🚲')+' '+tt('Vehicles','Mezzi');const F=FM(),L=[],own=VKEYS.filter(k=>F.veh[k]);
  if(CH.more==='col'){const k=RIDE;if(!k||!F.veh[k])return[];for(const c of VCOL)L.push({t:`<span class="sw" style="background:${c}"></span>`,main:F.veh[k].c===c,fn:()=>{F.veh[k].c=c;fmDirty=true;vehPaint(k);return true}});L.push({t:'‹',fn:()=>{CH.more=false;return true}});return L}
  for(const k of own)L.push({t:`${VEH[k].ic} ${N(VEH[k].N)}`,main:RIDE===k,fn:()=>{mount(k);return false}});
@@ -4908,7 +4915,9 @@ sb.addEventListener('click',e=>{if(sheetKind!=='toys')return;const b=e.target.cl
 .dci button{flex:none;min-width:84px;font:600 13px Fredoka,sans-serif;border:2px solid #2b2018;border-radius:11px;padding:6px 8px;background:#fff7e6;color:#2b2018;cursor:pointer;text-transform:none;letter-spacing:0}.dci button.m{background:#9be38a}.dci button:disabled{opacity:.5;cursor:default}.dci button small{display:inline;font-size:9px;opacity:.8}.dci .cs{white-space:nowrap}`;document.head.appendChild(st)}
 {const _bt=bldTap;bldTap=function(k){if(k!=='toys')return _bt(k);const F=FM(),bt=F.tasks.find(q=>q.k==='build'&&q.b==='toys');if(bt||PL||!F.b.toys)return _bt(k);
  if(VISIT){say(tt('The Toy Store: only its owner can shop here.','Il negozio dei giocattoli: qui compra solo chi abita l’isola.'),2.6);return}
- const D=PLACES.toys.pos;walkNear(D,.4,()=>chips(spotOf('toys').add(new V3(0,2.8,0)),()=>[{t:'🚪 '+tt('Go in','Entra'),main:1,fn:()=>{enterRoom('toys');return false}},{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'toys'});return false}}],'btoys'))}}
+ doorChips('toys')}}
+{const Z=zone('out',0,0,.6,()=>{const F=S.farm;if(F&&F.b&&F.b.toys&&!VISIT&&!PL&&!F.tasks.some(q=>q.k==='build'&&q.b==='toys'))enterRoom('toys')},'toys door');Z.x=1e4;
+ updaters.push(()=>{const F=S.farm;if(!F||!F.b||!F.b.toys){Z.x=1e4;return}const D=PLACES.toys.pos;if(Z.x!==D.x||Z.z!==D.z){const was=Z.x>1e3;Z.x=D.x;Z.z=D.z;if(was||true)Z.in=Math.hypot(igor.position.x-Z.x,igor.position.z-Z.z)<Z.r}})}
 
 /* --- the 3D decorations: each builder fills a group and returns its moving parts --- */
 const dM=c=>lam(c),dE=(c,i)=>lam(c,{emissive:c,emissiveIntensity:i});
@@ -6091,7 +6100,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-0200';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-0300';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
