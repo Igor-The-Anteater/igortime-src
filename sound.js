@@ -255,7 +255,7 @@ SFX.plunk=a=>{a=a||{};const k=a.g!=null?a.g:1;tone(520,140,.22,{g:.3*k,pan:a.pan
    ppiano: John Cagigor's crooked upright, with or without something between the strings (prep: none, screw, rubber, coin, bolt, paper).
    Both are heard also in focus (the listening games silence everything else). */
 const SOLO={fz:1,ppiano:1};
-const FZG={owl:[.8,1],crick:[2,4],drip:[2,1.8],knock:[2,4],fly:[1.3,1.3],drum:[1.3,1.6],leaf:[1.6,4],nail:[1.8,1.8]}; // so that all the voices sound about as loud
+const FZG={owl:[.8,1],crick:[2,4],drip:[2,1.8],knock:[2,4],peck:[1,2.5],fly:[1.3,1.3],drum:[1.1,1.6],leaf:[1.6,4],nail:[1.8,1.8]}; // so that all the voices sound about as loud
 SFX.fz=a=>{a=a||{};const v=a.v||'knock',f=a.f||440,k=(a.g!=null?a.g:1)*((FZG[v]||[1,1])[a.alt?1:0]),bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus},alt=!!a.alt,dl=o.delay;
  switch(v){
   case'owl':if(alt){tone(f,f*1.1,.55,{type:'triangle',g:.34*k,at:.06,vib:f*.025,vibF:7,...o});tone(f*1.1,f,.35,{type:'triangle',g:.22*k,at:.04,...o,delay:dl+.32})}
@@ -266,10 +266,12 @@ SFX.fz=a=>{a=a||{};const v=a.v||'knock',f=a.f||440,k=(a.g!=null?a.g:1)*((FZG[v]|
    else{tone(f*.7,f*1.5,.13,{g:.45*k,at:.004,glide:.6,...o});tone(f*1.5,f*1.4,.08,{g:.06*k,...o,delay:dl+.1})}return;
   case'knock':if(alt){nz(.05,{f0:1300,Q:.9,g:.5*k,at:.001,...o});nz(.05,{f0:1700,Q:1,g:.35*k,at:.001,...o,delay:dl+.018})}
    else{tone(f,f*.93,.08,{g:.55*k,at:.001,...o});nz(.02,{f0:f*2.6,Q:3,g:.2*k,at:.001,...o})}return;
+  case'peck':if(alt){for(let i=0;i<2;i++)nz(.03,{f0:2600,Q:2,g:.5*k,at:.001,...o,delay:dl+i*.07})}
+   else for(let i=0;i<5;i++){const g=(1-i*.15)*k;tone(f,f*.9,.035,{g:.5*g,at:.001,...o,delay:dl+i*.032});nz(.012,{f0:f*3,Q:3,g:.25*g,at:.001,...o,delay:dl+i*.032})}return;
   case'fly':if(alt){tone(f,f,.8,{g:.45*k,at:.002,...o});tone(f*2,f*2,.2,{g:.06*k,at:.002,...o});tone(f*6.3,f*6.3,.06,{g:.07*k,at:.001,...o})}
    else{tone(f,f,1.2,{g:.32*k,at:.002,...o});tone(f*2.76,f*2.76,.3,{g:.06*k,at:.002,...o});tone(f*5.4,f*5.4,.1,{g:.025*k,at:.001,...o})}return;
   case'drum':if(alt){tone(f*1.3,f*.95,.13,{type:'triangle',g:.5*k,at:.002,...o});nz(.09,{f0:650,Q:.8,g:.3*k,at:.002,...o})}
-   else{tone(f*1.7,f,.38,{g:.6*k,at:.002,...o});tone(f*3.4,f*2,.1,{g:.12*k,at:.002,...o});nz(.06,{f0:320,Q:1,g:.16*k,at:.002,...o})}return;
+   else{tone(f*2.2,f,.75,{g:.65*k,at:.003,glide:.25,...o});tone(f*2,f*2,.3,{g:.12*k,at:.003,...o});nz(.1,{type:'lowpass',f0:500,Q:.7,g:.25*k,at:.004,...o})}return;
   case'leaf':if(alt)nz(.12,{type:'highpass',f0:5200,g:.4*k,at:.01,...o});
    else{nz(.28,{f0:2400,Q:.6,g:.26*k,at:.09,...o});nz(.2,{f0:3600,Q:.9,g:.12*k,at:.05,...o,delay:dl+.08})}return;
   case'nail':tone(f,f,.6,{g:.25*k,at:.001,...o});tone(f*2.9,f*2.9,.3,{g:.12*k,at:.001,...o});tone(f*4.6,f*4.6,.15,{g:.07*k,at:.001,...o});return;
@@ -277,15 +279,17 @@ SFX.fz=a=>{a=a||{};const v=a.v||'knock',f=a.f||440,k=(a.g!=null?a.g:1)*((FZG[v]|
   case'glass':tone(f,f,2,{g:.34*k,at:.004,...o});tone(f*2.32,f*2.32,.9,{g:.06*k,at:.004,...o});tone(f*4.1,f*4.1,.3,{g:.03*k,at:.002,...o});return;
   case'spark':for(let i=0;i<5;i++){const h=f*[1,1.5,2,2.5,3][i];tone(h,h,.5,{g:.16*k,at:.002,...o,delay:dl+i*.06,pan:i%2?.4:-.4})}tone(f/2,f/2,1.2,{type:'triangle',g:.14*k,at:.08,...o});return;
   case'sing':[0,4,7,9,7,4,12].forEach((n,i)=>{const h=f*Math.pow(2,n/12);sus(h,.3,{type:'sine',g:.3*k,at:.03,rel:.1,vib:h*.01,vibF:5.5,...o,delay:dl+i*.2})});return}};
-SFX.ppiano=a=>{a=a||{};const f=a.f||262,p=a.prep||'none',k=(a.g!=null?a.g:1)*(p==='rubber'?2.5:1),bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus},dl=o.delay;
- const mute=p==='rubber',hv=p==='bolt'?.55:1;
- for(let n=1;n<=6;n++){const fn=f*n*Math.sqrt(1+.0004*n*n),dec=(mute?.28:p==='paper'?1.1:2.6)/(1+n*.35);let g=.3/Math.pow(n,1.25)*k;if(mute&&n>2)g*=.3;if(n===1)g*=hv;tone(fn,fn,dec,{g,at:.003,...o})}
+SFX.ppiano=a=>{a=a||{};const f=a.f||262,P=[].concat(a.prep||'none'),has=x=>P.includes(x),k=(a.g!=null?a.g:1)*(has('rubber')?2.2:1),bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus},dl=o.delay;
+ const mute=has('rubber'),hv=has('bolt')?.55:1,sh=mute?.45:1; // with the rubber too, the other objects ring less
+ for(let n=1;n<=6;n++){const fn=f*n*Math.sqrt(1+.0004*n*n),dec=(mute?.28:has('paper')?1.1:2.6)/(1+n*.35);let g=.3/Math.pow(n,1.25)*k;if(mute&&n>2)g*=.3;if(n===1)g*=hv;tone(fn,fn,dec,{g,at:.003,...o})}
  nz(.03,{f0:f*3,Q:1,g:.12*k,at:.001,...o});
- if(mute){tone(f*.5,f*.45,.12,{type:'triangle',g:.18*k,at:.002,...o});return}
- if(p==='screw'){for(const[r,g,d]of[[2.41,.11,1.7],[3.73,.08,1.3],[5.12,.06,.9],[6.89,.04,.6]])tone(f*r,f*r,d,{g:g*k,at:.002,...o});tone(f*1.5,f*1.5,1.4,{g:.05*k,at:.002,...o});tone(f*1.5+3,f*1.5+3,1.4,{g:.05*k,at:.002,...o});return}
- if(p==='coin'){for(let i=0;i<16;i++)nz(.016,{f0:f*5.2,Q:4,g:.14*k*(1-i/16),at:.001,...o,delay:dl+.02+i*.027});tone(f*3.1,f*3.1,.5,{g:.05*k,at:.002,...o});return}
- if(p==='bolt'){for(const[r,g,d]of[[1.13,.1,2.6],[2.3,.08,2],[3.1,.06,1.5],[4.6,.04,1]]){tone(f*r-1.5,f*r-1.5,d,{g:g*k,at:.003,...o});tone(f*r+1.5,f*r+1.5,d,{g:g*k,at:.003,...o})}tone(f*.5,f*.5,1.5,{g:.09*k,at:.004,...o});return}
- if(p==='paper'){tone(f,f,.6,{type:'sawtooth',lp:f*6,g:.1*k,at:.003,...o});nz(.4,{f0:f*4,Q:2.5,g:.13*k,at:.003,...o});nz(.25,{type:'highpass',f0:4000,g:.06*k,at:.003,...o})}};
+ if(mute)tone(f*.5,f*.45,.12,{type:'triangle',g:.18*k,at:.002,...o});
+ if(has('screw')){for(const[r,g,d]of[[2.41,.11,1.7],[3.73,.08,1.3],[5.12,.06,.9],[6.89,.04,.6]])tone(f*r,f*r,d*sh,{g:g*k,at:.002,...o});tone(f*1.5,f*1.5,1.4*sh,{g:.05*k,at:.002,...o});tone(f*1.5+3,f*1.5+3,1.4*sh,{g:.05*k,at:.002,...o})}
+ if(has('coin')){for(let i=0;i<16;i++)nz(.016,{f0:f*5.2,Q:4,g:.14*k*(1-i/16),at:.001,...o,delay:dl+.02+i*.027});tone(f*3.1,f*3.1,.5*sh,{g:.05*k,at:.002,...o})}
+ if(has('bolt')){for(const[r,g,d]of[[1.13,.1,2.6],[2.3,.08,2],[3.1,.06,1.5],[4.6,.04,1]]){tone(f*r-1.5,f*r-1.5,d*sh,{g:g*k,at:.003,...o});tone(f*r+1.5,f*r+1.5,d*sh,{g:g*k,at:.003,...o})}tone(f*.5,f*.5,1.5*sh,{g:.09*k,at:.004,...o})}
+ if(has('paper')){tone(f,f,.6,{type:'sawtooth',lp:f*6,g:.1*k,at:.003,...o});nz(.4,{f0:f*4,Q:2.5,g:.13*k,at:.003,...o});nz(.25,{type:'highpass',f0:4000,g:.06*k,at:.003,...o})}
+ // 12 Nov evening: a paper clip on the strings: a thin, sizzling buzz on top of the note
+ if(has('clip')){for(let i=0;i<24;i++)nz(.012,{f0:Math.min(9000,f*7.5),Q:6,g:.1*k*(1-i/24),at:.001,...o,delay:dl+.01+i*.017});tone(f*4.2,f*4.2,.35,{g:.04*k,at:.002,...o})}};
 /* 12 Nov 2026: the ice island (Antonio Vivaldigor).
    png: a penguin (or a chick: ch) calls one note; vln: Vivaldigor's ice violin; icl: an icicle; isng: the frozen pond sings (piu!);
    harm: one soft partial of the aurora's harmonic series. Heard also in focus, like the forest's voices. */
