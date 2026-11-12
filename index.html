@@ -5772,7 +5772,7 @@ updaters.push(()=>{const F=S.farm;if(!F)return;for(const k of BKEYS){const B=BOB
    - 👂 What changed?: the forest plays a little loop of sounds (owl, cricket, drop, woodpecker, firefly, drum mushroom, leaves),
      then plays it again with one thing changed: tap the voice that changed. 7 levels: a voice goes away, changes note,
      changes rhythm, changes timbre; from 2 to 6 voices. 8 rounds, level up with 7/8, seeds like the frogs (max 10);
-   - 🎹 the prepared piano: Cagigor puts something between the strings (screw, rubber, coin, bolt, paper) or nothing: which one?
+   - 🎹 the prepared piano: Cagigor puts something between the strings (screw, rubber, coin, paper, clip) or nothing: which one?
    - ✨ the fireflies in sync: tap the beat and the fireflies light up together (5 levels: the guide clicks stop sooner, the tempo changes);
    - 🤫 the silence of the forest: once a day a minute of just listening, then you say what you heard;
    - 🍲 mushroom soup: 4 mushrooms, all the Igorlets get their energy back;
@@ -5973,7 +5973,7 @@ function cageMenu(){if(!foVis())return;const L=foF();if(!L.met&&!VISIT)foMeet();
 function foMeet(){const L=foF();if(L.met)return;L.met=Date.now();if(L.mu.length<3)foSpawn(L,Date.now(),3-L.mu.length);foMuSync();fmDirty=true;save();
  setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`${CAGEN}: “Hello! I’m John Cagigor. I pick mushrooms and listen to the forest: here everything makes music, even silence. Look, some mushrooms have just come up: every one has its own voice!”`,`${CAGEN}: “Ciao! Sono John Cagigor. Raccolgo funghi e ascolto il bosco: qui tutto fa musica, anche il silenzio. Guarda, sono appena spuntati dei funghi: ognuno ha la sua voce!”`),6.5)},300)}
 /* Cagigor plays his prepared piano now and then when Igor is near */
-const PREPS=['none','screw','rubber','coin','bolt','paper','clip'];
+const PREPS=['none','screw','rubber','coin','paper','clip'];
 let lkAmbT=0;const LKPROG=[[['maj',60],['min',57],['maj',65],['maj',67]],[['maj',65],['maj',67],['min',64],['min',57]],[['min',57],['maj',65],['maj',60],['maj',67]],[['maj7',60],['min7',62],['dom7',67],['maj7',60]],[['min',62],['dom7',67],['maj',60]]];
 function lkAmb(){const P=pick(LKPROG),arp=Math.random()<.35,d=arp?2.2:1.7;let t=0;P.forEach(([ty,r])=>{const ms=chordOf(ty,r-12,0);setTimeout(()=>{if(lkVis()&&!(window.IgorSound&&IgorSound.focused))lkChord(ms,d,{arp,g:.55})},t*1000);t+=arp?d+.6:d+.15});lkAmbT=T+t}
 updaters.push((t,dt)=>{if(VISIT||!S.farm||!lkVis()||!lkF().met||!lkF().fr.length)return;if(!sheet.hidden||(window.IgorSound&&IgorSound.focused)||(typeof GR!=='undefined'&&GR.on))return;
@@ -6068,10 +6068,11 @@ function fwEnd(){const L=foF(),st=FW.st,ok=FW.ok,seeds=ok?Math.min(10,Math.max(1
    12 Nov evening (Fabio): one more object (a paper clip) and double preparations (screw + rubber…). You tap every object you hear
    (one or two), then "That's it!". 5 levels: 3 choices → 5 → all 7 → sometimes two objects → often two objects. */
 const PPO={none:{e:'🎹',N:['Nothing: a normal piano','Niente: pianoforte normale'],h:['clean and long','pulito e lungo']},screw:{e:'🔩',N:['A screw','Una vite'],h:['like a gong','come un gong']},rubber:{e:'🧽',N:['A piece of rubber','Un pezzo di gomma'],h:['a dull thud','un tonfo sordo']},
- coin:{e:'🪙',N:['A coin','Una moneta'],h:['it bounces: tin… tin-tin-tin','rimbalza: tin… tin-tin-tin']},bolt:{e:'⚙️',N:['A heavy bolt','Un bullone pesante'],h:['low and out of tune','grave e stonato']},paper:{e:'📄',N:['A sheet of paper','Un foglio di carta'],h:['a rustle','un fruscio']},clip:{e:'📎',N:['A paper clip','Una graffetta'],h:['like a sitar: nyiiing','come un sitar: gniiin']}};
-const PPALL=['none','screw','rubber','coin','bolt','paper','clip'];
-const PPL=[{o:['none','screw','rubber'],two:0},{o:['none','screw','rubber','coin','clip'],two:0},{o:PPALL,two:0},{o:PPALL,two:.45,pool:['screw','rubber','coin','clip']},{o:PPALL,two:.8,pool:['screw','rubber','coin','bolt','paper','clip']}];
-const PPLH=[['Three choices','Tre possibilità'],['A coin and a paper clip arrive','Arrivano la moneta e la graffetta'],['All seven','Tutti e sette'],['Sometimes two objects at once','A volte due oggetti insieme'],['Almost always two objects','Quasi sempre due oggetti']];
+ coin:{e:'🪙',N:['A coin','Una moneta'],h:['a music box: ting!','un carillon: tin!']},bolt:{e:'⚙️',N:['A heavy bolt','Un bullone pesante'],h:['low and out of tune','grave e stonato']},paper:{e:'📄',N:['A sheet of paper','Un foglio di carta'],h:['a rustle','un fruscio']},clip:{e:'📎',N:['A paper clip','Una graffetta'],h:['a spring: boing!','una molla: boing!']}};
+// 12 Nov 18:51 (Fabio): the bolt sounded too much like the screw: taken out
+const PPALL=['none','screw','rubber','coin','paper','clip'];
+const PPL=[{o:['none','screw','rubber'],two:0},{o:['none','screw','rubber','coin','clip'],two:0},{o:PPALL,two:0},{o:PPALL,two:.45,pool:['screw','rubber','coin','clip']},{o:PPALL,two:.8,pool:['screw','rubber','coin','paper','clip']}];
+const PPLH=[['Three choices','Tre possibilità'],['A coin and a paper clip arrive','Arrivano la moneta e la graffetta'],['All six','Tutti e sei'],['Sometimes two objects at once','A volte due oggetti insieme'],['Almost always two objects','Quasi sempre due oggetti']];
 const ppKey=a=>a.slice().sort().join('+'),ppName=a=>a.map(k=>`${PPO[k].e} ${N(PPO[k].N).toLowerCase()}`).join(tt(' and ',' e '));
 let PP=null;
 function ppPhrase(prep,o){const sc=[60,62,64,67,69,72],n=3,b=pick([.38,.45]);const ms=[];for(let k=0;k<n;k++)ms.push(pick(sc)-(Math.random()<.25?12:0));ms.forEach((m,k)=>snd('ppiano',{f:mf(m),prep,delay:(o&&o.delay||0)+k*b}));cgPlayT=T+n*b+.5;return ms}
@@ -7506,7 +7507,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-2000';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-2010';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
