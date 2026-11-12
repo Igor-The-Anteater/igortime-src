@@ -281,21 +281,22 @@ SFX.fz=a=>{a=a||{};const v=a.v||'knock',f=a.f||440,k=(a.g!=null?a.g:1)*((FZG[v]|
   case'sing':[0,4,7,9,7,4,12].forEach((n,i)=>{const h=f*Math.pow(2,n/12);sus(h,.3,{type:'sine',g:.3*k,at:.03,rel:.1,vib:h*.01,vibF:5.5,...o,delay:dl+i*.2})});return}};
 /* 12 Nov 18:30 (Fabio): screw and clip sounded the same, and so did the normal piano and the coin. Now each object has its own character:
    🎹 nothing: a clean, long piano · 🔩 screw: a gong / gamelan bell (the note almost disappears, inharmonic partials that beat, long)
-   🧽 rubber: a dull thud · 🪙 coin: the note is short and a coin bounces on the strings (tin… tin. tin tintintin, faster and faster)
-   ⚙️ bolt: heavy, low and out of tune · 📄 paper: a rustle · 📎 clip: a sitar: a nasal, buzzing "nyiiing" that bends up a little */
+   🧽 rubber: a dull thud · ⚙️ bolt: heavy, low and out of tune · 📄 paper: a rustle
+   18:44 (Fabio): coin and clip were still the same ("a disturbance on top of the normal piano"). Now they change the whole sound:
+   🪙 coin: a music box / carillon: the piano almost disappears, a high, pure, glassy "ting" an octave and more above
+   📎 clip: a spring: "boiiing", the note wobbles fast and bends down, like a jaw harp */
 SFX.ppiano=a=>{a=a||{};const f=a.f||262,P=[].concat(a.prep||'none'),has=x=>P.includes(x),k=(a.g!=null?a.g:1)*(has('rubber')?2.2:1),bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus},dl=o.delay;
  const mute=has('rubber'),hv=has('bolt')?.55:1,sh=mute?.45:1,gong=has('screw'),sit=has('clip'),coin=has('coin');
- const base=gong?.3:sit?.45:1,bdec=mute?.28:has('paper')?1.1:coin?.9:gong?1.2:2.6;
+ const base=gong?.3:sit?.12:coin?.1:1,bdec=mute?.28:has('paper')?1.1:coin?.5:sit?.5:gong?1.2:2.6;
  for(let n=1;n<=6;n++){const fn=f*n*Math.sqrt(1+.0004*n*n),dec=bdec/(1+n*.35);let g=.3/Math.pow(n,1.25)*k*base;if(mute&&n>2)g*=.3;if(n===1)g*=hv;tone(fn,fn,dec,{g,at:.003,...o})}
- nz(.03,{f0:f*3,Q:1,g:.12*k,at:.001,...o});
+ nz(.03,{f0:f*3,Q:1,g:(coin||sit?.03:.12)*k,at:.001,...o});
  if(mute)tone(f*.5,f*.45,.12,{type:'triangle',g:.18*k,at:.002,...o});
  if(gong){for(const[r,g,d]of[[1,.07,3.2],[2.76,.13,2.8],[5.4,.09,2.2],[8.93,.05,1.5],[1.52,.06,2.6]]){tone(f*r-1.8,f*r-1.8,d*sh,{g:g*k,at:.004,...o});tone(f*r+1.8,f*r+1.8,d*sh,{g:g*k,at:.004,...o})}
   tone(f*.5,f*.5,2.4*sh,{g:.07*k,at:.01,vib:f*.004,vibF:3,...o})}
- if(coin){let t=.12,gap=.2;for(let i=0;i<11;i++){const g=.22*k*(1-i/13);nz(.02,{f0:f*6.3,Q:7,g,at:.001,...o,delay:dl+t});tone(f*7.9,f*7.9,.07,{g:g*.35,at:.001,...o,delay:dl+t});t+=gap;gap*=.72}}
+ if(coin){const h=f*2;for(const[r,g,d]of[[1,.34,1.4],[2.01,.12,.8],[5.4,.07,.35],[8.9,.03,.15]])tone(h*r,h*r,d*sh,{g:g*k,at:.001,...o});nz(.008,{type:'highpass',f0:6000,g:.15*k,at:.001,...o})}
  if(has('bolt')){for(const[r,g,d]of[[1.13,.1,2.6],[2.3,.08,2],[3.1,.06,1.5],[4.6,.04,1]]){tone(f*r-1.5,f*r-1.5,d*sh,{g:g*k,at:.003,...o});tone(f*r+1.5,f*r+1.5,d*sh,{g:g*k,at:.003,...o})}tone(f*.5,f*.5,1.5*sh,{g:.09*k,at:.004,...o})}
  if(has('paper')){tone(f,f,.6,{type:'sawtooth',lp:f*6,g:.1*k,at:.003,...o});nz(.4,{f0:f*4,Q:2.5,g:.13*k,at:.003,...o});nz(.25,{type:'highpass',f0:4000,g:.06*k,at:.003,...o})}
- if(sit){for(const[m,g]of[[1,.13],[2,.07],[3,.04]])tone(f*m,f*m*1.018,1.7*sh,{type:'sawtooth',lp:Math.min(9000,f*9),g:g*k,at:.004,glide:.35,vib:f*m*.006,vibF:6.5,...o});
-  for(let i=0;i<5;i++)nz(.05,{f0:Math.min(8000,f*5),Q:3,g:.05*k*(1-i/5),at:.002,...o,delay:dl+i*.11})}};
+ if(sit){for(const[m,g,t]of[[1,.26,'triangle'],[2,.09,'sawtooth']])tone(f*m*1.5,f*m*.94,1.3*sh,{type:t,lp:f*5,g:g*k,at:.003,glide:.5,vib:f*m*.08,vibF:11,...o});tone(f*.5,f*.47,.5*sh,{type:'triangle',g:.1*k,at:.003,vib:f*.03,vibF:11,...o})}};
 /* 12 Nov 2026: the ice island (Antonio Vivaldigor).
    png: a penguin (or a chick: ch) calls one note; vln: Vivaldigor's ice violin; icl: an icicle; isng: the frozen pond sings (piu!);
    harm: one soft partial of the aurora's harmonic series. Heard also in focus, like the forest's voices. */
