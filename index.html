@@ -616,7 +616,7 @@ const SPC={t:{N:['Tofu','Tofu'],seeds:1,germ:30,ready:120,yield:6,win:480,care:n
  p:{N:['Tomato','Pomodoro'],seeds:3,germ:60,ready:360,yield:20,win:720,care:'water',lv:3},
  c:{N:['Carrot','Carota'],seeds:5,germ:120,ready:720,yield:45,win:1440,care:'weed',lv:5}};
 const LVX=[0,20,60,150,300,500,800,1200];
-const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes, the tool shed and the Caribbean island with its bar!','Pomodori, capanno degli attrezzi e l’isola caraibica con il bar!'],['Field 4!','Il campo 4!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6 and bigger buildings!','Il campo 6 ed edifici più grandi!'],['Field 7!','Il campo 7!'],['Field 8 and the lake island!','Il campo 8 e l’isola del lago!']];
+const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes, the tool shed and the Caribbean island with its bar!','Pomodori, capanno degli attrezzi e l’isola caraibica con il bar!'],['Field 4!','Il campo 4!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6, bigger buildings and the lake island!','Il campo 6, edifici più grandi e l’isola del lago!'],['Field 7!','Il campo 7!'],['Field 8!','Il campo 8!']];
 const FCOST=[null,{t:15},{t:35},{t:90},{t:160},{t:260},{t:400},{t:600}];
 const MAXF=8,CAPS=[30,80,200,500,2000,6000],PENCAP=[0,2,4,6],WATERCAP=[0,3,8],IGMAX=12;
 const igCap=()=>IGMAX; // a little house appears with every new Igorlet (hired, adopted, stray, orphan)
@@ -3115,9 +3115,9 @@ const isShown=o=>{for(let q=o;q;q=q.parent){if(!q.visible)return false;if(q===sc
 
 /* ---------- levels 9 to 16 ---------- */
 LVX.push(1700,2300,3000,3800,4700,5700,6800,8000); // the step keeps growing: +500, +600, +700…
-LVNEW.push(['Level 9: well done!','Livello 9: bravissimi!'],['Level 10!','Livello 10!'],['Level 11!','Livello 11!'],['Level 12: the firefly forest!','Livello 12: il bosco delle lucciole!'],['Level 13!','Livello 13!'],['Level 14!','Livello 14!'],['Level 15!','Livello 15!'],['Level 16: the ice island!','Livello 16: l’isola di ghiaccio!']);
+LVNEW.push(['Level 9: the firefly forest!','Livello 9: il bosco delle lucciole!'],['Level 10!','Livello 10!'],['Level 11!','Livello 11!'],['Level 12: the ice island!','Livello 12: l’isola di ghiaccio!'],['Level 13!','Livello 13!'],['Level 14!','Livello 14!'],['Level 15!','Livello 15!'],['Level 16: well done!','Livello 16: bravissimi!']);
 
-/* ---------- the firefly forest (level 12) ---------- */
+/* ---------- the firefly forest (level 9) ---------- */
 function mushroom(G,x,z,s,glow){const m=new THREE.Group(),st=new THREE.Mesh(new THREE.CylinderGeometry(.18,.26,1.4,10),lam('#efe6cf'));st.position.y=.7;m.add(st);
  const cap=new THREE.Mesh(new THREE.SphereGeometry(.95,18,10,0,TAU,0,Math.PI/2),glow?glowM('#5fb7e6',.35):lam(pick(['#d8443a','#c9542f','#b8383a'])));cap.scale.set(1,.55,1);cap.position.y=1.38;m.add(cap);
  for(let k=0;k<7;k++){const d=new THREE.Mesh(new THREE.SphereGeometry(.09,6,5),lam(glow?'#e9f8ff':'#fff6e6'));const a=k/7*TAU+rnd(),r=.35+rnd()*.45;d.position.set(Math.cos(a)*r,1.38+Math.sqrt(Math.max(0,1-r*r))*.5,Math.sin(a)*r);m.add(d)}
@@ -3133,7 +3133,7 @@ function isleForest(I,G){for(const[x,z,s,gl]of[[-4.2,-38.04,1.5],[3.6,-39.24,1.2
 function flyTick(I,dt){const night=SKY.nk;for(const f of I.flies){f.ph+=dt;f.g.position.set(f.c.x+Math.sin(f.ph*.7)*.6,f.c.y+Math.sin(f.ph*1.3)*.3,f.c.z+Math.cos(f.ph*.5)*.6);f.lit=Math.max(0,f.lit-dt*1.5);
   const tw=.35+.65*Math.max(0,Math.sin(f.ph*2.3)),b=(.25+night*.75)*tw+f.lit;f.hl.material.opacity=Math.min(1,b);f.hl.scale.setScalar(.7+f.lit*1.2)}}
 
-/* ---------- the ice island (level 16) ---------- */
+/* ---------- the ice island (level 12) ---------- */
 function snowPine(G,x,z,s){const t=new THREE.Group(),tr=new THREE.Mesh(new THREE.CylinderGeometry(.12,.18,1,7),lam('#6b4a2e'));tr.position.y=.5;t.add(tr);
  for(let i=0;i<3;i++){const c=new THREE.Mesh(new THREE.ConeGeometry(1.2-i*.3,1.25,12),lam('#2f5a46'));c.position.y=1.45+i*.72;t.add(c);const sn=new THREE.Mesh(new THREE.ConeGeometry(.75-i*.18,.55,12),lam('#f6fbff'));sn.position.y=1.85+i*.72;t.add(sn)}
  blob(t,1);t.scale.setScalar(s);t.position.set(x,0,z);G.add(t);block(x,z,.55*s)}
@@ -3162,14 +3162,14 @@ function pengTick(I,dt){for(const p of I.pengs){const q=p.g.position,v=p.goal.cl
 
 /* ---------- the new islands: each rises from the sea at its level, joined to the first island by a strip of land ----------
    level 3 (was 4 until 11 Nov 2026): the sand island, with palms and little crabs that wander and now and then pinch an Igorlet (it tickles!); an orphan Igorlet waits there
-   level 8: the lake island, a very shallow lake you can walk across, with lily pads and frogs
-   level 12: the firefly forest, giant mushrooms and fireflies that sing a note when you touch them
-   level 16: the ice island, snow, an igloo, a frozen pond to slide on, penguins */
+   level 6 (was 8 until 12 Nov 2026; saves keep the key 8): the lake island, a very shallow lake you can walk across, with lily pads and frogs
+   level 9 (was 12; key 12): the firefly forest, giant mushrooms and fireflies that sing a note when you touch them
+   level 12 (was 16; key 16): the ice island, snow, an igloo, a frozen pond to slide on, penguins */
 const ISLES=[
  {lv:3,sk:4,kind:'sand',cx:31.32,cz:-23.2,rx:8.5,rz:7.2,A:new V3(14.4,0,-12.72),B:new V3(26.82,0,-20.7),k:0,on:false,shown:false,risingT:-1},
- {lv:8,kind:'lake',cx:-31.32,cz:-23.2,rx:8.5,rz:7.2,A:new V3(-14.4,0,-12.72),B:new V3(-26.82,0,-20.7),k:0,on:false,shown:false,risingT:-1},
- {lv:12,kind:'forest',cx:0,cz:-36.54,rx:8,rz:6.5,A:new V3(0,0,-18.6),B:new V3(0,0,-31.54),k:0,on:false,shown:false,risingT:-1},
- {lv:16,kind:'ice',cx:31.32,cz:24.36,rx:8.5,rz:7.2,A:new V3(14.4,0,12.6),B:new V3(26.82,0,20.86),k:0,on:false,shown:false,risingT:-1}];
+ {lv:6,sk:8,kind:'lake',cx:-31.32,cz:-23.2,rx:8.5,rz:7.2,A:new V3(-14.4,0,-12.72),B:new V3(-26.82,0,-20.7),k:0,on:false,shown:false,risingT:-1},
+ {lv:9,sk:12,kind:'forest',cx:0,cz:-36.54,rx:8,rz:6.5,A:new V3(0,0,-18.6),B:new V3(0,0,-31.54),k:0,on:false,shown:false,risingT:-1},
+ {lv:12,sk:16,kind:'ice',cx:31.32,cz:24.36,rx:8.5,rz:7.2,A:new V3(14.4,0,12.6),B:new V3(26.82,0,20.86),k:0,on:false,shown:false,risingT:-1}];
 const ISL2=ISLES[0];
 /* 11 Nov 2026: the admins can give an island (and the sand island's Igorlet) to a player, and take them back. S.farm.ig = {4|8|12|16: time} */
 function isleGift(I){const F=S.farm;return!!(F&&F.ig&&F.ig[I.sk||I.lv])}
@@ -6100,7 +6100,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-0500';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-0600';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
@@ -6177,7 +6177,7 @@ function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
 window.IgorCloud=C;
 /* events forced by the admins for everyone (gev/<id>): every island listens to the last ones */
 try{onSnapshot(query(collection(db,'gev'),orderBy('at','desc'),limit(10)),q=>{if(window.IgorForce)window.IgorForce.global(q.docs.map(d=>{const x=d.data();return{id:d.id,k:x.k,lead:x.lead|0,st:x.st,at:x.at&&x.at.toMillis?x.at.toMillis():0}}))},e=>console.warn('gev',e&&e.code||e))}catch(e){console.warn('gev',e)}
-{const s=document.createElement('script');s.src='/chat.js?v=18';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=19';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
