@@ -1143,7 +1143,7 @@ function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>
   o.pl.position.y=(moving?Math.abs(Math.sin(o.walk))*.08:working?Math.abs(Math.sin(t*9+o.ph))*.1:Math.sin(t*2+o.ph)*.015)+jy;
   o.pl.quaternion.copy(camera.quaternion);if(moving)o.pl.rotateZ(Math.sin(o.walk)*.06);if(working)o.pl.rotateZ(Math.sin(t*9+o.ph)*.12);if(sleeping)o.pl.rotateZ(.25*o.face);
   o.pl.scale.set(o.face,1,1);if(sleeping||o.mode==='rest'){o.ic.visible=true;o.ic.material.map=iconTex.z;o.ic.position.y=IGH+.2+((t*.5+o.ph)%1)*.3}
-  if(o.ride&&!(o.act&&o.act.k==='ride'))o.ride=null;const ry=o.ride?o.ride.y+VEH[o.act.v].seat:0;o.pl.position.y+=ry;
+  if(o.ride&&!(o.act&&o.act.k==='ride'))o.ride=null;const ry=o.ride?o.ride.y+VEH[o.act.v].seat+IGL_RIDE:(where==='out'?groundAt(p.x,p.z):0);o.pl.position.y+=ry;
   const home=(o.mode==='sleep'||o.mode==='rest'||o.mode==='shelter')&&!moving&&o.hi!=null&&L<.2&&!(o.visitT>T);o.grp.visible=!home;o.L.hidden=home||!(o.showT>T);const H=houseObjs[(o.hi||0)%HOUSEP.length];if(H&&o.hi!=null){H.z.visible=home&&o.mode!=='shelter';if(H.z.visible)H.z.position.y=1.5+Math.sin(t*1.6+o.ph*6)*.04}
   {const umb=wet&&o.grp.visible&&o.hat!=='rain'&&!o.ride&&(o.mode==='idle'||o.mode==='sleep'||o.mode==='rest')&&!(SKY.W.storm>.3||SKY.W.hail>.3);if(umb&&!o.umb)o.umb=igUmb(o);if(o.umb){o.umb.visible=umb;if(umb){o.umb.position.y=IGH+.12+o.pl.position.y;o.umb.rotation.z=-.18*o.face+Math.sin(t*1.7+o.ph)*.04}}}
   o.L.pos.set(p.x,IGH+.55+ry,p.z)}
@@ -1547,7 +1547,7 @@ function igorUpdate(t,dt){blink(t);let moving=false;
    const camRight=new V3().setFromMatrixColumn(camera.matrixWorld,0);const d=v.dot(camRight);if(Math.abs(d)>.25)IG.face=d>0?1:-1;moving=true;IG.walk+=dt*10}}
  else if(started&&!reduce&&where==='out'&&T-lastAct>8){IG.idle-=dt;if(IG.idle<=0&&sheet.hidden){IG.idle=6+Math.random()*7;IG.manual=false;for(let k=0;k<12;k++){const a=Math.random()*TAU,r=1+Math.random()*2.2,x=igor.position.x+Math.cos(a)*r,z=igor.position.z+Math.sin(a)*r;if(walkable(x,z)&&Math.hypot(x,z+3)<6){IG.target=new V3(x,0,z);IG.arrive=null;break}}}}
  igPlane.position.y=.02+(moving?Math.abs(Math.sin(IG.walk))*.16:Math.sin(t*2)*.03);
- if(IG.jy>0){IG.jv-=17*dt;IG.jy+=IG.jv*dt;if(IG.jy<=0){IG.jy=0;IG.jv=0}}{const sy=where==='out'&&!RIDE?shoreY(igor.position.x,igor.position.z):0;igPlane.position.y+=IG.jy+rideY()+sy;const bl=igor.userData.blob||(igor.userData.blob=igor.children.find(c=>c.material===shadowMat));if(bl)bl.position.y=.02+sy}if(RIDE)igPlane.position.y-=moving?Math.abs(Math.sin(IG.walk))*.16:0;
+ if(IG.jy>0){IG.jv-=17*dt;IG.jy+=IG.jv*dt;if(IG.jy<=0){IG.jy=0;IG.jv=0}}{const sy=where==='out'&&!RIDE?shoreY(igor.position.x,igor.position.z)+isleY(igor.position.x,igor.position.z):0;igPlane.position.y+=IG.jy+rideY()+sy;const bl=igor.userData.blob||(igor.userData.blob=igor.children.find(c=>c.material===shadowMat));if(bl)bl.position.y=.02+sy}if(RIDE)igPlane.position.y-=moving?Math.abs(Math.sin(IG.walk))*.16:0;
  igPlane.quaternion.copy(camera.quaternion);if(moving)igPlane.rotateZ(Math.sin(IG.walk)*.05);
  igPlane.scale.set(IG.face,IG.jy>0?1+clamp(IG.jv*.025,-.08,.1):moving?1:1+Math.sin(t*2)*.012,1);
  igBring();
@@ -3207,6 +3207,13 @@ const isleN1=(I,x,z)=>segD(x,z,I.A.x,I.A.z,I.B.x,I.B.z);
 const isleE=(x,z)=>{let m=Infinity;for(const I of ISLES)if(I.on)m=Math.min(m,isleE1(I,x,z));return m};
 const isleNeck=(x,z)=>{let m=Infinity;for(const I of ISLES)if(I.on)m=Math.min(m,isleN1(I,x,z));return m};
 function isleLand(x,z,m=0){for(const I of ISLES)if(I.on&&(isleE1(I,x,z)<.86-m/8||isleN1(I,x,z)<1-m))return true;return false}
+/* 12 Nov 2026: the height of the islets' ground (same shapes as isleMesh), so Igor and the Igorlets stand on the dunes, snow and moss
+   instead of sinking into them */
+function isleY(x,z){let y=0;for(const I of ISLES){if(!I.on)continue;const e=isleE1(I,x,z),dn=isleN1(I,x,z);let h=-9;
+  if(e<1){if(I.kind==='sand')h=Math.max(.02,(1-e)*.3+Math.sin(x*.9)*Math.cos(z*.7)*.08);else if(I.kind==='forest')h=Math.max(.02,(1-e)*.25+Math.sin(x*.8)*Math.cos(z*.9)*.05);
+   else if(I.kind==='ice')h=Math.max(.02,(1-e)*.35+Math.sin(x*.7)*Math.cos(z*.6)*.07);else h=e<.8?0:.04+(e-.8)*.6}
+  if(dn<1.25)h=Math.max(h,.03);if(Math.hypot(x,z*1.12)<R+.2)h=Math.min(h,0);if(h>y)y=h}return y}
+const groundAt=(x,z)=>Math.max(-.2,shoreY(x,z))+isleY(x,z),IGL_RIDE=.16;
 function isleIn(x,z,m=0){for(const I of ISLES)if(I.on&&isleE1(I,x,z)<.86-m/8)return true;return false}
 function isleSide(x,z){for(let i=0;i<ISLES.length;i++){const I=ISLES[i];if(I.on&&isleE1(I,x,z)<.86)return'i'+i}if(Math.hypot(x,z*1.12)<R-1.5)return'main';for(let i=0;i<ISLES.length;i++){const I=ISLES[i];if(I.on&&isleN1(I,x,z)<1.05)return'n'+i}return'main'}
 // the way across: along the strip of land (from one new island to another, through the first)
@@ -3447,6 +3454,8 @@ const barF=()=>{const F=FM();F.bar=F.bar||{};return F.bar};
  let bi=0,bnear=false,bnext=0;const BL1=label(BS[0],[BARN+' · barista',BARN+' · barista'],new V3(-.4,IGH2*1.35+1.05,-2.2),()=>barMenu(),0);BL1.hidden=true;
  hit(bpl,.6,()=>{walkIn(new V3(-.4,0,-.55),()=>barMenu())},'barigor',.6);
  BUILD='bar';label(['Smoothies','Frullati'],BARN,new V3(1.7,1.9,-1.35),()=>walkIn(new V3(-.4,0,-.55),()=>barMenu()));
+ /* 12 Nov 2026: the TV says it can be switched on (players didn't know they could tap it) */
+ label(['📺 Igor TV','📺 Igor TV'],['tap to switch it on · weather, ads, firefighters','tocca per accenderla · meteo, pubblicità, pompieri'],new V3(4.7,2.75,.4),()=>walkIn(new V3(3.2,0,.4),()=>tvOn()),4);
  BUILD='out';
  updaters.push(t=>{if(where!=='bar')return;barPaint();bpl.quaternion.copy(camera.quaternion);bpl.position.y=.5+Math.abs(Math.sin(t*2.4))*.04;
   BL.forEach((b,i)=>{b.visible=Math.sin(t*2+i*1.3)>-.6});
@@ -3916,10 +3925,13 @@ function hatFire(c){c.save();c.translate(384,124);c.rotate(.42);c.lineJoin='roun
 HATS.fire=hatFire;
 const insDamaged=k=>insOut(k)>0||insMiss(k)>0;
 function rescFix(k){const M=insS(k);M.off=M.off.map(()=>0);M.sl=M.sl.map(()=>0);delete M.miss;M.rl=0;delete M.resc;fmDirty=true}
-function rescCall(k,quiet){const I=INSK[k],M=insS(k);if(!I||!insOn(I)||VISIT)return 0;if(M.resc)return 1;if(!insDamaged(k))return 0;
- const RC=rescCost(k);if(!pay(RC)){if(!quiet)say(NEED(RC),2.6);return-1}M.resc=Date.now()+RESC_T;fmDirty=true;save();try{hudFarm()}catch(_){}rescGo(k);return 2}
-function rescAll(){let n=0,short=false;for(const I of INS){if(!insOn(I)||!insDamaged(I.k)||insS(I.k).resc)continue;const r=rescCall(I.k,true);if(r===2)n++;if(r<0){short=true;break}}
- bubbleQ.length=0;bubbleT=0;say(n?tt(`Instrument rescue called for ${n} instrument${n>1?'s':''}: the boat${n>1?'s are':' is'} coming!`,`Soccorso strumenti chiamato per ${n} strument${n>1?'i':'o'}: arriva${n>1?'no le barche':' la barca'}!`)+(short?' '+tt('Not enough for the others.','Per gli altri non basta.'):''):short?tt('Not enough tofu ants or seeds for the firefighters.','Non bastano formiche di tofu o semi per i pompieri.'):tt('Every instrument is fine!','Tutti gli strumenti stanno bene!'),3.2);return n}
+function rescCall(k,quiet){const I=INSK[k],M=insS(k);if(!I||!insOn(I)||VISIT)return 0;if(M.resc||M.rq)return 1;if(!insDamaged(k))return 0;
+ const RC=rescCost(k);if(!pay(RC)){if(!quiet)say(NEED(RC),2.6);return-1}if(rescNear(k)){M.resc=Date.now()+RESC_T;rescGo(k)}else{M.rq=Date.now();if(!quiet){bubbleQ.length=0;bubbleT=0;say(tt(`Called! The firefighters will come when you go near the ${N(I.N).toLowerCase()}.`,`Chiamati! I pompieri arrivano quando vai vicino ${I.k==='gls'?'ai':'alla'} ${N(I.N).toLowerCase()}.`),3.6)}}fmDirty=true;save();try{hudFarm()}catch(_){}return 2}
+/* 12 Nov 2026: the firefighters come only when Igor is outside near the instrument, so the player sees them (called from the bar TV: they wait) */
+function rescNear(k){const o=insO[k];return!!(o&&where==='out'&&started&&igor.position.distanceTo(o.g.position.clone().setY(0))<9)}
+updaters.push(()=>{if(!S.farm||VISIT||where!=='out'||!started)return;for(const I of INS){const M=insS(I.k);if(M.rq&&!M.resc&&insOn(I)&&rescNear(I.k)){delete M.rq;M.resc=Date.now()+RESC_T;fmDirty=true;save();rescGo(I.k)}}});
+function rescAll(){let n=0,short=false;for(const I of INS){if(!insOn(I)||!insDamaged(I.k)||insS(I.k).resc||insS(I.k).rq)continue;const r=rescCall(I.k,true);if(r===2)n++;if(r<0){short=true;break}}
+ bubbleQ.length=0;bubbleT=0;say(n?tt(`Instrument rescue called for ${n} instrument${n>1?'s':''}: the firefighters come when you go near ${n>1?'each one':'it'}!`,`Soccorso strumenti chiamato per ${n} strument${n>1?'i':'o'}: i pompieri arrivano quando ti avvicini ${n>1?'a ciascuno':'allo strumento'}!`)+(short?' '+tt('Not enough for the others.','Per gli altri non basta.'):''):short?tt('Not enough tofu ants or seeds for the firefighters.','Non bastano formiche di tofu o semi per i pompieri.'):tt('Every instrument is fine!','Tutti gli strumenti stanno bene!'),3.2);return n}
 /* --- the boat and the firefighters --- */
 const RESCO=[];
 function rescBoat(){const g=new THREE.Group(),red=lam('#d8322a'),wh=lam('#f6f1e3');
@@ -3949,13 +3961,13 @@ updaters.push((t,dt)=>{if(!S.farm||VISIT)return;const tn=Date.now();
   if(u>=5.5&&u<10&&vis&&Math.floor(u*2.5)!==Math.floor((u-dt)*2.5))snd('pop');
   if(u>=15.6){world.remove(r.boat);r.men.forEach(q=>world.remove(q.pl));RESCO.splice(n,1)}}});
 /* --- where you call them: the instrument panel, and the TV --- */
-{const _insSheet2=insSheet;insSheet=function(){_insSheet2();if(VISIT)return;const k=INSEL,M=insS(k);if(!insDamaged(k)&&!M.resc)return;
- const html=M.resc?`<p class="shn">🚒 ${tt('The instrument rescue is on its way: the firefighters will fix everything.','Il soccorso strumenti sta arrivando: i pompieri sistemano tutto.')}</p>`
+{const _insSheet2=insSheet;insSheet=function(){_insSheet2();if(VISIT)return;const k=INSEL,M=insS(k);if(!insDamaged(k)&&!M.resc&&!M.rq)return;
+ const html=M.rq&&!M.resc?`<p class="shn">🚒 ${tt('The firefighters are called: they come as soon as you are near this instrument.','I pompieri sono chiamati: arrivano appena sei vicino a questo strumento.')}</p>`:M.resc?`<p class="shn">🚒 ${tt('The instrument rescue is on its way: the firefighters will fix everything.','Il soccorso strumenti sta arrivando: i pompieri sistemano tutto.')}</p>`
   :`<div class="mbt" style="margin:6px 0"><button type="button" data-resc="${k}">🚒 ${tt('Instrument rescue: fix everything','Soccorso strumenti: ripara tutto')} ${cst(rescCost(k))}</button></div>`;
  const h=sb.querySelectorAll('.shn');const at=h[h.length-1]||sb.querySelector('h2');if(at)at.insertAdjacentHTML('afterend',html)}}
 function rescueSheet(){const L=INS.filter(I=>insOn(I)&&(insDamaged(I.k)||insS(I.k).resc));
  openSheet('rescue',`<h2>🚒 ${tt('Instrument rescue','Soccorso strumenti')}</h2><p class="shn">${tt('The rain put them out of tune, the tempest took their pieces away? The firefighters come by boat and fix everything.','La pioggia li ha stonati, la tempesta si è portata via dei pezzi? I pompieri arrivano in barca e sistemano tutto.')} ${tt(`From ${costTxt(RESC)} per instrument, more if it is badly damaged.`,`Da ${costTxt(RESC)} per strumento, di più se è messo male.`)}</p>
- ${L.length?`<ul class="mell">${L.map(I=>{const M=insS(I.k),o=insOut(I.k),ms=insMiss(I.k);return`<li><span style="flex:1">${N(I.N)} <small>${[o?`${o} ${tt('out of tune',o>1?'stonate':'stonata')}`:'',ms?`${ms} ${tt(ms>1?'pieces lost':'piece lost',ms>1?'pezzi persi':'pezzo perso')}`:''].filter(Boolean).join(' · ')}</small></span>${M.resc?`<span>🚒 ${tt('on the way','in arrivo')}</span>`:`<button type="button" data-resc="${I.k}">🚒 ${tt('Call','Chiama')} ${cst(rescCost(I.k))}</button>`}</li>`}).join('')}</ul>
+ ${L.length?`<ul class="mell">${L.map(I=>{const M=insS(I.k),o=insOut(I.k),ms=insMiss(I.k);return`<li><span style="flex:1">${N(I.N)} <small>${[o?`${o} ${tt('out of tune',o>1?'stonate':'stonata')}`:'',ms?`${ms} ${tt(ms>1?'pieces lost':'piece lost',ms>1?'pezzi persi':'pezzo perso')}`:''].filter(Boolean).join(' · ')}</small></span>${M.resc||M.rq?`<span>🚒 ${tt(M.rq&&!M.resc?'called: go near it':'on the way',M.rq&&!M.resc?'chiamati: vai vicino':'in arrivo')}</span>`:`<button type="button" data-resc="${I.k}">🚒 ${tt('Call','Chiama')} ${cst(rescCost(I.k))}</button>`}</li>`}).join('')}</ul>
  ${L.filter(I=>!insS(I.k).resc).length>1?`<div class="row"><button type="button" class="m" data-resc="all">🚒 ${tt('Call for all','Chiama per tutti')}</button></div>`:''}`:`<p>${tt('Every instrument is fine: no need for the firefighters!','Tutti gli strumenti stanno bene: niente pompieri!')}</p>`}`)}
 sb.addEventListener('click',e=>{const b=e.target.closest('button[data-resc],button[data-tv="resc"]');if(!b)return;e.stopPropagation();
  if(b.dataset.tv==='resc'){rescueSheet();return}const k=b.dataset.resc;
@@ -3984,7 +3996,15 @@ for(let k=0;k<4;k++){const b={};birdNew(b,pickW([['gull',3],['sparrow',3],['robi
 // the heron stands in the lake, the owl sits in the firefly forest at night (or on the island's big tree)
 const heron=mkBird('heron');heron.visible=false;scene.add(heron);animAdd('heron',heron,()=>heron.visible);
 const owl=mkBird('owl');owl.visible=false;scene.add(owl);animAdd('owl',owl,()=>owl.visible);
-for(const w of owl.userData.w)w.rotation.z=0;
+/* 12 Nov 2026: perched birds fold their wings (they looked frozen in mid-flight); the heron gets long legs;
+   the owl sits on top of a real tree of the island (the old fixed spot had lost its tree) */
+function birdPerch(b,legs){for(const[i,w]of b.userData.w.entries()){const s=i?1:-1;w.scale.set(1.05,.15,.8);w.position.set(s*.125,0,-.02);w.rotation.set(0,0,s*Math.PI/2)}
+ if(legs){const lm=lam('#d9a24a');b.userData.legs=[];for(const s of[-1,1]){const l=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,legs,5),lm);l.position.set(s*.05,-.08-legs/2,0);b.add(l);b.userData.legs.push(l)}
+  const nk=new THREE.Mesh(new THREE.CylinderGeometry(.035,.045,.16,6),lam(SPECIES.heron.col));nk.position.set(0,.12,.16);nk.rotation.x=.5;b.add(nk);b.children[1].position.set(0,.22,.24);b.children[2].position.set(0,.21,.38)}}
+birdPerch(heron,.3);birdPerch(owl,0);
+let owlTree=null,owlT=0;
+function owlPerch(){let best=null,bh=0;const bx=new THREE.Box3();for(const tr of trees){const t=tr.t;if(!t.parent||!t.visible||(tr.o!=null&&tr.o<.5))continue;const p=t.getWorldPosition(new V3());if(Math.hypot(p.x,p.z*1.12)>R-2)continue;
+  bx.setFromObject(t);const h=bx.max.y;if(h>bh+.3||(best&&Math.abs(h-bh)<.3&&Math.hypot(p.x+4.5,p.z+6.2)<Math.hypot(best.x+4.5,best.z+6.2))){bh=Math.max(bh,h);best=new V3((bx.min.x+bx.max.x)/2,h,(bx.min.z+bx.max.z)/2)}}return best}
 let birdSwap=fT(60);
 updaters.push((t,dt)=>{dt=Math.min(dt,.1);const out=where==='out';
  for(const f of FISH){f.a+=f.w*dt;let x=Math.cos(f.a)*f.r,z=Math.sin(f.a)*f.r/1.12,y=-.56;
@@ -3996,8 +4016,8 @@ updaters.push((t,dt)=>{dt=Math.min(dt,.1);const out=where==='out';
  for(const b of BIRDS){b.a+=b.w*dt;const x=b.cx+Math.cos(b.a)*b.r,z=b.cz+Math.sin(b.a)*b.r,y=b.h+Math.sin(b.a*3)*.4;b.o.position.set(x,y,z);b.o.rotation.y=Math.atan2(-Math.sin(b.a)*Math.sign(b.w),Math.cos(b.a)*Math.sign(b.w));
   const fl=Math.sin(T*(b.sp==='gull'?6:14)+b.a*7)*.6;b.o.userData.w[0].rotation.z=fl;b.o.userData.w[1].rotation.z=-fl;b.o.visible=out&&day}
  if(T>birdSwap){birdSwap=T+fT(60+Math.random()*60);const b=pick(BIRDS);birdNew(b,pickW([['gull',3],['sparrow',3],['robin',1.5]]))}
- const L=ISLES[1];heron.visible=out&&day&&L&&L.on;if(heron.visible){heron.position.set(L.cx+2.2,.35,L.cz+1.2+Math.sin(T*.1)*.4);heron.rotation.y=Math.sin(T*.2)*.8;for(const w of heron.userData.w)w.rotation.z=0}
- const Fo=ISLES[2],owlOn=out&&SKY.nk>.6;owl.visible=owlOn;if(owlOn){if(Fo&&Fo.on)owl.position.set(Fo.cx+3.6,2.2,Fo.cz-2.7);else owl.position.set(-4.5,3.3,-6.2);owl.rotation.y=Math.sin(T*.4)*.9}});
+ const L=ISLES[1];heron.visible=out&&day&&L&&L.on;if(heron.visible){heron.position.set(L.cx+2.2,.62+Math.max(0,Math.sin(T*.7))*.0,L.cz+1.2+Math.sin(T*.1)*.4);heron.rotation.y=Math.sin(T*.2)*.8;const pk=Math.sin(T*.37);heron.rotation.x=pk>.92?(pk-.92)*6:0;const lg=heron.userData.legs;if(lg){const up=Math.sin(T*.13)>.3;lg[1].scale.y=up?.55:1;lg[1].position.y=up?-.08-.3*.55/2+.0:-.23}}
+ const Fo=ISLES[2],owlOn=out&&SKY.nk>.6;owl.visible=owlOn;if(owlOn){if(Fo&&Fo.on)owl.position.set(Fo.cx+3.6,2.2,Fo.cz-2.7);else{if(T>owlT){owlT=T+20;owlTree=owlPerch()}if(owlTree)owl.position.copy(owlTree).add(new V3(0,.12,0));else owl.visible=false}owl.rotation.y=Math.sin(T*.4)*.9}});
 // crabs and frogs of the islands go into the registry
 for(const I of ISLES){if(I.crabs)for(const c of I.crabs)animAdd(c.g.userData.sp,c.g);if(I.frogs)for(const f of I.frogs)animAdd(f.g.userData.sp,f.g)}
 
@@ -5263,16 +5283,18 @@ function lkFrogTap(E){if(!lkVis())return;const m=pick([60,62,64,67,69,72]);E.cT=
  bubbleQ.length=0;bubbleT=0;say(tt(`${N(FSP[E.sp].N)}: “${NNAME[m%12][0]}!”`,`${N(FSP[E.sp].N)}: “${NNAME[m%12][1]}!”`),2)}
 lkFrogsSync(true);
 /* ---------- the tadpoles: a black head and a wiggling tail, like a quaver ---------- */
-const lkLeafTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='rgba(247,236,212,.95)';g.beginPath();g.arc(32,32,28,0,TAU);g.fill();g.strokeStyle='#2b2018';g.lineWidth=3;g.stroke();g.font='34px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('🌿',32,35);return new THREE.CanvasTexture(c)})();
+const lkLeafTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='rgba(247,236,212,.95)';g.beginPath();g.arc(32,32,28,0,TAU);g.fill();g.strokeStyle='#2b2018';g.lineWidth=3;g.stroke();g.font='34px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('🍎',32,35);return new THREE.CanvasTexture(c)})();
 function lkTadMesh(id){const g=new THREE.Group(),blk=lam('#1d2226');const hd=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),blk);hd.scale.set(1.25,.85,1);g.add(hd);
  const tl=new THREE.Group();tl.position.x=-.07;const tm=new THREE.Mesh(new THREE.PlaneGeometry(.2,.07).translate(-.1,0,0),lam('#2a3036',{side:THREE.DoubleSide}));tm.rotation.x=-Math.PI/2;tl.add(tm);g.add(tl);
  const eye=new THREE.Mesh(new THREE.SphereGeometry(.018,6,5),lam('#f4f4f4'));eye.position.set(.05,.03,.035);g.add(eye);
  const legs=new THREE.Group();for(const s of[-1,1]){const l=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,.08,4),blk);l.rotation.x=Math.PI/2;l.rotation.z=s*.6;l.position.set(-.06,0,s*.05);legs.add(l)}legs.visible=false;g.add(legs);
  const lf=new THREE.Mesh(new THREE.PlaneGeometry(.32,.32),curve(new THREE.MeshBasicMaterial({map:lkLeafTex,transparent:true,depthWrite:false,side:THREE.DoubleSide})));lf.position.y=.42;lf.visible=false;g.add(lf);
- LKI.G.add(g);BUILD='out';const ht=hit(g,.42,()=>lkTadTap(id),'tadpole',.05);return{g,tl,legs,lf,ht,ph:Math.random()*TAU}}
+ LKI.G.add(g);BUILD='out';const ht=hit(g,.75,()=>lkTadTap(id),'tadpole',.05);
+ const lb=label(['🐸 Hungry tadpole','🐸 Girino affamato'],'',new V3(),()=>lkTadTap(id),6);lb.hidden=true;
+ return{g,tl,legs,lf,ht,lb,ph:Math.random()*TAU}}
 const lkFeedable=(t,now)=>!t.f.length||now-t.f[t.f.length-1]>=FEEDH;
 function lkTadSync(){const L=lkF(),ids=new Set(L.tad.map(t=>t.id));
- for(const[id,o]of LK.tads)if(!ids.has(id)){LKI.G.remove(o.g);const k=clickables.indexOf(o.ht);if(k>=0)clickables.splice(k,1);LK.tads.delete(id)}
+ for(const[id,o]of LK.tads)if(!ids.has(id)){LKI.G.remove(o.g);const k=clickables.indexOf(o.ht);if(k>=0)clickables.splice(k,1);if(o.lb){o.lb.el.remove();const j=labels.indexOf(o.lb);if(j>=0)labels.splice(j,1)}LK.tads.delete(id)}
  for(const t of L.tad)if(!LK.tads.has(t.id))LK.tads.set(t.id,lkTadMesh(t.id))}
 function lkSpawn(L,now){let p=null;for(let k=0;k<30&&!p;k++){const a=Math.random()*TAU,e=.22+Math.random()*.36,q=lkE(a,e);if(q.distanceTo(lkE(LK_AD,LK_GE))<2.2)continue;if(L.tad.some(t=>Math.hypot(t.x-q.x,t.z-q.z)<1.3))continue;p=q}
  if(!p)p=lkE(Math.random()*TAU,.3);L.tad.push({id:'t'+now.toString(36)+Math.floor(Math.random()*999),x:+p.x.toFixed(2),z:+p.z.toFixed(2),f:[],b:now})}
@@ -5285,11 +5307,12 @@ function lkTadTap(id){if(!lkVis())return;const L=lkF(),i=L.tad.findIndex(t=>t.id
  walkNear(lkTadPos(t),.7,()=>{const L=lkF(),j=L.tad.findIndex(q=>q.id===id);if(j<0)return;const t=L.tad[j],now=Date.now();
   if(VISIT){say(tt('A tadpole! It looks like a quaver with a tail.','Un girino! Sembra una croma con la coda.'),2.6);return}
   if(!lkFeedable(t,now)){say(tt(`It has just eaten: it will be hungry again in ${fmtL(t.f[t.f.length-1]+FEEDH-now)}.`,`Ha appena mangiato: avrà di nuovo fame tra ${fmtL(t.f[t.f.length-1]+FEEDH-now)}.`),3);return}
-  lkFeed(j,false)})}
+  const U=FUN();if(!(U.fruit>0)){say(tt('Tadpoles love apples 🍎! Shake a tree with fruit on the big island, then come back.','Ai girini piacciono le mele 🍎! Scuoti un albero con la frutta sull’isola grande, poi torna qui.'),4);return}
+  U.fruit--;lkFeed(j,false)})}
 function lkFeed(i,byIg,o){const L=lkF(),t=L.tad[i];if(!t)return;const now=Date.now();t.f.push(now);if(byIg)t.ig=1;snd('munch');
  const n=t.f.length;let msg='';
  if(n>=3){L.tad.splice(i,1);msg=lkBorn(byIg)}
- else if(!byIg)msg=n===1?tt('Yum! A bit of duckweed. It will be hungry again in 4 hours.','Gnam! Un po’ di lenticchie d’acqua. Avrà di nuovo fame tra 4 ore.'):tt('Look: its little legs are coming out! One more meal and it’s a frog.','Guarda: gli spuntano le zampette! Ancora un pasto e diventa una rana.');
+ else if(!byIg)msg=n===1?tt('Yum! An apple! It will be hungry again in 4 hours.','Gnam! Una mela! Avrà di nuovo fame tra 4 ore.'):tt('Look: its little legs are coming out! One more meal and it’s a frog.','Guarda: gli spuntano le zampette! Ancora un pasto e diventa una rana.');
  fmDirty=true;save();lkTadSync();if(msg){bubbleQ.length=0;bubbleT=0;say(msg,4.2)}}
 function lkBorn(byIg){const L=lkF(),sp=lkRoll(),first=!L.seen[sp];L.seen[sp]=(L.seen[sp]|0)+1;let extra='';
  if(L.fr.length<CHOIRMAX)L.fr.push({sp,at:Date.now()});
@@ -5536,91 +5559,71 @@ function lkSkipDone(n){const L=lkF();let msg;setTimeout(()=>{try{skLanded()}catc
  else if(n>=8){msg=tt('Eight notes: the whole octave! Do re mi fa sol la si do!','Otto note: l’ottava completa! Do re mi fa sol la si do!');const td=new Date().toDateString();if(!VISIT&&L.skD!==td){L.skD=td;S.seeds=(S.seeds|0)+2;msg+=' '+tt('+2 seeds (once a day).','+2 semi (una volta al giorno).');setTimeout(()=>{try{hudFarm()}catch(e){}},50)}}
  else msg=pick(tt([`${n} bounces! The scale stops at ${NNAME[SKN[n-1]%12][0]}…`,`${n} bounces. Let’s try for the octave!`,`${n}! A bit flatter and it goes further.`],[`${n} rimbalzi! La scala si ferma al ${NNAME[SKN[n-1]%12][1]}…`,`${n} rimbalzi. Proviamo a fare l’ottava!`,`${n}! Un po’ più piatto e va più lontano.`]));
  if(!VISIT&&n>(L.sk|0)){L.sk=n;fmDirty=true}if(!VISIT)save();bubbleQ.length=0;bubbleT=0;say(msg,3.2)}
-/* ---------- 🪨 12 Nov 2026: rimbalzello as three little skill games, in place of the joystick ----------
-   Igor stays on the shore; a small round panel takes the joystick's place. The three games take turns:
-   0 the ring that shrinks faster and faster (tap when it is as big as the stone),
-   1 the tilt (find the right tilt for this throw: the stone glows and stops trembling as you get closer, then ✓),
-   2 the stone going round a circle at an uneven speed (tap when it is inside the little window).
+/* ---------- 🪨 12 Nov 2026: rimbalzello as little skill games, in place of the joystick ----------
+   Igor stays on the shore; a small round panel takes the joystick's place. Two games take turns (16:15: the tilt game is gone):
+   0 the ring that shrinks faster and faster (tap when it is as big as the stone; the stone changes size every throw),
+   1 the stone going round a circle at an uneven speed (tap when it is inside the window; the window changes size every throw).
+   Each game has its own level (lkF().skL): every 8 bounces (the octave) it gets harder: faster, less margin, smaller windows.
    The better the tap, the more bounces (0 = straight into the water, 8 = the octave). */
 let SKG=null;
-const SKSZ=140,SKC=SKSZ/2,SKRS=19;
+const SKSZ=140,SKC=SKSZ/2,SKMAXL=12;
 (()=>{const st=document.createElement('style');st.textContent=`
 #skp{position:fixed;z-index:6;left:calc(16px + env(safe-area-inset-left,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:${SKSZ}px;height:${SKSZ}px;touch-action:none;user-select:none;-webkit-user-select:none}
 #skp canvas{width:${SKSZ}px;height:${SKSZ}px;display:block;border-radius:50%;cursor:pointer}
-#skp .skx,#skp .skok{position:absolute;border-radius:50%;background:#f7ecd4;border:3px solid #2b2018;box-shadow:0 3px 0 #2b2018;color:#2b2018;padding:0;line-height:1;font-weight:700}
-#skp .skx{right:-8px;top:-8px;width:32px;height:32px;font-size:17px}
-#skp .skok{right:-12px;bottom:-6px;width:46px;height:46px;font-size:22px}
-#skp .skcap{position:absolute;left:0;bottom:calc(100% + 8px);width:max-content;max-width:min(260px,calc(100vw - 40px));padding:5px 10px;border-radius:12px;background:rgba(20,26,34,.72);color:#f7ecd4;font:600 12.5px/1.3 var(--toon,system-ui);pointer-events:none}`;document.head.appendChild(st)})();
-const SKCAP=g=>{const tch=document.documentElement.classList.contains('touch');return g===0?tt('Tap when the ring is as big as the stone'+(tch?'':' (space)'),'Tocca quando il cerchio è grande come il sasso'+(tch?'':' (spazio)'))
- :g===1?tt('Tilt the stone until it shines and stops trembling, then ✓','Inclina il sasso finché brilla e non trema più, poi ✓')
- :tt('Tap when the stone is in the little window'+(tch?'':' (space)'),'Tocca quando il sasso è nella finestrella'+(tch?'':' (spazio)'))};
+#skp .skx{position:absolute;border-radius:50%;background:#f7ecd4;border:3px solid #2b2018;box-shadow:0 3px 0 #2b2018;color:#2b2018;padding:0;line-height:1;font-weight:700;right:-8px;top:-8px;width:32px;height:32px;font-size:17px}
+#skp .skcap{position:absolute;left:0;bottom:calc(100% + 8px);width:max-content;max-width:min(260px,calc(100vw - 40px));padding:5px 10px;border-radius:12px;background:rgba(20,26,34,.72);color:#f7ecd4;font:600 12.5px/1.3 var(--toon,system-ui);pointer-events:none}
+#skp .skcap b{color:#ffd34e;font-weight:700}`;document.head.appendChild(st)})();
+const skLv=g=>{const L=lkF();if(!Array.isArray(L.skL))L.skL=[0,0];return Math.min(SKMAXL,L.skL[g]|0)};
+const SKCAP=g=>{const tch=document.documentElement.classList.contains('touch'),sp=tch?'':tt(' (space)',' (spazio)');return(g===0?tt('Tap when the ring is as big as the stone','Tocca quando il cerchio è grande come il sasso'):tt('Tap when the stone is in the window','Tocca quando il sasso è nella finestrella'))+sp+` · <b>${tt('lv.','liv.')} ${skLv(g)+1}</b>`};
 function skB(q){return q<=0?0:Math.min(8,1+Math.floor(q*8))} // 0 = falls in, 8 = the octave
-function skInit(g){const R=Math.random;
- if(g===0)return{g,r:SKC-5,v:14+R()*10,a:30+R()*18};
- if(g===1){const an=R()*Math.PI*2,rd=.35+R()*.5;return{g,x:0,y:0,tx:Math.cos(an)*rd,ty:Math.sin(an)*rd,pt:0}}
- const ac=R()*Math.PI*2;return{g,th:ac+Math.PI*(.7+R()*.6),ac,hw:.19,w0:2+R()*.8,p1:R()*6,p2:R()*6,lt:0}}
+function skInit(g){const R=Math.random,lv=skLv(g);
+ if(g===0){const rs=12+R()*15;return{g,lv,rs,tol:Math.max(3.2,10-lv*.6)*(.8+rs/60),r:SKC-5,v:(14+R()*8)*(1+lv*.13),a:(30+R()*14)*(1+lv*.17)}}
+ const ac=R()*Math.PI*2,hw=Math.max(.07,(.24-lv*.013)*(.65+R()*.75));
+ return{g,lv,th:ac+Math.PI*(.7+R()*.6),ac,hw,w0:(1.9+R()*.7)*(1+lv*.1),irr:Math.min(.85,.45+lv*.035),p1:R()*6,p2:R()*6,lt:0,st:8+R()*5}}
 function lkSkipGame(){if(!lkVis())return;if(SKG){if(SKG.ph==='again')skNext();return}
- const L=lkF(),g=(L.skG|0)%3;try{for(const k in keys)keys[k]=false}catch(e){}try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(e){}
- const el=document.createElement('div');el.id='skp';el.innerHTML=`<div class="skcap"></div><canvas width="${SKSZ*2}" height="${SKSZ*2}"></canvas><button type="button" class="skok" hidden>✓</button><button type="button" class="skx" aria-label="${tt('Close','Chiudi')}">×</button>`;document.body.appendChild(el);
- SKG={el,cv:el.querySelector('canvas'),ph:'play',idle:0,res:null,s:skInit(g),drag:false,keys:{}};SKG.cx=SKG.cv.getContext('2d');SKG.cx.scale(2,2);
+ const L=lkF(),g=(L.skG|0)%2;try{for(const k in keys)keys[k]=false}catch(e){}try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(e){}
+ const el=document.createElement('div');el.id='skp';el.innerHTML=`<div class="skcap"></div><canvas width="${SKSZ*2}" height="${SKSZ*2}"></canvas><button type="button" class="skx" aria-label="${tt('Close','Chiudi')}">×</button>`;document.body.appendChild(el);
+ SKG={el,cv:el.querySelector('canvas'),ph:'play',idle:0,res:null,up:false,s:skInit(g)};SKG.cx=SKG.cv.getContext('2d');SKG.cx.scale(2,2);
  el.querySelector('.skx').onclick=e=>{e.stopPropagation();skClose()};
- el.querySelector('.skok').onclick=e=>{e.stopPropagation();skPress()};
  el.addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.closest('button'))return;e.preventDefault();if(!SKG)return;SKG.idle=0;
-  if(SKG.ph==='again'){skNext();return}if(SKG.ph!=='play')return;
-  if(SKG.s.g===1){SKG.drag=true;try{SKG.cv.setPointerCapture(e.pointerId)}catch(_){}skTiltAt(e)}else skPress()});
- el.addEventListener('pointermove',e=>{if(SKG&&SKG.drag&&SKG.ph==='play'){e.preventDefault();skTiltAt(e)}});
- const up=()=>{if(SKG)SKG.drag=false};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+  if(SKG.ph==='again'){skNext();return}if(SKG.ph==='play')skPress()});
  skCap();bubbleQ.length=0;bubbleT=0}
-function skCap(){if(!SKG)return;const c=SKG.el.querySelector('.skcap'),ok=SKG.el.querySelector('.skok');
- if(SKG.ph==='again'){c.textContent=tt('Another stone? Tap!','Un altro sasso? Tocca!');ok.hidden=true}else{c.textContent=SKCAP(SKG.s.g);ok.hidden=SKG.s.g!==1||SKG.ph!=='play'}}
-function skTiltAt(e){const r=SKG.cv.getBoundingClientRect();let x=(e.clientX-r.left-SKC)/52,y=(e.clientY-r.top-SKC)/52;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}SKG.s.x=x;SKG.s.y=y}
+function skCap(){if(!SKG)return;const c=SKG.el.querySelector('.skcap');
+ c.innerHTML=SKG.ph==='again'?(SKG.up?tt('Octave! Now it gets harder. Again? Tap!','Ottava! Ora diventa più difficile. Ancora? Tocca!'):tt('Another stone? Tap!','Un altro sasso? Tocca!')):SKG.ph==='thrown'?'🪨 …':SKCAP(SKG.s.g)}
 function skPress(){if(!SKG||SKG.ph!=='play'||!lkVis())return;const s=SKG.s;let q=0;
- if(s.g===0){const err=Math.abs(s.r-SKRS);q=1-err/10}
- else if(s.g===1){const d=Math.hypot(s.x-s.tx,s.y-s.ty);q=1-d/.5}
- else{let d=Math.abs(((s.th-s.ac)%(Math.PI*2)+Math.PI*3)%(Math.PI*2)-Math.PI);q=1-d/s.hw}
+ if(s.g===0)q=1-Math.abs(s.r-s.rs)/s.tol;
+ else{const d=Math.abs(((s.th-s.ac)%(Math.PI*2)+Math.PI*3)%(Math.PI*2)-Math.PI);q=1-d/s.hw}
  skThrow(skB(q))}
-function skThrow(b){if(!SKG)return;SKG.ph='thrown';SKG.res=b;SKG.idle=0;skCap();SKG.el.querySelector('.skcap').textContent='🪨 …';
- const L=lkF();if(!VISIT){L.skG=((L.skG|0)+1)%3;fmDirty=true}
- lkSkip(igor.position.clone(),1,null,b)}
+function skThrow(b){if(!SKG)return;SKG.ph='thrown';SKG.res=b;SKG.idle=0;SKG.up=false;
+ const L=lkF(),g=SKG.s.g;if(!VISIT){if(b>=8&&skLv(g)<SKMAXL){L.skL[g]=skLv(g)+1;SKG.up=true}L.skG=((L.skG|0)+1)%2;fmDirty=true}
+ skCap();lkSkip(igor.position.clone(),1,null,b)}
 function skLanded(){if(!SKG)return;SKG.ph='again';SKG.idle=0;skCap()}
-function skNext(){if(!SKG||!lkVis())return;const L=lkF();SKG.s=skInit((L.skG|0)%3);SKG.ph='play';SKG.res=null;SKG.idle=0;skCap()}
+function skNext(){if(!SKG||!lkVis())return;const L=lkF();SKG.s=skInit((L.skG|0)%2);SKG.ph='play';SKG.res=null;SKG.idle=0;skCap()}
 function skClose(){if(!SKG)return;try{SKG.el.remove()}catch(e){}SKG=null;joy.style.visibility=''}
 addEventListener('keydown',e=>{if(!SKG||!e.key||/INPUT|TEXTAREA/.test(e.target.tagName))return;const k=e.key;
  if(k===' '||k==='Enter'){e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;SKG.idle=0;if(SKG.ph==='again')skNext();else skPress();return}
- if(k.startsWith('Arrow')||'wasd'.includes(k.toLowerCase())&&k.length===1){e.preventDefault();e.stopImmediatePropagation();SKG.keys[k.length===1?k.toLowerCase():k]=true;SKG.idle=0;return}
+ if(k.startsWith('Arrow')||'wasd'.includes(k.toLowerCase())&&k.length===1){e.preventDefault();e.stopImmediatePropagation();return}
  if(k==='Escape')skClose()},true);
-addEventListener('keyup',e=>{if(SKG&&e.key)SKG.keys[e.key.length===1?e.key.toLowerCase():e.key]=false});
 function skDraw(dt){const c=SKG.cx,s=SKG.s,TAU2=Math.PI*2;c.clearRect(0,0,SKSZ,SKSZ);
- // the water
  const gr=c.createRadialGradient(SKC,SKC-10,6,SKC,SKC,SKC);gr.addColorStop(0,'rgba(64,132,150,.92)');gr.addColorStop(1,'rgba(22,58,78,.92)');
  c.beginPath();c.arc(SKC,SKC,SKC-3,0,TAU2);c.fillStyle=gr;c.fill();c.lineWidth=3;c.strokeStyle='rgba(247,236,212,.75)';c.stroke();
- const stone=(x,y,rx,ry,glow,tilt)=>{if(glow>0){const h=c.createRadialGradient(x,y,rx*.6,x,y,rx*2.1);h.addColorStop(0,`rgba(255,240,170,${.75*glow})`);h.addColorStop(1,'rgba(255,240,170,0)');c.fillStyle=h;c.beginPath();c.arc(x,y,rx*2.1,0,TAU2);c.fill()}
-  c.save();c.translate(x,y);c.beginPath();c.ellipse(0,0,rx,ry,0,0,TAU2);const sg=c.createLinearGradient(-rx+(tilt?tilt[0]*rx:0),-ry+(tilt?tilt[1]*ry:0),rx,ry);sg.addColorStop(0,'#d3d7da');sg.addColorStop(1,'#6f767d');c.fillStyle=sg;c.fill();c.lineWidth=2;c.strokeStyle='#2b2018';c.stroke();
+ const stone=(x,y,rx,ry)=>{c.save();c.translate(x,y);c.beginPath();c.ellipse(0,0,rx,ry,0,0,TAU2);const sg=c.createLinearGradient(-rx,-ry,rx,ry);sg.addColorStop(0,'#d3d7da');sg.addColorStop(1,'#6f767d');c.fillStyle=sg;c.fill();c.lineWidth=2;c.strokeStyle='#2b2018';c.stroke();
   c.beginPath();c.ellipse(-rx*.3,-ry*.35,rx*.35,ry*.18,-.3,0,TAU2);c.fillStyle='rgba(255,255,255,.35)';c.fill();c.restore()};
  if(s.g===0){ // the shrinking ring
-  if(SKG.ph==='play'){s.v+=s.a*dt;s.r-=s.v*dt;if(s.r<SKRS-10){skThrow(0)}}
-  c.setLineDash([3,4]);c.beginPath();c.arc(SKC,SKC,SKRS,0,TAU2);c.lineWidth=1.5;c.strokeStyle='rgba(247,236,212,.55)';c.stroke();c.setLineDash([]);
-  stone(SKC,SKC,SKRS-2,SKRS-5,0);
-  if(SKG.ph==='play'||SKG.ph==='thrown'){c.beginPath();c.arc(SKC,SKC,Math.max(2,s.r),0,TAU2);c.lineWidth=4;c.strokeStyle='#f7ecd4';c.stroke()}}
- else if(s.g===1){ // the tilt, like picking a lock: the closer, the brighter and the stiller
-  if(SKG.ph==='play'){const K=SKG.keys,sp=.9*dt;s.x+=((K.ArrowRight||K.d?1:0)-(K.ArrowLeft||K.a?1:0))*sp;s.y+=((K.ArrowDown||K.s?1:0)-(K.ArrowUp||K.w?1:0))*sp;const l=Math.hypot(s.x,s.y);if(l>1){s.x/=l;s.y/=l}}
-  const d=Math.hypot(s.x-s.tx,s.y-s.ty),cl=Math.max(0,1-d/.75),gl=cl*cl,tr=SKG.ph==='play'?(1-cl)*3.2:0,jx=(Math.random()-.5)*tr,jy=(Math.random()-.5)*tr;
-  // a faint cross: forward/back, left/right
-  c.strokeStyle='rgba(247,236,212,.25)';c.lineWidth=1;c.beginPath();c.moveTo(SKC,14);c.lineTo(SKC,SKSZ-14);c.moveTo(14,SKC);c.lineTo(SKSZ-14,SKC);c.stroke();
-  const rx=24*(1-.42*Math.abs(s.x)),ry=24*(1-.42*Math.abs(s.y));stone(SKC+s.x*16+jx,SKC+s.y*16+jy,rx,ry,gl,[s.x,s.y]);
-  // little sparkles when very close
-  if(cl>.7&&SKG.ph==='play')for(let i=0;i<3;i++){const a=Math.random()*TAU2,rr=26+Math.random()*12;c.fillStyle=`rgba(255,248,200,${(cl-.7)*2.6})`;c.fillRect(SKC+s.x*16+Math.cos(a)*rr,SKC+s.y*16+Math.sin(a)*rr,2,2)}
-  if(SKG.ph==='play'&&(s.pt-=dt)<=0&&cl>.35){s.pt=.9;snd('croak',{f:mf(76)*Math.pow(2,(1-cl)*1.2/12),d:.35,sp:'flute',g:.25+.35*cl})}}
+  if(SKG.ph==='play'){s.v+=s.a*dt;s.r-=s.v*dt;if(s.r<s.rs-s.tol)skThrow(0)}
+  c.setLineDash([3,4]);c.beginPath();c.arc(SKC,SKC,s.rs,0,TAU2);c.lineWidth=1.5;c.strokeStyle='rgba(247,236,212,.55)';c.stroke();c.setLineDash([]);
+  stone(SKC,SKC,s.rs-2,(s.rs-2)*.85);
+  if(SKG.ph!=='again'){c.beginPath();c.arc(SKC,SKC,Math.max(2,s.r),0,TAU2);c.lineWidth=4;c.strokeStyle='#f7ecd4';c.stroke()}}
  else{ // the stone going round, at an uneven speed
-  if(SKG.ph==='play'){s.lt+=dt;s.th+=dt*s.w0*(1+.5*Math.sin(1.7*s.lt+s.p1)+.28*Math.sin(3.3*s.lt+s.p2))}
+  if(SKG.ph==='play'){s.lt+=dt;s.th+=dt*s.w0*(1+s.irr*Math.sin(1.7*s.lt+s.p1)+.3*Math.sin(3.3*s.lt+s.p2))}
   const R=48;c.beginPath();c.arc(SKC,SKC,R,0,TAU2);c.lineWidth=7;c.strokeStyle='rgba(247,236,212,.22)';c.stroke();
-  c.beginPath();c.arc(SKC,SKC,R,s.ac-s.hw,s.ac+s.hw);c.lineWidth=11;c.strokeStyle='#ffd34e';c.stroke();
-  c.beginPath();c.arc(SKC,SKC,R,s.ac-.025,s.ac+.025);c.lineWidth=11;c.strokeStyle='#fff6d0';c.stroke();
-  stone(SKC+Math.cos(s.th)*R,SKC+Math.sin(s.th)*R,11,8,0)}
+  c.beginPath();c.arc(SKC,SKC,R,s.ac-s.hw,s.ac+s.hw);c.lineWidth=12;c.strokeStyle='#ffd34e';c.stroke();
+  c.beginPath();c.arc(SKC,SKC,R,s.ac-.02,s.ac+.02);c.lineWidth=12;c.strokeStyle='#fff6d0';c.stroke();
+  stone(SKC+Math.cos(s.th)*R,SKC+Math.sin(s.th)*R,s.st,s.st*.72)}
  if(SKG.ph==='again'){const b=SKG.res;c.fillStyle='rgba(20,26,34,.55)';c.beginPath();c.arc(SKC,SKC,SKC-5,0,TAU2);c.fill();
   c.fillStyle='#f7ecd4';c.textAlign='center';c.textBaseline='middle';c.font='700 34px system-ui';c.fillText(String(b),SKC,SKC-8);
   c.font='600 12px system-ui';c.fillText(b>=8?tt('the octave!','l’ottava!'):b===1?tt('bounce','rimbalzo'):b?tt('bounces','rimbalzi'):'plof!',SKC,SKC+18);
-  if(SKG.ph==='again'){c.font='600 18px system-ui';c.fillText('↻',SKC,SKC+40)}}}
+  c.font='600 18px system-ui';c.fillText(SKG.up?'⬆':'↻',SKC,SKC+40)}}
 updaters.push((t,dt)=>{if(!SKG)return;
  if(!lkVis()||!started||!sheet.hidden&&SKG.ph!=='thrown'){skClose();return}
  if(SKG.ph!=='thrown'&&igor.position.distanceTo(SKSTAND)>1.7){skClose();return}
@@ -5631,11 +5634,11 @@ let lkTk=0;
 updaters.push((t,dt)=>{if(!LKI.on)return;if((lkTk-=dt)<=0){lkTk=2;lkTadTick();lkTadSync();lkFrogsSync()}
  if(!LKI.G.visible)return;const L=lkF(),now=Date.now();
  for(const tp of L.tad){const o=LK.tads.get(tp.id);if(!o)continue;const n=tp.f.length,s=1.5+n*.35,a=t*.55+o.ph,r=.35;o.g.position.set(tp.x+Math.cos(a)*r,.07,tp.z+Math.sin(a)*r);o.g.rotation.y=Math.atan2(-Math.cos(a),-Math.sin(a));o.g.scale.setScalar(s);
-  o.tl.rotation.y=Math.sin(t*14+o.ph)*.45;o.legs.visible=n>=2;const fd=!VISIT&&lkFeedable(tp,now);o.lf.visible=fd&&where==='out';if(fd){o.lf.position.y=.42/s+Math.sin(t*2.5+o.ph)*.04;o.lf.quaternion.copy(o.g.quaternion).invert().multiply(camera.quaternion);o.lf.scale.setScalar(1/s)}}
+  o.tl.rotation.y=Math.sin(t*14+o.ph)*.45;o.legs.visible=n>=2;const fd=!VISIT&&lkFeedable(tp,now);o.lf.visible=fd&&where==='out';if(o.lb){o.lb.hidden=!fd;if(fd){o.g.getWorldPosition(o.lb.pos);o.lb.pos.y+=.9;const fr=FUN().fruit|0,sb=fr>0?tt(`Tap: give it an apple 🍎 (you have ${fr})`,`Tocca: dagli una mela 🍎 (ne hai ${fr})`):tt('It eats apples 🍎: shake a tree with fruit','Mangia le mele 🍎: scuoti un albero con la frutta');if(o.lb._s!==sb){o.lb._s=sb;o.lb.sub=sb;o.lb.el.innerHTML=N(o.lb.text)+`<small>${sb}</small>`}}}if(fd){o.lf.position.y=.42/s+Math.sin(t*2.5+o.ph)*.04;o.lf.quaternion.copy(o.g.quaternion).invert().multiply(camera.quaternion);o.lf.scale.setScalar(1/s)}}
  for(const E of LK.frogs){const j=E.g.userData.jumpT;if(j&&T-j<.4)E.g.position.y=.08+Math.sin((T-j)/.4*Math.PI)*.25}});
 /* ---------- to do: a hungry tadpole ---------- */
 {const _ti=todoItems;todoItems=function(){const L0=_ti();try{if(VISIT||!LKI.on||!S.farm)return L0;const L=lkF(),now=Date.now(),hg=L.tad.filter(t=>lkFeedable(t,now));
-  if(hg.length&&L0.length<6){const t=hg[0];L0.splice(Math.min(2,L0.length),0,{k:'tad',ic:'🐸',t:hg.length>1?tt(`${hg.length} hungry tadpoles`,`${hg.length} girini hanno fame`):tt('A hungry tadpole','Un girino ha fame'),go:outFirst(()=>lkTadTap(t.id))})}}catch(e){}return L0}}
+  if(hg.length&&L0.length<6){const t=hg[0];L0.splice(Math.min(2,L0.length),0,{k:'tad',ic:'🐸',t:hg.length>1?tt(`${hg.length} hungry tadpoles`,`${hg.length} girini hanno fame`):tt('A hungry tadpole 🍎','Un girino ha fame 🍎'),go:outFirst(()=>lkTadTap(t.id))})}}catch(e){}return L0}}
 /* ---------- 🌅 the evening choir: at sunset the frogs sing, the free Igorlets come to the shore to listen ---------- */
 const LKE={on:false,t0:0,step:0,next:0};let lkEvT=0;
 const EVPROG=[[48,52,55,60],[53,57,60,65],[55,59,62,65],[48,52,55,60,64]];
@@ -6604,7 +6607,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-1620';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-1720';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
