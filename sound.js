@@ -249,6 +249,60 @@ SFX.skip=a=>{a=a||{};const f=a.f||784,k=a.g!=null?a.g:1,o={delay:a.delay||0,pan:
  tone(1200,380,.09,{g:.18*k,...o});nz(.08,{f0:1500,Q:1,g:.12*k,...o});if(a.f)tone(f,f,.9,{g:.3*k,at:.002,...o}),tone(f*3,f*3,.15,{g:.04*k,at:.002,...o})};
 SFX.plunk=a=>{a=a||{};const k=a.g!=null?a.g:1;tone(520,140,.22,{g:.3*k,pan:a.pan||0});nz(.3,{f0:700,f1:250,Q:1.2,g:.16*k,pan:a.pan||0})};
 
+/* 12 Nov 2026: the firefly forest (John Cagigor).
+   fz: the voices of the forest for "What changed?", the silence of the forest and the fireflies in sync
+       (v: owl, crick, drip, knock, fly, drum, leaf, nail, horn, glass, spark, sing; alt = the same voice with another timbre);
+   ppiano: John Cagigor's crooked upright, with or without something between the strings (prep: none, screw, rubber, coin, bolt, paper).
+   Both are heard also in focus (the listening games silence everything else). */
+const SOLO={fz:1,ppiano:1};
+const FZG={owl:[.8,1],crick:[2,4],drip:[2,1.8],knock:[2,4],fly:[1.3,1.3],drum:[1.3,1.6],leaf:[1.6,4],nail:[1.8,1.8]}; // so that all the voices sound about as loud
+SFX.fz=a=>{a=a||{};const v=a.v||'knock',f=a.f||440,k=(a.g!=null?a.g:1)*((FZG[v]||[1,1])[a.alt?1:0]),bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus},alt=!!a.alt,dl=o.delay;
+ switch(v){
+  case'owl':if(alt){tone(f,f*1.1,.55,{type:'triangle',g:.34*k,at:.06,vib:f*.025,vibF:7,...o});tone(f*1.1,f,.35,{type:'triangle',g:.22*k,at:.04,...o,delay:dl+.32})}
+   else{tone(f*1.07,f,.5,{g:.5*k,at:.06,...o});tone(f*2,f*2,.3,{g:.04*k,at:.06,...o});nz(.3,{f0:f*2,Q:2,g:.04*k,at:.06,...o})}return;
+  case'crick':if(alt){nz(.02,{type:'highpass',f0:3200,g:.45*k,at:.001,...o});tone(f*.5,f*.5,.03,{type:'square',g:.08*k,at:.001,lp:2500,...o})}
+   else for(let i=0;i<3;i++)tone(f,f,.035,{type:'square',lp:f*1.6,g:.11*k,at:.003,...o,delay:dl+i*.048});return;
+  case'drip':if(alt){tone(f,f,.55,{type:'triangle',g:.42*k,at:.002,lp:f*3,...o});tone(f*2,f*2,.2,{g:.05*k,at:.002,...o})}
+   else{tone(f*.7,f*1.5,.13,{g:.45*k,at:.004,glide:.6,...o});tone(f*1.5,f*1.4,.08,{g:.06*k,...o,delay:dl+.1})}return;
+  case'knock':if(alt){nz(.05,{f0:1300,Q:.9,g:.5*k,at:.001,...o});nz(.05,{f0:1700,Q:1,g:.35*k,at:.001,...o,delay:dl+.018})}
+   else{tone(f,f*.93,.08,{g:.55*k,at:.001,...o});nz(.02,{f0:f*2.6,Q:3,g:.2*k,at:.001,...o})}return;
+  case'fly':if(alt){tone(f,f,.8,{g:.45*k,at:.002,...o});tone(f*2,f*2,.2,{g:.06*k,at:.002,...o});tone(f*6.3,f*6.3,.06,{g:.07*k,at:.001,...o})}
+   else{tone(f,f,1.2,{g:.32*k,at:.002,...o});tone(f*2.76,f*2.76,.3,{g:.06*k,at:.002,...o});tone(f*5.4,f*5.4,.1,{g:.025*k,at:.001,...o})}return;
+  case'drum':if(alt){tone(f*1.3,f*.95,.13,{type:'triangle',g:.5*k,at:.002,...o});nz(.09,{f0:650,Q:.8,g:.3*k,at:.002,...o})}
+   else{tone(f*1.7,f,.38,{g:.6*k,at:.002,...o});tone(f*3.4,f*2,.1,{g:.12*k,at:.002,...o});nz(.06,{f0:320,Q:1,g:.16*k,at:.002,...o})}return;
+  case'leaf':if(alt)nz(.12,{type:'highpass',f0:5200,g:.4*k,at:.01,...o});
+   else{nz(.28,{f0:2400,Q:.6,g:.26*k,at:.09,...o});nz(.2,{f0:3600,Q:.9,g:.12*k,at:.05,...o,delay:dl+.08})}return;
+  case'nail':tone(f,f,.6,{g:.25*k,at:.001,...o});tone(f*2.9,f*2.9,.3,{g:.12*k,at:.001,...o});tone(f*4.6,f*4.6,.15,{g:.07*k,at:.001,...o});return;
+  case'horn':sus(f,.42,{type:'sawtooth',lp:f*3,g:.15*k,at:.03,rel:.12,f0:f*.94,sl:.05,...o});sus(f,.42,{type:'triangle',g:.1*k,at:.03,rel:.12,...o});return;
+  case'glass':tone(f,f,2,{g:.34*k,at:.004,...o});tone(f*2.32,f*2.32,.9,{g:.06*k,at:.004,...o});tone(f*4.1,f*4.1,.3,{g:.03*k,at:.002,...o});return;
+  case'spark':for(let i=0;i<5;i++){const h=f*[1,1.5,2,2.5,3][i];tone(h,h,.5,{g:.16*k,at:.002,...o,delay:dl+i*.06,pan:i%2?.4:-.4})}tone(f/2,f/2,1.2,{type:'triangle',g:.14*k,at:.08,...o});return;
+  case'sing':[0,4,7,9,7,4,12].forEach((n,i)=>{const h=f*Math.pow(2,n/12);sus(h,.3,{type:'sine',g:.3*k,at:.03,rel:.1,vib:h*.01,vibF:5.5,...o,delay:dl+i*.2})});return}};
+SFX.ppiano=a=>{a=a||{};const f=a.f||262,p=a.prep||'none',k=(a.g!=null?a.g:1)*(p==='rubber'?2.5:1),bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus},dl=o.delay;
+ const mute=p==='rubber',hv=p==='bolt'?.55:1;
+ for(let n=1;n<=6;n++){const fn=f*n*Math.sqrt(1+.0004*n*n),dec=(mute?.28:p==='paper'?1.1:2.6)/(1+n*.35);let g=.3/Math.pow(n,1.25)*k;if(mute&&n>2)g*=.3;if(n===1)g*=hv;tone(fn,fn,dec,{g,at:.003,...o})}
+ nz(.03,{f0:f*3,Q:1,g:.12*k,at:.001,...o});
+ if(mute){tone(f*.5,f*.45,.12,{type:'triangle',g:.18*k,at:.002,...o});return}
+ if(p==='screw'){for(const[r,g,d]of[[2.41,.11,1.7],[3.73,.08,1.3],[5.12,.06,.9],[6.89,.04,.6]])tone(f*r,f*r,d,{g:g*k,at:.002,...o});tone(f*1.5,f*1.5,1.4,{g:.05*k,at:.002,...o});tone(f*1.5+3,f*1.5+3,1.4,{g:.05*k,at:.002,...o});return}
+ if(p==='coin'){for(let i=0;i<16;i++)nz(.016,{f0:f*5.2,Q:4,g:.14*k*(1-i/16),at:.001,...o,delay:dl+.02+i*.027});tone(f*3.1,f*3.1,.5,{g:.05*k,at:.002,...o});return}
+ if(p==='bolt'){for(const[r,g,d]of[[1.13,.1,2.6],[2.3,.08,2],[3.1,.06,1.5],[4.6,.04,1]]){tone(f*r-1.5,f*r-1.5,d,{g:g*k,at:.003,...o});tone(f*r+1.5,f*r+1.5,d,{g:g*k,at:.003,...o})}tone(f*.5,f*.5,1.5,{g:.09*k,at:.004,...o});return}
+ if(p==='paper'){tone(f,f,.6,{type:'sawtooth',lp:f*6,g:.1*k,at:.003,...o});nz(.4,{f0:f*4,Q:2.5,g:.13*k,at:.003,...o});nz(.25,{type:'highpass',f0:4000,g:.06*k,at:.003,...o})}};
+/* 12 Nov 2026: the ice island (Antonio Vivaldigor).
+   png: a penguin (or a chick: ch) calls one note; vln: Vivaldigor's ice violin; icl: an icicle; isng: the frozen pond sings (piu!);
+   harm: one soft partial of the aurora's harmonic series. Heard also in focus, like the forest's voices. */
+Object.assign(SOLO,{png:1,vln:1,icl:1,isng:1,harm:1});
+SFX.png=a=>{a=a||{};const f=a.f||660,d=a.d||.25,k=a.g!=null?a.g:1,bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus};
+ if(a.ch){sus(f,d,{type:'triangle',g:.3*k,f0:f*.88,sl:.05,vib:f*.02,vibF:9,at:.02,rel:.06,...o});sus(f*2,d,{type:'sine',g:.06*k,f0:f*1.8,sl:.05,at:.02,rel:.06,...o});return}
+ sus(f,d,{type:'sawtooth',lp:f*3.2,q:3,g:.16*k,f0:f*.85,sl:.06,vib:f*.025,vibF:8,at:.02,rel:.07,...o});sus(f,d,{type:'square',lp:f*1.6,g:.08*k,f0:f*.85,sl:.06,at:.02,rel:.07,...o})};
+SFX.vln=a=>{a=a||{};const f=a.f||660,d=a.d||.5,k=a.g!=null?a.g:1,bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus};
+ sus(f,d,{type:'sawtooth',lp:f*4,q:1.2,g:.15*k,vib:f*.012,vibF:5.5,at:.07,rel:.15,...o});sus(f*2,d,{type:'triangle',g:.04*k,vib:f*.024,vibF:5.5,at:.08,rel:.15,...o});
+ nz(Math.min(.25,d),{f0:f*3,Q:3,g:.03*k,at:.03,...o})};
+SFX.icl=a=>{a=a||{};const f=a.f||1047,k=a.g!=null?a.g:1,bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus};
+ tone(f,f,1.6,{g:.38*k,at:.002,...o});tone(f*2.4,f*2.4,.5,{g:.08*k,at:.002,...o});tone(f*3.9,f*3.9,.18,{g:.05*k,at:.001,...o});nz(.015,{f0:6000,Q:1,g:.08*k,at:.001,...o})};
+SFX.isng=a=>{a=a||{};const f=a.f||900,k=a.g!=null?a.g:1,bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus},dl=o.delay;
+ tone(f*3,f*.7,.35,{g:.3*k,at:.003,glide:.5,...o});tone(f*2.2,f*.6,.45,{g:.12*k,at:.003,glide:.6,...o,delay:dl+.09});tone(f*1.6,f*.5,.5,{g:.06*k,at:.003,glide:.7,...o,delay:dl+.2})};
+SFX.harm=a=>{a=a||{};const f=a.f||131,d=a.d||6,k=a.g!=null?a.g:1,bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus};
+ sus(f,d,{type:'sine',g:.16*k,at:1.2,rel:2,vib:f*.003,vibF:.7,...o})};
+
 /* ---------- unlock on the first gesture, the on/off switch ---------- */
 function unlock(){if(!wanted)return;if(!ac)init();if(ac&&ac.state==='suspended')ac.resume()}
 ['pointerdown','keydown','touchend'].forEach(ev=>addEventListener(ev,unlock,{capture:true,passive:true}));
@@ -266,7 +320,7 @@ window.IgorSound={
  focus(on){FOCUS=!!on;if(ac&&bgOut)bgOut.gain.setTargetAtTime(FOCUS?0:1,ac.currentTime,FOCUS?.06:.4)},
  get focused(){return FOCUS},
  frame,
- sfx(name,arg){if(!ac||!wanted)return;if(FOCUS&&name!=='whistle'&&name!=='bell')return;const f=SFX[name];if(f)try{f(arg)}catch(e){}},
+ sfx(name,arg){if(!ac||!wanted)return;if(FOCUS&&name!=='whistle'&&name!=='bell'&&!SOLO[name])return;const f=SFX[name];if(f)try{f(arg)}catch(e){}},
  ig(kind,o){if(!ac||!wanted||FOCUS)return;try{if(kind==='work')igWork(o);else if(kind==='snore')snore(o);else igVoice(kind,o)}catch(e){}},
  thunder(near){if(!ac||!wanted||FOCUS)return;try{thunder(near)}catch(e){}},
  _init:init // for rendering a demo offline
