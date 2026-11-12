@@ -446,6 +446,8 @@ const gg=new THREE.PlaneGeometry(116,116,203,203);gg.rotateX(-Math.PI/2);
    const dpath=Math.min(segD(x,z,0,-4.2,8,-0.5),segD(x,z,0,-4.2,-9,-7.5),segD(x,z,0,-4.2,0,8),segD(x,z,0,3,-10.5,5));if(dpath<.75){t.lerp(path,.6*(1-dpath/.75));y*=.3}}
   pos.setY(i,y);cols.push(t.r,t.g,t.b)}
  gg.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));gg.computeVertexNormals()}
+/* 12 Nov 2026: the height of the big island's ground (same as above), so Igor and the Igorlets don't sink into its bumps */
+function mainY(x,z){if(Math.hypot(x,z*1.12)>R)return 0;let y=Math.max(0,Math.sin(x*.21+1)*Math.cos(z*.19)*.25-.05);if(!y)return 0;const dp=Math.min(segD(x,z,0,-4.2,8,-0.5),segD(x,z,0,-4.2,-9,-7.5),segD(x,z,0,-4.2,0,8),segD(x,z,0,3,-10.5,5));return dp<.75?y*.3:y}
 function segD(px,pz,ax,az,bx,bz){const dx=bx-ax,dz=bz-az,u=clamp(((px-ax)*dx+(pz-az)*dz)/(dx*dx+dz*dz),0,1);return Math.hypot(px-ax-u*dx,pz-az-u*dz)}
 const ground=new THREE.Mesh(gg,lam('#ffffff',{vertexColors:true}));scene.add(ground);
 const sea=new THREE.Mesh(new THREE.PlaneGeometry(300,300).rotateX(-Math.PI/2),lam('#1f4561',{emissive:'#0b1a2a',emissiveIntensity:1}));sea.position.y=-.62;scene.add(sea);
@@ -1143,7 +1145,7 @@ function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>
   o.pl.position.y=(moving?Math.abs(Math.sin(o.walk))*.08:working?Math.abs(Math.sin(t*9+o.ph))*.1:Math.sin(t*2+o.ph)*.015)+jy;
   o.pl.quaternion.copy(camera.quaternion);if(moving)o.pl.rotateZ(Math.sin(o.walk)*.06);if(working)o.pl.rotateZ(Math.sin(t*9+o.ph)*.12);if(sleeping)o.pl.rotateZ(.25*o.face);
   o.pl.scale.set(o.face,1,1);if(sleeping||o.mode==='rest'){o.ic.visible=true;o.ic.material.map=iconTex.z;o.ic.position.y=IGH+.2+((t*.5+o.ph)%1)*.3}
-  if(o.ride&&!(o.act&&o.act.k==='ride'))o.ride=null;const ry=o.ride?o.ride.y+VEH[o.act.v].seat+IGL_RIDE:(where==='out'?groundAt(p.x,p.z):0);o.pl.position.y+=ry;
+  if(o.ride&&!(o.act&&o.act.k==='ride'))o.ride=null;const ry=o.ride?o.ride.y+VEH[o.act.v].seat+IGL_RIDE:(where==='out'?groundAt(p.x,p.z)+mainY(p.x,p.z):0);o.pl.position.y+=ry;
   const home=(o.mode==='sleep'||o.mode==='rest'||o.mode==='shelter')&&!moving&&o.hi!=null&&L<.2&&!(o.visitT>T);o.grp.visible=!home;o.L.hidden=home||!(o.showT>T);const H=houseObjs[(o.hi||0)%HOUSEP.length];if(H&&o.hi!=null){H.z.visible=home&&o.mode!=='shelter';if(H.z.visible)H.z.position.y=1.5+Math.sin(t*1.6+o.ph*6)*.04}
   {const umb=wet&&o.grp.visible&&o.hat!=='rain'&&!o.ride&&(o.mode==='idle'||o.mode==='sleep'||o.mode==='rest')&&!(SKY.W.storm>.3||SKY.W.hail>.3);if(umb&&!o.umb)o.umb=igUmb(o);if(o.umb){o.umb.visible=umb;if(umb){o.umb.position.y=IGH+.12+o.pl.position.y;o.umb.rotation.z=-.18*o.face+Math.sin(t*1.7+o.ph)*.04}}}
   o.L.pos.set(p.x,IGH+.55+ry,p.z)}
@@ -1547,7 +1549,7 @@ function igorUpdate(t,dt){blink(t);let moving=false;
    const camRight=new V3().setFromMatrixColumn(camera.matrixWorld,0);const d=v.dot(camRight);if(Math.abs(d)>.25)IG.face=d>0?1:-1;moving=true;IG.walk+=dt*10}}
  else if(started&&!reduce&&where==='out'&&T-lastAct>8){IG.idle-=dt;if(IG.idle<=0&&sheet.hidden){IG.idle=6+Math.random()*7;IG.manual=false;for(let k=0;k<12;k++){const a=Math.random()*TAU,r=1+Math.random()*2.2,x=igor.position.x+Math.cos(a)*r,z=igor.position.z+Math.sin(a)*r;if(walkable(x,z)&&Math.hypot(x,z+3)<6){IG.target=new V3(x,0,z);IG.arrive=null;break}}}}
  igPlane.position.y=.02+(moving?Math.abs(Math.sin(IG.walk))*.16:Math.sin(t*2)*.03);
- if(IG.jy>0){IG.jv-=17*dt;IG.jy+=IG.jv*dt;if(IG.jy<=0){IG.jy=0;IG.jv=0}}{const sy=where==='out'&&!RIDE?shoreY(igor.position.x,igor.position.z)+isleY(igor.position.x,igor.position.z):0;igPlane.position.y+=IG.jy+rideY()+sy;const bl=igor.userData.blob||(igor.userData.blob=igor.children.find(c=>c.material===shadowMat));if(bl)bl.position.y=.02+sy}if(RIDE)igPlane.position.y-=moving?Math.abs(Math.sin(IG.walk))*.16:0;
+ if(IG.jy>0){IG.jv-=17*dt;IG.jy+=IG.jv*dt;if(IG.jy<=0){IG.jy=0;IG.jv=0}}{const sy=where==='out'&&!RIDE?shoreY(igor.position.x,igor.position.z)+isleY(igor.position.x,igor.position.z)+mainY(igor.position.x,igor.position.z):0;igPlane.position.y+=IG.jy+rideY()+sy;const bl=igor.userData.blob||(igor.userData.blob=igor.children.find(c=>c.material===shadowMat));if(bl)bl.position.y=.02+sy}if(RIDE)igPlane.position.y-=moving?Math.abs(Math.sin(IG.walk))*.16:0;
  igPlane.quaternion.copy(camera.quaternion);if(moving)igPlane.rotateZ(Math.sin(IG.walk)*.05);
  igPlane.scale.set(IG.face,IG.jy>0?1+clamp(IG.jv*.025,-.08,.1):moving?1:1+Math.sin(t*2)*.012,1);
  igBring();
@@ -7489,7 +7491,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-1915';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-1930';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
