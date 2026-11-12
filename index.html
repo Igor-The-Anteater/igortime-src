@@ -6462,7 +6462,12 @@ function icMeet(){const L=icF();if(L.met)return;L.met=Date.now();L.en=Date.now()
  setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`${VIVN}: “Welcome to the ice! I’m Antonio Vivaldigor. Here the penguins sing, the pond sings, even the sky sings at night. And look: there’s an egg in the nest!”`,`${VIVN}: “Benvenuto sul ghiaccio! Sono Antonio Vivaldigor. Qui cantano i pinguini, canta il laghetto, di notte canta perfino il cielo. E guarda: nel nido c’è un uovo!”`),6.5);setTimeout(()=>{if(!icVis())return;bubbleQ.length=0;bubbleT=0;say(tt(`${VIVN}: “When it hatches, the chick will be hungry. Feed it three times, recognising its voice, and it becomes a penguin of the colony. Ask me: “Eggs and chicks”.”`,`${VIVN}: “Quando si schiude, il pulcino avrà fame. Dagli da mangiare tre volte, riconoscendo la sua voce, e diventerà un pinguino della colonia. Chiedimi pure: “Uova e pulcini”.”`),7)},7200)},300)}
 /* an original little winter tune for the ice violin: [midi, beats] */
 const WTUNE=[[76,.5],[77,.25],[76,.25],[74,.5],[72,.5],[71,.75],[72,.25],[74,1],[0,.25],[69,.5],[72,.25],[76,.25],[81,.75],[79,.25],[77,.5],[76,.5],[74,.5],[76,.25],[72,.25],[71,1.5]];
-function vvPlay(mel,k){let t=0;const bt=.42;for(const[m,b]of mel){if(m)snd('vln',{f:mf(m),d:b*bt*.95+.05,delay:t,g:k||1});t+=b*bt}vvPlayT=T+t;return t}
+// 12 Nov 19:51 (Fabio: "still very soft"): louder was not enough (the sound bus keeps peaks down): while Vivaldigor plays, the sea,
+// the wind and the voices step back (the same focus as the listening games), then come back
+let vvFocT=0;
+function vvPlay(mel,k){let t=0;const bt=.42;for(const[m,b]of mel){if(m)snd('vln',{f:mf(m),d:b*bt*.95+.05,delay:t,g:k||1});t+=b*bt}vvPlayT=T+t;
+ if(window.IgorSound&&IgorSound.focus&&!foFocus&&where==='out'){IgorSound.focus(true);clearTimeout(vvFocT);vvFocT=setTimeout(()=>{if(!foFocus&&!(SL&&SL.ph==='play'))IgorSound.focus(false)},(t+.5)*1000)}
+ return t}
 updaters.push((t,dt)=>{const on=ICI.on&&ICI.G.visible;if(!on){IC.lbl.hidden=true;return}vvPaint();
  IC.vvPl.quaternion.copy(camera.quaternion);IC.vvPl.position.y=VV_P.y+(T<vvPlayT?Math.abs(Math.sin(t*6))*.05:Math.abs(Math.sin(t*1.6))*.025);IC.vvPl.rotation.z+=T<vvPlayT?Math.sin(t*3)*.06:0;
  const near=where==='out'&&igor.position.distanceTo(VV_P)<6;IC.lbl.pos.copy(VV_P).add(new V3(0,IGH2+.45,0));IC.lbl.hidden=!near||!!(CH&&CH.key==='vivaldi')||bubbleT>0||!sheet.hidden;
@@ -6713,6 +6718,160 @@ HATS.wool=hatWool;
 {const _iv=igVis;igVis=function(t,dt){_iv(t,dt);if(!ICI.on||VISIT&&false)return;let F;try{F=FM()}catch(e){return}if(!F||!F.igs)return;
  for(const g of F.igs){const o=igObjs.get(g.id);if(!o||!o.grp.visible||o.hat==='night')continue;const p=o.grp.position;
   if(isleE1(ICI,p.x,p.z)<1.08&&o.hat!=='wool'){o.hat='wool';o.mat.map=igTex(g,'wool');o.mat.needsUpdate=true}}}}
+
+/* ================= 12 Nov 2026 (evening, Fabio 19:51): tofuel sizes, whales and sharks, vehicle races, shell trades explained ================= */
+
+/* ---------- ⛽ tofuel: five sizes instead of one. The small ones cost a little less and are a little quicker than before
+   (before: 10 tofu ants → 6 tofuel in 20 minutes); in between, a third of a barrel and half a barrel. The bigger, the cheaper
+   per litre. The 60 and 120 need the big tank (still level 2). ---------- */
+const DISTO=[{k:'c10',e:'🧴',N:['Small can','Tanica piccola'],out:10,ants:13,min:22},{k:'c20',e:'🧴',N:['Big can','Tanica grande'],out:20,ants:25,min:40},
+ {k:'b3',e:'🛢',N:['A third of a barrel','Un terzo di barile'],out:40,ants:48,min:70},{k:'b2',e:'🛢',N:['Half a barrel','Mezzo barile'],out:60,ants:70,min:100},
+ {k:'b1',e:'🛢',N:['A whole barrel','Un barile intero'],out:120,ants:135,min:180}];
+function distilO(D){const U=FUEL(),F=FM();if(!F.b.fuel)return;const slots=F.b.fuel>=2?2:1;if(U.q.length>=slots)return say(tt('The still is busy.','La distilleria è già al lavoro.'),2.2);
+ if(D.out>fuelCap())return say(tt('This one doesn’t fit in the tank: the big tank holds 120 (upgrade the still).','Questa non entra nel serbatoio: quello grande tiene 120 (migliora la distilleria).'),3);
+ if(U.n+U.q.reduce((a,b)=>a+b.amt,0)+D.out>fuelCap())return say(tt('Not enough room in the tank for this one.','Nel serbatoio non c’è abbastanza posto per questa.'),2.4);
+ if(!pay({t:D.ants}))return say(NEED({t:D.ants}),2.6);U.q.push({end:Date.now()+D.min*MIN*early(),amt:D.out});snd('build');
+ say(tt(`Bubble bubble… ${D.out} tofuel in ${fmtL(D.min*MIN*early())}.`,`Blub blub… ${D.out} tofuel tra ${fmtL(D.min*MIN*early())}.`),2.8);fmDirty=true;save();fmRender()}
+{const _bt=bldTap;bldTap=function(k){if(k!=='fuel')return _bt(k);const F=FM(),bt=F.tasks.find(q=>q.k==='build'&&q.b==='fuel');if(bt||PL||!F.b.fuel||VISIT)return _bt(k);if(where!=='out')exitRoom(true);
+ if(igor.position.distanceTo(spotOf('fuel'))>5){IG.target=spotOf('fuel').add(new V3(0,0,SPOTR.fuel+1));IG.arrive=null;IG.manual=true}const U=FUEL();
+ say(tt(`Tofuel: ${Math.floor(U.n)}/${fuelCap()}.`,`Tofuel: ${Math.floor(U.n)}/${fuelCap()}.`)+(U.q.length?' '+tt(`Next batch in ${fmtL(U.q[0].end-Date.now())}.`,`Prossima cotta tra ${fmtL(U.q[0].end-Date.now())}.`):''),2.6);
+ chips(spotOf('fuel').add(new V3(0,2.3,0)),()=>{const F=FM(),U=FUEL(),L=[],nx=BLD.fuel.up[F.b.fuel+1],slots=F.b.fuel>=2?2:1,cap=fuelCap(),used=U.n+U.q.reduce((a,b)=>a+b.amt,0);
+  if(U.q.length>=slots)L.push({t:`⏳ ${fmtL(U.q[0].end-Date.now())}`,off:1,why:tt('The still is busy.','La distilleria è già al lavoro.')});
+  else for(const D of DISTO){const t=`${D.e} ${N(D.N)}: ${D.out} ${cst({t:D.ants})} · ${fmtL(D.min*MIN*early())}`;
+   if(D.out>cap)L.push({t,off:1,why:tt('Only with the big tank (upgrade the still).','Solo col serbatoio grande (migliora la distilleria).')});
+   else if(used+D.out>cap)L.push({t,off:1,why:tt('Not enough room left in the tank.','Nel serbatoio non c’è più abbastanza posto.')});
+   else L.push({t,main:D.k==='c10'?1:0,fn:()=>{distilO(D);return true}})}
+  if(nx)L.push(lvlOf()<nx.lv?{t:`⬆ 🔒 ${tt('lv.','liv.')} ${nx.lv}`,off:1,why:LVFIRST(nx.lv)}:{t:`⬆ ${N(nx.gives)} ${cst(nx.cost)}`,fn:()=>{build('fuel');return false}});
+  L.push({t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'move',key:'fuel'});return false}});return L},'bfuel')}}
+
+/* ---------- 🐋🦈 whales and sharks, much bigger than the plane. Fabio (20:07): one about every 30 minutes of play (20–40),
+   a golden one (it sparkles) about every 10 days (7–13 days apart, real days: the first whale after that date is golden).
+   It swims two laps round the island, further out than the fish (diving under the islands' strips), then dives away. The free
+   Igorlets notice it and run to the shore to watch. Admins can send a golden one to a player (gift v = 'big:gold'). ---------- */
+const GDAY=864e5,BIGW={cur:null,next:0,force:0};BIGW.next=600+Math.random()*1200;
+function goldW(){const F=FM();if(!F.goldW||!F.goldW.next){F.goldW={next:Date.now()+Math.random()*10*GDAY};fmDirty=true}return F.goldW}
+function mkWhale(gold){const g=new THREE.Group(),M=gold?glowM('#e0aa22',.22):lam('#3d5570'),Wh=gold?glowM('#ffe08a',.2):lam('#c9d6e0');
+ const b=new THREE.Mesh(new THREE.SphereGeometry(1,18,12),M);b.scale.set(1.25,1,3.6);g.add(b);
+ const be=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),Wh);be.scale.set(1.05,.6,3.1);be.position.set(0,-.42,.3);g.add(be);
+ const hd=new THREE.Mesh(new THREE.SphereGeometry(.95,16,10),M);hd.scale.set(1.15,.85,1.3);hd.position.set(0,.1,2.9);g.add(hd);
+ for(const s of[-1,1]){const fi=new THREE.Mesh(new THREE.SphereGeometry(.5,10,6),M);fi.scale.set(2.2,.18,.9);fi.position.set(s*1.5,-.35,1.2);fi.rotation.z=s*-.35;g.add(fi);
+  const ey=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),lam('#141414'));ey.position.set(s*1.02,.0,3.3);g.add(ey)}
+ const tl=new THREE.Mesh(new THREE.CylinderGeometry(.35,.6,2.2,10),M);tl.rotation.x=Math.PI/2;tl.position.z=-4.1;g.add(tl);g.userData.tail=new THREE.Group();g.userData.tail.position.z=-5.1;g.add(g.userData.tail);
+ for(const s of[-1,1]){const fl=new THREE.Mesh(new THREE.SphereGeometry(.7,10,6),M);fl.scale.set(1.8,.14,.8);fl.position.set(s*1.0,0,-.3);fl.rotation.y=s*.5;g.userData.tail.add(fl)}
+ return g}
+function mkShark(gold){const g=new THREE.Group(),M=gold?glowM('#e0aa22',.22):lam('#7d8b98'),Wh=gold?glowM('#ffe08a',.2):lam('#e6ecef');
+ const b=new THREE.Mesh(new THREE.SphereGeometry(1,18,12),M);b.scale.set(.85,.8,3.1);g.add(b);
+ const be=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),Wh);be.scale.set(.75,.5,2.8);be.position.set(0,-.32,.2);g.add(be);
+ const no=new THREE.Mesh(new THREE.ConeGeometry(.62,1.6,12),M);no.rotation.x=Math.PI/2;no.position.z=3.4;g.add(no);
+ const df=new THREE.Mesh(new THREE.ConeGeometry(.55,1.7,4),M);df.scale.set(.25,1,1);df.position.set(0,1.35,.2);df.rotation.x=-.35;g.add(df);g.userData.fin=df;
+ for(const s of[-1,1]){const fi=new THREE.Mesh(new THREE.ConeGeometry(.35,1.4,4),M);fi.scale.set(.2,1,1);fi.position.set(s*.95,-.45,1.1);fi.rotation.z=s*1.9;g.add(fi);
+  const ey=new THREE.Mesh(new THREE.SphereGeometry(.08,8,6),lam('#141414'));ey.position.set(s*.62,.15,2.6);g.add(ey)}
+ g.userData.tail=new THREE.Group();g.userData.tail.position.z=-3.1;g.add(g.userData.tail);
+ const t1=new THREE.Mesh(new THREE.ConeGeometry(.45,1.9,4),M);t1.scale.set(.2,1,1);t1.position.set(0,.65,-.3);t1.rotation.x=-.6;g.userData.tail.add(t1);
+ const t2=new THREE.Mesh(new THREE.ConeGeometry(.35,1.3,4),M);t2.scale.set(.2,1,1);t2.position.set(0,-.45,-.2);t2.rotation.x=Math.PI+.6;g.userData.tail.add(t2);
+ return g}
+function bigSpawn(o0){o0=o0||{};const G=goldW(),gold=!!o0.gold||Date.now()>=G.next;if(gold){G.next=Date.now()+(7+Math.random()*6)*GDAY;fmDirty=true;save()}const kind=o0.kind||(Math.random()<.5?'whale':'shark'),o=kind==='whale'?mkWhale(gold):mkShark(gold);
+ const sc=kind==='whale'?1:.95;o.scale.setScalar(sc);scene.add(o);
+ const B={kind,gold,o,a:Math.random()*TAU,r:R+10+Math.random()*3,dir:Math.random()<.5?1:-1,trav:0,t0:T,sp:[],spT:T+4,watch:0};
+ B.w=(kind==='whale'?1.9:2.6)/B.r*B.dir;
+ if(gold){const sm=glowM('#fff6c8',1.2);for(let k=0;k<16;k++){const h=new THREE.Mesh(new THREE.OctahedronGeometry(.16,0),sm);h.position.set((Math.random()-.5)*2.8,.9+Math.random()*1.4,(Math.random()-.5)*7);o.add(h);B.sp.push({h,ph:Math.random()*TAU})}}
+ BIGW.cur=B;
+ const nm=gold?(kind==='whale'?tt('a golden whale','una balena d’oro'):tt('a golden shark','uno squalo d’oro')):(kind==='whale'?tt('a whale','una balena'):tt('a shark','uno squalo'));
+ if(started&&!VISIT&&where==='out'){setTimeout(()=>{if(BIGW.cur!==B||where!=='out')return;bubbleQ.length=0;bubbleT=0;say(gold?tt(`Look out at sea… ${nm}! It sparkles all over!`,`Guarda al largo… ${nm}! Sbrilluccica tutto!`):tt(`Look out at sea: ${nm}!`,`Guarda al largo: ${nm}!`),3.4);if(gold)toast(tt('✨ A golden '+(kind==='whale'?'whale':'shark')+' is swimming round the island!','✨ '+(kind==='whale'?'Una balena d’oro nuota':'Uno squalo d’oro nuota')+' intorno all’isola!'))},2500)}
+ bigWatch(B)}
+function bigEnd(){const B=BIGW.cur;if(!B)return;scene.remove(B.o);BIGW.cur=null;for(const[,o]of igObjs)if(o.act&&o.act.k==='sea')o.act=null}
+updaters.push(()=>{if(VISIT||!S.farm||!started)return;if(BIGW.force&&where==='out'){if(BIGW.cur&&!BIGW.cur.gold)bigEnd();if(!BIGW.cur){BIGW.force=0;bigSpawn({gold:1});BIGW.next=T+1200+Math.random()*1200}return}
+ if(!BIGW.cur&&T>BIGW.next){BIGW.next=T+1200+Math.random()*1200;bigSpawn()}});
+// an admin sends a golden whale (or shark): it comes as soon as Igor is outside
+{const _ap=window.IgorGift.apply;window.IgorGift.apply=function(g){if(g&&g.k==='veh'&&g.v==='big:gold'){ensureFarm();const F=FM();F.gifts=F.gifts||{};if(F.gifts[g.id])return false;
+  F.gifts[g.id]={k:'veh',n:1,v:g.v,at:Date.now(),had:true};BIGW.force=1;fmDirty=true;save();return true}return _ap.call(this,g)}}
+const bigShore=a=>{for(let r=R-1;r>R-8;r-=.6){const x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3))return new V3(x,0,z)}return null};
+function bigWatch(B){if(VISIT)return;let n=0;const max=B.gold?9:4;
+ for(const[,o]of igObjs){if(n>=max)break;if(o.mode!=='idle'||!o.grp.visible)continue;const A=o.act;if(A&&/^(ride|wh|lead|rope|rinv)$/.test(A.k))continue;if(!B.gold&&Math.random()<.35)continue;
+  if(A&&A.k==='isl'&&typeof islOff==='function')islOff(o);const P=bigShore(B.a+(n-1.5)*.08);if(!P)continue;o.act={k:'sea',goal:P,until:T+60,n:n++,said:0}}}
+// the Igorlets who watch it stay there, they are not sent elsewhere every few seconds
+{const _idl=idleDirector;idleDirector=function(list){const keep=list.filter(o=>o.act&&(o.act.k==='sea'||o.act.k==='rinv')&&T<o.act.until);_idl(list.filter(o=>!keep.includes(o)))}}
+Object.assign(ISAY,{
+ whale:[['A whale! It’s bigger than the plane!','Hello, whale! Hellooo!','Look at the spout: pffff!'],['Una balena! È più grande dell’aereo!','Ciao balena! Ciaooo!','Guarda lo sbuffo: pffff!']],
+ shark:[['A shark! Good thing we’re on land.','What a fin…','It’s just passing by. I hope.'],['Uno squalo! Meno male che siamo a terra.','Che pinna…','Sta solo passando. Spero.']],
+ gold:[['It’s golden! It sparkles!','Make a wish, quick!','I’ll never forget this!'],['È d’oro! Sbrilluccica!','Esprimi un desiderio, presto!','Questo non me lo scordo più!']]});
+updaters.push((t,dt)=>{const B=BIGW.cur;if(!B)return;dt=Math.min(dt,.1);const out=where==='out';
+ const laps=TAU*2,u=B.trav/laps,rise=Math.min(1,(T-B.t0)/4),sink=u>1?Math.min(1,(B.trav-laps)/(Math.abs(B.w)*4)):0;
+ B.a+=B.w*dt;B.trav+=Math.abs(B.w)*dt;if(sink>=1){bigEnd();return}
+ const x=Math.cos(B.a)*B.r,z=Math.sin(B.a)*B.r/1.12;let under=0;try{under=isleE(x,z)<1.7||isleNeck(x,z)<3?1:0}catch(e){}
+ B.dep=(B.dep||0)+((under?1:0)-(B.dep||0))*Math.min(1,dt*.8);
+ const base=B.kind==='whale'?-.95:-1.05,y=base-3.5*(1-rise)-3.5*sink-3*B.dep+Math.sin(T*.7)*.08;
+ B.o.position.set(x,y,z);const dx=-Math.sin(B.a)*Math.sign(B.w),dz=Math.cos(B.a)/1.12*Math.sign(B.w);B.o.rotation.y=Math.atan2(dx,dz);B.o.visible=out;
+ if(B.o.userData.tail)B.o.userData.tail.rotation[B.kind==='whale'?'x':'y']=Math.sin(T*(B.kind==='whale'?1.4:3))*.35;
+ for(const s of B.sp){const q=Math.max(0,Math.sin(T*3+s.ph));s.h.scale.setScalar(.05+q*1.3);s.h.rotation.y=T*2+s.ph}
+ // the whale's spout
+ if(B.kind==='whale'&&T>B.spT&&!B.dep&&rise>=1&&sink<=0&&out){B.spT=T+7+Math.random()*6;for(let k=0;k<10;k++){const h=new THREE.Mesh(new THREE.SphereGeometry(.18,6,5),curve(new THREE.MeshBasicMaterial({color:B.gold?'#fff3b0':'#ffffff',transparent:true,opacity:.85,depthWrite:false})));const p=B.o.localToWorld(new V3((Math.random()-.5)*.3,1.0,2.4));h.position.copy(p);scene.add(h);
+   const v=new V3((Math.random()-.5)*.6,2.4+Math.random()*1.4,(Math.random()-.5)*.6),t0=T;const step=()=>{const e=T-t0;if(e>1.6){scene.remove(h);return}h.position.addScaledVector(v,.016);v.y-=.05;h.material.opacity=.8*(1-e/1.6);requestAnimationFrame(step)};step()}
+  if(igor.position.distanceTo(B.o.position)<22)snd('water')}
+ // the watchers follow it along the shore
+ if((B.wt=(B.wt||0)-dt)<=0){B.wt=4;for(const[,o]of igObjs){const A=o.act;if(!A||A.k!=='sea')continue;const P=bigShore(B.a+((A.n||0)-1.5)*.08);if(P)A.goal=P}}
+ for(const[,o]of igObjs){const A=o.act;if(!A||A.k!=='sea')continue;if(o.grp.position.distanceTo(A.goal)<.6){o.ic.visible=true;o.ic.material.map=iconTex.heart;o.ic.position.y=IGH+.25+Math.sin(t*3+(A.n||0))*.06;
+   if(!A.said&&Math.random()<dt*.3){A.said=1;islSay(o,B.gold?'gold':B.kind)}if(o.jump<=0&&Math.random()<dt*(B.gold?.8:.25))o.jump=.4}}});
+
+/* ---------- 🏁 races: with two copies of the same vehicle, now and then an Igorlet comes and challenges Igor: it takes the other
+   copy and runs away (with a little head start), Igor has to catch it. Three catches and Igor wins; after two minutes it ends
+   anyway. With only single copies, now and then an Igorlet suggests buying a second one. ---------- */
+let RACE=null,raceNext=0,raceHintT=0;
+const raceStart0=()=>{raceNext=T+240+Math.random()*240;raceHintT=T+420+Math.random()*300};raceStart0();
+function raceTrack(A){const V=VEH[A.v],C=VC[V.kind],ez=V.kind==='water'?1/1.12:1,P0=parkOf(A.v,1);let r=Math.hypot(P0.x-C.x,(P0.z-C.z)/ez);
+ if(V.kind==='land')r=Math.max(7,Math.min(R-3.5,r));if(V.kind==='air')r=R*.85;return{V,C,ez,r}}
+function raceAng(A,p){const{C,ez}=raceTrack(A);return Math.atan2((p.z-C.z)/ez,p.x-C.x)}
+{const _rp=ridePath;ridePath=function(A,t){if(!A.race)return _rp(A,t);if(A.done)return null;const{V,C,ez,r}=raceTrack(A),k=4.2*V.sp;
+ const dt=Math.min(.1,Math.max(0,t-(A.lt||t)));A.lt=t;
+ const pos=a=>new V3(C.x+Math.cos(a)*r,0,C.z+Math.sin(a)*r*ez);
+ let p=pos(A.a);const d=Math.hypot(p.x-igor.position.x,p.z-igor.position.z);
+ // Igor right in front: turn round (not too often)
+ const ai=raceAng(A,igor.position);let da=((ai-A.a)*A.dir)%TAU;if(da<0)da+=TAU;if(da<.5&&d<7&&T>(A.turnT||0)){A.dir=-A.dir;A.turnT=T+3}
+ const v=T<(A.burst||0)?k*1.35:d<5?k*.92:k*.74;A.a+=A.dir*v*dt/r;
+ if(A.arc){if(A.a>A.arc.hi){A.a=A.arc.hi;A.dir=-1}if(A.a<A.arc.lo){A.a=A.arc.lo;A.dir=1}}
+ p=pos(A.a);return{pos:p,y:(V.kind==='water'?-.5:0)+(V.kind==='air'?V.h:0),head:A.a+A.dir*Math.PI/2}}}
+function raceAsk(o,k){const g=igById(o.id);if(!g)return;const V=VEH[k];o.showT=T+8;bubbleQ.length=0;bubbleT=0;
+ say(`${g.name}: “${tt(`Race me! I take the other ${N(V.N).toLowerCase()}, you try to catch me!`,`Facciamo una gara? Io prendo l’altro mezzo (${V.ic} ${N(V.N).toLowerCase()}), tu prova a prendermi!`)}”`,4.5);
+ chips(igor.position.clone().add(new V3(0,1.7,0)),()=>[{t:`🏁 ${tt('Let’s race!','Gara!')}`,main:1,fn:()=>{raceGo(o,k);return false}},{t:tt('Later','Dopo'),fn:()=>{if(o.act&&o.act.k==='rinv')o.act=null;return false}}],'race',1)}
+function raceGo(o,k){const F=FM();if(!F.veh[k]||vehN(k)<2||where!=='out'){if(o.act)o.act=null;return}hideChips();
+ if(RIDE!==k)mount(k);if(RIDE!==k){o.act=null;return}const V=VEH[k];
+ const A={k:'ride',v:k,j:1,race:1,dir:Math.random()<.5?1:-1,goal:o.grp.position.clone()};const{C,ez,r}=raceTrack(A);
+ A.a=raceAng(A,igor.position)+A.dir*.75;
+ if(V.kind==='water'){const a0=raceAng(A,parkOf(k,1)),c=wArc(a0,r);if(!c.full){A.arc={lo:a0+c.lo+.05,hi:a0+c.hi-.05};A.a=Math.max(A.arc.lo,Math.min(A.arc.hi,A.a))}}
+ o.act=A;RACE={k,o,id:o.id,A,t0:T,dur:120,n:0,safe:T+2};
+ bubbleQ.length=0;bubbleT=0;const g=igById(o.id);say(`${g?g.name:'Igorlet'}: “${tt('Catch me if you can!','Prendimi, se ci riesci!')}”`,2.4);racePill()}
+function racePill(){let el=document.getElementById('racep');if(!el){el=document.createElement('div');el.id='racep';el.innerHTML=`<span class="rct"></span><button type="button" aria-label="${tt('Stop','Ferma')}">✕</button>`;document.body.appendChild(el);
+  el.querySelector('button').onclick=e=>{e.stopPropagation();raceEnd('stop')}}}
+function raceEnd(why){const R0=RACE;if(!R0)return;RACE=null;R0.A.done=1;const el=document.getElementById('racep');if(el)el.remove();raceStart0();
+ const g=igById(R0.id),nm=g?g.name:'Igorlet',n=R0.n;let seeds=0;
+ if(why==='win'){seeds=4+Math.max(0,Math.round((R0.dur-(T-R0.t0))/30));snd('star');bubbleQ.length=0;bubbleT=0;say(`${nm}: “${tt('Caught three times! You’re the champion!','Presa tre volte! Sei tu il campione!')}”`,3.4)}
+ else if(why==='time'){seeds=n;bubbleQ.length=0;bubbleT=0;say(`${nm}: “${n?tt(`Time’s up! You caught me ${n} time${n>1?'s':''}… not bad!`,`Tempo scaduto! Mi hai preso ${n} volt${n>1?'e':'a'}… niente male!`):tt('Time’s up! You never caught me, hehe!','Tempo scaduto! Non mi hai mai preso, ehehe!')}”`,3.4)}
+ else if(why==='off'){bubbleQ.length=0;bubbleT=0;say(`${nm}: “${tt('You got off: the race is over.','Sei sceso: la gara è finita.')}”`,2.6)}
+ if(seeds&&!VISIT){S.seeds=(S.seeds|0)+seeds;fmDirty=true;save();window._fromGame='';setTimeout(()=>{try{seedParty(seeds)}catch(e){}},600)}}
+updaters.push((t,dt)=>{if(VISIT||!S.farm||!started)return;const F=FM();
+ if(RACE){const R0=RACE,o=igObjs.get(R0.id);if(!o||o.act!==R0.A){raceEnd('stop');return}if(RIDE!==R0.k){raceEnd('off');return}if(where!=='out'){raceEnd('stop');return}
+  const left=R0.dur-(T-R0.t0),e=document.querySelector('#racep .rct'),s=Math.max(0,Math.ceil(left));if(e)e.textContent=`🏁 ${VEH[R0.k].ic} ${tt('caught','presa')} ${R0.n}/3 · ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  const P=o.grp.position;if(T>R0.safe&&Math.hypot(P.x-igor.position.x,P.z-igor.position.z)<1.5){R0.n++;R0.safe=T+3;R0.A.burst=T+2.5;snd('pop');o.jump=.5;
+   if(R0.n>=3){raceEnd('win');return}const g=igById(R0.id);bubbleQ.length=0;bubbleT=0;say(`${g?g.name:'Igorlet'}: “${pick(tt(['Caught! But not for long!','Argh! Again!'],['Presa! Ma non per molto!','Uffa! Ancora!']))} (${R0.n}/3)”`,2.2)}
+  if(left<=0)raceEnd('time');return}
+ // an Igorlet walking over to challenge Igor
+ for(const[,o]of igObjs){const A=o.act;if(!A||A.k!=='rinv')continue;if(T>A.until){o.act=null;continue}A.goal.copy(igor.position).add(new V3(1.1,0,.5));
+  if(!A.asked&&o.grp.position.distanceTo(igor.position)<2.2){A.asked=1;raceAsk(o,A.v)}}
+ if(T<raceNext||where!=='out'||!sheet.hidden||CH||(typeof igQuiet==='function'&&igQuiet()))return;raceNext=T+20;
+ if((RIDE&&!VEH[RIDE])||typeof LEADPL!=='undefined'&&Object.values(LEADPL).some(Boolean))return;
+ const pairs=VKEYS.filter(k=>F.veh[k]&&vehN(k)>=2&&!riderOf(k,1)&&(!MOTOR[k]||FUEL().n>=8)&&(!RIDE||RIDE===k));
+ const free=[...igObjs.values()].filter(o=>o.mode==='idle'&&o.grp.visible&&!(o.act&&/^(ride|wh|lead|rope|sea|rinv)$/.test(o.act.k))&&o.grp.position.distanceTo(igor.position)<16);
+ if(pairs.length&&free.length){const o=pick(free),k=pick(pairs);if(o.act&&o.act.k==='isl'&&typeof islOff==='function')islOff(o);o.act={k:'rinv',v:k,goal:igor.position.clone(),until:T+40};raceNext=T+420+Math.random()*300;return}
+ // nobody to race with: a hint, now and then
+ const own=VKEYS.filter(k=>F.veh[k]);if(!pairs.length&&own.length&&!VKEYS.some(k=>vehN(k)>=2)&&vehMax()>=2&&T>raceHintT&&free.length){raceHintT=T+900+Math.random()*600;
+  const o=pick(free),g=igById(o.id),k=pick(own),V=VEH[k];if(!g)return;o.showT=T+6;bubbleQ.length=0;bubbleT=0;
+  say(`${g.name}: “${tt(`Hey Igor! If you bought another ${N(V.N).toLowerCase()}, we could race: I run away, you catch me!`,`Ehi Igor! Se comprassi un altro mezzo uguale (${V.ic} ${N(V.N).toLowerCase()}), potremmo fare le gare: io scappo e tu mi prendi!`)}”`,5)}});
+{const st=document.createElement('style');st.textContent=`#racep{position:fixed;z-index:7;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:8px;padding:6px 8px 6px 14px;border-radius:999px;background:rgba(20,16,34,.78);color:#f7ecd4;font:600 14px/1.2 var(--toon,system-ui);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+#racep button{width:28px;height:28px;padding:0;border-radius:50%;font-size:14px;line-height:1}`;document.head.appendChild(st)}
+
+/* ---------- 🔄 shell trades, explained where you look for them: in your own shell case ---------- */
+{const _cs=caseSheet;caseSheet=function(sel){_cs(sel);if(VISIT||sheetKind!=='shells')return;const p=document.createElement('p');p.className='shn';
+ p.innerHTML=tt('🔄 <b>Trading shells</b>: visit a friend’s island (from the chat 💬, or by boat with “🧭 Visit a friend”), tap <b>their</b> shell case and choose “Propose a trade”: you give one of your spare shells (the second copies) for one of theirs. When they come back home they accept or say no.','🔄 <b>Scambiare conchiglie</b>: vai sull’isola di un amico (dalla chat 💬, oppure in barca con “🧭 Visita un amico”), tocca il <b>suo</b> espositore e scegli “Proponi uno scambio”: dai una delle tue conchiglie doppie per una delle sue. Quando torna a casa accetta o dice di no. Servono doppie da tutte e due le parti, e il tuo amico deve avere l’espositore.');sb.appendChild(p)}}
 
 /* ================= 10 Nov 2026: Igor's house, made your own: parts, colours and whole styles. Try for free, pay to keep ================= */
 const HSTY={
@@ -7572,7 +7731,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-2030';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-2115';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
@@ -7649,7 +7808,7 @@ function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
 window.IgorCloud=C;
 /* events forced by the admins for everyone (gev/<id>): every island listens to the last ones */
 try{onSnapshot(query(collection(db,'gev'),orderBy('at','desc'),limit(10)),q=>{if(window.IgorForce)window.IgorForce.global(q.docs.map(d=>{const x=d.data();return{id:d.id,k:x.k,lead:x.lead|0,st:x.st,at:x.at&&x.at.toMillis?x.at.toMillis():0}}))},e=>console.warn('gev',e&&e.code||e))}catch(e){console.warn('gev',e)}
-{const s=document.createElement('script');s.src='/chat.js?v=19';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=20';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
