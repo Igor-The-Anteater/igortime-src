@@ -225,6 +225,29 @@ const SFX={
  wish:()=>{for(let i=0;i<8;i++){const f=st(1047,PENTA[i]);tone(f,f,.6,{g:.22,delay:i*.06,at:.003,pan:R(-.6,.6)})}tone(523,523,1.8,{g:.18,at:.3,type:'triangle'})},
 };
 SFX.clear=SFX.weed;
+/* 12 Nov 2026: the lake island. A held, sung note (sus); the frogs of the choir sing with their own voice (croak: frog, toad,
+   flute, cello, bell, gold); Gondoligor sings (gsing); a flat stone skipping on the water (skip). */
+function sus(f,d,o={}){const t=ac.currentTime+(o.delay||0),bus=o.bus||sfxIn,g=G(0),p=P(o.pan),osc=ac.createOscillator();osc.type=o.type||'sine';
+ if(o.f0){osc.frequency.setValueAtTime(o.f0,t);osc.frequency.exponentialRampToValueAtTime(f,t+(o.sl||.09))}else osc.frequency.setValueAtTime(f,t);
+ if(o.vib){const l=ac.createOscillator(),lg=G(0);l.frequency.value=o.vibF||5.5;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(o.vib,t+Math.min(.45,d*.4));l.connect(lg);lg.connect(osc.frequency);l.start(t);l.stop(t+d+.1)}
+ const a=o.at||.05,r=Math.min(o.rel||.3,d*.5),pk=o.g!=null?o.g:.3;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(pk,t+a);g.gain.linearRampToValueAtTime(pk*.8,t+Math.max(a+.01,d-r));g.gain.exponentialRampToValueAtTime(.0001,t+d);
+ let src=osc;if(o.lp){const fl=F('lowpass',o.lp,o.q||.9);osc.connect(fl);src=fl}src.connect(g);g.connect(p);p.connect(bus);osc.start(t);osc.stop(t+d+.05)}
+SFX.croak=a=>{a=a||{};const f=a.f||262,d=a.d||1.6,sp=a.sp||'frog',k=a.g!=null?a.g:1,o={delay:a.delay||0,pan:a.pan||0};
+ if(sp==='bell'){tone(f,f,Math.max(1.4,d),{g:.4*k,at:.002,...o});tone(f*2.76,f*2.76,.4,{g:.08*k,at:.002,...o});tone(f*2,f*2,d*.6,{g:.06*k,...o});return}
+ // a little "cr" before the note, like a frog clearing its throat (not for the flute)
+ if(sp!=='flute')nz(.05,{f0:sp==='toad'?380:620,Q:2.5,g:.07*k,...o});
+ if(sp==='frog'){sus(f,d,{type:'square',lp:Math.min(2600,f*4),g:.16*k,f0:f*.82,sl:.1,vib:f*.012,vibF:6,at:.04,...o});sus(f/2,d,{type:'sine',g:.1*k,at:.06,...o});return}
+ if(sp==='toad'){sus(f,d,{type:'sawtooth',lp:Math.min(1400,f*2.6),g:.17*k,f0:f*.75,sl:.14,vib:f*.008,vibF:4.5,at:.05,...o});sus(f/2,d,{type:'sine',g:.12*k,at:.07,...o});return}
+ if(sp==='flute'){sus(f,d,{type:'sine',g:.3*k,vib:f*.008,vibF:5,at:.09,...o});sus(f*2,d,{type:'sine',g:.04*k,at:.1,...o});nz(Math.min(.5,d),{f0:2400,Q:1.2,g:.05*k,at:.05,...o});return}
+ if(sp==='cello'){sus(f,d,{type:'sawtooth',lp:Math.min(2000,f*5),q:1.4,g:.15*k,vib:f*.01,vibF:5.2,at:.12,...o});sus(f/2,d,{type:'sine',g:.08*k,at:.12,...o});return}
+ if(sp==='gold'){sus(f,d,{type:'triangle',g:.26*k,vib:f*.01,vibF:5.5,at:.06,...o});sus(f*2,d,{type:'sine',g:.06*k,at:.08,...o});for(let i=0;i<4;i++){const h=f*[4,5,6,8][i];tone(h,h,.5,{g:.025*k,at:.003,delay:(a.delay||0)+.08+i*.07,pan:(i%2?.4:-.4)})}return}
+ sus(f,d,{type:'square',lp:f*4,g:.15*k,...o})};
+SFX.gsing=a=>{a=a||{};const f=a.f||392,d=a.d||.5,k=a.g!=null?a.g:1,o={delay:a.delay||0,pan:a.pan||0};
+ sus(f,d,{type:'triangle',lp:2200,g:.3*k,f0:f*.97,sl:.06,vib:f*.012,vibF:5.6,at:.04,rel:.18,...o});sus(f*2,d,{type:'sine',g:.035*k,at:.05,rel:.18,...o});
+ nz(.04,{f0:1800,Q:1.5,g:.025*k,...o})};
+SFX.skip=a=>{a=a||{};const f=a.f||784,k=a.g!=null?a.g:1,o={delay:a.delay||0,pan:a.pan||0};
+ tone(1200,380,.09,{g:.18*k,...o});nz(.08,{f0:1500,Q:1,g:.12*k,...o});if(a.f)tone(f,f,.9,{g:.3*k,at:.002,...o}),tone(f*3,f*3,.15,{g:.04*k,at:.002,...o})};
+SFX.plunk=a=>{a=a||{};const k=a.g!=null?a.g:1;tone(520,140,.22,{g:.3*k,pan:a.pan||0});nz(.3,{f0:700,f1:250,Q:1.2,g:.16*k,pan:a.pan||0})};
 
 /* ---------- unlock on the first gesture, the on/off switch ---------- */
 function unlock(){if(!wanted)return;if(!ac)init();if(ac&&ac.state==='suspended')ac.resume()}
