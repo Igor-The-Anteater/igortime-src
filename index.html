@@ -92,6 +92,7 @@ button.link{border:0;padding:9px 4px;color:var(--dim);text-transform:none;letter
 #index li button[aria-pressed="true"]{color:var(--warm)}
 #index li small{color:var(--warm);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;margin-left:6px}
 #bubble{position:fixed;left:0;top:0;z-index:3;pointer-events:none;font:400 italic 18px/1.2 var(--display);color:var(--abyss);background:var(--bone);padding:9px 16px 10px;border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.35);white-space:normal;width:max-content;max-width:min(360px,calc(100vw - 24px));box-sizing:border-box;overflow-wrap:break-word;opacity:0;transition:opacity .4s}@media (max-width:560px){#bubble{font-size:16px;padding:8px 13px 9px;max-width:calc(100vw - 24px)}}
+#bubble.igl{background:#e9f3d6;box-shadow:0 6px 22px rgba(0,0,0,.35),inset 0 0 0 2px #7fae45}#bubble.igl::after{background:#e9f3d6}
 #bubble::after{content:'';position:absolute;left:var(--tx,20px);bottom:-13px;width:20px;height:15px;background:var(--bone);clip-path:polygon(0 0,100% 0,8% 100%)}
 #toast{position:fixed;z-index:7;left:50%;top:calc(var(--hh,62px) + 8px);transform:translateX(-50%);background:var(--bone);color:var(--abyss);font:400 italic 18px/1.2 var(--display);padding:10px 18px;border-radius:999px;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
 #hint{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font:500 14px/1.3 var(--toon);letter-spacing:.02em;color:var(--bone);text-shadow:0 1px 6px #000;pointer-events:none;transition:opacity .8s;text-align:center;width:max-content;max-width:calc(100vw - 32px)}
@@ -762,7 +763,7 @@ function finish(q,t){const F=FM(),f=q.f!=null?F.fields[q.f]:null;if(fmLive)snd(q
 // a ready field waits for you to tap it; while you are away the first free Igorlet picks it
 function autoTick(t,live){if(live)return;const F=FM();F.fields.forEach((f,i)=>{if(f.st==='sown'&&t>=f.tr&&!F.tasks.some(q=>q.f===i&&q.k==='harvest'))addTask({k:'harvest',f:i,auto:1})})}
 function careTick(t){const F=FM();if(!F.water)return;F.fields.forEach((f,i)=>{if(F.water>0&&SPC[f.sp].care==='water'&&needsCare(f,t)){F.water--;f.cared=true;F.tasks.filter(x=>x.f===i&&x.k==='water'&&!x.heat).forEach(x=>dropTask(x))}})}
-function advance(t,dt,live){const F=FM(),t1=t+dt;
+function advance(t,dt,live){const F=FM(),t1=t+dt;for(const q of F.tasks)if(q.w.length){const w=q.w.filter(id=>{const g=igById(id);return g&&g.task===q.id});if(w.length!==q.w.length){q.w=w;fmDirty=true}}
  for(const g of F.igs)if(!g.task){g.en=Math.min(enMaxG(g),g.en+dt/(LEAF*MIN*early())*restMult());if(g.rest&&g.en>=REST_TO){g.rest=false;fmDirty=true}}
  dozeTick(t,live);for(const q of F.tasks){if(tstate(q,t)!=='ok')continue;let r=q.w.reduce((a,id)=>{const g=igById(id);return a+(!g?1:g.doze?0:g.trait==='keen'?1.15:1)},0);if(live&&igorAt(q))r+=1;q.done+=dt*r}
  for(const q of[...F.tasks]){if(!F.tasks.includes(q))continue;const s=tstate(q,t1);if(s==='drop')dropTask(q);else if(s==='ok'&&q.done>=q.dur)finish(q,t1)}
@@ -832,13 +833,18 @@ function endEv(E,t){if(EVK[E.k].neg&&E.nf>0&&E.cov===E.nf){S.seeds=(S.seeds|0)+3
 /* --- player actions --- */
 const NEED=c=>tt(`Need ${costTxt(c)}.`,`Servono ${costTxt(c)}.`)+(c&&c.s&&(S.seeds|0)<c.s?' '+tt('Play a game to win seeds!','Fai un gioco per vincere semi!'):'');
 function sowCost(f){return{s:SPC[f.sp].seeds}}
+/* 12 Nov 2026: say WHY no Igorlet comes (busy, tired, napping, asleep) */
+function whyNobody(){const F=FM(),n=F.igs.length,busy=F.igs.filter(g=>g.task).length,tired=F.igs.filter(g=>!g.task&&(g.rest||g.en<1));
+ if(igSleep())return tt('The Igorlets are asleep: they start again at 7:30. It’s on the list.','Gli Igorlets dormono: ricominciano alle 7:30. È in lista.');
+ if(tired.length&&busy<n){const m=Math.min(...tired.map(g=>g.rest?restLeft(g):Math.max(0,1-g.en)*LEAF*MIN*early()/restMult()));return tt(`The Igorlets are tired and resting: one is back in ${fmt(m)}. It’s on the list.`,`Gli Igorlets sono stanchi e si riposano: uno torna tra ${fmt(m)}. È in lista.`)}
+ return tt('Everyone’s busy: it’s on the list.','Sono tutti occupati: è in lista.')}
 function order(i,k,mine){const F=FM(),f=F.fields[i];if(!f)return;
  if(k!=='replant'&&F.tasks.some(q=>q.f===i&&q.k===k&&!q.heat))return say(tt('Already on the list.','È già in lista.'),2);
  const mk=(kk,extra={})=>addTask({k:kk,f:i,igor:!!mine,...extra});
  if(k==='sow'||k==='plowsow'||k==='replant'){const c=sowCost(f);if(!pay(c))return say(tt(`Need ${costTxt(c)}: play a game!`,`Servono ${costTxt(c)}: fai un gioco!`),3);
   if(k==='plowsow')mk('plow');if(k==='replant'){if(!F.tasks.some(q=>q.f===i&&q.k==='harvest'))mk('harvest');mk('plow')}mk('sow',{cost:c})}
  else mk(k);
- if(mine){walkToPlot(i);say(tt('I’ll do it! I stay here.','Lo faccio io! Resto qui.'),2.6)}else{const free=F.igs.some(g=>!g.task&&!g.rest&&g.en>=1);say(free?pick(tt(['On it!','Coming!','Leave it to us.'],['Subito!','Arriviamo!','Ci pensiamo noi.'])):tt('Everyone’s busy: it’s on the list.','Sono tutti occupati: è in lista.'),2.6)}
+ if(mine){walkToPlot(i);say(tt('I’ll do it! I stay here.','Lo faccio io! Resto qui.'),2.6)}else{const free=F.igs.some(g=>!g.task&&!g.rest&&g.en>=1);say(free?pick(tt(['On it!','Coming!','Leave it to us.'],['Subito!','Arriviamo!','Ci pensiamo noi.'])):whyNobody(),2.6)}
  simTo(Date.now(),true);save();fmRender()}
 function cancelTask(id){const F=FM(),q=F.tasks.find(o=>o.id===id);if(!q)return;dropTask(q);if(q.k==='tarp')F.items[TKI[q.tk]||'tarp']++;save();fmRender()}
 function coverAll(){const F=FM(),E=F.ev;if(!E)return;const need=TK[E.k],kk=TKI[need||'n'];let n=0,short=0;
@@ -1098,15 +1104,22 @@ function idleDirector(list){const F=FM();idleT=8+Math.random()*6;ballO.a=ballO.c
 /* 10 Nov 2026: the Igorlets sleep by the clock, from midnight to 7:30 (the visitor's time, or ?hour=), not when the sky gets dark:
    in winter it is dark at five, and they stay up playing under the street lamps */
 function igSleep(){let h=SKY.over.hour;if(h==null){const d=new Date();h=d.getHours()+d.getMinutes()/60}h=((h%24)+24)%24;return h<7.5}
+/* 12 Nov 2026: a little umbrella in the two colours of the Igorlet's house, for free Igorlets in the rain */
+function igUmb(o){const C=HOUSEC[(o.hi||0)%HOUSEC.length],g=new THREE.Group();
+ for(let k=0;k<8;k++){const m=new THREE.Mesh(new THREE.ConeGeometry(.4,.17,2,1,true,k*TAU/8,TAU/8),curve(new THREE.MeshLambertMaterial({color:C[k%2],side:THREE.DoubleSide})));m.position.y=.08;g.add(m)}
+ const st=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.5,6),curve(new THREE.MeshLambertMaterial({color:'#3a2e25'})));st.position.y=-.17;g.add(st);
+ const tip=new THREE.Mesh(new THREE.SphereGeometry(.025,6,4),curve(new THREE.MeshLambertMaterial({color:C[1]})));tip.position.y=.18;g.add(tip);
+ g.position.set(.05,IGH+.12,0);o.grp.add(g);return g}
 function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>.3||SKY.W.hail>.3,night=igSleep(),snow=SKY.cover>.5;snowman.visible=snow;if(snow)snowman.position.copy(spotOf('pen')).add(new V3(2.6,0,1.6));
  const idle=[];const seen=new Set();
  F.igs.forEach((g,i)=>{const o=igObj(g);seen.add(g.id);const q=g.task&&F.tasks.find(x=>x.id===g.task);let hat='',mode='idle';o.ic.visible=false;const wOut=window._wishOut&&window._wishOut.id===g.id&&T<window._wishOut.until;
-  if(q){const S0=siteOf(q),k=q.w.indexOf(g.id);o.goal.copy(S0).add(q.k==='build'?new V3(k?-.9:.9,0,1.1):q.k==='scare'?new V3(-1.5,0,2.2):new V3(.62,0,1.22));hat=hatOf(q.k);mode='work';o.act=null}
+  if(q){const S0=siteOf(q),k=q.w.indexOf(g.id);o.goal.copy(S0).add(q.k==='build'?new V3(k?-.9:.9,0,1.1):q.k==='scare'?new V3(-1.5,0,2.2):new V3(.62,0,1.22));hat=wet?'rain':hatOf(q.k);mode='work';o.act=null}
+  else if(wOut&&window._wishOut.jump){const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0);cr.y=0;cr.normalize();o.goal.copy(igor.position).addScaledVector(cr,1.05);o.act=null}
   else if(wOut){idle.push(o)}
   else if(night){o.goal.copy(penIn(i));hat='night';mode='sleep';o.act=null}
   else if(g.rest){o.goal.copy(penIn(i));mode='rest';o.act=null}
-  else if(wet){o.goal.copy(penIn(i));hat=SKY.W.rain>.35?'rain':'';mode='shelter';o.act=null}
-  else{idle.push(o);if(snow&&!o.act){o.goal.copy(snowman.position).add(new V3(Math.cos(i*2)*.9,0,Math.sin(i*2)*.9))}}
+  else if(false){}
+  else{idle.push(o);if(wet&&(SKY.W.storm>.3||SKY.W.hail>.3))hat='rain';if(snow&&!o.act){o.goal.copy(snowman.position).add(new V3(Math.cos(i*2)*.9,0,Math.sin(i*2)*.9))}}
   if(o.visitT>T&&mode!=='idle'&&mode!=='work'){const D=penIn(i);o.goal.set(D.x+(o.vdx||0),0,D.z+(o.vdz||0));if(mode!=='shelter')hat='night'}
   if(o.hat!==hat){o.hat=hat;o.mat.map=igTex(g,hat);o.mat.needsUpdate=true}
   if(!o.texOK&&igorOK){o.texOK=true;o.mat.map=igTex(g,hat);o.mat.needsUpdate=true}o.hi=i;
@@ -1132,6 +1145,7 @@ function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>
   o.pl.scale.set(o.face,1,1);if(sleeping||o.mode==='rest'){o.ic.visible=true;o.ic.material.map=iconTex.z;o.ic.position.y=IGH+.2+((t*.5+o.ph)%1)*.3}
   if(o.ride&&!(o.act&&o.act.k==='ride'))o.ride=null;const ry=o.ride?o.ride.y+VEH[o.act.v].seat:0;o.pl.position.y+=ry;
   const home=(o.mode==='sleep'||o.mode==='rest'||o.mode==='shelter')&&!moving&&o.hi!=null&&L<.2&&!(o.visitT>T);o.grp.visible=!home;o.L.hidden=home||!(o.showT>T);const H=houseObjs[(o.hi||0)%HOUSEP.length];if(H&&o.hi!=null){H.z.visible=home&&o.mode!=='shelter';if(H.z.visible)H.z.position.y=1.5+Math.sin(t*1.6+o.ph*6)*.04}
+  {const umb=wet&&o.grp.visible&&o.hat!=='rain'&&!o.ride&&(o.mode==='idle'||o.mode==='sleep'||o.mode==='rest')&&!(SKY.W.storm>.3||SKY.W.hail>.3);if(umb&&!o.umb)o.umb=igUmb(o);if(o.umb){o.umb.visible=umb;if(umb){o.umb.position.y=IGH+.12+o.pl.position.y;o.umb.rotation.z=-.18*o.face+Math.sin(t*1.7+o.ph)*.04}}}
   o.L.pos.set(p.x,IGH+.55+ry,p.z)}
  if(toyObj.swing.visible)toyObj.swing.userData.seat.rotation.x=Math.sin(t*1.6)*.35}
 
@@ -2023,7 +2037,11 @@ function say(t,sec=3){if(bubbleT>0&&bubble.textContent===t)return;if(bubbleT>0&&
 let T=0,lastAct=0,started=false;const poke=()=>{lastAct=T};
 function chatter(){if(!started||bubbleT>0||T-lastAct<12)return;lastAct=T+Math.random()*6;if(S.farm&&Math.random()<.6)say(fieldHint(),3.4);else say(pick(SKY.lines&&Math.random()<.35?SKY.lines:LINES.idle),3.4)}
 const pv=new V3();
-function placeBubble(){projC(pv.set(igor.position.x,IH+.75+rideY(),igor.position.z));const vis=pv.z<1&&bubbleT>0;bubble.style.opacity=vis?1:0;if(!vis)return;
+/* 12 Nov 2026: when an Igorlet speaks ("Name: “…”"), the balloon is over that Igorlet, not over Igor */
+let bubWho=null,bubTxt=null;
+function bubSpeaker(){const t=bubble.textContent;if(t!==bubTxt){bubTxt=t;bubWho=null;const m=/^([^:“\n]{1,30}): “/.exec(t);if(m){try{const g=FM().igs.find(x=>x.name===m[1].trim());if(g)bubWho=g.id}catch(e){}}}
+ const o=bubWho!=null&&where==='out'&&igObjs.get(bubWho);if(!o||!o.grp.visible)return null;const p=o.grp.position;projC(pv.set(p.x,IGH+.62,p.z));return pv.z<1&&Math.abs(pv.x)<.98&&Math.abs(pv.y)<.98?o:null}
+function placeBubble(){const bo=bubbleT>0?bubSpeaker():null;bubble.classList.toggle('igl',!!bo);if(bo){const p=bo.grp.position;projC(pv.set(p.x,IGH+.62+(bo.pl.position.y||0),p.z))}else projC(pv.set(igor.position.x,IH+.75+rideY(),igor.position.z));const vis=pv.z<1&&bubbleT>0;bubble.style.opacity=vis?1:0;if(!vis)return;
  const sx=(pv.x*.5+.5)*innerWidth,sy=(-pv.y*.5+.5)*innerHeight,w=bubble.offsetWidth,h=bubble.offsetHeight;
  let L=clamp(sx-24,12,innerWidth-w-12),T2=clamp(sy-h-14,(window._hh||60)+6,innerHeight-h-12);[L,T2]=bubbleAvoid(L,T2,w,h);L=clamp(L,12,Math.max(12,innerWidth-w-12));T2=clamp(T2,6,Math.max(6,innerHeight-h-12));bubble.style.transform=`translate(${L}px,${T2}px)`;bubble.style.setProperty('--tx',clamp(sx-L-6,14,w-30)+'px')}
 let hintOn=true;function floatText(txt,pos){const el=document.createElement('div');el.textContent=txt;el.style.cssText='position:fixed;left:0;top:0;z-index:5;pointer-events:none;font:400 italic 26px/1 var(--display);color:var(--bone);text-shadow:0 1px 8px #000';document.body.appendChild(el);const p0=pos.clone();let a=0;
@@ -2231,7 +2249,7 @@ function awaySummary(){const F=FM(),L=F.log.filter(e=>e.t>fmSeen0+500&&e.t<Date.
 $('ants').onclick=()=>{const F=FM(),lv=lvlOf(),nx=LVX[lv];say(nx!=null?tt(`Level ${lv}. Level ${lv+1} at ${nx} ants harvested (${F.total}).`,`Livello ${lv}. Il ${lv+1} a ${nx} formiche raccolte (${F.total}).`):tt('Level 16: the island is complete!','Livello 16: l’isola è completa!'),3.4)};
 $('seeds').onclick=()=>say(tt('Seeds come from the games: in my house and in the music school.','I semi vengono dai giochi: in casa mia e nella scuola di musica.'),3.4);
 let fmAcc=0,fmSaveT=0,fmUiT=0;
-updaters.push((t,dt)=>{igVis(t,dt);worldTick(t);placeTick();chipTick();fab.style.display=started&&where==='out'?'flex':'none';if(where!=='out'&&!bar.hidden)closeBar();
+updaters.push((t,dt)=>{try{igVis(t,dt);worldTick(t);placeTick();chipTick()}catch(e){if(!window.__fmVisE){window.__fmVisE=1;window.__igErr&&__igErr(e,'farm view')}}fab.style.display=started&&where==='out'?'flex':'none';if(where!=='out'&&!bar.hidden)closeBar();
  fmAcc+=dt;if(fmAcc<.25)return;fmAcc=0;const F=FM(),tn=Date.now();simTo(tn,true);if(started&&document.visibilityState==='visible')F.seen=tn;
  const lv=lvlOf();if(lv>F.lvlSeen){F.lvlSeen=lv;fmDirty=true;if(started){toast(tt(`Island level ${lv}!`,`Isola al livello ${lv}!`));say(N(LVNEW[lv]),3.6)}}
  if(fmDirty){fmDirty=false;save()}else if((fmSaveT+=.25)>5){fmSaveT=0;saveLocal()}
@@ -2859,7 +2877,7 @@ function wishChips(id){if(VISIT){return}const g=igById(id),o=igObjs.get(id),w=wi
   if(w.k==='ant')L.push(pocket()>0?{t:`${tt('A tofu ant','Una formica di tofu')} <small>−1</small>`,main:1,fn:()=>{FM().ants.t--;snd('munch');wishDone(id);return false}}:{t:tt('A tofu ant','Una formica di tofu'),off:1,why:tt('No tofu ants in your pocket: pick a field!','Niente formiche di tofu in tasca: raccogli un campo!')});
   if(w.k==='shell'){const d=Object.entries(U.col).filter(([v,n])=>n>1&&SHELL[v]).sort((a,b)=>SHELL[a[0]].ti-SHELL[b[0]].ti||b[1]-a[1])[0];L.push(d?{t:`🐚 ${N(SHELL[d[0]].N)} <small>×${d[1]}</small>`,main:1,fn:()=>{U.col[d[0]]--;snd('shell');caseDirty=true;wishDone(id);return false}}:{t:'🐚 '+tt('A spare shell','Una conchiglia doppia'),off:1,why:tt('You need a spare shell: look on the beach!','Ti serve una conchiglia doppia: cercala sulla spiaggia!')})}
   if(w.k==='sea')L.push({t:'🌊 '+tt('Let’s go!','Andiamo!'),main:1,fn:()=>{wishSea(id);return false}});
-  if(w.k==='jump')L.push({t:'⤴ '+tt('Let’s jump!','Saltiamo!'),main:1,fn:()=>{JW={id,n:0,t:T};window._wishOut={id,until:T+90};say(matchMedia('(pointer:coarse)').matches?tt('Double-tap the joystick: three jumps!','Doppio tocco sul joystick: tre salti!'):tt('Press space: three jumps!','Premi spazio: tre salti!'),3);return false}});
+  if(w.k==='jump')L.push({t:'⤴ '+tt('Let’s jump!','Saltiamo!'),main:1,fn:()=>{JW={id,n:0,t:T};window._wishOut={id,until:T+90,jump:1};say(matchMedia('(pointer:coarse)').matches?tt('Double-tap the joystick: three jumps!','Doppio tocco sul joystick: tre salti!'):tt('Press space: three jumps!','Premi spazio: tre salti!'),3);return false}});
   L.push({t:tt('Later','Dopo'),fn:()=>false});return L},'wish'+id)}
 function wishSea(id){const o=igObjs.get(id);if(!o)return;const p=o.grp.position,a=Math.atan2(p.z*1.12,p.x),r=R-1.3;let P=null;for(let k=0;k<16&&!P;k++){const b=a+(k%2?1:-1)*Math.ceil(k/2)*.18,x=Math.cos(b)*r,z=Math.sin(b)*r/1.12;if(!blocked.some(q=>Math.hypot(q.x-x,q.z-z)<q.r+.6))P=new V3(x,0,z)}
  if(!P)return wishDone(id);window._wishOut={id,until:T+65};o.act={k:'lead',goal:P.clone().add(new V3(.5,0,0))};LEAD={id,P,t:T};say(tt('Follow me!','Seguimi!'),1.8);walkNear(P,.6,null)}
@@ -3869,7 +3887,9 @@ let tvAcc=0;updaters.push((t,dt)=>{if(!TV.on)return;if(where!=='bar'){tvOff();re
    A red boat comes in from the sea, two Igorlet firefighters in red helmets jump off, walk to the instrument and fix it:
    every note back in tune and the lost pieces back in place (no seeds for the pieces they bring back).
    The repair is saved at once as M.resc = when it will be done (12 s later), so it also happens if you close the game. */
-const RESC={t:15,s:1},RESC_T=12000;
+const RESC={t:40,s:2},RESC_T=12000;
+/* 12 Nov 2026: 40 tofu ants + 2 seeds per instrument, plus 6 tofu ants for every note out of tune or piece lost */
+const rescCost=k=>({t:RESC.t+6*(insOut(k)+insMiss(k)),s:RESC.s});
 function hatFire(c){c.save();c.translate(384,124);c.rotate(.42);c.lineJoin='round';c.strokeStyle=ACC_INK;c.lineWidth=7;c.fillStyle='#d8322a';
  c.beginPath();c.moveTo(-90,4);c.bezierCurveTo(-90,-122,90,-122,90,4);c.closePath();c.fill();c.stroke();
  c.beginPath();c.moveTo(-150,2);c.quadraticCurveTo(-20,30,120,6);c.lineTo(118,-6);c.quadraticCurveTo(-20,14,-146,-10);c.closePath();c.fill();c.stroke();
@@ -3881,9 +3901,9 @@ HATS.fire=hatFire;
 const insDamaged=k=>insOut(k)>0||insMiss(k)>0;
 function rescFix(k){const M=insS(k);M.off=M.off.map(()=>0);M.sl=M.sl.map(()=>0);delete M.miss;M.rl=0;delete M.resc;fmDirty=true}
 function rescCall(k,quiet){const I=INSK[k],M=insS(k);if(!I||!insOn(I)||VISIT)return 0;if(M.resc)return 1;if(!insDamaged(k))return 0;
- if(!pay(RESC)){if(!quiet)say(NEED(RESC),2.6);return-1}M.resc=Date.now()+RESC_T;fmDirty=true;save();try{hudFarm()}catch(_){}rescGo(k);return 2}
+ const RC=rescCost(k);if(!pay(RC)){if(!quiet)say(NEED(RC),2.6);return-1}M.resc=Date.now()+RESC_T;fmDirty=true;save();try{hudFarm()}catch(_){}rescGo(k);return 2}
 function rescAll(){let n=0,short=false;for(const I of INS){if(!insOn(I)||!insDamaged(I.k)||insS(I.k).resc)continue;const r=rescCall(I.k,true);if(r===2)n++;if(r<0){short=true;break}}
- bubbleQ.length=0;bubbleT=0;say(n?tt(`Instrument rescue called for ${n} instrument${n>1?'s':''}: the boat${n>1?'s are':' is'} coming!`,`Soccorso strumenti chiamato per ${n} strument${n>1?'i':'o'}: arriva${n>1?'no le barche':' la barca'}!`)+(short?' '+NEED(RESC):''):short?NEED(RESC):tt('Every instrument is fine!','Tutti gli strumenti stanno bene!'),3.2);return n}
+ bubbleQ.length=0;bubbleT=0;say(n?tt(`Instrument rescue called for ${n} instrument${n>1?'s':''}: the boat${n>1?'s are':' is'} coming!`,`Soccorso strumenti chiamato per ${n} strument${n>1?'i':'o'}: arriva${n>1?'no le barche':' la barca'}!`)+(short?' '+tt('Not enough for the others.','Per gli altri non basta.'):''):short?tt('Not enough tofu ants or seeds for the firefighters.','Non bastano formiche di tofu o semi per i pompieri.'):tt('Every instrument is fine!','Tutti gli strumenti stanno bene!'),3.2);return n}
 /* --- the boat and the firefighters --- */
 const RESCO=[];
 function rescBoat(){const g=new THREE.Group(),red=lam('#d8322a'),wh=lam('#f6f1e3');
@@ -3915,11 +3935,11 @@ updaters.push((t,dt)=>{if(!S.farm||VISIT)return;const tn=Date.now();
 /* --- where you call them: the instrument panel, and the TV --- */
 {const _insSheet2=insSheet;insSheet=function(){_insSheet2();if(VISIT)return;const k=INSEL,M=insS(k);if(!insDamaged(k)&&!M.resc)return;
  const html=M.resc?`<p class="shn">🚒 ${tt('The instrument rescue is on its way: the firefighters will fix everything.','Il soccorso strumenti sta arrivando: i pompieri sistemano tutto.')}</p>`
-  :`<div class="mbt" style="margin:6px 0"><button type="button" data-resc="${k}">🚒 ${tt('Instrument rescue: fix everything','Soccorso strumenti: ripara tutto')} ${cst(RESC)}</button></div>`;
+  :`<div class="mbt" style="margin:6px 0"><button type="button" data-resc="${k}">🚒 ${tt('Instrument rescue: fix everything','Soccorso strumenti: ripara tutto')} ${cst(rescCost(k))}</button></div>`;
  const h=sb.querySelectorAll('.shn');const at=h[h.length-1]||sb.querySelector('h2');if(at)at.insertAdjacentHTML('afterend',html)}}
 function rescueSheet(){const L=INS.filter(I=>insOn(I)&&(insDamaged(I.k)||insS(I.k).resc));
- openSheet('rescue',`<h2>🚒 ${tt('Instrument rescue','Soccorso strumenti')}</h2><p class="shn">${tt('The rain put them out of tune, the tempest took their pieces away? The firefighters come by boat and fix everything.','La pioggia li ha stonati, la tempesta si è portata via dei pezzi? I pompieri arrivano in barca e sistemano tutto.')} ${cst(RESC)} ${tt('per instrument','per strumento')}</p>
- ${L.length?`<ul class="mell">${L.map(I=>{const M=insS(I.k),o=insOut(I.k),ms=insMiss(I.k);return`<li><span style="flex:1">${N(I.N)} <small>${[o?`${o} ${tt('out of tune',o>1?'stonate':'stonata')}`:'',ms?`${ms} ${tt(ms>1?'pieces lost':'piece lost',ms>1?'pezzi persi':'pezzo perso')}`:''].filter(Boolean).join(' · ')}</small></span>${M.resc?`<span>🚒 ${tt('on the way','in arrivo')}</span>`:`<button type="button" data-resc="${I.k}">🚒 ${tt('Call','Chiama')}</button>`}</li>`}).join('')}</ul>
+ openSheet('rescue',`<h2>🚒 ${tt('Instrument rescue','Soccorso strumenti')}</h2><p class="shn">${tt('The rain put them out of tune, the tempest took their pieces away? The firefighters come by boat and fix everything.','La pioggia li ha stonati, la tempesta si è portata via dei pezzi? I pompieri arrivano in barca e sistemano tutto.')} ${tt(`From ${costTxt(RESC)} per instrument, more if it is badly damaged.`,`Da ${costTxt(RESC)} per strumento, di più se è messo male.`)}</p>
+ ${L.length?`<ul class="mell">${L.map(I=>{const M=insS(I.k),o=insOut(I.k),ms=insMiss(I.k);return`<li><span style="flex:1">${N(I.N)} <small>${[o?`${o} ${tt('out of tune',o>1?'stonate':'stonata')}`:'',ms?`${ms} ${tt(ms>1?'pieces lost':'piece lost',ms>1?'pezzi persi':'pezzo perso')}`:''].filter(Boolean).join(' · ')}</small></span>${M.resc?`<span>🚒 ${tt('on the way','in arrivo')}</span>`:`<button type="button" data-resc="${I.k}">🚒 ${tt('Call','Chiama')} ${cst(rescCost(I.k))}</button>`}</li>`}).join('')}</ul>
  ${L.filter(I=>!insS(I.k).resc).length>1?`<div class="row"><button type="button" class="m" data-resc="all">🚒 ${tt('Call for all','Chiama per tutti')}</button></div>`:''}`:`<p>${tt('Every instrument is fine: no need for the firefighters!','Tutti gli strumenti stanno bene: niente pompieri!')}</p>`}`)}
 sb.addEventListener('click',e=>{const b=e.target.closest('button[data-resc],button[data-tv="resc"]');if(!b)return;e.stopPropagation();
  if(b.dataset.tv==='resc'){rescueSheet();return}const k=b.dataset.resc;
@@ -4546,7 +4566,7 @@ function ropeEnd(){const o=igObjs.get(ROPE.id),g=igById(ROPE.id),n=ROPE.n,U=FUN(
 /* one tap anywhere jumps while the rope turns (the joystick too); the arrows can't walk away */
 addEventListener('pointerdown',e=>{if(!ROPE.on||ROPE.state==='walk')return;if(e.target.closest&&e.target.closest('button,#chips,.sheet,#igc,header'))return;jump()},true);
 updaters.push((t,dt)=>{
- if(!ROPE.on){if(ROPE.call){const o=igObjs.get(ROPE.call.id);if(!o||T-ROPE.call.t>60||where!=='out'||RIDE){ropeCancel(5);return}o.act.goal.copy(igor.position).add(new V3(1.1,0,.7));
+ if(!ROPE.on){if(ROPE.call){const o=igObjs.get(ROPE.call.id);if(!o||T-ROPE.call.t>60||where!=='out'||RIDE){ropeCancel(5);return}if(!o.act||o.act.k!=='rope'){if(o.mode==='idle'&&!o.ride)o.act={k:'rope',goal:igor.position.clone()};else{ROPE.call=null;ROPE.next=Date.now()+fMs(5);return}}o.act.goal.copy(igor.position).add(new V3(1.1,0,.7));
    if(o.grp.position.distanceTo(o.act.goal)<.5){o.ic.visible=true;o.ic.material.map=iconTex.heart;o.ic.position.y=IGH+.25+Math.sin(t*3)*.06;o.showT=T+2}}
   else if(Date.now()>ROPE.next){ROPE.next=Date.now()+fMs(1.5);ropeInvite()}return}
  const o=igObjs.get(ROPE.id);if(!o||where!=='out'||RIDE){ropeEnd();return}
@@ -6477,7 +6497,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-0700';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-1520';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
