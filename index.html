@@ -1187,7 +1187,7 @@ const plR=P=>P.k==='field'||P.k==='movefield'?1.05:P.k==='tree'?Math.max(.55,.62
 function startPlace(P){if(where!=='out')exitRoom(true);hideChips();closeBar();PL={...P,r:plR(P),x:null,z:null,ok:false,cuts:{t:[],r:[]}};ghost.g.visible=true;const f=PL.k.includes('field'),w=f?1.7:PL.r*1.5;ghost.sq.scale.set(w,1,w);ghost.ring.scale.setScalar(f?1.2:PL.r);
  say(tt('Walk me to a free spot.','Portami in un posto libero.'),3)}
 /* 12 Nov 2026 (Fabio): things can go right up to the sand (the edge of what you place touches where the grass ends); not on the jetty's landing */
-function placeCheck(x,z){const F=FM(),r=PL.r;if(Math.hypot(x,z*1.12)>R-(r+(PL.k.includes('field')?.45:.15))*1.12&&!isleIn(x,z,1.5+r))return tt('Too close to the sea.','Troppo vicino al mare.');
+function placeCheck(x,z){const F=FM(),r=PL.r;if(Math.hypot(x,z*1.12)>R-(PL.k.includes('field')?.95:r+.1)*1.12&&!isleIn(x,z,1.5+r))return tt('Too close to the sea.','Troppo vicino al mare.');
  if(jettyD(x,z)<r+JTY.w+.5)return tt('Too close to the jetty.','Troppo vicino alla passerella.');
  for(const fb of FIXB){if(fb===PL.fx)continue;const[a,b,c]=fb;if(Math.hypot(x-a,z-b)<c+r)return tt('Too close to a house.','Troppo vicino a una casa.')}
  for(let i=0;i<F.fields.length;i++){if(PL.k==='movefield'&&PL.i===i)continue;const f=F.fields[i];if(Math.hypot(x-f.x,z-f.z)<r+1.02)return tt('Too close to a field.','Troppo vicino a un campo.')}
@@ -6100,7 +6100,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-0300';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-0400';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
