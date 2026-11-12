@@ -305,8 +305,9 @@ SFX.png=a=>{a=a||{};const f=a.f||660,d=a.d||.25,k=a.g!=null?a.g:1,bus=FOCUS?solo
  if(a.ch){sus(f,d,{type:'triangle',g:.3*k,f0:f*.88,sl:.05,vib:f*.02,vibF:9,at:.02,rel:.06,...o});sus(f*2,d,{type:'sine',g:.06*k,f0:f*1.8,sl:.05,at:.02,rel:.06,...o});return}
  sus(f,d,{type:'sawtooth',lp:f*3.2,q:3,g:.16*k,f0:f*.85,sl:.06,vib:f*.025,vibF:8,at:.02,rel:.07,...o});sus(f,d,{type:'square',lp:f*1.6,g:.08*k,f0:f*.85,sl:.06,at:.02,rel:.07,...o})};
 SFX.vln=a=>{a=a||{};const f=a.f||660,d=a.d||.5,k=a.g!=null?a.g:1,bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus};
- sus(f,d,{type:'sawtooth',lp:f*4,q:1.2,g:.15*k,vib:f*.012,vibF:5.5,at:.07,rel:.15,...o});sus(f*2,d,{type:'triangle',g:.04*k,vib:f*.024,vibF:5.5,at:.08,rel:.15,...o});
- nz(Math.min(.25,d),{f0:f*3,Q:3,g:.03*k,at:.03,...o})};
+ // 12 Nov 19:14 (Fabio): the winter tune was too soft: about three times louder, a little brighter
+ sus(f,d,{type:'sawtooth',lp:f*5,q:1.2,g:.42*k,vib:f*.012,vibF:5.5,at:.06,rel:.15,...o});sus(f*2,d,{type:'triangle',g:.11*k,vib:f*.024,vibF:5.5,at:.07,rel:.15,...o});
+ nz(Math.min(.25,d),{f0:f*3,Q:3,g:.07*k,at:.03,...o})};
 SFX.icl=a=>{a=a||{};const f=a.f||1047,k=a.g!=null?a.g:1,bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus};
  tone(f,f,1.6,{g:.38*k,at:.002,...o});tone(f*2.4,f*2.4,.5,{g:.08*k,at:.002,...o});tone(f*3.9,f*3.9,.18,{g:.05*k,at:.001,...o});nz(.015,{f0:6000,Q:1,g:.08*k,at:.001,...o})};
 SFX.isng=a=>{a=a||{};const f=a.f||900,k=a.g!=null?a.g:1,bus=FOCUS?soloOut:sfxIn,o={delay:a.delay||0,pan:a.pan||0,bus},dl=o.delay;
