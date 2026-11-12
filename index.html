@@ -5500,12 +5500,12 @@ sb.addEventListener('click',e=>{if(!/^lk[cekob]$/.test(sheetKind||''))return;con
 /* ---------- 🪨 rimbalzello: flat stones on the shore ---------- */
 const SKP=lkE(LK_AS,.83),SKSTAND=lkE(LK_AS,.74);
 {const g=new THREE.Group();g.position.copy(SKP);for(let k=0;k<6;k++){const s=new THREE.Mesh(new THREE.CylinderGeometry(.13+Math.random()*.05,.15+Math.random()*.05,.05,10),lam(pick(['#9aa0a6','#8a9096','#b0b4b8','#7e858c'])));s.position.set((k%3-1)*.17,.03+Math.floor(k/3)*.05,(k>2?.05:-.05));s.rotation.set(Math.random()*.2,Math.random()*TAU,Math.random()*.2);g.add(s)}
- LKI.G.add(g);block(SKP.x,SKP.z,.3);BUILD='out';hit(g,.5,()=>{if(!lkVis())return;walkNear(SKSTAND,.45,()=>lkSkip(igor.position.clone(),1))},'skip stones',.2);
- LK.skL=label(['🪨 Skipping stones','🪨 Rimbalzello'],tt('8 bounces = the octave','8 rimbalzi = l’ottava'),SKP.clone().add(new V3(0,1.1,0)),()=>{if(lkVis())walkNear(SKSTAND,.45,()=>lkSkip(igor.position.clone(),1))},4)}
+ LKI.G.add(g);block(SKP.x,SKP.z,.3);BUILD='out';hit(g,.5,()=>{if(!lkVis())return;walkNear(SKSTAND,.45,()=>lkSkipGame())},'skip stones',.2);
+ LK.skL=label(['🪨 Skipping stones','🪨 Rimbalzello'],tt('8 bounces = the octave','8 rimbalzi = l’ottava'),SKP.clone().add(new V3(0,1.1,0)),()=>{if(lkVis())walkNear(SKSTAND,.45,()=>lkSkipGame())},4)}
 const SKN=[72,74,76,77,79,81,83,84];
 function lkRoll8(isIg){const w=isIg?[8,14,17,16,13,9,6]:[14,20,20,16,10,5,2];let tot=0;for(const x of w)tot+=x;let r=Math.random()*tot;for(let k=0;k<w.length;k++){r-=w[k];if(r<=0)return k+2}return 2}
-function lkSkip(from,isIgor,o){if(!lkVis()&&isIgor)return;const C=new V3(LKI.cx,0,LKI.cz),dir=C.clone().sub(from).setY(0).normalize();dir.applyAxisAngle(new V3(0,1,0),(Math.random()-.5)*.5);
- const n=lkRoll8(isIgor),loud=isIgor?1:Math.max(0,1-igor.position.distanceTo(from)/14)*.7,st=new THREE.Mesh(new THREE.CylinderGeometry(.07,.08,.03,8),lam('#9aa0a6'));
+function lkSkip(from,isIgor,o,nb){if(!lkVis()&&isIgor)return;const C=new V3(LKI.cx,0,LKI.cz),dir=C.clone().sub(from).setY(0).normalize();dir.applyAxisAngle(new V3(0,1,0),(Math.random()-.5)*.5);
+ const n=nb!=null?nb+1:lkRoll8(isIgor),loud=isIgor?1:Math.max(0,1-igor.position.distanceTo(from)/14)*.7,st=new THREE.Mesh(new THREE.CylinderGeometry(.07,.08,.03,8),lam('#9aa0a6'));
  const P=[from.clone().add(dir.clone().multiplyScalar(.3)).setY(.9)];let d=1.5,x=P[0].clone().setY(.07);for(let k=0;k<n;k++){x=x.clone().add(dir.clone().multiplyScalar(d));P.push(x);d*=.82}
  st.position.copy(P[0]);LKI.G.add(st);LK.stones.push({m:st,P,k:0,u:0,n,loud,isIgor,dur:.42});if(isIgor){IG.face=dir.x>0?1:-1;snd('whoosh')}if(o)o.jump=.4}
 function lkRipple(p,big){const m=new THREE.Mesh(new THREE.RingGeometry(.12,.17,24).rotateX(-Math.PI/2),curve(new THREE.MeshBasicMaterial({color:'#e8f6fb',transparent:true,opacity:.7,depthWrite:false})));m.position.set(p.x,.085,p.z);LKI.G.add(m);LK.rip.push({m,u:0,big})}
@@ -5515,10 +5515,101 @@ updaters.push((t,dt)=>{for(let i=LK.stones.length-1;i>=0;i--){const S0=LK.stones
    if(S0.loud>0.02&&where==='out'){if(last)snd('plunk',{g:S0.loud});else snd('skip',{f:mf(SKN[S0.k-1]),g:S0.loud})}
    if(last&&S0.isIgor)lkSkipDone(S0.n-1)}}
  for(let i=LK.rip.length-1;i>=0;i--){const r=LK.rip[i];r.u+=dt/(r.big?1.4:.9);const s=1+r.u*(r.big?7:4);r.m.scale.set(s,1,s);r.m.material.opacity=.7*(1-r.u);if(r.u>=1){LKI.G.remove(r.m);r.m.geometry.dispose();LK.rip.splice(i,1)}}});
-function lkSkipDone(n){const L=lkF();let msg;
- if(n>=7){msg=tt('Eight notes: the whole octave! Do re mi fa sol la si do!','Otto note: l’ottava completa! Do re mi fa sol la si do!');const td=new Date().toDateString();if(!VISIT&&L.skD!==td){L.skD=td;S.seeds=(S.seeds|0)+2;msg+=' '+tt('+2 seeds (once a day).','+2 semi (una volta al giorno).');setTimeout(()=>{try{hudFarm()}catch(e){}},50)}}
+function lkSkipDone(n){const L=lkF();let msg;setTimeout(()=>{try{skLanded()}catch(e){}},350);
+ if(n===0)msg=pick(tt(['Plop! Straight in. The next one will bounce!','Splash! The lake wanted to keep that one.'],['Plof! Dritto in acqua. Il prossimo rimbalzerà!','Splash! Questo il lago se l’è voluto tenere.']));
+ else if(n>=8){msg=tt('Eight notes: the whole octave! Do re mi fa sol la si do!','Otto note: l’ottava completa! Do re mi fa sol la si do!');const td=new Date().toDateString();if(!VISIT&&L.skD!==td){L.skD=td;S.seeds=(S.seeds|0)+2;msg+=' '+tt('+2 seeds (once a day).','+2 semi (una volta al giorno).');setTimeout(()=>{try{hudFarm()}catch(e){}},50)}}
  else msg=pick(tt([`${n} bounces! The scale stops at ${NNAME[SKN[n-1]%12][0]}…`,`${n} bounces. Let’s try for the octave!`,`${n}! A bit flatter and it goes further.`],[`${n} rimbalzi! La scala si ferma al ${NNAME[SKN[n-1]%12][1]}…`,`${n} rimbalzi. Proviamo a fare l’ottava!`,`${n}! Un po’ più piatto e va più lontano.`]));
  if(!VISIT&&n>(L.sk|0)){L.sk=n;fmDirty=true}if(!VISIT)save();bubbleQ.length=0;bubbleT=0;say(msg,3.2)}
+/* ---------- 🪨 12 Nov 2026: rimbalzello as three little skill games, in place of the joystick ----------
+   Igor stays on the shore; a small round panel takes the joystick's place. The three games take turns:
+   0 the ring that shrinks faster and faster (tap when it is as big as the stone),
+   1 the tilt (find the right tilt for this throw: the stone glows and stops trembling as you get closer, then ✓),
+   2 the stone going round a circle at an uneven speed (tap when it is inside the little window).
+   The better the tap, the more bounces (0 = straight into the water, 8 = the octave). */
+let SKG=null;
+const SKSZ=140,SKC=SKSZ/2,SKRS=19;
+(()=>{const st=document.createElement('style');st.textContent=`
+#skp{position:fixed;z-index:6;left:calc(16px + env(safe-area-inset-left,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:${SKSZ}px;height:${SKSZ}px;touch-action:none;user-select:none;-webkit-user-select:none}
+#skp canvas{width:${SKSZ}px;height:${SKSZ}px;display:block;border-radius:50%;cursor:pointer}
+#skp .skx,#skp .skok{position:absolute;border-radius:50%;background:#f7ecd4;border:3px solid #2b2018;box-shadow:0 3px 0 #2b2018;color:#2b2018;padding:0;line-height:1;font-weight:700}
+#skp .skx{right:-8px;top:-8px;width:32px;height:32px;font-size:17px}
+#skp .skok{right:-12px;bottom:-6px;width:46px;height:46px;font-size:22px}
+#skp .skcap{position:absolute;left:0;bottom:calc(100% + 8px);width:max-content;max-width:min(260px,calc(100vw - 40px));padding:5px 10px;border-radius:12px;background:rgba(20,26,34,.72);color:#f7ecd4;font:600 12.5px/1.3 var(--toon,system-ui);pointer-events:none}`;document.head.appendChild(st)})();
+const SKCAP=g=>{const tch=document.documentElement.classList.contains('touch');return g===0?tt('Tap when the ring is as big as the stone'+(tch?'':' (space)'),'Tocca quando il cerchio è grande come il sasso'+(tch?'':' (spazio)'))
+ :g===1?tt('Tilt the stone until it shines and stops trembling, then ✓','Inclina il sasso finché brilla e non trema più, poi ✓')
+ :tt('Tap when the stone is in the little window'+(tch?'':' (space)'),'Tocca quando il sasso è nella finestrella'+(tch?'':' (spazio)'))};
+function skB(q){return q<=0?0:Math.min(8,1+Math.floor(q*8))} // 0 = falls in, 8 = the octave
+function skInit(g){const R=Math.random;
+ if(g===0)return{g,r:SKC-5,v:14+R()*10,a:30+R()*18};
+ if(g===1){const an=R()*Math.PI*2,rd=.35+R()*.5;return{g,x:0,y:0,tx:Math.cos(an)*rd,ty:Math.sin(an)*rd,pt:0}}
+ const ac=R()*Math.PI*2;return{g,th:ac+Math.PI*(.7+R()*.6),ac,hw:.19,w0:2+R()*.8,p1:R()*6,p2:R()*6,lt:0}}
+function lkSkipGame(){if(!lkVis())return;if(SKG){if(SKG.ph==='again')skNext();return}
+ const L=lkF(),g=(L.skG|0)%3;try{for(const k in keys)keys[k]=false}catch(e){}try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(e){}
+ const el=document.createElement('div');el.id='skp';el.innerHTML=`<div class="skcap"></div><canvas width="${SKSZ*2}" height="${SKSZ*2}"></canvas><button type="button" class="skok" hidden>✓</button><button type="button" class="skx" aria-label="${tt('Close','Chiudi')}">×</button>`;document.body.appendChild(el);
+ SKG={el,cv:el.querySelector('canvas'),ph:'play',idle:0,res:null,s:skInit(g),drag:false,keys:{}};SKG.cx=SKG.cv.getContext('2d');SKG.cx.scale(2,2);
+ el.querySelector('.skx').onclick=e=>{e.stopPropagation();skClose()};
+ el.querySelector('.skok').onclick=e=>{e.stopPropagation();skPress()};
+ el.addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.closest('button'))return;e.preventDefault();if(!SKG)return;SKG.idle=0;
+  if(SKG.ph==='again'){skNext();return}if(SKG.ph!=='play')return;
+  if(SKG.s.g===1){SKG.drag=true;try{SKG.cv.setPointerCapture(e.pointerId)}catch(_){}skTiltAt(e)}else skPress()});
+ el.addEventListener('pointermove',e=>{if(SKG&&SKG.drag&&SKG.ph==='play'){e.preventDefault();skTiltAt(e)}});
+ const up=()=>{if(SKG)SKG.drag=false};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+ skCap();bubbleQ.length=0;bubbleT=0}
+function skCap(){if(!SKG)return;const c=SKG.el.querySelector('.skcap'),ok=SKG.el.querySelector('.skok');
+ if(SKG.ph==='again'){c.textContent=tt('Another stone? Tap!','Un altro sasso? Tocca!');ok.hidden=true}else{c.textContent=SKCAP(SKG.s.g);ok.hidden=SKG.s.g!==1||SKG.ph!=='play'}}
+function skTiltAt(e){const r=SKG.cv.getBoundingClientRect();let x=(e.clientX-r.left-SKC)/52,y=(e.clientY-r.top-SKC)/52;const l=Math.hypot(x,y);if(l>1){x/=l;y/=l}SKG.s.x=x;SKG.s.y=y}
+function skPress(){if(!SKG||SKG.ph!=='play'||!lkVis())return;const s=SKG.s;let q=0;
+ if(s.g===0){const err=Math.abs(s.r-SKRS);q=1-err/10}
+ else if(s.g===1){const d=Math.hypot(s.x-s.tx,s.y-s.ty);q=1-d/.5}
+ else{let d=Math.abs(((s.th-s.ac)%(Math.PI*2)+Math.PI*3)%(Math.PI*2)-Math.PI);q=1-d/s.hw}
+ skThrow(skB(q))}
+function skThrow(b){if(!SKG)return;SKG.ph='thrown';SKG.res=b;SKG.idle=0;skCap();SKG.el.querySelector('.skcap').textContent='🪨 …';
+ const L=lkF();if(!VISIT){L.skG=((L.skG|0)+1)%3;fmDirty=true}
+ lkSkip(igor.position.clone(),1,null,b)}
+function skLanded(){if(!SKG)return;SKG.ph='again';SKG.idle=0;skCap()}
+function skNext(){if(!SKG||!lkVis())return;const L=lkF();SKG.s=skInit((L.skG|0)%3);SKG.ph='play';SKG.res=null;SKG.idle=0;skCap()}
+function skClose(){if(!SKG)return;try{SKG.el.remove()}catch(e){}SKG=null;joy.style.visibility=''}
+addEventListener('keydown',e=>{if(!SKG||!e.key||/INPUT|TEXTAREA/.test(e.target.tagName))return;const k=e.key;
+ if(k===' '||k==='Enter'){e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;SKG.idle=0;if(SKG.ph==='again')skNext();else skPress();return}
+ if(k.startsWith('Arrow')||'wasd'.includes(k.toLowerCase())&&k.length===1){e.preventDefault();e.stopImmediatePropagation();SKG.keys[k.length===1?k.toLowerCase():k]=true;SKG.idle=0;return}
+ if(k==='Escape')skClose()},true);
+addEventListener('keyup',e=>{if(SKG&&e.key)SKG.keys[e.key.length===1?e.key.toLowerCase():e.key]=false});
+function skDraw(dt){const c=SKG.cx,s=SKG.s,TAU2=Math.PI*2;c.clearRect(0,0,SKSZ,SKSZ);
+ // the water
+ const gr=c.createRadialGradient(SKC,SKC-10,6,SKC,SKC,SKC);gr.addColorStop(0,'rgba(64,132,150,.92)');gr.addColorStop(1,'rgba(22,58,78,.92)');
+ c.beginPath();c.arc(SKC,SKC,SKC-3,0,TAU2);c.fillStyle=gr;c.fill();c.lineWidth=3;c.strokeStyle='rgba(247,236,212,.75)';c.stroke();
+ const stone=(x,y,rx,ry,glow,tilt)=>{if(glow>0){const h=c.createRadialGradient(x,y,rx*.6,x,y,rx*2.1);h.addColorStop(0,`rgba(255,240,170,${.75*glow})`);h.addColorStop(1,'rgba(255,240,170,0)');c.fillStyle=h;c.beginPath();c.arc(x,y,rx*2.1,0,TAU2);c.fill()}
+  c.save();c.translate(x,y);c.beginPath();c.ellipse(0,0,rx,ry,0,0,TAU2);const sg=c.createLinearGradient(-rx+(tilt?tilt[0]*rx:0),-ry+(tilt?tilt[1]*ry:0),rx,ry);sg.addColorStop(0,'#d3d7da');sg.addColorStop(1,'#6f767d');c.fillStyle=sg;c.fill();c.lineWidth=2;c.strokeStyle='#2b2018';c.stroke();
+  c.beginPath();c.ellipse(-rx*.3,-ry*.35,rx*.35,ry*.18,-.3,0,TAU2);c.fillStyle='rgba(255,255,255,.35)';c.fill();c.restore()};
+ if(s.g===0){ // the shrinking ring
+  if(SKG.ph==='play'){s.v+=s.a*dt;s.r-=s.v*dt;if(s.r<SKRS-10){skThrow(0)}}
+  c.setLineDash([3,4]);c.beginPath();c.arc(SKC,SKC,SKRS,0,TAU2);c.lineWidth=1.5;c.strokeStyle='rgba(247,236,212,.55)';c.stroke();c.setLineDash([]);
+  stone(SKC,SKC,SKRS-2,SKRS-5,0);
+  if(SKG.ph==='play'||SKG.ph==='thrown'){c.beginPath();c.arc(SKC,SKC,Math.max(2,s.r),0,TAU2);c.lineWidth=4;c.strokeStyle='#f7ecd4';c.stroke()}}
+ else if(s.g===1){ // the tilt, like picking a lock: the closer, the brighter and the stiller
+  if(SKG.ph==='play'){const K=SKG.keys,sp=.9*dt;s.x+=((K.ArrowRight||K.d?1:0)-(K.ArrowLeft||K.a?1:0))*sp;s.y+=((K.ArrowDown||K.s?1:0)-(K.ArrowUp||K.w?1:0))*sp;const l=Math.hypot(s.x,s.y);if(l>1){s.x/=l;s.y/=l}}
+  const d=Math.hypot(s.x-s.tx,s.y-s.ty),cl=Math.max(0,1-d/.75),gl=cl*cl,tr=SKG.ph==='play'?(1-cl)*3.2:0,jx=(Math.random()-.5)*tr,jy=(Math.random()-.5)*tr;
+  // a faint cross: forward/back, left/right
+  c.strokeStyle='rgba(247,236,212,.25)';c.lineWidth=1;c.beginPath();c.moveTo(SKC,14);c.lineTo(SKC,SKSZ-14);c.moveTo(14,SKC);c.lineTo(SKSZ-14,SKC);c.stroke();
+  const rx=24*(1-.42*Math.abs(s.x)),ry=24*(1-.42*Math.abs(s.y));stone(SKC+s.x*16+jx,SKC+s.y*16+jy,rx,ry,gl,[s.x,s.y]);
+  // little sparkles when very close
+  if(cl>.7&&SKG.ph==='play')for(let i=0;i<3;i++){const a=Math.random()*TAU2,rr=26+Math.random()*12;c.fillStyle=`rgba(255,248,200,${(cl-.7)*2.6})`;c.fillRect(SKC+s.x*16+Math.cos(a)*rr,SKC+s.y*16+Math.sin(a)*rr,2,2)}
+  if(SKG.ph==='play'&&(s.pt-=dt)<=0&&cl>.35){s.pt=.9;snd('croak',{f:mf(76)*Math.pow(2,(1-cl)*1.2/12),d:.35,sp:'flute',g:.25+.35*cl})}}
+ else{ // the stone going round, at an uneven speed
+  if(SKG.ph==='play'){s.lt+=dt;s.th+=dt*s.w0*(1+.5*Math.sin(1.7*s.lt+s.p1)+.28*Math.sin(3.3*s.lt+s.p2))}
+  const R=48;c.beginPath();c.arc(SKC,SKC,R,0,TAU2);c.lineWidth=7;c.strokeStyle='rgba(247,236,212,.22)';c.stroke();
+  c.beginPath();c.arc(SKC,SKC,R,s.ac-s.hw,s.ac+s.hw);c.lineWidth=11;c.strokeStyle='#ffd34e';c.stroke();
+  c.beginPath();c.arc(SKC,SKC,R,s.ac-.025,s.ac+.025);c.lineWidth=11;c.strokeStyle='#fff6d0';c.stroke();
+  stone(SKC+Math.cos(s.th)*R,SKC+Math.sin(s.th)*R,11,8,0)}
+ if(SKG.ph==='again'){const b=SKG.res;c.fillStyle='rgba(20,26,34,.55)';c.beginPath();c.arc(SKC,SKC,SKC-5,0,TAU2);c.fill();
+  c.fillStyle='#f7ecd4';c.textAlign='center';c.textBaseline='middle';c.font='700 34px system-ui';c.fillText(String(b),SKC,SKC-8);
+  c.font='600 12px system-ui';c.fillText(b>=8?tt('the octave!','l’ottava!'):b===1?tt('bounce','rimbalzo'):b?tt('bounces','rimbalzi'):'plof!',SKC,SKC+18);
+  if(SKG.ph==='again'){c.font='600 18px system-ui';c.fillText('↻',SKC,SKC+40)}}}
+updaters.push((t,dt)=>{if(!SKG)return;
+ if(!lkVis()||!started||!sheet.hidden&&SKG.ph!=='thrown'){skClose();return}
+ if(SKG.ph!=='thrown'&&igor.position.distanceTo(SKSTAND)>1.7){skClose();return}
+ joy.style.visibility='hidden';if((SKG.idle+=dt)>(SKG.ph==='again'?9:40)){skClose();return}
+ try{skDraw(Math.min(dt,.05))}catch(e){skClose()}});
 /* ---------- tadpoles and frogs every frame ---------- */
 let lkTk=0;
 updaters.push((t,dt)=>{if(!LKI.on)return;if((lkTk-=dt)<=0){lkTk=2;lkTadTick();lkTadSync();lkFrogsSync()}
@@ -6497,7 +6588,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-1520';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-1540';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
