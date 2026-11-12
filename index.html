@@ -5,7 +5,7 @@
 <title>Igor time</title>
 <script>try{if(localStorage.getItem('igortime_view')==='games'&&!/[?&](signin|island)\b/.test(location.search)){document.documentElement.style.visibility='hidden';location.replace('/games/')}}catch(e){}
 try{if((JSON.parse(localStorage.getItem('igortime_v1'))||{}).seen>=1&&!/[?&]choose\b/.test(location.search))document.documentElement.classList.add('seen')}catch(e){}</script>
-<script src="/sound.js?v=17"></script>
+<script src="/sound.js?v=18"></script>
 <script src="/intervals/wig.js?v=2"></script>
 <script src="/drumschool/rigor.js?v=1"></script>
 <script src="/notes/nadia.js?v=1"></script>
@@ -3229,7 +3229,7 @@ function isleMesh(I){const x0=Math.min(I.cx-I.rx,I.A.x,I.B.x)-3,x1=Math.max(I.cx
   const n=Math.sin(x*.37)*Math.cos(z*.31)+Math.sin((x-z)*.13),grass=()=>t.copy(n>.5?c:n>-.25?a:b);
   if(I.kind==='sand'){if(e<1){y=Math.max(.02,(1-e)*.3+Math.sin(x*.9)*Math.cos(z*.7)*.08);t.copy(n>0?sand:sand2)}else if(e<1.28){y=-.3*(e-1)/.28;t.copy(wet)}
    if(dn<1.25){const yy=.03;if(yy>y){y=yy;t.copy(sand2)}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.copy(wet)}}}
-  else if(I.kind==='forest'){const moss=new THREE.Color(n>.3?'#2c4a2a':n>-.3?'#26402a':'#33552f');if(e<1){y=Math.max(.02,(1-e)*.25+Math.sin(x*.8)*Math.cos(z*.9)*.05);t.copy(moss)}else if(e<1.28){y=-.3*(e-1)/.28;t.copy(wet)}
+  else if(I.kind==='forest'){const moss=new THREE.Color(n>.55?'#2fe07c':n>.1?'#14502f':n>-.55?'#0c2418':'#24103a'); /* 12 Nov: fluo and very dark, a magic forest */if(e<1){y=Math.max(.02,(1-e)*.25+Math.sin(x*.8)*Math.cos(z*.9)*.05);t.copy(moss)}else if(e<1.28){y=-.3*(e-1)/.28;t.copy(wet)}
    if(dn<1.25){const yy=.03;if(yy>y){y=yy;t.copy(moss).lerp(path,.5*(1-dn/1.25))}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.copy(wet)}}}
   else if(I.kind==='ice'){const sn=new THREE.Color(n>.2?'#f4f8fb':'#e3edf4');if(e<1){y=Math.max(.02,(1-e)*.35+Math.sin(x*.7)*Math.cos(z*.6)*.07);t.copy(sn)}else if(e<1.28){y=-.3*(e-1)/.28;t.set('#cfdde6')}
    if(dn<1.25){const yy=.03;if(yy>y){y=yy;t.copy(sn)}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.set('#cfdde6')}}}
@@ -5749,6 +5749,807 @@ function toyChips(k){if(VISIT){visitNo();return}const D=DECO[k],T0=_toyD[k],m=DE
 
 // buildings made after the world group was gathered live in the scene: hide them indoors
 updaters.push(()=>{const F=S.farm;if(!F)return;for(const k of BKEYS){const B=BOBJ[k];if(!B)continue;const v=where==='out'&&(!!F.b[k]||F.tasks.some(q=>q.k==='build'&&q.b===k));if(B.g.visible!==v)B.g.visible=v}});
+/* ================= 12 Nov 2026: the firefly forest comes alive (John Cagigor) =================
+   John Cagigor, an Igorlet mushroom hunter (khaki bucket hat with a little mushroom, a basket), sits by a crooked upright piano
+   under the biggest mushroom. (John Cage was a great mushroom expert, too.) Talking to him:
+   - 👂 What changed?: the forest plays a little loop of sounds (owl, cricket, drop, woodpecker, firefly, drum mushroom, leaves),
+     then plays it again with one thing changed: tap the voice that changed. 7 levels: a voice goes away, changes note,
+     changes rhythm, changes timbre; from 2 to 6 voices. 8 rounds, level up with 7/8, seeds like the frogs (max 10);
+   - 🎹 the prepared piano: Cagigor puts something between the strings (screw, rubber, coin, bolt, paper) or nothing: which one?
+   - ✨ the fireflies in sync: tap the beat and the fireflies light up together (5 levels: the guide clicks stop sooner, the tempo changes);
+   - 🤫 the silence of the forest: once a day a minute of just listening, then you say what you heard;
+   - 🍲 mushroom soup: 4 mushrooms, all the Igorlets get their energy back;
+   - 📖 the mushroom book: 9 species, each with its voice (porcino = woodblock, chanterelle = drop, parasol = drum, …, golden, singing).
+   Mushrooms come up after the rain: after every rainy event of 18:00 (also when nobody is there), when it rains on the island
+   while you play (once every 3 hours), and one every 8 hours from the damp of the forest. Up to 8 at a time; tap one to pick it.
+   At night (once a day, before the Igorlets go to bed) the fireflies light up all together on the tempo you kept,
+   and the free Igorlets dance in the fairy ring.
+   The Igorlets play here too: they try the crooked piano, help pick mushrooms (one an hour at most), shelter under the caps when
+   it rains, listen to Cagigor.
+   Saved in S.farm.forest = {met, mu:[{id,x,z,sp,b}], bk:{sp:n}, seen:{sp:n}, tn, rT, ed:{evId:1}, st, best:{}, pl, fl, bpm, sil, night, soup, igP} */
+/* 12 Nov 2026: a character who speaks ("Name: “…”") gets the balloon over their own head, like the Igorlets (15:20 fix), not over Igor.
+   SPKR[name] gives the sprite to point at (or null when it isn't on screen here). Gondoligor, John Cagigor, Antonio Vivaldigor. */
+const SPKR={};
+{const _bs=bubSpeaker;bubSpeaker=function(){const o=_bs();if(o)return o;if(where!=='out')return null;const m=/^([^:“\n]{1,30}): “/.exec(bubble.textContent||'');if(!m)return null;
+ let obj=null;try{const f=SPKR[m[1].trim()];obj=f&&f()}catch(e){}if(!obj)return null;for(let q=obj;q;q=q.parent)if(!q.visible)return null;
+ const w=obj.getWorldPosition(new V3());projC(pv.set(w.x,IGH+.62+w.y,w.z));if(!(pv.z<1&&Math.abs(pv.x)<.98&&Math.abs(pv.y)<.98))return null;return{grp:{position:w},pl:{position:{y:w.y}}}}}
+SPKR[GONDN]=()=>LK.gPl;
+const FOI=ISLES[2],CAGEN='John Cagigor';
+const foE=(a,e)=>new V3(FOI.cx+Math.cos(a)*FOI.rx*e,0,FOI.cz+Math.sin(a)*FOI.rz*e);
+const MUMAX=8,MUBASE=8*3600e3,MURAIN=3*3600e3;
+const CG_PIANO=new V3(-4.75,0,-36.75),CG_P=new V3(-3.7,0,-36.45),CG_B=new V3(-2.7,0,-35.75),RING=new V3(2.2,0,-36.2);
+function foF(){const F=FM();if(!F.forest||typeof F.forest!=='object')F.forest={};const L=F.forest;
+ if(!Array.isArray(L.mu))L.mu=[];if(!L.bk)L.bk={};if(!L.seen)L.seen={};if(!L.ed)L.ed={};if(!L.best)L.best={};if(L.st==null)L.st=0;return L}
+const foVis=()=>FOI.on&&FOI.G.visible&&where==='out';
+/* ---------- 12 Nov 17:23 (Fabio): a magical, a bit creepy-gothic forest: fluo green and very dark moss (in isleMesh), giant mushrooms in
+   deep violet and wine with a glow, the luminous ones fluo green, coloured spores floating, a violet and a green light, a violet
+   tint in the fog when Igor is in the forest ---------- */
+{const RED=['#d8443a','#c9542f','#b8383a'].map(c=>new THREE.Color(c).getHex()),BLU=new THREE.Color('#5fb7e6').getHex(),GOTH=['#5a1f7a','#7a1a4f','#3a1a5e'];let k=0;const seen=new Set();
+ FOI.G.traverse(m=>{if(!m.isMesh||!m.material||!m.material.color||seen.has(m.material))return;seen.add(m.material);const h=m.material.color.getHex();
+  if(RED.includes(h)){const c=GOTH[k++%3];m.material.color.set(c);if(m.material.emissive){m.material.emissive.set(c);m.material.emissiveIntensity=.25}}
+  else if(h===BLU){m.material.color.set('#3dffa0');if(m.material.emissive)m.material.emissive.set('#2bd98a')}})}
+{const n=reduce?40:110,pos=new Float32Array(n*3),col=new Float32Array(n*3),P=[],C=['#c46bff','#3dffa0','#ff5fd2','#5fe6ff'].map(c=>new THREE.Color(c));
+ for(let i=0;i<n;i++){const a=Math.random()*TAU,r=Math.sqrt(Math.random())*.9;P.push({x:FOI.cx+Math.cos(a)*r*FOI.rx,z:FOI.cz+Math.sin(a)*r*FOI.rz,y:.3+Math.random()*3,ph:Math.random()*TAU});const c=C[i%4];col.set([c.r,c.g,c.b],i*3)}
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));
+ const pts=new THREE.Points(g,new THREE.PointsMaterial({size:.13,vertexColors:true,transparent:true,opacity:.85,depthWrite:false,blending:THREE.AdditiveBlending,map:dot}));FOI.G.add(pts);
+ const L1=new THREE.PointLight('#a24dff',0,16,1.6),L2=new THREE.PointLight('#2bff9a',0,13,1.6);L1.position.set(FOI.cx-2,3.2,FOI.cz-1);L2.position.set(FOI.cx+3,2.4,FOI.cz+1.5);FOI.G.add(L1);FOI.G.add(L2);
+ const VIO=new THREE.Color('#2a0f3e');let tint=0;
+ updaters.push((t,dt)=>{const on=FOI.G.visible&&where==='out';pts.visible=on;if(!on){L1.intensity=L2.intensity=0;return}
+  for(let i=0;i<n;i++){const p=P[i];pos[i*3]=p.x+Math.sin(t*.3+p.ph)*.5;pos[i*3+1]=p.y+Math.sin(t*.5+p.ph*2)*.35;pos[i*3+2]=p.z+Math.cos(t*.25+p.ph)*.5}g.attributes.position.needsUpdate=true;
+  const k=.3+.7*SKY.nk;L1.intensity=.32*k*(.85+.15*Math.sin(t*.7));L2.intensity=.55*k*(.85+.15*Math.sin(t*.9+1));
+  const inF=isleE1(FOI,igor.position.x,igor.position.z)<1.15;tint+=((inF?1:0)-tint)*Math.min(1,dt*1.5)});
+ const _sk=skyTick;skyTick=function(dt){_sk(dt);if(tint>.01&&where==='out'&&scene.fog)scene.fog.color.lerp(VIO,.5*tint)}}
+/* ---------- the mushrooms: species, voices, the mesh ---------- */
+const FGS={porc:{N:['Cep','Porcino'],c:'#7a4a2a',v:'knock',m:67,w:30,d:['It sounds like a little wooden block.','Suona come un legnetto.']},
+ fin:{N:['Chanterelle','Finferlo'],c:'#f2a93b',v:'drip',m:76,w:26,d:['Plip! A drop of water.','Plip! Una goccia d’acqua.']},
+ mazza:{N:['Parasol mushroom','Mazza di tamburo'],c:'#c9b08a',v:'drum',m:45,w:16,tall:1,d:['In Italian it’s called “drumstick”. Boom!','Il nome dice tutto: bum!']},
+ chiod:{N:['Honey mushroom','Chiodino'],c:'#d99a4a',v:'nail',m:84,w:14,small:1,d:['Small as a nail, and it rings like one: ting!','Piccolo come un chiodo, e suona come un chiodo: tin!']},
+ tromb:{N:['Trumpet mushroom','Trombetta'],c:'#6a5872',v:'horn',m:62,w:7,horn:1,d:['Toot! A tiny trumpet.','Pe-pè! Una trombetta piccolissima.']},
+ camp:{N:['Bell mushroom','Fungo campanella'],c:'#a8c8f0',v:'fly',m:84,w:4.5,glow:1,d:['Ding! It rings like a little bell.','Din! Suona come una campanella.']},
+ lum:{N:['Glowing mushroom','Fungo luminoso'],c:'#7ff0d8',v:'glass',m:79,w:3,glow:1,d:['It glows at night and hums like a glass.','Di notte brilla e canta come un bicchiere.']},
+ oro:{N:['Golden mushroom','Fungo d’oro'],c:'#f2c230',v:'spark',m:72,w:1,glow:1,d:['Very, very rare. Its voice sparkles.','Rarissimo. La sua voce luccica.']},
+ canta:{N:['Singing mushroom','Fungo che canta'],c:'#e88fd0',v:'sing',m:72,w:.25,glow:1,d:['Legendary: it sings a little melody.','Leggendario: canta una piccola melodia.']}};
+const FGK=Object.keys(FGS),FGRARE={oro:1,canta:1};
+function fgRoll(){let tot=0;for(const k of FGK)tot+=FGS[k].w;let r=Math.random()*tot;for(const k of FGK){r-=FGS[k].w;if(r<=0)return k}return'porc'}
+function fgVoice(sp,o){const S0=FGS[sp];snd('fz',{v:S0.v,f:mf(S0.m),g:1,...(o||{})})}
+function fgMesh(sp,s){const S0=FGS[sp],g=new THREE.Group(),stM=lam('#efe2c4'),capM=S0.glow?glowM(S0.c,.45):lam(S0.c);
+ const h=S0.tall?.62:S0.small?.2:.3,r=S0.tall?.3:S0.small?.12:.22;
+ const st=new THREE.Mesh(new THREE.CylinderGeometry(r*.28,r*.38,h,8),stM);st.position.y=h/2;g.add(st);
+ if(S0.horn){const cp=new THREE.Mesh(new THREE.CylinderGeometry(r*.95,r*.3,h*.9,12,1,true),curve(new THREE.MeshLambertMaterial({color:S0.c,side:THREE.DoubleSide})));cp.position.y=h*.95;g.add(cp)}
+ else{const cp=new THREE.Mesh(new THREE.SphereGeometry(r,14,8,0,TAU,0,Math.PI/2),capM);cp.scale.y=S0.tall?.35:.62;cp.position.y=h;g.add(cp);
+  if(sp==='mazza'){for(let k=0;k<6;k++){const d=new THREE.Mesh(new THREE.SphereGeometry(.03,5,4),lam('#7a5a3a'));const a=k/6*TAU;d.position.set(Math.cos(a)*r*.55,h+r*.22,Math.sin(a)*r*.55);g.add(d)}}
+  if(sp==='mazza'){const ring=new THREE.Mesh(new THREE.TorusGeometry(r*.32,.02,5,10),stM);ring.rotation.x=Math.PI/2;ring.position.y=h*.7;g.add(ring)}}
+ if(S0.glow){const hl=halo(S0.c,.9*s/.8,.45);hl.position.y=h;g.add(hl);g.userData.hl=hl}
+ blob(g,r*1.3);g.scale.setScalar(s);return g}
+const FO={mus:new Map(),cgPl:null,lbl:null,piano:null,ring:[]};
+// the ground of the forest is a little higher in the middle (same shape as isleY): things stand on it, not in it
+const foY=(x,z)=>{const e=isleE1(FOI,x,z);return e<1?Math.max(.02,(1-e)*.25+Math.sin(x*.8)*Math.cos(z*.9)*.05):0};
+CG_PIANO.y=foY(CG_PIANO.x,CG_PIANO.z);CG_P.y=foY(CG_P.x,CG_P.z);
+function foSpawn(L,now,n){let k=0;for(;k<n&&L.mu.length<MUMAX;k++){let p=null;
+  for(let j=0;j<40&&!p;j++){const a=Math.random()*TAU,e=.2+Math.random()*.58,q=foE(a,e);if(!walkable(q.x,q.z))continue;if(q.distanceTo(CG_PIANO)<2.2||q.distanceTo(CG_B)<1.2||q.distanceTo(RING)<1.9)continue;
+   if(L.mu.some(m=>Math.hypot(m.x-q.x,m.z-q.z)<1.1))continue;p=q}
+  if(!p)break;L.mu.push({id:'m'+now.toString(36)+Math.floor(Math.random()*9999),x:+p.x.toFixed(2),z:+p.z.toFixed(2),sp:fgRoll(),b:now})}
+ return k}
+function foMuSync(){const L=foF(),ids=new Set(L.mu.map(m=>m.id));
+ for(const[id,o]of FO.mus)if(!ids.has(id)){FOI.G.remove(o.g);const k=clickables.indexOf(o.ht);if(k>=0)clickables.splice(k,1);FO.mus.delete(id)}
+ for(const m of L.mu)if(!FO.mus.has(m.id)){const g=fgMesh(m.sp,1.15+Math.random()*.3);g.position.set(m.x,foY(m.x,m.z),m.z);g.rotation.y=Math.random()*TAU;FOI.G.add(g);BUILD='out';
+  const id=m.id,ht=hit(g,.5,()=>foMuTap(id),'mushroom',.2);FO.mus.set(id,{g,ht,ph:Math.random()*TAU,y0:g.position.y})}}
+const foRainy=k=>['storm','hail','tune','wind','surge','drizzle'].includes(k);
+function foTick(){if(VISIT||!FOI.on||!S.farm)return;const L=foF(),now=Date.now();let n=0,why='';
+ if(!L.tn)L.tn=now+MUBASE;
+ while(now>=L.tn){if(L.mu.length<MUMAX)n+=foSpawn(L,now,1);L.tn+=MUBASE;if(why==='')why='damp'}
+ try{const d=dayIdx(now);for(const dd of[d-2,d-1,d]){const E=evPlan(dd);if(!E||!foRainy(E.k)||now<E.at||L.ed[E.id])continue;L.ed[E.id]=1;const k=foSpawn(L,now,3);if(k){n+=k;why='ev'}}
+  const ks=Object.keys(L.ed);if(ks.length>12)for(const k of ks.slice(0,ks.length-12))delete L.ed[k]}catch(e){}
+ if(started&&where==='out'&&((SKY.W.rain||0)>.2||(SKY.W.storm||0)>.2)&&now-(L.rT||0)>MURAIN){L.rT=now;const k=foSpawn(L,now,2);if(k){n+=k;why='rain'}}
+ if(n){fmDirty=true;save();foMuSync();
+  if(why==='rain'||why==='ev'){if(foVis()&&igor.position.distanceTo(new V3(FOI.cx,0,FOI.cz))<14){bubbleQ.length=0;bubbleT=0;say(tt('After the rain the mushrooms come up… and every one has its own voice!','Dopo la pioggia spuntano i funghi… e ognuno ha la sua voce!'),3.6)}
+   else if(started&&L.met)toast(tt('🍄 After the rain new mushrooms came up in the forest','🍄 Dopo la pioggia, nel bosco sono spuntati funghi nuovi'))}}}
+function foMuTap(id){if(!foVis())return;const L=foF(),m=L.mu.find(q=>q.id===id);if(!m)return;
+ walkNear(new V3(m.x,0,m.z),.55,()=>{const L=foF(),i=L.mu.findIndex(q=>q.id===id);if(i<0)return;const m=L.mu[i];
+  if(VISIT){fgVoice(m.sp);say(tt(`A ${N(FGS[m.sp].N).toLowerCase()}! Listen to its voice.`,`Un ${N(FGS[m.sp].N).toLowerCase()}! Senti che voce.`),2.6);return}
+  L.mu.splice(i,1);foPick(m.sp,false)})}
+function foPick(sp,byIg,o){const L=foF(),first=!L.seen[sp];L.seen[sp]=(L.seen[sp]|0)+1;L.bk[sp]=(L.bk[sp]|0)+1;fmDirty=true;save();foMuSync();
+ setTimeout(()=>fgVoice(sp),120);if(FGRARE[sp]||first)setTimeout(()=>snd('star'),700);
+ if(byIg)return;const S0=FGS[sp],nm=N(S0.N).toLowerCase(),tot=foBasket();bubbleQ.length=0;bubbleT=0;
+ say(first?tt(`${FGRARE[sp]?'Wow! ':''}A ${nm}! ${N(S0.d)} It goes into the mushroom book.`,`${FGRARE[sp]?'Uau! ':''}Un ${nm}! ${N(S0.d)} Lo scrivo nel libro dei funghi.`)
+  :tt(`A ${nm}! ${N(S0.d)} (${tot} in the basket)`,`Un ${nm}! ${N(S0.d)} (${tot} nel cestino)`),3.6)}
+const foBasket=()=>{const L=foF();let n=0;for(const k in L.bk)n+=L.bk[k]|0;return n};
+const foSoupable=()=>{const L=foF();let n=0;for(const k in L.bk)if(!FGRARE[k])n+=L.bk[k]|0;return n};
+/* ---------- the crooked piano, the fairy ring ---------- */
+{const g=new THREE.Group(),wd=lam('#5a3826'),wd2=lam('#3e271b'),ivory=lam('#f7f2e4'),ebony=lam('#202022'),brass=glowM('#d9b44a',.2);
+ const body=new THREE.Mesh(new THREE.BoxGeometry(1.3,1.15,.46),wd);body.position.set(0,.68,-.06);g.add(body);
+ const top=new THREE.Mesh(new THREE.BoxGeometry(1.38,.06,.52),wd2);top.position.set(0,1.28,-.06);top.rotation.z=.05;g.add(top);
+ const shelf=new THREE.Mesh(new THREE.BoxGeometry(1.3,.08,.34),wd2);shelf.position.set(0,.66,.28);g.add(shelf);
+ const keys=new THREE.Mesh(new THREE.BoxGeometry(1.2,.03,.22),ivory);keys.position.set(0,.715,.3);g.add(keys);
+ for(let k=0;k<10;k++){if([2,6,9].includes(k))continue;const b=new THREE.Mesh(new THREE.BoxGeometry(.05,.035,.13),ebony);b.position.set(-.55+k*.115+.06,.74,.25);g.add(b)}
+ for(const x of[-.58,.58]){const l=new THREE.Mesh(new THREE.BoxGeometry(.08,.62,.08),wd2);l.position.set(x,.31,.36);g.add(l)}
+ const desk=new THREE.Mesh(new THREE.BoxGeometry(.7,.36,.03),wd2);desk.position.set(0,.98,.18);desk.rotation.x=-.25;g.add(desk);
+ const sc=new THREE.Mesh(new THREE.PlaneGeometry(.5,.3),lam('#fbf6e8',{side:THREE.DoubleSide}));sc.position.set(0,.99,.2);sc.rotation.x=-.25;g.add(sc);
+ // the screws and the coin on the strings, seen through the open lid
+ for(let k=0;k<4;k++){const s=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.12,5),brass);s.position.set(-.4+k*.24,1.33,-.06);g.add(s)}
+ const coin=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.012,12),brass);coin.position.set(.3,1.33,.04);g.add(coin);
+ // a little mushroom on top
+ const mu=fgMesh('fin',.9);mu.position.set(-.45,1.3,-.1);g.add(mu);
+ const bench=new THREE.Mesh(new THREE.BoxGeometry(.7,.08,.32),lam('#8a5a3a'));bench.position.set(0,.42,.86);g.add(bench);
+ for(const[x,z]of[[-.3,.75],[.3,.75],[-.3,.97],[.3,.97]]){const l=new THREE.Mesh(new THREE.BoxGeometry(.05,.42,.05),wd2);l.position.set(x,.21,z);g.add(l)}
+ blob(g,1);g.position.copy(CG_PIANO);g.rotation.y=.18;g.rotation.z=.04;FOI.G.add(g);block(CG_PIANO.x,CG_PIANO.z,.75);FO.piano=g;BUILD='out';hit(g,.8,()=>cageTap(),'cagigor piano',.7)}
+{for(let k=0;k<9;k++){const a=k/9*TAU,m=fgMesh(k%3?'lum':'camp',.55);const rx=RING.x+Math.cos(a)*1.25,rz=RING.z+Math.sin(a)*1.05;m.position.set(rx,foY(rx,rz),rz);FOI.G.add(m);FO.ring.push(m)}}
+/* ---------- John Cagigor ---------- */
+const cgC=document.createElement('canvas');cgC.width=IGC;cgC.height=IGCH;const cgT=new THREE.CanvasTexture(cgC);let cgOK=false;
+function cgPaint(){if(!igorOK||cgOK)return;cgOK=true;const c2=cgC.getContext('2d');c2.setTransform(SCI,0,0,SCI,0,IGPAD*SCI);c2.filter=canFilter?'hue-rotate(10deg) saturate(.95)':'none';c2.drawImage(igorImg,0,0,663,730);c2.filter='none';
+ // the basket, hanging from the curl of the tongue, with mushrooms in it
+ c2.save();c2.translate(420,600);c2.lineJoin='round';c2.strokeStyle='#2b2018';c2.lineWidth=5;
+ c2.beginPath();c2.moveTo(-60,-10);c2.quadraticCurveTo(0,-110,60,-10);c2.lineWidth=7;c2.strokeStyle='#8a5a2a';c2.stroke();
+ c2.fillStyle='#e2463c';c2.beginPath();c2.ellipse(-22,-14,26,16,0,Math.PI,0);c2.fill();c2.lineWidth=4;c2.strokeStyle='#2b2018';c2.stroke();
+ c2.fillStyle='#f2a93b';c2.beginPath();c2.ellipse(20,-12,22,14,0,Math.PI,0);c2.fill();c2.stroke();
+ c2.fillStyle='#c9924a';c2.beginPath();c2.moveTo(-64,-10);c2.lineTo(64,-10);c2.lineTo(50,48);c2.lineTo(-50,48);c2.closePath();c2.fill();c2.lineWidth=5;c2.stroke();
+ c2.strokeStyle='rgba(90,55,20,.7)';c2.lineWidth=3;for(let k=0;k<3;k++){c2.beginPath();c2.moveTo(-60+k*2,6+k*15);c2.lineTo(60-k*2,6+k*15);c2.stroke()}for(let k=-2;k<=2;k++){c2.beginPath();c2.moveTo(k*24,-8);c2.lineTo(k*20,46);c2.stroke()}
+ c2.restore();
+ // the khaki bucket hat with a little red mushroom pinned on it
+ c2.save();accMap(c2,EYES);c2.translate(384,128);c2.rotate(.4);c2.lineJoin='round';c2.strokeStyle='#141414';c2.lineWidth=6;
+ c2.fillStyle='#b9a36a';c2.beginPath();c2.moveTo(-118,14);c2.quadraticCurveTo(0,40,118,14);c2.lineTo(80,-6);c2.quadraticCurveTo(0,8,-80,-6);c2.closePath();c2.fill();c2.stroke();
+ c2.fillStyle='#cdb87e';c2.beginPath();c2.moveTo(-80,-2);c2.quadraticCurveTo(-74,-74,0,-78);c2.quadraticCurveTo(74,-74,80,-2);c2.quadraticCurveTo(0,10,-80,-2);c2.closePath();c2.fill();c2.stroke();
+ c2.fillStyle='#6b5a34';c2.beginPath();c2.moveTo(-80,-6);c2.quadraticCurveTo(0,6,80,-6);c2.lineTo(78,-22);c2.quadraticCurveTo(0,-10,-78,-22);c2.closePath();c2.fill();c2.lineWidth=4;c2.stroke();
+ c2.fillStyle='#f3ead2';c2.fillRect(34,-34,9,16);c2.strokeRect(34,-34,9,16);c2.fillStyle='#d8392f';c2.beginPath();c2.ellipse(38,-36,18,11,0,Math.PI,0);c2.fill();c2.stroke();
+ c2.fillStyle='#fff';for(const[x,y]of[[31,-41],[42,-43],[48,-38]]){c2.beginPath();c2.arc(x,y,2.6,0,TAU);c2.fill()}
+ c2.restore();cgT.needsUpdate=true}
+const cgMesh=s=>new THREE.Mesh(new THREE.PlaneGeometry(IGW*s,IGH2*s).translate(0,IGH2*s/2,0),curve(new THREE.MeshBasicMaterial({map:cgT,transparent:true,alphaTest:.15,side:THREE.DoubleSide,color:new THREE.Color(.95,.96,.98)})));
+{FO.cgPl=cgMesh(1);FO.cgPl.position.copy(CG_P);FOI.G.add(FO.cgPl);const sh=new THREE.Group();sh.position.copy(CG_P);blob(sh,.32);FOI.G.add(sh);BUILD='out';hit(FO.cgPl,.45,()=>cageTap(),'cagigor',.5)}
+BUILD='out';
+const CGS=[["Listen… even silence makes music.","Ascolta… anche il silenzio fa musica."],["After the rain, the mushrooms sing.","Dopo la pioggia, i funghi cantano."],["I put a screw in my piano. Now it sounds much better!","Ho messo una vite nel pianoforte. Ora suona molto meglio!"],["What changed? Listen carefully…","Cosa è cambiato? Ascolta bene…"],["A mushroom soup for the Igorlets?","Una zuppa di funghi per gli Igorlets?"]];
+let cgNext=0,cgPlayT=0;
+FO.lbl=label(CGS[0],[CAGEN+' · mushroom hunter',CAGEN+' · cercatore di funghi'],new V3(),()=>cageTap(),6);
+PLACES.cage={get pos(){return CG_B.clone()},open:()=>cageMenu(),name:CAGEN};
+function cageTap(){if(!foVis())return;walkNear(CG_B,.6,()=>cageMenu())}
+function cageMenu(){if(!foVis())return;const L=foF();if(!L.met&&!VISIT)foMeet();
+ chips(CG_B.clone().add(new V3(0,2.1,0)),()=>{CH.title='🍄 '+CAGEN;const L=foF(),td=new Date().toDateString(),sp=foSoupable();return[
+  {t:`👂 ${tt('What changed?','Che cosa è cambiato?')} <small>${tt('level','liv.')} ${Math.min(L.st,FWL.length-1)+1}</small>`,main:1,fn:()=>{fwOpen();return false}},
+  {t:`🎹 ${tt('The prepared piano','Il pianoforte preparato')}`,fn:()=>{ppOpen();return false}},
+  {t:`✨ ${tt('Fireflies in sync','Le lucciole in sincrono')}`,fn:()=>{ffOpen();return false}},
+  {t:`🤫 ${tt('The silence of the forest','Il silenzio del bosco')}${L.sil===td?` <small>${tt('done today','fatto oggi')}</small>`:''}`,fn:()=>{slOpen();return false}},
+  sp>=4||VISIT?{t:`🍲 ${tt('Mushroom soup','Zuppa di funghi')} <small>🍄 ${sp}/4</small>`,fn:()=>{foSoup();return false}}:{t:`🍲 ${tt('Mushroom soup','Zuppa di funghi')} <small>🍄 ${sp}/4</small>`,off:1,why:tt('Soup needs 4 mushrooms: pick them in the forest (they come up after the rain).','Per la zuppa servono 4 funghi: raccoglili nel bosco (spuntano dopo la pioggia).')},
+  {t:`📖 ${tt('The mushroom book','Il libro dei funghi')} <small>${FGK.filter(k=>L.seen[k]).length}/${FGK.length}</small>`,fn:()=>{fbOpen();return false}}]},'cage')}
+function foMeet(){const L=foF();if(L.met)return;L.met=Date.now();if(L.mu.length<3)foSpawn(L,Date.now(),3-L.mu.length);foMuSync();fmDirty=true;save();
+ setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`${CAGEN}: “Hello! I’m John Cagigor. I pick mushrooms and listen to the forest: here everything makes music, even silence. Look, some mushrooms have just come up: every one has its own voice!”`,`${CAGEN}: “Ciao! Sono John Cagigor. Raccolgo funghi e ascolto il bosco: qui tutto fa musica, anche il silenzio. Guarda, sono appena spuntati dei funghi: ognuno ha la sua voce!”`),6.5)},300)}
+/* Cagigor plays his prepared piano now and then when Igor is near */
+const PREPS=['none','screw','rubber','coin','bolt','paper'];
+function cgTune(){const sc=[60,62,63,67,68,72,74,75],n=6+Math.floor(Math.random()*4);let t=0;for(let k=0;k<n;k++){const m=pick(sc)-(Math.random()<.3?12:0),p=pick(PREPS);snd('ppiano',{f:mf(m),prep:p,delay:t,g:.7});t+=pick([.25,.25,.5,.75])}cgPlayT=T+t}
+updaters.push((t,dt)=>{const on=FOI.on&&FOI.G.visible;if(!on){FO.lbl.hidden=true;return}cgPaint();
+ FO.cgPl.quaternion.copy(camera.quaternion);if(FO.sit){FO.piano.updateMatrixWorld();const b=FO.piano.localToWorld(new V3(.05,.45,.84));FO.cgPl.position.lerp(new V3(b.x-FOI.G.position.x,b.y-FOI.G.position.y-.12,b.z),.15)}else{FO.cgPl.position.x+=(CG_P.x-FO.cgPl.position.x)*.15;FO.cgPl.position.z+=(CG_P.z-FO.cgPl.position.z)*.15;FO.cgPl.position.y=CG_P.y+(T<cgPlayT?Math.abs(Math.sin(t*7))*.05:Math.abs(Math.sin(t*1.8))*.025)}
+ const near=where==='out'&&igor.position.distanceTo(CG_P)<6;FO.lbl.pos.copy(CG_P).add(new V3(0,IGH2+.45,0));FO.lbl.hidden=FO.sit||!near||!!(CH&&CH.key==='cage')||bubbleT>0||!sheet.hidden;
+ if(near&&T>cgNext){cgNext=T+7;const L1=CGS[Math.floor(Math.random()*CGS.length)];FO.lbl.text=L1;FO.lbl.el.innerHTML=N(L1)+`<small>${N(FO.lbl.sub)}</small>`}
+ if(!FO.sit&&where==='out'&&sheet.hidden&&!(window.IgorSound&&IgorSound.focused)&&igor.position.distanceTo(CG_P)<10&&T>cgPlayT+45&&Math.random()<dt*.05)cgTune();
+ for(const[,o]of FO.mus){o.g.position.y=o.y0+Math.sin(t*1.4+o.ph)*.012;if(o.g.userData.hl)o.g.userData.hl.material.opacity=.25+.35*SKY.nk+.1*Math.sin(t*2+o.ph)}});
+/* the first time: Cagigor waits near Igor's house and calls; tap him and he leads the way to the forest */
+{const H0=new V3(2.4,0,-3.2),bo=new THREE.Group();bo.position.copy(H0);world.add(bo);const pl=cgMesh(1);bo.add(pl);blob(bo,.3);bo.visible=false;
+ const CALL=[["Psst… in the forest the mushrooms make music!","Psst… nel bosco i funghi fanno musica!"],["Come and listen to the forest!","Vieni ad ascoltare il bosco!"],["Tap me: I’ll show you the way!","Toccami: ti faccio strada!"]];
+ let ci=0,cnext=0,lead=false;const L=label(CALL[0],[CAGEN+' · mushroom hunter',CAGEN+' · cercatore di funghi'],H0.clone().add(new V3(0,IGH2+.55,0)),()=>go(),0);L.hidden=true;
+ const want=()=>!VISIT&&S.farm&&FOI.on&&!foF().met&&!(typeof barF==='function'&&ISL2.on&&!barF().met)&&!(LKI.on&&!lkF().met);
+ SPKR[CAGEN]=()=>bo.visible?pl:FO.cgPl;
+ function go(){if(!want()||lead)return;lead=true;say(tt(`${CAGEN}: “Follow me!”`,`${CAGEN}: “Seguimi!”`),2);goTo('cage')}
+ BUILD='out';hit(bo,.5,()=>go(),'cagigor out',.4);
+ updaters.push((t,dt)=>{const on=want()&&where==='out';bo.visible=on;if(!on){L.hidden=true;return}cgPaint();pl.quaternion.copy(camera.quaternion);const B=CG_B;
+  if(lead){const tg=isleVia(B,bo.position),v=tg.clone().sub(bo.position);v.y=0;const d=v.length(),dd=Math.hypot(bo.position.x-B.x,bo.position.z-B.z);
+   const gap=bo.position.distanceTo(igor.position);if(d>.05&&gap<4.5)bo.position.addScaledVector(v.normalize(),Math.min(d,dt*3.2));pl.position.y=Math.abs(Math.sin(t*9))*.06;
+   if(dd<.8){bo.visible=false}if(!IG.target&&dd>1&&igor.position.distanceTo(bo.position)>.8)goTo('cage')}
+  else{pl.position.y=Math.abs(Math.sin(t*3))*.08;if(T>cnext&&igor.position.distanceTo(bo.position)<14){ci=(ci+1)%CALL.length;L.text=CALL[ci];L.el.innerHTML=N(L.text)+`<small>${N(L.sub)}</small>`;cnext=T+3.5}}
+  L.pos.copy(bo.position).add(new V3(0,IGH2+.55,0));L.hidden=lead||igor.position.distanceTo(bo.position)>14})}
+/* ---------- focus: the listening games silence the sea, the wind and the rest ---------- */
+const FOGAMES={fwc:1,fpp:1,ffs:1};let foFocus=false;
+function foFoc(on){if(foFocus===on)return;foFocus=on;if(window.IgorSound&&IgorSound.focus)IgorSound.focus(on)}
+updaters.push(()=>{if(foFocus&&!FOGAMES[sheetKind])foFoc(false)});
+/* ---------- 👂 What changed? ---------- */
+const FWV={owl:{e:'🦉',N:['Owl','Gufo'],m:[55,57,59,60],h:[1,2],pan:-.5},crick:{e:'🦗',N:['Cricket','Grillo'],m:[86,88,90,91],h:[3,5],pan:.55},
+ drip:{e:'💧',N:['Drop','Goccia'],m:[72,74,76,79],h:[2,3],pan:-.2},knock:{e:'🪵',N:['Woodpecker','Picchio'],m:[67,69,71],h:[3,4],pan:.25},
+ fly:{e:'✨',N:['Firefly','Lucciola'],m:[79,81,84,86],h:[2,3],pan:.7},drum:{e:'🍄',N:['Drum mushroom','Fungo tamburo'],m:[43,45,47,48],h:[2,3],pan:-.7},
+ leaf:{e:'🍃',N:['Leaves','Foglie'],m:null,h:[2,3],pan:.05}};
+const FWK=Object.keys(FWV),FWSTEP=.3,FWN=8,FWCYC=FWSTEP*FWN;
+const FWL=[{n:2,ch:['gone']},{n:3,ch:['gone']},{n:3,ch:['gone','note'],sh:[4,7]},{n:4,ch:['note','rhythm'],sh:[3,5]},{n:4,ch:['gone','note','rhythm'],sh:[2,4]},{n:5,ch:['note','rhythm','timbre'],sh:[2,4]},{n:6,ch:['gone','note','rhythm','timbre'],sh:[1,3]}];
+const FWLH=[['Who went away?','Chi se n’è andato?'],['One more voice','Una voce in più'],['Now a voice can change note','Ora una voce può cambiare nota'],['Four voices: a note or a rhythm','Quattro voci: una nota o un ritmo'],['Anything can change','Può cambiare di tutto'],['Something new: the timbre','Una cosa nuova: il timbro'],['Six voices, tiny changes','Sei voci, cambiamenti piccolissimi']];
+const FWCH={gone:['went away','se n’è andato'],note:['changed note','ha cambiato nota'],rhythm:['changed rhythm','ha cambiato ritmo'],timbre:['changed timbre (the colour of the sound)','ha cambiato timbro (il colore del suono)']};
+function fwPat(n){const s=new Set();while(s.size<n)s.add(Math.floor(Math.random()*FWN));return[...s].sort((a,b)=>a-b)}
+function fwScene(lv){const L0=FWL[lv],ks=FWK.slice().sort(()=>Math.random()-.5).slice(0,L0.n),used=new Map();
+ const A=ks.map(k=>{const V=FWV[k],n=V.h[0]+Math.floor(Math.random()*(V.h[1]-V.h[0]+1));return{k,m:V.m?pick(V.m):60,p:fwPat(n),alt:false}});
+ // the change
+ let ty=pick(L0.ch),i=Math.floor(Math.random()*A.length);
+ for(let g=0;g<10&&ty==='note'&&!FWV[A[i].k].m;g++)i=Math.floor(Math.random()*A.length);if(ty==='note'&&!FWV[A[i].k].m)ty=L0.ch.includes('rhythm')?'rhythm':'gone';
+ const B=A.map(v=>({...v,p:v.p.slice()})),b=B[i];
+ if(ty==='gone')b.gone=true;
+ else if(ty==='note'){const[s0,s1]=L0.sh||[4,7],d=(s0+Math.floor(Math.random()*(s1-s0+1)))*(Math.random()<.5?-1:1);b.m=A[i].m+d}
+ else if(ty==='rhythm'){let p;for(let g=0;g<20;g++){p=fwPat(b.p.length+(Math.random()<.3?1:0));if(p.filter(x=>!b.p.includes(x)).length>=1&&p.join()!==b.p.join())break}b.p=p}
+ else b.alt=true;
+ return{A,B,i,ty,k:A[i].k}}
+function fwPlay(sc,t0,cyc,only){for(let c=0;c<cyc;c++)for(const v of sc){if(v.gone||only&&only!==v.k)continue;for(const s of v.p)snd('fz',{v:v.k,f:mf(v.m),alt:v.alt,delay:t0+c*FWCYC+s*FWSTEP,pan:FWV[v.k].pan*.8,g:only?1:.85})}}
+let FW=null;
+const FOOK=[['Bravo!','Bravo!'],['Exactly!','Esatto!'],['What ears!','Che orecchie!'],['The owl is jealous!','Il gufo è invidioso!'],['You heard it!','L’hai sentito!']];
+function fwOpen(st){const L=foF(),s0=Math.min(L.st,FWL.length-1);FW={st:st!=null?Math.min(st,s0):s0,i:0,ok:0,q:null,busy:false,tm:[]};fwIntro()}
+const fwChips=()=>`<div class="lkfr">${FWK.map(k=>`<i style="--c:#5a7a4a">${FWV[k].e}</i>`).join('')}</div>`;
+function fwIntro(){const L=foF(),s0=Math.min(L.st,FWL.length-1);foFoc(true);
+ openSheet('fwc',`<h2>👂 ${tt('What changed?','Che cosa è cambiato?')}</h2>
+ <p class="shn">${tt('The forest plays a little loop of sounds, then plays it again. Something changes: tap the voice that changed!','Il bosco suona un piccolo giro di suoni, poi lo risuona. Qualcosa cambia: tocca la voce che è cambiata!')}</p>
+ <p class="lkst">${tt('Level','Livello')} <b>${FW.st+1}</b>/${FWL.length} · ${N(FWLH[FW.st])} · ${FWL[FW.st].n} ${tt('voices','voci')}</p>
+ <div class="lkans fwans">${FWK.map(k=>`<button type="button" data-fwh="${k}">${FWV[k].e} ${N(FWV[k].N)}</button>`).join('')}</div>
+ <p class="shn">${tt('Tap a voice to hear it alone.','Tocca una voce per sentirla da sola.')}</p>
+ ${s0>0?`<div class="lklv">${Array.from({length:s0+1},(_,k)=>`<button type="button" data-fwl="${k}"${k===FW.st?' class="on"':''}>${k+1}</button>`).join('')}</div>`:''}
+ <div class="lkctl"><button type="button" class="m" data-fw="go">▶ ${tt('Start: 8 rounds','Inizia: 8 giri')}</button></div>`)}
+function fwClear(){if(FW){for(const t of FW.tm)clearTimeout(t);FW.tm=[]}}
+function fwListen(){if(!FW||!FW.q)return;fwClear();const q=FW.q,m=()=>sb.querySelector('.fwmsg');FW.ph='listen';
+ const set=(t,a)=>FW.tm.push(setTimeout(()=>{if(sheetKind!=='fwc')return;const e=m();if(e)e.innerHTML=a},t*1000));
+ set(0,`<b>${tt('Before…','Prima…')}</b>`);fwPlay(q.A,.15,2);set(.15+2*FWCYC+.2,'…');set(.15+2*FWCYC+.75,`<b>${tt('After…','Dopo…')}</b>`);fwPlay(q.B,.15+2*FWCYC+.75,2);
+ set(.15+4*FWCYC+1,tt('What changed?','Che cosa è cambiato?'));FW.tm.push(setTimeout(()=>{if(FW)FW.ph='ans'},(.15+4*FWCYC+.4)*1000))}
+function fwNext(){if(FW.i>=8){fwEnd();return}FW.q=fwScene(FW.st);FW.busy=false;const q=FW.q;
+ openSheet('fwc',`<h2>👂 ${tt('What changed?','Che cosa è cambiato?')}</h2>
+ <p class="lkst">${tt('Round','Giro')} <b>${FW.i+1}</b>/8 · ✔ ${FW.ok}</p><p class="shn fwmsg">${tt('Listen…','Ascolta…')}</p>
+ <div class="lkans fwans">${q.A.map(v=>`<button type="button" data-fwa="${v.k}">${FWV[v.k].e} ${N(FWV[v.k].N)}</button>`).join('')}</div>
+ <div class="lkctl"><button type="button" data-fw="again">🔁 ${tt('Before and after','Prima e dopo')}</button></div>`);
+ setTimeout(()=>{if(sheetKind==='fwc'&&FW&&FW.q===q)fwListen()},300)}
+function fwAns(k){if(!FW||!FW.q||FW.busy)return;FW.busy=true;FW.ph='wait';fwClear();const q=FW.q,ok=k===q.k,m=sb.querySelector('.fwmsg');
+ sb.querySelectorAll('[data-fwa]').forEach(b=>{if(b.dataset.fwa===q.k)b.classList.add('ok');else if(b.dataset.fwa===k)b.classList.add('no')});
+ const what=`${FWV[q.k].e} ${tt(`The ${N(FWV[q.k].N).toLowerCase()}`,`${q.k==='leaf'?'Le':q.k==='drip'||q.k==='fly'?'La':'Il'} ${N(FWV[q.k].N).toLowerCase()}`)} ${q.k==='leaf'&&LANG==='it'?{gone:'se ne sono andate',note:'hanno cambiato nota',rhythm:'hanno cambiato ritmo',timbre:'hanno cambiato timbro (il colore del suono)'}[q.ty]:N(FWCH[q.ty])}`;
+ if(ok){FW.ok++;snd('star');if(m)m.innerHTML=`${N(pick(FOOK))} ${what}.`}
+ else{if(m)m.innerHTML=`${pick(tt(['Almost!','Good try!','Nearly there!'],['Quasi!','Bel tentativo!','Ci sei quasi!']))} ${what}. ${tt('Listen: before, then after.','Ascolta: prima, poi dopo.')}`;
+  const v0=q.A[q.i],v1=q.B[q.i];fwPlay([v0],.5,1,v0.k);if(!v1.gone)fwPlay([v1],.5+FWCYC+.5,1,v1.k)}
+ FW.i++;FW.tm.push(setTimeout(()=>{if(sheetKind==='fwc'&&FW)fwNext()},ok?1500:(1.5+2*FWCYC)*1000+600))}
+function fwEnd(){const L=foF(),st=FW.st,ok=FW.ok,seeds=ok?Math.min(10,Math.max(1,Math.round(ok*(st+4)/8))):0;let up='';
+ if(!VISIT){L.best[st]=Math.max(L.best[st]|0,ok);if(ok>=7&&st===L.st&&L.st<FWL.length-1){L.st++;up=tt(`Level ${L.st+1} is open: ${N(FWLH[L.st]).toLowerCase()}!`,`Si apre il livello ${L.st+1}: ${N(FWLH[L.st]).toLowerCase()}!`)}
+  if(seeds)S.seeds=(S.seeds|0)+seeds;fmDirty=true;save()}
+ openSheet('fwc',`<h2>👂 ${tt('What changed?','Che cosa è cambiato?')}</h2><p class="lkbig">${ok}/8</p>
+ <p class="shn">${ok===8?tt('All right! You hear everything, like an owl.','Tutti giusti! Senti tutto, come un gufo.'):ok>=6?tt('What ears!','Che orecchie!'):tt('Every time you play, you hear a little more.','Ogni volta che giochi, senti un po’ di più.')} ${up}</p>
+ ${seeds&&!VISIT?`<p class="lkst">🌱 +${seeds} ${tt('seeds','semi')}</p>`:''}
+ <div class="lkctl"><button type="button" class="m" data-fw="replay">▶ ${tt('Play again','Gioca ancora')}</button><button type="button" data-fw="close">${tt('Close','Chiudi')}</button></div>`);
+ FW.q=null;setTimeout(()=>foFoc(false),900);if(seeds&&!VISIT){window._fromGame='';setTimeout(()=>{try{seedParty(seeds)}catch(e){}},500)}}
+/* ---------- 🎹 the prepared piano ---------- */
+const PPO={none:{e:'🎹',N:['Nothing: a normal piano','Niente: pianoforte normale']},screw:{e:'🔩',N:['A screw','Una vite']},rubber:{e:'🧽',N:['A piece of rubber','Un pezzo di gomma']},
+ coin:{e:'🪙',N:['A coin','Una moneta']},bolt:{e:'⚙️',N:['A heavy bolt','Un bullone pesante']},paper:{e:'📄',N:['A sheet of paper','Un foglio di carta']}};
+const PPL=[['none','screw','rubber'],['none','screw','rubber','coin'],['none','screw','rubber','coin','bolt'],['none','screw','rubber','coin','bolt','paper']];
+let PP=null;
+function ppPhrase(prep,o){const sc=[60,62,64,67,69,72],n=3,b=pick([.38,.45]);const ms=[];for(let k=0;k<n;k++)ms.push(pick(sc)-(Math.random()<.25?12:0));ms.forEach((m,k)=>snd('ppiano',{f:mf(m),prep,delay:(o&&o.delay||0)+k*b}));cgPlayT=T+n*b+.5;return ms}
+function ppOpen(){const L=foF();PP={lv:Math.min(L.pl|0,PPL.length-1),i:0,ok:0,q:null,busy:false};foFoc(true);
+ openSheet('fpp',`<h2>🎹 ${tt('The prepared piano','Il pianoforte preparato')}</h2>
+ <p class="shn">${tt(`${CAGEN} puts something between the strings of his piano and the sound changes. Listen and guess what he put in!`,`${CAGEN} mette qualcosa tra le corde del suo pianoforte e il suono cambia. Ascolta e indovina cosa ci ha messo!`)}</p>
+ <p class="lkst">${tt('Level','Livello')} <b>${PP.lv+1}</b>/${PPL.length} · ${PPL[PP.lv].length} ${tt('choices','possibilità')}</p>
+ <div class="lkans">${PPL[PP.lv].map(k=>`<button type="button" data-pph="${k}">${PPO[k].e} ${N(PPO[k].N)}</button>`).join('')}</div>
+ <p class="shn">${tt('Tap an object to hear it first.','Tocca un oggetto per sentirlo prima.')}</p>
+ <div class="lkctl"><button type="button" class="m" data-pp="go">▶ ${tt('Start: 6 rounds','Inizia: 6 giri')}</button></div>`)}
+function ppNext(){if(PP.i>=6){ppEnd();return}const ch=PPL[PP.lv];let k=pick(ch);if(PP.q&&k===PP.q.k&&Math.random()<.6)k=pick(ch);PP.q={k};PP.busy=false;
+ openSheet('fpp',`<h2>🎹 ${tt('The prepared piano','Il pianoforte preparato')}</h2>
+ <p class="lkst">${tt('Round','Giro')} <b>${PP.i+1}</b>/6 · ✔ ${PP.ok}</p><p class="shn ppmsg">${tt('Listen… what is between the strings?','Ascolta… cosa c’è tra le corde?')}</p>
+ <div class="lkans">${ch.map(x=>`<button type="button" data-ppa="${x}">${PPO[x].e} ${N(PPO[x].N)}</button>`).join('')}</div>
+ <div class="lkctl"><button type="button" data-pp="again">🔁 ${tt('Again','Ancora')}</button></div>`);
+ setTimeout(()=>{if(sheetKind==='fpp'&&PP&&PP.q)PP.q.ms=ppPhrase(PP.q.k,{delay:.1})},350)}
+function ppAgain(){if(!PP||!PP.q)return;const q=PP.q,b=.42;(q.ms||[60,64,67]).forEach((m,k)=>snd('ppiano',{f:mf(m),prep:q.k,delay:.05+k*b}))}
+function ppAns(k){if(!PP||!PP.q||PP.busy)return;PP.busy=true;const q=PP.q,ok=k===q.k,m=sb.querySelector('.ppmsg');
+ sb.querySelectorAll('[data-ppa]').forEach(b=>{if(b.dataset.ppa===q.k)b.classList.add('ok');else if(b.dataset.ppa===k)b.classList.add('no')});
+ if(ok){PP.ok++;snd('star');if(m)m.textContent=`${N(pick(FOOK))} ${PPO[q.k].e} ${N(PPO[q.k].N)}!`}
+ else{if(m)m.textContent=`${tt('Almost! It was','Quasi! Era')} ${PPO[q.k].e} ${N(PPO[q.k].N).toLowerCase()}. ${tt('Listen again:','Riascolta:')}`;setTimeout(()=>{if(sheetKind==='fpp')ppAgain()},400)}
+ PP.i++;setTimeout(()=>{if(sheetKind==='fpp'&&PP)ppNext()},ok?1300:3000)}
+function ppEnd(){const L=foF(),lv=PP.lv,ok=PP.ok,seeds=ok?Math.min(6,Math.max(1,Math.round(ok*(lv+3)/6))):0;let up='';
+ if(!VISIT){if(ok>=5&&lv===(L.pl|0)&&lv<PPL.length-1){L.pl=lv+1;const nk=PPL[L.pl][PPL[L.pl].length-1];up=tt(`Next time there is something new: ${PPO[nk].e} ${N(PPO[nk].N).toLowerCase()}!`,`La prossima volta c’è una cosa nuova: ${PPO[nk].e} ${N(PPO[nk].N).toLowerCase()}!`)}
+  if(seeds)S.seeds=(S.seeds|0)+seeds;fmDirty=true;save()}
+ openSheet('fpp',`<h2>🎹 ${tt('The prepared piano','Il pianoforte preparato')}</h2><p class="lkbig">${ok}/6</p>
+ <p class="shn">${ok===6?tt(`${CAGEN}: “Perfect! You could prepare a piano yourself.”`,`${CAGEN}: “Perfetto! Potresti preparare un pianoforte anche tu.”`):tt(`${CAGEN}: “Every object has its voice. Next time you’ll hear them even better.”`,`${CAGEN}: “Ogni oggetto ha la sua voce. La prossima volta le sentirai ancora meglio.”`)} ${up}</p>
+ ${seeds&&!VISIT?`<p class="lkst">🌱 +${seeds} ${tt('seeds','semi')}</p>`:''}
+ <div class="lkctl"><button type="button" class="m" data-pp="replay">▶ ${tt('Play again','Gioca ancora')}</button><button type="button" data-pp="close">${tt('Close','Chiudi')}</button></div>`);
+ PP.q=null;setTimeout(()=>foFoc(false),900);if(seeds&&!VISIT){window._fromGame='';setTimeout(()=>{try{seedParty(seeds)}catch(e){}},400)}}
+/* ---------- ✨ the fireflies in sync ---------- */
+const FFL=[{bpm:[80,80],guide:99,tol:150},{bpm:[92,92],guide:8,tol:130},{bpm:[100,108],guide:4,tol:115},{bpm:[72,120],guide:4,tol:100},{bpm:[66,132],guide:4,tol:85}];
+const FFH=[['The woodpecker keeps the time with you','Il picchio tiene il tempo con te'],['The woodpecker stops after 8 beats','Il picchio smette dopo 8 colpi'],['Only 4 beats to start','Solo 4 colpi per partire'],['A different tempo every time','Un tempo diverso ogni volta'],['Very slow or very fast','Lentissimo o velocissimo']];
+const FFBEATS=20,FFPEN=[0,2,4,7,9,12,14,16];
+let FFG=null;
+function ffOpen(){const L=foF(),lv=Math.min(L.fl|0,FFL.length-1);FFG={lv,ph:'intro'};foFoc(true);
+ openSheet('ffs',`<h2>✨ ${tt('Fireflies in sync','Le lucciole in sincrono')}</h2>
+ <p class="shn">${tt('In the forest the fireflies flash each on their own. Tap the beat, steady like a clock: little by little they will light up all together!','Nel bosco le lucciole lampeggiano ognuna per conto suo. Tocca il tempo, regolare come un orologio: piano piano si accenderanno tutte insieme!')}</p>
+ <p class="lkst">${tt('Level','Livello')} <b>${lv+1}</b>/${FFL.length} · ${N(FFH[lv])}</p>
+ <canvas class="ffcv" width="640" height="240"></canvas>
+ <p class="shn ffmsg">${document.documentElement.classList.contains('touch')?tt('Tap the fireflies (or the button) on the beat.','Tocca le lucciole (o il pulsante) a tempo.'):tt('Tap the fireflies, the button or the space bar on the beat.','Tocca le lucciole, il pulsante o la barra spaziatrice a tempo.')}</p>
+ <div class="lkctl"><button type="button" class="m" data-ff="go">▶ ${tt('Start','Inizia')}</button><button type="button" data-ff="tap" class="fftap" hidden>✨ ${tt('Tap!','Tocca!')}</button></div>`);
+ FFG.cv=sb.querySelector('.ffcv');FFG.fl=Array.from({length:8},(_,i)=>({x:.1+i*.115+Math.random()*.03,y:.3+Math.random()*.45,off:Math.random()-.5,glow:0,last:-1}))}
+function ffStart(){if(!FFG)return;const S0=FFL[FFG.lv],bpm=Math.round(S0.bpm[0]+Math.random()*(S0.bpm[1]-S0.bpm[0])),per=60/bpm;
+ Object.assign(FFG,{ph:'play',bpm,per,t0:performance.now()/1000+.8,taps:[],q:new Array(FFBEATS).fill(0),k:0});
+ foFoc(true);for(let b=0;b<FFBEATS;b++)if(b<S0.guide)snd('fz',{v:'knock',f:mf(b%4?67:72),alt:false,delay:.8+b*per,g:b<4?1:.5});
+ const g=sb.querySelector('[data-ff="go"]');if(g)g.hidden=true;const tp=sb.querySelector('.fftap');if(tp)tp.hidden=false;
+ const m=sb.querySelector('.ffmsg');if(m)m.textContent=tt(`The woodpecker gives the tempo: ${bpm} beats a minute. Join in!`,`Il picchio dà il tempo: ${bpm} colpi al minuto. Entra anche tu!`);
+ FFG.end=FFG.t0+(FFBEATS-.5)*per+.3}
+function ffTap(ts){if(!FFG||FFG.ph!=='play')return;const now=(ts>0?ts:performance.now())/1000; // the moment of the touch (event.timeStamp), not when the page gets to itFFG.taps.push(now);const b=Math.round((now-FFG.t0)/FFG.per);
+ snd('fz',{v:'fly',f:mf(72+FFPEN[(FFG.k++)%8]),g:.7});
+ if(b<0||b>=FFBEATS)return;const e=now-(FFG.t0+b*FFG.per);FFG.lastE=e;
+ // the fireflies come closer together a little at every tap on the beat
+ const tol=FFL[FFG.lv].tol/1000,q=Math.max(0,1-Math.abs(e)/tol);if(q>0)for(const f of FFG.fl){f.off*=(1-.32*q);f.glow=1}}
+function ffScore(){// the steadiness: errors measured from the player's own average delay (headphones and speakers add a little)
+ const per=FFG.per,tol=FFL[FFG.lv].tol/1000,E=[];for(let b=4;b<FFBEATS;b++){const tb=FFG.t0+b*per;let best=null;for(const t of FFG.taps){const e=t-tb;if(Math.abs(e)<per/2&&(best==null||Math.abs(e)<Math.abs(best)))best=e}E.push(best)}
+ const got=E.filter(e=>e!=null).sort((a,b)=>a-b),med=got.length?Math.max(-.12,Math.min(.12,got[Math.floor(got.length/2)])):0;
+ let s=0;for(const e of E)if(e!=null)s+=Math.max(0,1-Math.abs(e-med)/tol);const extra=Math.max(0,FFG.taps.length-got.length-4);return Math.max(0,Math.min(1,(s-extra*.5)/(FFBEATS-4)))}
+function ffEnd(){if(!FFG||FFG.ph!=='play')return;FFG.ph='end';const L=foF(),lv=FFG.lv,sy=ffScore(),pc=Math.round(sy*100),seeds=sy>.15?Math.min(10,Math.max(1,Math.round(sy*(lv+4)*1.25))):0;let up='';
+ if(!VISIT){if(sy>=.8&&lv===(L.fl|0)&&lv<FFL.length-1){L.fl=lv+1;up=tt(`Level ${lv+2}: ${N(FFH[lv+1]).toLowerCase()}!`,`Livello ${lv+2}: ${N(FFH[lv+1]).toLowerCase()}!`)}
+  if(sy>=.5){L.bpm=FFG.bpm}if(seeds)S.seeds=(S.seeds|0)+seeds;fmDirty=true;save()}
+ for(const f of FFG.fl)f.off*=sy>.6?0:1;
+ const m=sb.querySelector('.ffmsg');if(m)m.innerHTML=`<b>${pc}%</b> · ${pc>=90?tt('All the fireflies light up together!','Tutte le lucciole si accendono insieme!'):pc>=60?tt('Almost all together: what a sight!','Quasi tutte insieme: che spettacolo!'):tt('Some are already together. Try again: steady, steady…','Alcune sono già insieme. Riprova: regolare, regolare…')} ${up}${sy>=.5&&!VISIT?' '+tt(`Tonight they will flash at ${FFG.bpm} beats a minute.`,`Stanotte lampeggeranno a ${FFG.bpm} colpi al minuto.`):''}${seeds&&!VISIT?` · 🌱 +${seeds}`:''}`;
+ const g=sb.querySelector('[data-ff="go"]');if(g){g.hidden=false;g.textContent='▶ '+tt('Again','Ancora')}const tp=sb.querySelector('.fftap');if(tp)tp.hidden=true;
+ setTimeout(()=>foFoc(false),900);if(seeds&&!VISIT){window._fromGame='';setTimeout(()=>{try{seedParty(seeds)}catch(e){}},400)}}
+function ffDraw(){const c=FFG.cv&&FFG.cv.getContext('2d');if(!c)return;const W=640,H=240,now=performance.now()/1000;c.clearRect(0,0,W,H);
+ const gr=c.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#0e1a26');gr.addColorStop(1,'#1d3324');c.fillStyle=gr;c.beginPath();c.roundRect(0,0,W,H,18);c.fill();
+ for(let k=0;k<5;k++){c.fillStyle='rgba(20,40,24,.9)';c.beginPath();c.ellipse(60+k*140,H+10,70,40+k%2*20,0,0,TAU);c.fill()}
+ const per=FFG.per||.75,base=FFG.t0||now;
+ for(const f of FFG.fl){let lit=0;if(FFG.ph==='play'||FFG.ph==='end'){const u=(now-base)/per+f.off,fr=u-Math.floor(u);lit=Math.max(0,1-fr*4)}else{const u=now*1.3+f.off*7,fr=u-Math.floor(u);lit=Math.max(0,1-fr*3)}
+  f.glow=Math.max(0,f.glow-.04);const x=f.x*W,y=f.y*H+Math.sin(now*1.2+f.x*9)*6,r=6+lit*22;
+  const g2=c.createRadialGradient(x,y,0,x,y,r*2);g2.addColorStop(0,`rgba(230,255,140,${.25+lit*.7})`);g2.addColorStop(1,'rgba(216,255,106,0)');c.fillStyle=g2;c.beginPath();c.arc(x,y,r*2,0,TAU);c.fill();
+  c.fillStyle=`rgba(240,255,190,${.4+lit*.6})`;c.beginPath();c.arc(x,y,4,0,TAU);c.fill()}
+ if(FFG.ph==='play'){const b=Math.floor((now-FFG.t0)/FFG.per);c.fillStyle='rgba(247,236,212,.7)';c.font='600 15px system-ui';c.textAlign='right';c.fillText(`${Math.max(0,Math.min(FFBEATS,b+1))}/${FFBEATS}`,W-16,24);if(now>FFG.end)ffEnd()}}
+updaters.push(()=>{if(sheetKind==='ffs'&&FFG){try{ffDraw()}catch(e){}}else if(FFG&&FFG.ph==='play')FFG.ph='intro'});
+addEventListener('keydown',e=>{if(sheetKind!=='ffs'||!FFG||e.key!==' '||/INPUT|TEXTAREA/.test(e.target.tagName))return;e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;if(FFG.ph==='play')ffTap(e.timeStamp);else ffStart()},true);
+sb.addEventListener('pointerdown',e=>{if(sheetKind!=='ffs'||!FFG||FFG.ph!=='play')return;if(e.target.closest('.ffcv,.fftap')){e.preventDefault();e.stopPropagation();ffTap(e.timeStamp)}},true);
+/* ---------- 🤫 the silence of the forest: 4'33" ----------
+   (12 Nov 17:23, Fabio) It lasts 4 minutes and 33 seconds, like John Cage's piece, with a timer. Cagigor sits at his piano and plays… nothing,
+   in three movements (the timings of the first performance, 1952: 30", 2'23", 1'40"). No panel on the screen while it goes on:
+   only a small timer at the top. The island keeps sounding (sea, wind, Igorlets): that is the piece. Igor says nothing meanwhile.
+   Afterwards: what did you hear? (some forest voices are hidden in the four and a half minutes). Seeds once a day. */
+let SL=null;const SLMOV=[30,143,100],SLDUR=273;
+function slOpen(){const L=foF(),td=new Date().toDateString();SL={ph:'intro',paid:L.sil===td};
+ openSheet('fsl',`<h2>🤫 ${tt('The silence of the forest','Il silenzio del bosco')}</h2>
+ <p class="shn">${tt(`${CAGEN}: “Now I play 4′33″. For four minutes and thirty-three seconds I play nothing at all: the music is everything you hear around you. Then you tell me what you heard.”`,`${CAGEN}: “Adesso suono 4′33″. Per quattro minuti e trentatré secondi non suono niente: la musica è tutto quello che senti intorno. Poi mi dici cosa hai sentito.”`)}</p>
+ <p class="shn">${SL.paid?tt('You already did it today: you can listen again, the seeds come back tomorrow.','Oggi l’hai già fatto: puoi riascoltare, i semi tornano domani.'):tt('Once a day: up to 3 seeds.','Una volta al giorno: fino a 3 semi.')}</p>
+ <p class="lkbig">4′33″</p>
+ <div class="lkctl"><button type="button" class="m" data-sl="go">🤫 ${tt('Listen','Ascolta')}</button></div>`)}
+function slStop(){if(SL&&SL.tm){for(const x of SL.tm)clearTimeout(x);SL.tm=[]}const e=document.getElementById('slp');if(e)e.remove()}
+function slStart(){if(!SL)return;closeSheet();foFoc(false);const ks=FWK.slice().sort(()=>Math.random()-.5).slice(0,3+Math.floor(Math.random()*3));SL.heard=ks;SL.ph='play';SL.t0=performance.now()/1000;SL.dur=SLDUR;SL.tm=[];
+ for(const k of ks){const V=FWV[k],times=2+Math.floor(Math.random()*3);for(let j=0;j<times;j++){const t=8+Math.random()*(SLDUR-16),m=V.m?pick(V.m):60,n=V.h[0]+Math.floor(Math.random()*2);SL.tm.push(setTimeout(()=>{if(!SL||SL.ph!=='play')return;for(let s=0;s<n;s++)snd('fz',{v:k,f:mf(m),delay:s*(k==='crick'?.32:.45),pan:V.pan*.9,g:.75})},t*1000))}}
+ const el=document.createElement('div');el.id='slp';el.innerHTML=`<span class="slt"></span><button type="button" aria-label="${tt('Stop','Ferma')}">✕</button>`;document.body.appendChild(el);
+ el.querySelector('button').onclick=e=>{e.stopPropagation();SL.ph='intro';slStop();FO.sit=false;sayQ(tt(`${CAGEN}: “We’ll listen another time.”`,`${CAGEN}: “Ascolteremo un’altra volta.”`),2.6)};
+ bubbleQ.length=0;bubbleT=0;FO.sit=true;sayQ(tt(`${CAGEN}: “4′33″. First movement.” (he sits at the piano… and plays nothing)`,`${CAGEN}: “4′33″. Primo movimento.” (si siede al pianoforte… e non suona niente)`),4)}
+function slAsk(){slStop();SL.ph='ask';SL.pick=new Set();FO.sit=false;
+ openSheet('fsl',`<h2>🤫 ${tt('What did you hear?','Cosa hai sentito?')}</h2>
+ <p class="shn">${tt(`${CAGEN} gets up and bows. Among all the sounds of the island, which forest voices did you hear? Tap them (and nothing else).`,`${CAGEN} si alza e fa l’inchino. Tra tutti i suoni dell’isola, quali voci del bosco hai sentito? Toccale (e nient’altro).`)}</p>
+ <div class="lkans">${FWK.map(k=>`<button type="button" data-slp="${k}">${FWV[k].e} ${N(FWV[k].N)}</button>`).join('')}</div>
+ <div class="lkctl"><button type="button" class="m" data-sl="done">✓ ${tt('That’s what I heard','Ho sentito questi')}</button></div>`)}
+function slDone(){const L=foF(),H=new Set(SL.heard),P=SL.pick;let hit0=0,wrong=0;for(const k of FWK){if(H.has(k)&&P.has(k))hit0++;else if(H.has(k)!==P.has(k))wrong++}
+ const seeds=SL.paid||VISIT?0:wrong===0?3:wrong<=1?2:hit0?1:0;if(!VISIT){L.sil=new Date().toDateString();if(seeds)S.seeds=(S.seeds|0)+seeds;fmDirty=true;save()}
+ sb.querySelectorAll('[data-slp]').forEach(b=>{const k=b.dataset.slp;if(H.has(k))b.classList.add('ok');else if(P.has(k))b.classList.add('no')});
+ const bt=sb.querySelector('[data-sl="done"]');if(bt)bt.outerHTML=`<button type="button" data-sl="close">${tt('Close','Chiudi')}</button>`;
+ const p=document.createElement('p');p.className='shn';p.innerHTML=`${wrong===0?tt('Everything, exactly!','Tutto, esattamente!'):tt(`In the forest there were: ${SL.heard.map(k=>FWV[k].e).join(' ')}.`,`Nel bosco c’erano: ${SL.heard.map(k=>FWV[k].e).join(' ')}.`)} ${tt(`${CAGEN}: “There is no real silence: there is always something to listen to.”`,`${CAGEN}: “Il silenzio vero non esiste: c’è sempre qualcosa da ascoltare.”`)}${seeds?` · 🌱 +${seeds}`:''}`;sb.appendChild(p);
+ if(seeds){window._fromGame='';setTimeout(()=>{try{seedParty(seeds)}catch(e){}},400)}}
+updaters.push(()=>{if(!SL||SL.ph!=='play')return;if(where!=='out'){SL.ph='intro';slStop();FO.sit=false;return}
+ const el=performance.now()/1000-SL.t0,left=Math.max(0,SL.dur-el);let mv=0,acc=0;for(let k=0;k<3;k++){acc+=SLMOV[k];if(el<acc){mv=k;break}mv=2}
+ if(SL.mv!==mv){if(SL.mv!=null)sayQ(tt(`${CAGEN}: “${['First','Second','Third'][mv]} movement.”`,`${CAGEN}: “${['Primo','Secondo','Terzo'][mv]} movimento.”`),2.4);SL.mv=mv}
+ const e=document.querySelector('#slp .slt'),s=Math.ceil(left);if(e)e.textContent=`🤫 4′33″ · ${['I','II','III'][mv]} · ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+ if(left<=0){sayQ(tt(`${CAGEN}: “Thank you for listening.”`,`${CAGEN}: “Grazie per aver ascoltato.”`),2.6);SL.ph='end';setTimeout(()=>{if(SL&&SL.ph==='end')slAsk()},1800)}});
+{const st=document.createElement('style');st.textContent=`#slp{position:fixed;z-index:7;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:8px;padding:6px 8px 6px 14px;border-radius:999px;background:rgba(20,16,34,.78);color:#f7ecd4;font:600 14px/1.2 var(--toon,system-ui);box-shadow:0 3px 0 rgba(0,0,0,.35)}
+#slp button{width:28px;height:28px;padding:0;border-radius:50%;font-size:14px;line-height:1}`;document.head.appendChild(st)}
+/* ---------- quiet: on Gondoligor's gondola and during 4'33" Igor says nothing out of place (12 Nov 17:23, Fabio) ----------
+   Only the host speaks (Gondoligor on the gondola, Cagigor during the silence); on the gondola Igor says two or three things
+   about the lake, then nothing until he gets off. */
+let sayOK=0;
+const igQuiet=()=>typeof GR!=='undefined'&&GR.on?'gond':SL&&(SL.ph==='play'||SL.ph==='end')?'sil':'';
+{const _say=say;say=function(t,sec){const q=igQuiet();if(q&&!sayOK){const m=/^([^:“\n]{1,30}): “/.exec(t||''),who=m&&m[1].trim();if(who!==(q==='gond'?GONDN:CAGEN))return}return _say(t,sec)}}
+function sayQ(t,s){sayOK=1;try{say(t,s)}finally{sayOK=0}}
+{const GL=[["Wooow, how beautiful the lake is!","Uauuu, che bello il lago!"],["Look at the lily pads… and the frogs are listening.","Guarda le ninfee… e le rane ascoltano."],["What a voice, Gondoligor!","Che voce, Gondoligor!"]];let gi=0;
+ updaters.push(()=>{if(!(typeof GR!=='undefined'&&GR.on)){gi=0;return}const at=[.18,.5,.8];if(gi<3&&GR.u>=at[gi]){if(gi<2||Math.random()<.5)sayQ(N(GL[gi]),3);gi++}})}
+/* ---------- 🍲 mushroom soup ---------- */
+function foSoup(){if(VISIT){say(tt('Cagigor’s soup is only for his own island’s Igorlets.','La zuppa di Cagigor è solo per gli Igorlets della sua isola.'),2.6);return}
+ const F=FM(),L=foF();if(foSoupable()<4){say(tt('Soup needs 4 mushrooms.','Per la zuppa servono 4 funghi.'),2.4);return}
+ const need=F.igs.filter(g=>g.en<enMaxG(g)-.01||g.rest);if(!need.length){bubbleQ.length=0;bubbleT=0;say(tt(`${CAGEN}: “All the Igorlets are full of energy! Let’s keep the mushrooms for later.”`,`${CAGEN}: “Gli Igorlets sono tutti pieni di energia! Teniamo i funghi per dopo.”`),3.4);return}
+ let n=4;while(n>0){const k=Object.keys(L.bk).filter(k=>!FGRARE[k]&&(L.bk[k]|0)>0).sort((a,b)=>(L.bk[b]|0)-(L.bk[a]|0))[0];if(!k)break;L.bk[k]--;if(!L.bk[k])delete L.bk[k];n--}
+ for(const g of F.igs){g.en=enMaxG(g);if(g.rest)g.rest=false;const o=igObjs.get(g.id);if(o){o.jump=.5;o.showT=T+4}}L.soup=(L.soup|0)+1;
+ snd('munch');setTimeout(()=>snd('wish'),500);fmDirty=true;try{hudFarm()}catch(e){}simTo(Date.now(),true);save();fmRender();bubbleQ.length=0;bubbleT=0;
+ say(tt(`${CAGEN}: “Mushroom soup is ready! Every Igorlet is full of energy again.”`,`${CAGEN}: “Zuppa di funghi pronta! Tutti gli Igorlets sono di nuovo pieni di energia.”`),3.6)}
+/* ---------- 📖 the mushroom book ---------- */
+function fbOpen(){const L=foF();
+ const sp=FGK.map(k=>L.seen[k]?`<div class="lksp"><button type="button" class="fgv" data-fgv="${k}" style="--c:${FGS[k].c}">🍄</button><div><b>${N(FGS[k].N)}</b> <small>${L.bk[k]?`× ${L.bk[k]} ${tt('in the basket','nel cestino')}`:tt('found','trovato')}</small><span>${N(FGS[k].d)}</span></div></div>`:`<div class="lksp q"><i>❓</i><div><b>???</b><span>${FGRARE[k]?tt('Very, very rare…','Rarissimo…'):tt('Who knows how it sounds…','Chissà che voce ha…')}</span></div></div>`).join('');
+ openSheet('fbk',`<h2>📖 ${tt('The mushroom book','Il libro dei funghi')}</h2>
+ <p class="lkst">🧺 ${tt('Basket','Cestino')}: <b>${foBasket()}</b> · ${tt('species','specie')} <b>${FGK.filter(k=>L.seen[k]).length}/${FGK.length}</b> · 🍲 ${L.soup|0}</p>${sp}
+ <p class="shn">${tt('Mushrooms come up after the rain (and a few from the damp of the forest). Tap one to hear its voice. The golden and the singing mushroom stay in the basket: they never go into the soup.','I funghi spuntano dopo la pioggia (e qualcuno dall’umidità del bosco). Toccane uno per sentire la sua voce. Il fungo d’oro e quello che canta restano nel cestino: non vanno mai nella zuppa.')}</p>
+ <p class="lkst">👂 ${tt('What changed?','Che cosa è cambiato?')} ${tt('lv.','liv.')} ${Math.min(L.st,FWL.length-1)+1} · 🎹 ${tt('lv.','liv.')} ${(L.pl|0)+1} · ✨ ${tt('lv.','liv.')} ${(L.fl|0)+1}${L.bpm?` (${L.bpm} bpm)`:''}</p>`)}
+/* ---------- the panels' buttons ---------- */
+sb.addEventListener('click',e=>{if(!/^(fwc|fpp|ffs|fsl|fbk)$/.test(sheetKind||''))return;const b=e.target.closest('button');if(!b)return;e.stopPropagation();
+ if(b.dataset.fwh){const k=b.dataset.fwh,V=FWV[k];fwPlay([{k,m:V.m?pick(V.m):60,p:fwPat(V.h[1]),alt:false}],.05,1,k);return}
+ if(b.dataset.fwl!=null){FW.st=+b.dataset.fwl;fwIntro();return}
+ if(b.dataset.fwa){if(FW&&FW.ph==='ans')fwAns(b.dataset.fwa);return}
+ if(b.dataset.pph){const ms=[60,64,67];ms.forEach((m,k)=>snd('ppiano',{f:mf(m),prep:b.dataset.pph,delay:.05+k*.4}));return}
+ if(b.dataset.ppa){ppAns(b.dataset.ppa);return}
+ if(b.dataset.slp){if(SL&&SL.ph==='ask'&&!sb.querySelector('[data-sl="close"]')){const k=b.dataset.slp;if(SL.pick.has(k))SL.pick.delete(k);else SL.pick.add(k);b.classList.toggle('sel',SL.pick.has(k))}return}
+ if(b.dataset.fgv){fgVoice(b.dataset.fgv);return}
+ switch(b.dataset.fw||b.dataset.pp||b.dataset.ff||b.dataset.sl){
+  case'go':if(b.dataset.fw){FW.i=0;FW.ok=0;fwNext()}else if(b.dataset.pp){PP.i=0;PP.ok=0;ppNext()}else if(b.dataset.ff){foFoc(true);ffStart()}else if(b.dataset.sl){slStart()}return;
+  case'again':if(b.dataset.fw){if(FW&&FW.q&&FW.ph==='ans')fwListen()}else ppAgain();return;
+  case'replay':if(b.dataset.fw)fwOpen(FW?FW.st:null);else ppOpen();return;
+  case'done':slDone();return;
+  case'close':closeSheet();return}});
+{const st=document.createElement('style');st.textContent=`.fwans button.sel,.lkans button.sel{outline:3px solid #ffd34e}.ffcv{width:100%;height:auto;display:block;border-radius:18px;margin:6px 0;touch-action:manipulation;cursor:pointer}
+.fftap{font-size:16px;padding:12px 26px}.lksp .fgv{flex:none;width:32px;height:30px;padding:0;border-radius:50%;font-size:18px;line-height:28px;background:color-mix(in srgb,var(--c,#888) 60%,transparent)}`;document.head.appendChild(st)}
+/* ---------- mushrooms every few seconds, the to-do ---------- */
+let foTk=0;
+updaters.push((t,dt)=>{if(!FOI.on)return;if((foTk-=dt)<=0){foTk=2;foTick();foMuSync()}});
+{const _ti=todoItems;todoItems=function(){const L0=_ti();try{if(VISIT||!FOI.on||!S.farm)return L0;const L=foF();if(L.mu.length&&L0.length<6){const m=L.mu[0];
+  L0.push({k:'mush',ic:'🍄',t:L.mu.length>1?tt(`${L.mu.length} mushrooms in the forest`,`${L.mu.length} funghi nel bosco`):tt('A mushroom in the forest','Un fungo nel bosco'),go:outFirst(()=>foMuTap(m.id))})}}catch(e){}return L0}}
+/* ---------- 🌙 the fireflies' night: once a day, when it gets dark (before bedtime), the fireflies light up all together
+   on the tempo you kept, the free Igorlets dance in the fairy ring ---------- */
+const FNT={on:false,t0:0,per:.66,next:0,k:0};let foNT=0;
+{const _ft=flyTick;flyTick=function(I,dt){_ft(I,dt);if(I!==FOI||!FNT.on)return;const u=(T-FNT.t0)/FNT.per,fr=u-Math.floor(u),lit=Math.max(0,1-fr*3.5);
+ for(const f of I.flies){f.hl.material.opacity=Math.min(1,.15+lit*.95);f.hl.scale.setScalar(.7+lit*1.4)}
+ for(const m of FO.ring)if(m.userData.hl){m.userData.hl.material.opacity=.2+lit*.7}}}
+updaters.push((t,dt)=>{if(!FOI.on||VISIT||!S.farm||!started)return;
+ if(!FNT.on){if((foNT-=dt)>0)return;foNT=6;if(where!=='out')return;const L=foF(),d=new Date(),td=d.toDateString(),h=d.getHours()+d.getMinutes()/60;
+  if(!L.met||L.night===td||!(SKY.el<-8)||h<16||h>23.4||(typeof LKE!=='undefined'&&LKE.on))return;L.night=td;fmDirty=true;save();
+  FNT.on=true;FNT.t0=T+4;FNT.per=60/(L.bpm||88);FNT.next=FNT.t0;FNT.k=0;FNT.until=T+64;
+  let n=0;for(const[,o]of igObjs){if(o.mode!=='idle'||!o.grp.visible)continue;const A=o.act;if(A&&/^(ride|wh|lead|rope|ball|ring)$/.test(A.k))continue;if(A&&A.k==='isl')islOff(o);
+   o.act={k:'isl',i:2,s:'ring',n:n++,st:0,until:T+70,goal:RING.clone()}}
+  const near=igor.position.distanceTo(new V3(FOI.cx,0,FOI.cz))<16;bubbleQ.length=0;bubbleT=0;
+  if(near)say(tt('Look: it’s dark… the fireflies are lighting up all together!','Guarda: è buio… le lucciole si accendono tutte insieme!'),4);
+  else toast(tt('✨ In the forest the fireflies are lighting up all together','✨ Nel bosco le lucciole si accendono tutte insieme'));return}
+ if(T>FNT.until){FNT.on=false;return}
+ if(T>=FNT.next){const near=where==='out'&&igor.position.distanceTo(new V3(FOI.cx,0,FOI.cz))<20;if(near)snd('fz',{v:'fly',f:mf(72+FFPEN[FNT.k%8]),g:FNT.k%4?.5:.8});FNT.k++;FNT.next+=FNT.per}});
+/* ---------- the Igorlets in the forest ---------- */
+Object.assign(ISPOT.forest,{piano:[1,{music:7,keen:1,explorer:1}],pick:[2,{foodie:4,explorer:4,keen:3}],shelter:[4,{sleepy:3,lazy:3,shy:3,foodie:2}],cage:[2,{music:3,shy:2,sleepy:1}]});
+Object.assign(ISAY,{
+ piano:[['There’s a screw in the piano! It sounds… interesting.','Plink! Plonk! I’m a composer now.','Which key has the coin on it?'],['C’è una vite nel pianoforte! Suona… interessante.','Plin! Plon! Adesso sono un compositore.','Quale tasto ha la moneta sopra?']],
+ pick:[['A mushroom for the basket!','Found one! It goes “toc”.','Cagigor, look what I found!'],['Un fungo per il cestino!','Trovato! Fa “toc”.','Cagigor, guarda cosa ho trovato!']],
+ shelter:[['A giant umbrella! The rain can’t get me.','Plip, plop… the rain plays on the mushroom.','After the rain, new mushrooms!'],['Un ombrello gigante! La pioggia non mi prende.','Plip, plop… la pioggia suona sul fungo.','Dopo la pioggia, funghi nuovi!']],
+ cage:[['Shh… I’m listening to the silence.','Cagigor says every sound is music. Even my tummy.','What a strange piano!'],['Shh… ascolto il silenzio.','Cagigor dice che ogni suono è musica. Anche la mia pancia.','Che pianoforte strano!']],
+ ring:[['A dance in the fairy ring!','The fireflies keep the time for us!','One, two, one, two… all together!'],['Un ballo nel cerchio delle fate!','Le lucciole ci tengono il tempo!','Uno, due, uno, due… tutti insieme!']]});
+{const _ok=islOk;islOk=function(I,s){if(I!==FOI)return _ok(I,s);switch(s){case'pick':{const L=S.farm&&foF();return!!(L&&L.mu.length>=2&&Date.now()-(L.igP||0)>3600e3)}
+  case'shelter':return(SKY.W.rain||0)>.15||(SKY.W.storm||0)>.15;case'ring':return false;case'piano':return!(window.IgorSound&&IgorSound.focused);default:return _ok(I,s)}}}
+const FOS={
+ piano(I,A,o,t){const p=CG_PIANO.clone().add(new V3(.1,0,1.05));if(A.st&&t>(A.next||0)){if(A.next&&!FO.sit&&where==='out'&&igor.position.distanceTo(p)<10&&!(window.IgorSound&&IgorSound.focused))snd('ppiano',{f:mf(pick([60,62,64,67,69,72])),prep:pick(PREPS),g:.6});A.next=t+(Math.random()<.2?4+Math.random()*4:.35+Math.random()*.7)}return{p,ic:'note',pose:'work'}},
+ pick(I,A,o,t){const L=foF();let m=L.mu.find(x=>x.id===A.mid);if(!m&&!A.done){m=L.mu[(A.n||0)%Math.max(1,L.mu.length)];if(m)A.mid=m.id}
+  if(!m)return{p:CG_P.clone().add(new V3(.7,0,.5)),ic:'heart'};const p=new V3(m.x+.35,0,m.z+.25);
+  if(A.st&&!A.done){A.done=1;const i=L.mu.indexOf(m);if(!VISIT&&i>=0&&Date.now()-(L.igP||0)>3600e3){L.igP=Date.now();L.mu.splice(i,1);foPick(m.sp,true,o);o.jump=.5}}return{p,ic:'heart',pose:'work'}},
+ shelter(I,A,o,t){const[x,z,s]=MUSH[(A.n||0)%3];const a=(A.n||0)*1.7;return{p:new V3(x+Math.cos(a)*.45*s,0,z+.35*s+Math.sin(a)*.2),ic:'heart'}},
+ cage(I,A,o,t){return{p:CG_P.clone().add(new V3(.75+(A.n||0)*.45,0,.55)),ic:T<cgPlayT?'note':'q',hop:T<cgPlayT?.4:0}},
+ ring(I,A,o,t,dt){if(A.a==null)A.a=(A.n||0)/6*TAU;if(A.st)A.a+=dt*.55;const p=new V3(RING.x+Math.cos(A.a)*1.55,0,RING.z+Math.sin(A.a)*1.3);
+  if(A.st&&FNT.on&&o.jump<=0){const u=(T-FNT.t0)/FNT.per,fr=u-Math.floor(u);if(fr<.08)o.jump=.35}return{p,ctl:A.st?1:0,ic:'note',quiet:A.n>0}}};
+{const _isp=islSpot;islSpot=function(I,A,o,t,dt){if(I===FOI&&FOS[A.s])return FOS[A.s](I,A,o,t,dt);return _isp(I,A,o,t,dt)}}
+
+/* ================= 12 Nov 2026: the ice island comes alive (Antonio Vivaldigor) =================
+   Antonio Vivaldigor, an Igorlet with the red wig of "the red priest", a scarf and a violin made of ice, plays winter music by
+   his ice music stand. Talking to him:
+   - 🐣 the chick's voice: emperor penguins find their chick by its voice among thousands. The chick sings its call, then the
+     penguins sing theirs: who sings the same one? 7 levels: very different calls, one note different, a small note or the rhythm,
+     only the rhythm, then higher or lower (transposed: the shape counts). 6 rounds, level up with 5/6, max 10 seeds;
+   - 🧊 icicles in a row: every night new icicles grow on the igloo; put them in order from the lowest to the highest
+     (their length tells you nothing: you must listen). Seeds once a day, 4 levels;
+   - ⛸️ skating the melody: Vivaldigor plays a phrase, you say where it goes (up, down, the same) and Igor skates its shape;
+   - 🎻 a little winter tune; 📖 the colony.
+   Eggs: one every 10 hours (and one more after every frost of 18:00), up to 3 eggs and chicks. An egg hatches after 20 hours:
+   the chick has its own call. It is hungry every 4 hours: to feed it (a little tofu fish, 1 tofu ant) you must recognise it by
+   its voice. After 3 meals it grows up and joins the colony (penguin, rockhopper, emperor, little blue, golden: rare ones too).
+   The frozen pond sings ("piu piu", like real frozen lakes) when Igor or the Igorlets slide on it.
+   At night (once a day, before bedtime, not together with the fireflies) the aurora: its colours are the harmonics of one note,
+   heard one after the other; the free Igorlets lie in the snow to watch, Vivaldigor plays.
+   The Igorlets play here too: they listen to Vivaldigor, slide with the chicks.
+   Also fixed: the pond's walking area (I.pond) was still where it was before the island grew (11 Nov): now it matches the ice.
+   Saved in S.farm.ice = {met, eg:[{id,x,z,b}], ch:[{id,x,z,c:{m,r},f:[times]}], ad:[sp], seen:{sp:n}, en, ed:{evId:1},
+   st, best:{}, icD, icL, skL, aur, feed} */
+const ICI=ISLES[3],VIVN='Antonio Vivaldigor';
+if(ICI.pond)Object.assign(ICI.pond,{x:29.82,z:25.16});
+const icE=(a,e)=>new V3(ICI.cx+Math.cos(a)*ICI.rx*e,0,ICI.cz+Math.sin(a)*ICI.rz*e);
+const icY=(x,z)=>{const e=isleE1(ICI,x,z);return e<1?Math.max(.02,(1-e)*.35+Math.sin(x*.7)*Math.cos(z*.6)*.07):0};
+const VV_P=new V3(32.4,0,21.0),VV_B=new V3(33.45,0,21.75),NEST=new V3(28.6,0,21.4),ICL_B=new V3(33.4,0,24.7);VV_P.y=icY(VV_P.x,VV_P.z);
+const EGGH=10*3600e3,HATCH=20*3600e3,CFEED=4*3600e3,CHMAX=3,COLMAX=12;
+function icF(){const F=FM();if(!F.ice||typeof F.ice!=='object')F.ice={};const L=F.ice;
+ if(!Array.isArray(L.eg))L.eg=[];if(!Array.isArray(L.ch))L.ch=[];if(!Array.isArray(L.ad))L.ad=[];if(!L.seen)L.seen={};if(!L.ed)L.ed={};if(!L.best)L.best={};if(L.st==null)L.st=0;return L}
+const icVis=()=>ICI.on&&ICI.G.visible&&where==='out';
+const IC={eg:new Map(),ch:new Map(),ad:[],vvPl:null,lbl:null,icicles:[],aur:[]};
+/* ---------- the penguins of the colony: species ---------- */
+const PSP={penguin:{N:['Penguin','Pinguino'],w:60,d:['The heart of the colony.','Il cuore della colonia.']},
+ rock:{N:['Rockhopper','Pinguino saltarocce'],w:20,d:['Yellow eyebrows and a lot of bounce.','Sopracciglia gialle e tanta voglia di saltare.']},
+ emperor:{N:['Emperor penguin','Pinguino imperatore'],w:12,d:['The tallest: it finds its chick by its voice.','Il più alto: ritrova il suo pulcino dalla voce.']},
+ blue:{N:['Little blue penguin','Pinguino minore blu'],w:6,d:['The smallest of all, blue like the evening.','Il più piccolo di tutti, blu come la sera.']},
+ gold:{N:['Golden penguin','Pinguino d’oro'],w:2,d:['Very, very rare. It shines on the snow.','Rarissimo. Brilla sulla neve.']}};
+const PSPK=Object.keys(PSP);
+function psRoll(){let tot=0;for(const k of PSPK)tot+=PSP[k].w;let r=Math.random()*tot;for(const k of PSPK){r-=PSP[k].w;if(r<=0)return k}return'penguin'}
+function mkPengSp(sp){const g=mkPeng(sp==='emperor');if(sp==='blue'||sp==='gold'){const seen=new Set(),bk=new THREE.Color('#1f2328').getHex();g.traverse(m=>{if(!m.isMesh||seen.has(m.material))return;seen.add(m.material);if(m.material.color.getHex()===bk){m.material=sp==='gold'?glowM('#e0b030',.25):lam('#3d5f8f')}})}
+ if(sp==='blue')g.scale.setScalar(.8);
+ if(sp==='rock'){for(const s of[-1,1]){const c=new THREE.Mesh(new THREE.ConeGeometry(.03,.16,5),lam('#f2d23a'));c.position.set(s*.09,.82,.05);c.rotation.z=s*-1.1;g.add(c)}}
+ g.userData.sp=sp;return g}
+/* the grown-up chicks join the five penguins that were already there */
+function icColSync(){const L=icF(),want=L.ad.slice(0,COLMAX-5);while(IC.ad.length>want.length){const p=IC.ad.pop();ICI.G.remove(p.g);const i=ICI.pengs.indexOf(p);if(i>=0)ICI.pengs.splice(i,1)}
+ want.forEach((sp,i)=>{if(IC.ad[i]&&IC.ad[i].sp===sp)return;if(IC.ad[i]){ICI.G.remove(IC.ad[i].g);const j=ICI.pengs.indexOf(IC.ad[i]);if(j>=0)ICI.pengs.splice(j,1)}
+  const g=mkPengSp(sp),P=NEST.clone().add(new V3((Math.random()-.5)*2,0,(Math.random()-.5)*1.5));g.position.copy(P);ICI.G.add(g);if(sp==='penguin'||sp==='emperor')animAdd(sp,g);const p={g,goal:P.clone(),wait:1+Math.random()*3,slide:0,sp};ICI.pengs.push(p);IC.ad[i]=p})}
+/* ---------- eggs and chicks ---------- */
+function mkEgg(){const g=new THREE.Group(),nest=new THREE.Mesh(new THREE.TorusGeometry(.17,.07,6,14),lam('#e6eef5'));nest.rotation.x=Math.PI/2;nest.position.y=.05;g.add(nest);
+ const e=new THREE.Mesh(new THREE.SphereGeometry(.12,12,10),lam('#fbf7ee'));e.scale.y=1.3;e.position.y=.15;g.add(e);g.userData.e=e;blob(g,.25);return g}
+function mkChick(){const g=new THREE.Group(),fl=lam('#9aa3ab'),dk=lam('#3a3f45'),wh=lam('#f4f4f0');const b=new THREE.Mesh(new THREE.SphereGeometry(.16,12,10),fl);b.scale.y=1.15;b.position.y=.18;g.add(b);
+ const hd=new THREE.Mesh(new THREE.SphereGeometry(.11,10,8),dk);hd.position.y=.38;g.add(hd);const fc=new THREE.Mesh(new THREE.SphereGeometry(.075,10,8),wh);fc.scale.z=.5;fc.position.set(0,.38,.07);g.add(fc);
+ for(const s of[-1,1]){const ey=new THREE.Mesh(new THREE.SphereGeometry(.018,6,5),dk);ey.position.set(s*.035,.4,.11);g.add(ey)}const bk=new THREE.Mesh(new THREE.ConeGeometry(.025,.07,5),lam('#3a3f45'));bk.rotation.x=Math.PI/2;bk.position.set(0,.36,.14);g.add(bk);
+ const fish=new THREE.Mesh(new THREE.PlaneGeometry(.32,.32),curve(new THREE.MeshBasicMaterial({map:icFishTex,transparent:true,depthWrite:false,side:THREE.DoubleSide})));fish.position.y=.75;fish.visible=false;g.add(fish);g.userData.fish=fish;blob(g,.22);return g}
+const icFishTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='rgba(247,236,212,.95)';g.beginPath();g.arc(32,32,28,0,TAU);g.fill();g.strokeStyle='#2b2018';g.lineWidth=3;g.stroke();g.font='32px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('🐟',32,35);return new THREE.CanvasTexture(c)})();
+const icFeedable=(c,now)=>!c.f.length||now-c.f[c.f.length-1]>=CFEED;
+function icNestPt(L){for(let k=0;k<30;k++){const a=Math.random()*TAU,r=.3+Math.random()*1.3,x=NEST.x+Math.cos(a)*r,z=NEST.z+Math.sin(a)*r*.8;if(!walkable(x,z))continue;if(L.eg.concat(L.ch).some(q=>Math.hypot(q.x-x,q.z-z)<.6))continue;return{x:+x.toFixed(2),z:+z.toFixed(2)}}return{x:NEST.x,z:NEST.z}}
+function icLay(L,now){if(L.eg.length+L.ch.length>=CHMAX)return 0;const p=icNestPt(L);L.eg.push({id:'e'+now.toString(36)+Math.floor(Math.random()*999),x:p.x,z:p.z,b:now});return 1}
+function icCall(){const sc=[72,74,76,77,79,81,84],m=[],r=[];let i=Math.floor(Math.random()*4);for(let k=0;k<3;k++){m.push(sc[i]);r.push(pick([1,1,2]));i=Math.max(0,Math.min(sc.length-1,i+pick([-2,-1,1,2,3])))}return{m,r}}
+function icTick(){if(VISIT||!ICI.on||!S.farm)return;const L=icF(),now=Date.now();let ch=false;
+ if(!L.met)return;if(!L.en){L.en=now+EGGH;ch=true}
+ while(now>=L.en){if(icLay(L,L.en))ch=true;L.en+=EGGH}
+ try{const d=dayIdx(now);for(const dd of[d-2,d-1,d]){const E=evPlan(dd);if(!E||E.k!=='frost'||now<E.at||L.ed[E.id])continue;L.ed[E.id]=1;if(icLay(L,now)){ch=true;if(started)toast(tt('🥚 After the frost a new egg appeared on the ice island','🥚 Dopo la gelata è comparso un uovo nuovo sull’isola di ghiaccio'))}}
+  const ks=Object.keys(L.ed);if(ks.length>12)for(const k of ks.slice(0,ks.length-12))delete L.ed[k]}catch(e){}
+ for(let i=L.eg.length-1;i>=0;i--){const e=L.eg[i];if(now-e.b>=HATCH){L.eg.splice(i,1);L.ch.push({id:'c'+e.id.slice(1),x:e.x,z:e.z,c:icCall(),f:[],b:now});ch=true;
+   if(started&&icVis()&&igor.position.distanceTo(new V3(e.x,0,e.z))<14){bubbleQ.length=0;bubbleT=0;say(tt('Crack! An egg hatched: a chick! Listen to its voice: it’s only its own.','Crac! Un uovo si è schiuso: un pulcino! Ascolta la sua voce: è solo sua.'),4)}
+   else if(started)toast(tt('🐣 A chick was born on the ice island','🐣 Sull’isola di ghiaccio è nato un pulcino'))}}
+ if(ch){fmDirty=true;save()}}
+function icSync(){const L=icF();
+ const sync=(M,list,mk,tap,name)=>{const ids=new Set(list.map(x=>x.id));for(const[id,o]of M)if(!ids.has(id)){ICI.G.remove(o.g);const k=clickables.indexOf(o.ht);if(k>=0)clickables.splice(k,1);M.delete(id)}
+  for(const x of list)if(!M.has(x.id)){const g=mk();g.position.set(x.x,icY(x.x,x.z),x.z);g.rotation.y=Math.random()*TAU;ICI.G.add(g);BUILD='out';const id=x.id;M.set(id,{g,ht:hit(g,.5,()=>tap(id),name,.2),ph:Math.random()*TAU,y0:g.position.y})}};
+ sync(IC.eg,L.eg,mkEgg,icEggTap,'egg');sync(IC.ch,L.ch,mkChick,icChickTap,'chick')}
+function icEggTap(id){if(!icVis())return;const L=icF(),e=L.eg.find(q=>q.id===id);if(!e)return;walkNear(new V3(e.x,0,e.z),.6,()=>{const L=icF(),e=L.eg.find(q=>q.id===id);if(!e)return;
+ const o=IC.eg.get(id);if(o)o.wob=T;snd('png',{f:mf(84),ch:1,d:.12,g:.5});say(tt(`An egg! It will hatch in ${fmtL(e.b+HATCH-Date.now())}. Something is moving inside…`,`Un uovo! Si schiuderà tra ${fmtL(e.b+HATCH-Date.now())}. Dentro qualcosa si muove…`),3.2)})}
+function icCallPlay(c,t0,o){let t=t0||0;const U=.17;c.m.forEach((m,i)=>{snd('png',{f:mf(m+((o&&o.tr)||0)),ch:o&&o.adult?0:1,d:c.r[i]*U*.92,delay:t,g:o&&o.g||1});t+=c.r[i]*U});return t}
+function icChickTap(id){if(!icVis())return;const L=icF(),c=L.ch.find(q=>q.id===id);if(!c)return;walkNear(new V3(c.x,0,c.z),.6,()=>{const L=icF(),c=L.ch.find(q=>q.id===id);if(!c)return;const now=Date.now();
+ const o=IC.ch.get(id);if(o)o.hop=T;icCallPlay(c.c,.05);
+ if(VISIT){say(tt('A chick! Listen to its voice.','Un pulcino! Senti che voce.'),2.4);return}
+ if(!icFeedable(c,now)){say(tt(`It has just eaten: hungry again in ${fmtL(c.f[c.f.length-1]+CFEED-now)}.`,`Ha appena mangiato: di nuovo fame tra ${fmtL(c.f[c.f.length-1]+CFEED-now)}.`),3);return}
+ if(pocket()<1){say(tt('A little tofu fish costs 1 tofu ant: harvest a field, then come back!','Un pesciolino di tofu costa 1 formica di tofu: raccogli un campo, poi torna!'),3.4);return}
+ icFeedOpen(id)})}
+/* feeding: the hungry chick calls, then three or four voices answer: which one is it? */
+let FD=null;
+function icFeedOpen(id){const L=icF(),c=L.ch.find(q=>q.id===id);if(!c)return;const others=L.ch.filter(q=>q.id!==id).map(q=>q.c);
+ const opts=[c.c];let g=0;while(opts.length<3+(L.ch.length>2?1:0)&&g++<50){const d=others.length&&Math.random()<.5?pick(others):ivMut(c.c,'one',[2,4]);if(!opts.some(o=>ivSig(o)===ivSig(d)))opts.push(d)}
+ opts.sort(()=>Math.random()-.5);FD={id,opts,ok:opts.indexOf(c.c),sel:-1};foFoc(true);
+ openSheet('ifd',`<h2>🐟 ${tt('Who is hungry?','Chi ha fame?')}</h2>
+ <p class="shn">${tt('A chick is calling: it is hungry! Listen to its call, then find the voice that is the same.','Un pulcino chiama: ha fame! Ascolta il suo richiamo, poi trova la voce uguale.')}</p>
+ <div class="lkctl"><button type="button" class="m" data-iv="fcall">🐣 ${tt('The call','Il richiamo')}</button></div>
+ <div class="ivp">${opts.map((o,i)=>`<button type="button" data-ifo="${i}">🐧<small>${'ABCD'[i]}</small></button>`).join('')}</div>
+ <p class="shn fdmsg">${tt('Tap a voice to listen, then “It’s this one!”','Tocca una voce per ascoltarla, poi “È questa!”')}</p>
+ <div class="lkctl"><button type="button" class="m" data-iv="fok" disabled>✓ ${tt('It’s this one!','È questa!')}</button></div>`);
+ setTimeout(()=>{if(sheetKind==='ifd'&&FD)icCallPlay(c.c,.1)},300)}
+function icFeedDo(){const L=icF(),i=L.ch.findIndex(q=>q.id===FD.id);if(i<0){closeSheet();return}const c=L.ch[i],now=Date.now(),m=sb.querySelector('.fdmsg');
+ if(FD.sel!==FD.ok){if(m)m.textContent=tt('That one was another voice. Listen to the call again: you’ll find it!','Quella era un’altra voce. Riascolta il richiamo: lo trovi!');icCallPlay(c.c,.3);return}
+ FM().ants.t-=1;c.f.push(now);snd('munch');let msg='';
+ if(c.f.length>=3){L.ch.splice(i,1);const sp=psRoll(),first=!L.seen[sp];L.seen[sp]=(L.seen[sp]|0)+1;L.ad.push(sp);if(L.ad.length>40)L.ad.splice(0,L.ad.length-40);icColSync();snd('star');
+  msg=sp==='penguin'?tt('It found its voice and grew up: it joins the colony!','Ha trovato la sua voce ed è cresciuto: entra nella colonia!'):tt(`${first?'Wow! ':''}It grew up into a ${N(PSP[sp].N).toLowerCase()}! ${N(PSP[sp].d)}`,`${first?'Uau! ':''}È cresciuto ed è un ${N(PSP[sp].N).toLowerCase()}! ${N(PSP[sp].d)}`)}
+ else msg=c.f.length===1?tt('Yum! A little tofu fish. It will be hungry again in 4 hours.','Gnam! Un pesciolino di tofu. Avrà di nuovo fame tra 4 ore.'):tt('Look how it’s growing! One more meal and it’s a penguin.','Guarda come cresce! Ancora un pasto e diventa un pinguino.');
+ L.feed=(L.feed|0)+1;fmDirty=true;save();icSync();try{hudFarm()}catch(e){}closeSheet();setTimeout(()=>foFoc(false),300);bubbleQ.length=0;bubbleT=0;say(msg,4)}
+/* ---------- Vivaldigor's corner: an ice music stand; icicles on the igloo ---------- */
+{const g=new THREE.Group(),ice=curve(new THREE.MeshLambertMaterial({color:'#d4eef8',emissive:'#8fc6dc',emissiveIntensity:.25,transparent:true,opacity:.85}));
+ const pole=new THREE.Mesh(new THREE.CylinderGeometry(.03,.05,1,6),ice);pole.position.y=.5;g.add(pole);const base=new THREE.Mesh(new THREE.CylinderGeometry(.2,.25,.06,10),ice);base.position.y=.03;g.add(base);
+ const desk=new THREE.Mesh(new THREE.BoxGeometry(.5,.34,.03),ice);desk.position.set(0,1.08,0);desk.rotation.x=-.35;g.add(desk);const sc=new THREE.Mesh(new THREE.PlaneGeometry(.42,.28),lam('#fbf6e8',{side:THREE.DoubleSide}));sc.position.set(0,1.09,.02);sc.rotation.x=-.35;g.add(sc);
+ const P=new V3(31.75,0,20.75);g.position.set(P.x,icY(P.x,P.z),P.z);g.rotation.y=.3;ICI.G.add(g);block(P.x,P.z,.25)}
+{const ig=ICI.igloo;if(ig){const ice=curve(new THREE.MeshLambertMaterial({color:'#e2f4fb',emissive:'#9fd2e6',emissiveIntensity:.3,transparent:true,opacity:.9}));
+ for(let k=0;k<7;k++){const a=Math.PI*(k+.5)/7,len=.18+Math.random()*.3,c=new THREE.Mesh(new THREE.ConeGeometry(.035,len,6),ice);c.rotation.x=Math.PI;c.position.set(Math.cos(a)*.57,Math.sin(a)*.57-len/2+.02,1.66);ig.add(c);IC.icicles.push(c)}
+ BUILD='out';hit(ig,.6,()=>{if(icVis())walkNear(ICL_B,.5,()=>iclOpen())},'icicles',.5)}}
+/* ---------- Antonio Vivaldigor ---------- */
+const vvC=document.createElement('canvas');vvC.width=IGC;vvC.height=IGCH;const vvT=new THREE.CanvasTexture(vvC);let vvOK=false;
+function vvPaint(){if(!igorOK||vvOK)return;vvOK=true;const c2=vvC.getContext('2d');c2.setTransform(SCI,0,0,SCI,0,IGPAD*SCI);c2.filter=canFilter?'hue-rotate(-6deg) saturate(1.05)':'none';c2.drawImage(igorImg,0,0,663,730);c2.filter='none';
+ // a blue scarf with white stripes
+ c2.save();c2.translate(330,456);c2.rotate(.3);c2.lineJoin='round';c2.strokeStyle='#1d2f4a';c2.lineWidth=4;c2.fillStyle='#3d6fb8';
+ c2.beginPath();c2.moveTo(-58,-16);c2.quadraticCurveTo(0,10,58,-16);c2.lineTo(52,6);c2.quadraticCurveTo(0,30,-52,6);c2.closePath();c2.fill();c2.stroke();
+ c2.beginPath();c2.moveTo(18,8);c2.lineTo(34,70);c2.lineTo(6,74);c2.lineTo(0,12);c2.closePath();c2.fill();c2.stroke();c2.strokeStyle='#f4f8fb';c2.lineWidth=5;for(const y of[40,58]){c2.beginPath();c2.moveTo(6+y*.1,y);c2.lineTo(30+y*.05,y-2);c2.stroke()}c2.restore();
+ // the violin of ice, held against the snout
+ c2.save();c2.translate(500,560);c2.rotate(-.75);c2.lineJoin='round';c2.strokeStyle='#2b4a5e';c2.lineWidth=4;c2.fillStyle='rgba(200,236,250,.92)';
+ c2.beginPath();c2.ellipse(0,26,30,28,0,0,TAU);c2.fill();c2.stroke();c2.beginPath();c2.ellipse(0,-14,22,22,0,0,TAU);c2.fill();c2.stroke();c2.fillStyle='rgba(200,236,250,.92)';c2.fillRect(-14,-6,28,16);
+ c2.fillStyle='#9fd2e6';c2.fillRect(-5,-90,10,70);c2.strokeRect(-5,-90,10,70);c2.beginPath();c2.arc(0,-96,9,0,TAU);c2.fill();c2.stroke();
+ c2.strokeStyle='rgba(43,74,94,.7)';c2.lineWidth=1.5;for(const x of[-3,-1,1,3]){c2.beginPath();c2.moveTo(x,-88);c2.lineTo(x*1.5,40);c2.stroke()}
+ c2.fillStyle='#2b4a5e';for(const s of[-1,1]){c2.beginPath();c2.ellipse(s*14,8,2.5,8,s*.2,0,TAU);c2.fill()}c2.restore();
+ // the bow
+ c2.save();c2.translate(470,610);c2.rotate(.5);c2.strokeStyle='#5a3a24';c2.lineWidth=5;c2.beginPath();c2.moveTo(-110,0);c2.lineTo(110,0);c2.stroke();c2.strokeStyle='#f4f0e2';c2.lineWidth=2;c2.beginPath();c2.moveTo(-106,6);c2.lineTo(106,6);c2.stroke();c2.restore();
+ // the red wig, all curls ("il prete rosso")
+ c2.save();accMap(c2,EYES);c2.translate(372,118);c2.rotate(.35);c2.lineJoin='round';c2.strokeStyle='#5a1a10';c2.lineWidth=5;
+ const curls=[[-92,10,30],[-70,-30,32],[-38,-58,32],[0,-70,34],[38,-58,32],[70,-30,32],[92,10,30],[-104,46,26],[104,46,26],[-50,-8,30],[0,-20,32],[50,-8,30]];
+ for(const[x,y,r]of curls){c2.fillStyle='#c8442c';c2.beginPath();c2.arc(x,y,r,0,TAU);c2.fill();c2.stroke();c2.strokeStyle='rgba(90,26,16,.55)';c2.lineWidth=3;c2.beginPath();c2.arc(x+2,y+2,r*.5,.5,4.5);c2.stroke();c2.strokeStyle='#5a1a10';c2.lineWidth=5}
+ c2.restore();vvT.needsUpdate=true}
+const vvMesh=s=>new THREE.Mesh(new THREE.PlaneGeometry(IGW*s,IGH2*s).translate(0,IGH2*s/2,0),curve(new THREE.MeshBasicMaterial({map:vvT,transparent:true,alphaTest:.15,side:THREE.DoubleSide,color:new THREE.Color(.95,.96,.98)})));
+{IC.vvPl=vvMesh(1);IC.vvPl.position.copy(VV_P);ICI.G.add(IC.vvPl);const sh=new THREE.Group();sh.position.copy(VV_P);blob(sh,.32);ICI.G.add(sh);BUILD='out';hit(IC.vvPl,.45,()=>vvTap(),'vivaldigor',.5)}
+const VVS=[["Brrr! Winter is my favourite season. Well… one of four.","Brrr! L’inverno è la mia stagione preferita. Be’… una delle quattro."],["The penguins find their chicks by their voice. Shall we try?","I pinguini ritrovano i pulcini dalla voce. Proviamo?"],["Tonight, if the sky is clear, the aurora sings.","Stanotte, se il cielo è sereno, canta l’aurora."],["My violin is made of ice: I play it fast, so it doesn’t melt.","Il mio violino è di ghiaccio: lo suono in fretta, così non si scioglie."],["New icicles have grown on the igloo!","Sull’igloo sono cresciuti ghiaccioli nuovi!"]];
+let vvNext=0,vvPlayT=0;BUILD='out';
+IC.lbl=label(VVS[0],[VIVN+' · violinist',VIVN+' · violinista'],new V3(),()=>vvTap(),6);
+PLACES.vivaldi={get pos(){return VV_B.clone()},open:()=>vvMenu(),name:VIVN};
+function vvTap(){if(!icVis())return;walkNear(VV_B,.6,()=>vvMenu())}
+function vvMenu(){if(!icVis())return;const L=icF();if(!L.met&&!VISIT)icMeet();
+ chips(VV_B.clone().add(new V3(0,2.1,0)),()=>{CH.title='🎻 '+VIVN;const L=icF(),td=new Date().toDateString();return[
+  {t:`🐣 ${tt('The chick’s voice','La voce del pulcino')} <small>${tt('level','liv.')} ${Math.min(L.st,IVL.length-1)+1}</small>`,main:1,fn:()=>{ivOpen();return false}},
+  {t:`🧊 ${tt('Icicles in a row','I ghiaccioli in fila')}${L.icD===td?` <small>${tt('done today','fatti oggi')}</small>`:` <small>${tt('new!','nuovi!')}</small>`}`,fn:()=>{iclOpen();return false}},
+  {t:`⛸️ ${tt('Skating the melody','Pattinare la melodia')}`,fn:()=>{sktOpen();return false}},
+  {t:`🎻 ${tt('A winter tune','Un’arietta d’inverno')}`,fn:()=>{hideChips();vvPlay(WTUNE);bubbleQ.length=0;bubbleT=0;say(tt(`${VIVN}: “A little winter tune, just for you.”`,`${VIVN}: “Un’arietta d’inverno, solo per te.”`),3);return false}},
+  {t:`📖 ${tt('The colony','La colonia')} <small>${5+Math.min(COLMAX-5,L.ad.length)}🐧</small>`,fn:()=>{icbOpen();return false}}]},'vivaldi')}
+function icMeet(){const L=icF();if(L.met)return;L.met=Date.now();L.en=Date.now()+EGGH;if(!L.eg.length&&!L.ch.length)icLay(L,Date.now()-HATCH+3*3600e3);icSync();fmDirty=true;save();
+ setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(tt(`${VIVN}: “Welcome to the ice! I’m Antonio Vivaldigor. Here the penguins sing, the pond sings, even the sky sings at night. And look: there’s an egg in the nest!”`,`${VIVN}: “Benvenuto sul ghiaccio! Sono Antonio Vivaldigor. Qui cantano i pinguini, canta il laghetto, di notte canta perfino il cielo. E guarda: nel nido c’è un uovo!”`),6.5)},300)}
+/* an original little winter tune for the ice violin: [midi, beats] */
+const WTUNE=[[76,.5],[77,.25],[76,.25],[74,.5],[72,.5],[71,.75],[72,.25],[74,1],[0,.25],[69,.5],[72,.25],[76,.25],[81,.75],[79,.25],[77,.5],[76,.5],[74,.5],[76,.25],[72,.25],[71,1.5]];
+function vvPlay(mel,k){let t=0;const bt=.42;for(const[m,b]of mel){if(m)snd('vln',{f:mf(m),d:b*bt*.95+.05,delay:t,g:k||1});t+=b*bt}vvPlayT=T+t;return t}
+updaters.push((t,dt)=>{const on=ICI.on&&ICI.G.visible;if(!on){IC.lbl.hidden=true;return}vvPaint();
+ IC.vvPl.quaternion.copy(camera.quaternion);IC.vvPl.position.y=VV_P.y+(T<vvPlayT?Math.abs(Math.sin(t*6))*.05:Math.abs(Math.sin(t*1.6))*.025);IC.vvPl.rotation.z+=T<vvPlayT?Math.sin(t*3)*.06:0;
+ const near=where==='out'&&igor.position.distanceTo(VV_P)<6;IC.lbl.pos.copy(VV_P).add(new V3(0,IGH2+.45,0));IC.lbl.hidden=!near||!!(CH&&CH.key==='vivaldi')||bubbleT>0||!sheet.hidden;
+ if(near&&T>vvNext){vvNext=T+7;const L1=VVS[Math.floor(Math.random()*VVS.length)];IC.lbl.text=L1;IC.lbl.el.innerHTML=N(L1)+`<small>${N(IC.lbl.sub)}</small>`}
+ if(where==='out'&&sheet.hidden&&!(window.IgorSound&&IgorSound.focused)&&igor.position.distanceTo(VV_P)<10&&T>vvPlayT+50&&Math.random()<dt*.04)vvPlay(WTUNE.slice(0,8+Math.floor(Math.random()*12)),.7);
+ for(const[,o]of IC.eg){o.g.position.y=o.y0;const w=o.wob&&T-o.wob<1.2?Math.sin((T-o.wob)*25)*.18:Math.sin(t*.7+o.ph)>.97?Math.sin(t*30)*.06:0;o.g.userData.e.rotation.z=w}
+ const L=S.farm&&icF(),now=Date.now();
+ for(const c of(L?L.ch:[])){const o=IC.ch.get(c.id);if(!o)continue;const n=c.f.length,s=1+n*.22;o.g.scale.setScalar(s);o.g.position.y=o.y0+(o.hop&&T-o.hop<.5?Math.sin((T-o.hop)/.5*Math.PI)*.25:Math.abs(Math.sin(t*2+o.ph))*.02);
+  o.g.rotation.y+=Math.sin(t*.5+o.ph)*dt*.5;const fd=!VISIT&&icFeedable(c,now)&&where==='out';o.g.userData.fish.visible=fd;if(fd){const f=o.g.userData.fish;f.position.y=(.75+Math.sin(t*2.5+o.ph)*.04)/s;f.quaternion.copy(o.g.quaternion).invert().multiply(camera.quaternion);f.scale.setScalar(1/s)}}});
+/* the first time: Vivaldigor waits near Igor's house and calls; tap him and he leads the way to the ice */
+{const H0=new V3(-2.4,0,-3.2),bo=new THREE.Group();bo.position.copy(H0);world.add(bo);const pl=vvMesh(1);bo.add(pl);blob(bo,.3);bo.visible=false;
+ const CALL=[["Brrr! On the ice island the penguins are singing!","Brrr! Sull’isola di ghiaccio cantano i pinguini!"],["Come and hear my ice violin!","Vieni a sentire il mio violino di ghiaccio!"],["Tap me: I’ll show you the way!","Toccami: ti faccio strada!"]];
+ let ci=0,cnext=0,lead=false;const L=label(CALL[0],[VIVN+' · violinist',VIVN+' · violinista'],H0.clone().add(new V3(0,IGH2+.55,0)),()=>go(),0);L.hidden=true;
+ const want=()=>!VISIT&&S.farm&&ICI.on&&!icF().met&&!(typeof barF==='function'&&ISL2.on&&!barF().met)&&!(LKI.on&&!lkF().met)&&!(FOI.on&&!foF().met);
+ SPKR[VIVN]=()=>bo.visible?pl:IC.vvPl;
+ function go(){if(!want()||lead)return;lead=true;say(tt(`${VIVN}: “Follow me!”`,`${VIVN}: “Seguimi!”`),2);goTo('vivaldi')}
+ BUILD='out';hit(bo,.5,()=>go(),'vivaldigor out',.4);
+ updaters.push((t,dt)=>{const on=want()&&where==='out';bo.visible=on;if(!on){L.hidden=true;return}vvPaint();pl.quaternion.copy(camera.quaternion);const B=VV_B;
+  if(lead){const tg=isleVia(B,bo.position),v=tg.clone().sub(bo.position);v.y=0;const d=v.length(),dd=Math.hypot(bo.position.x-B.x,bo.position.z-B.z);
+   const gap=bo.position.distanceTo(igor.position);if(d>.05&&gap<4.5)bo.position.addScaledVector(v.normalize(),Math.min(d,dt*3.2));pl.position.y=Math.abs(Math.sin(t*9))*.06;
+   if(dd<.8){bo.visible=false}if(!IG.target&&dd>1&&igor.position.distanceTo(bo.position)>.8)goTo('vivaldi')}
+  else{pl.position.y=Math.abs(Math.sin(t*3))*.08;if(T>cnext&&igor.position.distanceTo(bo.position)<14){ci=(ci+1)%CALL.length;L.text=CALL[ci];L.el.innerHTML=N(L.text)+`<small>${N(L.sub)}</small>`;cnext=T+3.5}}
+  L.pos.copy(bo.position).add(new V3(0,IGH2+.55,0));L.hidden=lead||igor.position.distanceTo(bo.position)>14})}
+Object.assign(FOGAMES,{ivp:1,iic:1,isk:1,ifd:1});
+/* ---------- 🐣 the chick's voice ---------- */
+const IVL=[{n:3,len:3,mode:'diff'},{n:4,len:3,mode:'two'},{n:4,len:4,mode:'one',sh:[3,5]},{n:5,len:4,mode:'one',sh:[1,2],rh:1},{n:5,len:5,mode:'rhythm'},{n:6,len:4,mode:'tr',sh:[2,3]},{n:6,len:5,mode:'tr',sh:[1,2],rh:1}];
+const IVLH=[['Find the same call','Trova lo stesso richiamo'],['Four penguins','Quattro pinguini'],['Only one note is different','Cambia una nota sola'],['A small note, or the rhythm','Una nota piccola, o il ritmo'],['Same notes, another rhythm','Stesse note, un altro ritmo'],['Higher or lower: the shape counts','Più acuto o più grave: conta la forma'],['The hardest colony','La colonia più difficile']];
+const IVSC=[67,69,71,72,74,76,77,79,81,83,84];
+const ivSig=(c,tr)=>tr?c.m.slice(1).map((m,i)=>m-c.m[i]).join(',')+'|'+c.r.join(''):c.m.join(',')+'|'+c.r.join('');
+function ivNew(len){let i=2+Math.floor(Math.random()*5);const m=[],r=[];for(let k=0;k<len;k++){m.push(IVSC[i]);r.push(pick([1,1,1,2]));i=Math.max(0,Math.min(IVSC.length-1,i+pick([-3,-2,-1,1,2,3])));if(k>0&&IVSC[i]===m[k-1]&&Math.random()<.7)i=Math.min(IVSC.length-1,i+1)}return{m,r}}
+function ivRh(c){const r=c.r.slice();for(let g=0;g<20;g++){const k=Math.floor(Math.random()*r.length);r[k]=r[k]===1?2:1;if(r.join('')!==c.r.join(''))break}return{m:c.m.slice(),r}}
+function ivMut(c,mode,sh){if(mode==='diff')return ivNew(c.m.length);if(mode==='rhythm')return ivRh(c);
+ const m=c.m.slice(),n=mode==='two'?2:1,ks=[...Array(m.length).keys()].sort(()=>Math.random()-.5).slice(0,n),[s0,s1]=sh||[3,5];
+ for(const k of ks){const d=(s0+Math.floor(Math.random()*(s1-s0+1)))*(Math.random()<.5?-1:1);m[k]=Math.max(60,Math.min(91,m[k]+d))}return{m,r:c.r.slice()}}
+function ivRound(lv){const S0=IVL[lv],tr=S0.mode==='tr',t=ivNew(S0.len),opts=[{c:t,tr:0}],seen=new Set([ivSig(t,tr)]);let g=0;
+ while(opts.length<S0.n&&g++<200){let c;if(S0.rh&&Math.random()<.4)c=ivRh(t);else c=ivMut(t,tr?'one':S0.mode,S0.sh);const s=ivSig(c,tr);if(seen.has(s))continue;seen.add(s);opts.push({c,tr:0})}
+ if(tr){const ts=[-7,-5,-4,-3,-2,2,3,4,5,7].sort(()=>Math.random()-.5);opts.forEach((o,i)=>o.tr=ts[i%ts.length])}
+ const ord=opts.map((o,i)=>i).sort(()=>Math.random()-.5);return{t,opts:ord.map(i=>opts[i]),ok:ord.indexOf(0),tr}}
+let IV=null;
+function ivOpen(st){const L=icF(),s0=Math.min(L.st,IVL.length-1);IV={st:st!=null?Math.min(st,s0):s0,i:0,ok:0,q:null,busy:false,tm:[]};foFoc(true);
+ openSheet('ivp',`<h2>🐣 ${tt('The chick’s voice','La voce del pulcino')}</h2>
+ <p class="shn">${tt('Emperor penguins find their chick among thousands, just by its voice. The chick sings its call: which penguin sings the same one?','I pinguini imperatori ritrovano il loro pulcino tra migliaia, solo dalla voce. Il pulcino canta il suo richiamo: quale pinguino canta lo stesso?')}</p>
+ <p class="lkst">${tt('Level','Livello')} <b>${IV.st+1}</b>/${IVL.length} · ${N(IVLH[IV.st])} · ${IVL[IV.st].n} ${tt('penguins','pinguini')}</p>
+ ${s0>0?`<div class="lklv">${Array.from({length:s0+1},(_,k)=>`<button type="button" data-ivl="${k}"${k===IV.st?' class="on"':''}>${k+1}</button>`).join('')}</div>`:''}
+ <div class="lkctl"><button type="button" class="m" data-iv="go">▶ ${tt('Start: 6 rounds','Inizia: 6 giri')}</button></div>`)}
+function ivClear(){if(IV){for(const t of IV.tm)clearTimeout(t);IV.tm=[]}}
+function ivFlash(i,on){const b=sb.querySelector(`[data-ivo="${i}"]`);if(b)b.classList.toggle('sing',on)}
+function ivListen(){if(!IV||!IV.q)return;ivClear();const q=IV.q,m=()=>sb.querySelector('.ivmsg');IV.ph='listen';
+ const at=(t,fn)=>IV.tm.push(setTimeout(()=>{if(sheetKind==='ivp')fn()},t*1000));
+ at(0,()=>{const e=m();if(e)e.innerHTML=`<b>🐣 ${tt('The chick…','Il pulcino…')}</b>`;const c=sb.querySelector('.ivchick');if(c)c.classList.add('sing')});
+ let t=icCallPlay(q.t,.15)+.15+.6;at(t-.5,()=>{const c=sb.querySelector('.ivchick');if(c)c.classList.remove('sing')});
+ q.opts.forEach((o,i)=>{const t0=t;at(t0,()=>{ivFlash(i,true);const e=m();if(e)e.innerHTML=`🐧 ${'ABCDEF'[i]}…`});const t1=icCallPlay(o.c,t0,{tr:o.tr,adult:1});at(t1,()=>ivFlash(i,false));t=t1+.45});
+ at(t,()=>{IV.ph='ans';const e=m();if(e)e.textContent=tt('Which one sings the same call? Tap to listen again, then “It’s this one!”','Chi canta lo stesso richiamo? Tocca per riascoltare, poi “È questo!”')})}
+function ivNext(){if(IV.i>=6){ivEnd();return}IV.q=ivRound(IV.st);IV.busy=false;IV.sel=-1;IV.ph='wait';const q=IV.q;
+ openSheet('ivp',`<h2>🐣 ${tt('The chick’s voice','La voce del pulcino')}</h2>
+ <p class="lkst">${tt('Round','Giro')} <b>${IV.i+1}</b>/6 · ✔ ${IV.ok}</p>
+ <div class="lkctl"><button type="button" class="ivchick" data-iv="chick">🐣 ${tt('The chick','Il pulcino')}</button></div>
+ <div class="ivp">${q.opts.map((o,i)=>`<button type="button" data-ivo="${i}">🐧<small>${'ABCDEF'[i]}</small></button>`).join('')}</div>
+ <p class="shn ivmsg">${tt('Listen…','Ascolta…')}</p>
+ <div class="lkctl"><button type="button" class="m" data-iv="ok" disabled>✓ ${tt('It’s this one!','È questo!')}</button><button type="button" data-iv="all">🔁 ${tt('Everyone again','Tutti da capo')}</button></div>`);
+ setTimeout(()=>{if(sheetKind==='ivp'&&IV&&IV.q===q)ivListen()},300)}
+function ivPickO(i){if(!IV||!IV.q||IV.busy||IV.ph!=='ans')return;IV.sel=i;sb.querySelectorAll('[data-ivo]').forEach(b=>b.classList.toggle('on',+b.dataset.ivo===i));const ok=sb.querySelector('[data-iv="ok"]');if(ok)ok.disabled=false;
+ ivClear();ivFlash(i,true);const o=IV.q.opts[i],t=icCallPlay(o.c,.05,{tr:o.tr,adult:1});IV.tm.push(setTimeout(()=>ivFlash(i,false),t*1000))}
+function ivAns(){if(!IV||!IV.q||IV.busy||IV.sel<0||IV.ph!=='ans')return;IV.busy=true;IV.ph='wait';ivClear();const q=IV.q,ok=IV.sel===q.ok,m=sb.querySelector('.ivmsg');
+ sb.querySelectorAll('[data-ivo]').forEach(b=>{const i=+b.dataset.ivo;if(i===q.ok)b.classList.add('ok');else if(i===IV.sel)b.classList.add('no')});
+ if(ok){IV.ok++;snd('star');if(m)m.textContent=pick(tt(['Found! The chick runs to it.','Yes! What a happy chick.','That’s it: same call!'],['Trovato! Il pulcino gli corre incontro.','Sì! Che pulcino felice.','È lui: stesso richiamo!']))}
+ else{if(m)m.textContent=tt(`Almost! It was penguin ${'ABCDEF'[q.ok]}. Listen: the chick, then its penguin.`,`Quasi! Era il pinguino ${'ABCDEF'[q.ok]}. Ascolta: il pulcino, poi il suo pinguino.`);
+  const t=icCallPlay(q.t,.4);ivFlash(q.ok,true);const o=q.opts[q.ok];icCallPlay(o.c,t+.5,{tr:o.tr,adult:1})}
+ IV.i++;IV.tm.push(setTimeout(()=>{if(sheetKind==='ivp'&&IV)ivNext()},ok?1500:4600))}
+function ivEnd(){const L=icF(),st=IV.st,ok=IV.ok,seeds=ok?Math.min(10,Math.max(1,Math.round(ok*(st+4)/6))):0;let up='';
+ if(!VISIT){L.best[st]=Math.max(L.best[st]|0,ok);if(ok>=5&&st===L.st&&L.st<IVL.length-1){L.st++;up=tt(`Level ${L.st+1} is open: ${N(IVLH[L.st]).toLowerCase()}!`,`Si apre il livello ${L.st+1}: ${N(IVLH[L.st]).toLowerCase()}!`)}
+  if(seeds)S.seeds=(S.seeds|0)+seeds;fmDirty=true;save()}
+ openSheet('ivp',`<h2>🐣 ${tt('The chick’s voice','La voce del pulcino')}</h2><p class="lkbig">${ok}/6</p>
+ <p class="shn">${ok===6?tt('Every chick found its penguin! You hear like an emperor.','Ogni pulcino ha ritrovato il suo pinguino! Hai l’orecchio di un imperatore.'):ok>=4?tt('What an ear!','Che orecchio!'):tt('Every time you play, you recognise voices better.','Ogni volta che giochi, riconosci meglio le voci.')} ${up}</p>
+ ${seeds&&!VISIT?`<p class="lkst">🌱 +${seeds} ${tt('seeds','semi')}</p>`:''}
+ <div class="lkctl"><button type="button" class="m" data-iv="replay">▶ ${tt('Play again','Gioca ancora')}</button><button type="button" data-iv="close">${tt('Close','Chiudi')}</button></div>`);
+ IV.q=null;setTimeout(()=>foFoc(false),900);if(seeds&&!VISIT){window._fromGame='';setTimeout(()=>{try{seedParty(seeds)}catch(e){}},500)}}
+/* ---------- 🧊 icicles in a row ---------- */
+const ICLN=[4,5,6,7],ICLG=[4,3,2,1];
+function iclSet(lv){const n=ICLN[lv],gap=ICLG[lv],ms=[];let g=0;while(ms.length<n&&g++<500){const m=72+Math.floor(Math.random()*20);if(ms.every(x=>Math.abs(x-m)>=gap))ms.push(m)}
+ return ms.map(m=>({m,h:.35+Math.random()*.65}))}
+let ICL=null;
+function iclOpen(){const L=icF(),td=new Date().toDateString(),lv=Math.min(L.icL|0,ICLN.length-1);ICL={lv,set:iclSet(lv),done:[],err:0,sel:-1,paid:L.icD===td};foFoc(true);iclDraw()}
+function iclDraw(){const s=ICL.set,sorted=s.map((x,i)=>i).sort((a,b)=>s[a].m-s[b].m);
+ openSheet('iic',`<h2>🧊 ${tt('Icicles in a row','I ghiaccioli in fila')}</h2>
+ <p class="shn">${tt('Every night new icicles grow on the igloo. Put them in order, from the lowest to the highest! Their length tells you nothing: listen.','Ogni notte sull’igloo crescono ghiaccioli nuovi. Mettili in fila, dal più grave al più acuto! La lunghezza non conta: ascolta.')}</p>
+ <div class="icrow">${s.map((x,i)=>{const k=ICL.done.indexOf(i);return`<button type="button" data-icl="${i}" class="${k>=0?'done':''}${ICL.sel===i?' on':''}" style="--h:${Math.round(40+x.h*90)}px">${k>=0?`<b>${k+1}</b>`:''}</button>`}).join('')}</div>
+ <p class="shn iclmsg">${ICL.done.length?tt(`${ICL.done.length} in place. Which is the next one up?`,`${ICL.done.length} in fila. Qual è il prossimo, salendo?`):tt('Tap an icicle to hear it, then “This is the lowest”.','Tocca un ghiacciolo per sentirlo, poi “È il più grave”.')}</p>
+ <div class="lkctl"><button type="button" class="m" data-ic="ok"${ICL.sel<0?' disabled':''}>✓ ${ICL.done.length?tt('This is the next one','È il prossimo'):tt('This is the lowest','È il più grave')}</button><button type="button" data-ic="row"${ICL.done.length?'':' hidden'}>🎶 ${tt('Play the row','Suona la fila')}</button></div>
+ <p class="lkst">${tt('Level','Livello')} ${ICL.lv+1}/${ICLN.length} · ${s.length} ${tt('icicles','ghiaccioli')}${ICL.paid?' · '+tt('seeds already taken today','semi già presi oggi'):''}</p>`);ICL._sorted=sorted}
+function iclRow(list,t0){let t=t0||.05;for(const i of list){snd('icl',{f:mf(ICL.set[i].m),delay:t});t+=.32}return t}
+function iclOk(){if(!ICL||ICL.sel<0)return;const want=ICL._sorted[ICL.done.length],i=ICL.sel;
+ if(i===want){ICL.done.push(i);ICL.sel=-1;snd('icl',{f:mf(ICL.set[i].m)});if(ICL.done.length>=ICL.set.length-1&&ICL.done.length<ICL.set.length){ICL.done.push(ICL._sorted[ICL.set.length-1])}
+  if(ICL.done.length>=ICL.set.length){iclEnd();return}iclDraw()}
+ else{ICL.err++;const hi=ICL.set[i].m>ICL.set[want].m;iclDraw();const m=sb.querySelector('.iclmsg');if(m)m.textContent=hi?tt('That one is higher: there is a lower one still. Listen again!','Quello è più acuto: ce n’è ancora uno più grave. Riascolta!'):tt('Hmm, listen again: compare it with the last one in the row.','Mmm, riascolta: confrontalo con l’ultimo della fila.')}}
+function iclEnd(){const L=icF(),td=new Date().toDateString(),e=ICL.err,seeds=ICL.paid||VISIT?0:Math.max(1,4-e)+ICL.lv;let up='';
+ if(!VISIT){L.icD=td;if(e<=1&&ICL.lv===(L.icL|0)&&ICL.lv<ICLN.length-1){L.icL=ICL.lv+1;up=tt(`Tomorrow there will be ${ICLN[L.icL]} icicles, closer together!`,`Domani ci saranno ${ICLN[L.icL]} ghiaccioli, più vicini tra loro!`)}if(seeds)S.seeds=(S.seeds|0)+seeds;fmDirty=true;save()}
+ iclDraw();const m=sb.querySelector('.iclmsg');if(m)m.innerHTML=`${e===0?tt('Perfect, from the lowest to the highest!','Perfetto, dal più grave al più acuto!'):tt(`All in a row! (${e} ${e>1?'tries':'try'} more)`,`Tutti in fila! (${e} tentativ${e>1?'i':'o'} in più)`)} ${up}${seeds?` · 🌱 +${seeds}`:''}`;
+ const b=sb.querySelector('[data-ic="ok"]');if(b)b.hidden=true;iclRow(ICL._sorted,.4);setTimeout(()=>foFoc(false),3500);if(seeds){window._fromGame='';setTimeout(()=>{try{seedParty(seeds)}catch(e){}},400)}}
+/* ---------- ⛸️ skating the melody ---------- */
+const SKLN=[3,4,5,6];
+function sktPhrase(lv){const len=SKLN[lv],m=[];let i=3+Math.floor(Math.random()*4);for(let k=0;k<len;k++){m.push(IVSC[i]);let d=pick(lv>=3?[-1,1,-2,2]:[-2,-1,1,2,3,-3]);if(lv>=2&&Math.random()<.2)d=0;i=Math.max(0,Math.min(IVSC.length-1,i+d));if(d!==0&&IVSC[i]===m[k])i=Math.max(0,Math.min(IVSC.length-1,i-2*Math.sign(d)))}return m}
+let SKT=null;
+function sktOpen(){const L=icF(),lv=Math.min(L.skL|0,SKLN.length-1);SKT={lv,i:0,ok:0,q:null,ans:[],ph:'intro'};foFoc(true);
+ openSheet('isk',`<h2>⛸️ ${tt('Skating the melody','Pattinare la melodia')}</h2>
+ <p class="shn">${tt(`${VIVN} plays a little phrase: where does it go? For every step tell Igor: up, down${lv>=2?' or the same note':''}. Igor skates its shape on the ice.`,`${VIVN} suona una frasetta: dove va? Per ogni passo dillo a Igor: su, giù${lv>=2?' o la stessa nota':''}. Igor ne pattina la forma sul ghiaccio.`)}</p>
+ <p class="lkst">${tt('Level','Livello')} <b>${lv+1}</b>/${SKLN.length} · ${SKLN[lv]} ${tt('notes','note')}</p>
+ <div class="lkctl"><button type="button" class="m" data-sk="go">▶ ${tt('Start: 6 phrases','Inizia: 6 frasi')}</button></div>`)}
+function sktPlayQ(t0){let t=t0||.1;for(const m of SKT.q)snd('vln',{f:mf(m),d:.36,delay:t}),t+=.42;vvPlayT=T+t;return t}
+function sktNext(){if(SKT.i>=6){sktEnd();return}SKT.q=sktPhrase(SKT.lv);SKT.ans=[];SKT.busy=false;const same=SKT.lv>=2;
+ openSheet('isk',`<h2>⛸️ ${tt('Skating the melody','Pattinare la melodia')}</h2>
+ <p class="lkst">${tt('Phrase','Frase')} <b>${SKT.i+1}</b>/6 · ✔ ${SKT.ok}</p><canvas class="skcv" width="600" height="200"></canvas>
+ <p class="shn skmsg">${tt(`${SKT.q.length-1} steps: where does the melody go?`,`${SKT.q.length-1} passi: dove va la melodia?`)}</p>
+ <div class="lkctl skbt"><button type="button" data-ska="1">⬆ ${tt('Up','Su')}</button>${same?`<button type="button" data-ska="0">➡ ${tt('Same','Uguale')}</button>`:''}<button type="button" data-ska="-1">⬇ ${tt('Down','Giù')}</button><button type="button" data-sk="again">🔁 ${tt('Again','Ancora')}</button></div>`);
+ sktDrawC();setTimeout(()=>{if(sheetKind==='isk'&&SKT&&SKT.q)sktPlayQ()},300)}
+function sktDrawC(show){const cv=sb.querySelector('.skcv');if(!cv)return;const c=cv.getContext('2d'),W=600,H=200,q=SKT.q;c.clearRect(0,0,W,H);
+ const gr=c.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#dff3fb');gr.addColorStop(1,'#b9dfee');c.fillStyle=gr;c.beginPath();c.roundRect(0,0,W,H,18);c.fill();
+ c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=2;for(let k=0;k<6;k++){c.beginPath();c.moveTo(30+k*97,H-20);c.lineTo(80+k*97,20);c.stroke()}
+ const n=q.length,dx=(W-80)/(n-1),pts=[[40,H/2]];let y=H/2;for(let k=0;k<SKT.ans.length;k++){y-=SKT.ans[k]*34;y=Math.max(22,Math.min(H-22,y));pts.push([40+(k+1)*dx,y])}
+ if(show){let yy=H/2;const P=[[40,H/2]];for(let k=1;k<n;k++){yy-=Math.sign(q[k]-q[k-1])*34;yy=Math.max(22,Math.min(H-22,yy));P.push([40+k*dx,yy])}c.setLineDash([6,6]);c.strokeStyle='rgba(43,74,94,.45)';c.lineWidth=4;c.beginPath();P.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();c.setLineDash([])}
+ c.strokeStyle='#3d6fb8';c.lineWidth=6;c.lineCap='round';c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();
+ for(let k=0;k<n;k++){c.fillStyle=k<pts.length?'#f7f2e4':'rgba(255,255,255,.5)';c.beginPath();c.arc(40+k*dx,k<pts.length?pts[k][1]:H/2,7,0,TAU);c.fill()}
+ const[lx,ly]=pts[pts.length-1];c.font='26px serif';c.textAlign='center';c.textBaseline='middle';c.fillText('⛸️',lx,ly-20)}
+function sktAns(d){if(!SKT||!SKT.q||SKT.busy)return;const k=SKT.ans.length,q=SKT.q;if(k>=q.length-1)return;SKT.ans.push(d);snd('vln',{f:mf(q[k+1]),d:.3});sktDrawC();snd('isng',{f:700+Math.random()*500,g:.4});
+ if(SKT.ans.length>=q.length-1){SKT.busy=true;const right=q.slice(1).every((m,i)=>Math.sign(m-q[i])===SKT.ans[i]),msg=sb.querySelector('.skmsg');
+  if(right){SKT.ok++;snd('star');if(msg)msg.textContent=pick(tt(['What a curve! Exactly the melody’s shape.','Bravo: you skated it perfectly!','Vivaldigor applauds!'],['Che curva! Proprio la forma della melodia.','Bravo: l’hai pattinata perfetta!','Vivaldigor applaude!']))}
+  else{sktDrawC(true);if(msg)msg.textContent=tt('Almost! The dotted line is the melody’s real shape. Listen again:','Quasi! La linea tratteggiata è la forma vera della melodia. Riascolta:');setTimeout(()=>{if(sheetKind==='isk')sktPlayQ(.1)},500)}
+  SKT.i++;setTimeout(()=>{if(sheetKind==='isk'&&SKT)sktNext()},right?1500:2400+q.length*420)}}
+function sktEnd(){const L=icF(),lv=SKT.lv,ok=SKT.ok,seeds=ok?Math.min(6,Math.max(1,Math.round(ok*(lv+3)/6))):0;let up='';
+ if(!VISIT){if(ok>=5&&lv===(L.skL|0)&&lv<SKLN.length-1){L.skL=lv+1;up=tt(`Next time: ${SKLN[lv+1]} notes${lv+1===2?', and notes that stay the same':''}!`,`La prossima volta: ${SKLN[lv+1]} note${lv+1===2?', e note che restano uguali':''}!`)}if(seeds)S.seeds=(S.seeds|0)+seeds;fmDirty=true;save()}
+ openSheet('isk',`<h2>⛸️ ${tt('Skating the melody','Pattinare la melodia')}</h2><p class="lkbig">${ok}/6</p>
+ <p class="shn">${ok===6?tt(`${VIVN}: “Bravissimo! You skate like a melody.”`,`${VIVN}: “Bravissimo! Pattini come una melodia.”`):tt(`${VIVN}: “Up, down… the ear learns fast on the ice.”`,`${VIVN}: “Su, giù… sul ghiaccio l’orecchio impara in fretta.”`)} ${up}</p>
+ ${seeds&&!VISIT?`<p class="lkst">🌱 +${seeds} ${tt('seeds','semi')}</p>`:''}
+ <div class="lkctl"><button type="button" class="m" data-sk="replay">▶ ${tt('Play again','Gioca ancora')}</button><button type="button" data-sk="close">${tt('Close','Chiudi')}</button></div>`);
+ SKT.q=null;setTimeout(()=>foFoc(false),900);if(seeds&&!VISIT){window._fromGame='';setTimeout(()=>{try{seedParty(seeds)}catch(e){}},400)}}
+/* ---------- 📖 the colony ---------- */
+function icbOpen(){const L=icF(),now=Date.now(),cnt={};for(const sp of L.ad.slice(0,COLMAX-5))cnt[sp]=(cnt[sp]|0)+1;
+ const sp=PSPK.map(k=>L.seen[k]?`<div class="lksp"><i style="--c:${k==='gold'?'#e0b030':k==='blue'?'#3d5f8f':'#2b3a46'}">🐧</i><div><b>${N(PSP[k].N)}</b> <small>${cnt[k]?`× ${cnt[k]} ${tt('in the colony','nella colonia')}`:tt('grown up here','cresciuto qui')}</small><span>${N(PSP[k].d)}</span></div></div>`:`<div class="lksp q"><i>❓</i><div><b>???</b><span>${k==='gold'?tt('Very, very rare…','Rarissimo…'):tt('Who knows who will hatch…','Chissà chi nascerà…')}</span></div></div>`).join('');
+ const eg=L.eg.map(e=>`<li>🥚 ${tt(`hatches in ${fmtL(e.b+HATCH-now)}`,`si schiude tra ${fmtL(e.b+HATCH-now)}`)}</li>`).join('')+L.ch.map(c=>`<li>🐣 ${c.f.length}/3 ${tt('meals','pasti')} · ${icFeedable(c,now)?`<b>${tt('hungry!','ha fame!')}</b>`:tt(`hungry again in ${fmtL(c.f[c.f.length-1]+CFEED-now)}`,`di nuovo fame tra ${fmtL(c.f[c.f.length-1]+CFEED-now)}`)}</li>`).join('');
+ openSheet('icb',`<h2>📖 ${tt('The penguin colony','La colonia dei pinguini')}</h2>
+ <p class="lkst">🐧 <b>${5+Math.min(COLMAX-5,L.ad.length)}</b>/${COLMAX}${L.ad.length>COLMAX-5?` · ${L.ad.length-(COLMAX-5)} ${tt('on the far shore','sulla riva lontana')}`:''} · ${tt('grown up here','cresciuti qui')}: ${L.ad.length}</p>${sp}
+ <p class="lkst"><b>${tt('Eggs and chicks','Uova e pulcini')}</b></p>${eg?`<ul class="lktd">${eg}</ul>`:`<p class="shn">${tt('No eggs right now: a new one comes every 10 hours (and after every frost).','Nessun uovo adesso: ne arriva uno nuovo ogni 10 ore (e dopo ogni gelata).')}</p>`}
+ <p class="shn">${tt('A chick is hungry every 4 hours: to give it a little tofu fish (1 tofu ant) you must recognise its voice. After 3 meals it grows up.','Un pulcino ha fame ogni 4 ore: per dargli un pesciolino di tofu (1 formica di tofu) devi riconoscere la sua voce. Dopo 3 pasti diventa grande.')}</p>
+ <p class="lkst">🐣 ${tt('lv.','liv.')} ${Math.min(L.st,IVL.length-1)+1} · 🧊 ${tt('lv.','liv.')} ${(L.icL|0)+1} · ⛸️ ${tt('lv.','liv.')} ${(L.skL|0)+1}</p>`)}
+/* ---------- the panels' buttons ---------- */
+sb.addEventListener('click',e=>{if(!/^(ivp|iic|isk|ifd|icb)$/.test(sheetKind||''))return;const b=e.target.closest('button');if(!b)return;e.stopPropagation();
+ if(b.dataset.ivl!=null){IV.st=+b.dataset.ivl;ivOpen(IV.st);return}
+ if(b.dataset.ivo!=null){ivPickO(+b.dataset.ivo);return}
+ if(b.dataset.ifo!=null){if(!FD)return;FD.sel=+b.dataset.ifo;sb.querySelectorAll('[data-ifo]').forEach(x=>x.classList.toggle('on',x===b));const ok=sb.querySelector('[data-iv="fok"]');if(ok)ok.disabled=false;icCallPlay(FD.opts[FD.sel],.05,{adult:0});return}
+ if(b.dataset.icl!=null){if(!ICL||ICL.done.length>=ICL.set.length)return;const i=+b.dataset.icl;snd('icl',{f:mf(ICL.set[i].m)});if(ICL.done.includes(i))return;ICL.sel=i;sb.querySelectorAll('[data-icl]').forEach(x=>x.classList.toggle('on',+x.dataset.icl===i));const ok=sb.querySelector('[data-ic="ok"]');if(ok)ok.disabled=false;return}
+ if(b.dataset.ska!=null){sktAns(+b.dataset.ska);return}
+ const k=b.dataset.iv||b.dataset.ic||b.dataset.sk;
+ if(b.dataset.iv){switch(k){case'go':IV.i=0;IV.ok=0;ivNext();return;case'chick':if(IV&&IV.q&&IV.ph==='ans'){ivClear();const c=sb.querySelector('.ivchick');if(c)c.classList.add('sing');const t=icCallPlay(IV.q.t,.05);IV.tm.push(setTimeout(()=>{const c=sb.querySelector('.ivchick');if(c)c.classList.remove('sing')},t*1000))}return;
+  case'all':if(IV&&IV.q&&IV.ph==='ans'&&!IV.busy)ivListen();return;case'ok':ivAns();return;case'replay':ivOpen(IV?IV.st:null);return;case'close':closeSheet();return;
+  case'fcall':if(FD){const L=icF(),c=L.ch.find(q=>q.id===FD.id);if(c)icCallPlay(c.c,.05)}return;case'fok':icFeedDo();return}}
+ if(b.dataset.ic){if(k==='ok')iclOk();else if(k==='row'&&ICL)iclRow(ICL.done);return}
+ if(b.dataset.sk){switch(k){case'go':SKT.i=0;SKT.ok=0;sktNext();return;case'again':if(SKT&&SKT.q)sktPlayQ();return;case'replay':sktOpen();return;case'close':closeSheet();return}}});
+{const st=document.createElement('style');st.textContent=`.ivp{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:10px 0}.ivp button{width:64px;height:64px;border-radius:50%;padding:0;font-size:26px;line-height:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-transform:none;letter-spacing:0;transition:transform .12s}
+.ivp button small{font-size:11px;margin-top:2px}.ivp button.on{outline:3px solid #ffd34e}.ivp button.sing,.ivchick.sing{transform:scale(1.15);box-shadow:0 0 14px #bfe6f5}.ivp button.ok{background:#3f8a48;color:#fff}.ivp button.no{opacity:.55}
+.icrow{display:flex;justify-content:center;align-items:flex-start;gap:8px;margin:8px 0 4px;padding-top:10px;border-top:10px solid #eef6fb;border-radius:6px}.icrow button{width:34px;height:var(--h);padding:0;border:0;border-radius:4px 4px 50% 50% / 4px 4px 90% 90%;background:linear-gradient(#f4fbff,#bfe6f5 70%,#9fd2e6);box-shadow:inset 0 0 0 2px rgba(43,74,94,.25);color:#2b4a5e;display:flex;align-items:flex-end;justify-content:center;font-size:13px;padding-bottom:6px}
+.icrow button.on{outline:3px solid #ffd34e}.icrow button.done{background:linear-gradient(#f4fbff,#9fe0b8 70%,#6cc495)}.skcv{width:100%;height:auto;display:block;border-radius:18px;margin:6px 0}.skbt button{min-width:84px}`;document.head.appendChild(st)}
+/* ---------- the frozen pond sings when someone slides on it ---------- */
+let icSingT=0;
+updaters.push((t,dt)=>{if(!icVis()||!ICI.pond)return;const P=ICI.pond,onP=(x,z)=>Math.hypot((x-P.x)/P.rx,(z-P.z)/P.rz)<1;if(T<icSingT)return;
+ const moving=IG.target||Object.values(keys||{}).some(Boolean);
+ if(onP(igor.position.x,igor.position.z)&&moving){icSingT=T+.9+Math.random()*1.2;snd('isng',{f:600+Math.random()*700,g:.8});return}
+ for(const[,o]of igObjs){const A=o.act;if(A&&A.k==='isl'&&A.s==='slide'&&A.st&&igor.position.distanceTo(o.grp.position)<10){icSingT=T+2.5+Math.random()*3;snd('isng',{f:700+Math.random()*600,g:.45});return}}});
+/* ---------- every few seconds: eggs, chicks, the colony; the to-do ---------- */
+let icTk=0;
+updaters.push((t,dt)=>{if(!ICI.on)return;if((icTk-=dt)<=0){icTk=2;icTick();icSync();if(S.farm)icColSync()}});
+{const _ti=todoItems;todoItems=function(){const L0=_ti();try{if(VISIT||!ICI.on||!S.farm)return L0;const L=icF(),now=Date.now(),hg=L.ch.filter(c=>icFeedable(c,now));
+  if(hg.length&&L0.length<6){const c=hg[0];L0.splice(Math.min(3,L0.length),0,{k:'chick',ic:'🐣',t:hg.length>1?tt(`${hg.length} hungry chicks`,`${hg.length} pulcini hanno fame`):tt('A hungry chick 🐟','Un pulcino ha fame 🐟'),go:outFirst(()=>icChickTap(c.id))})}}catch(e){}return L0}}
+/* ---------- 🌌 the aurora: once a day at night (not together with the fireflies), its bands are the harmonics of one note ---------- */
+const AUR={on:false,t0:0,k:0,next:0};let auT=0;
+{const cols=['#5cf2a0','#4fd8e0','#9a7cf2','#f28ad0','#7cf2c8','#5ca8f2','#c8f27c','#f2a65c'];
+ for(let k=0;k<8;k++){const g=new THREE.PlaneGeometry(48,7,48,1),m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:cols[k],transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
+  m.userData.base=g.attributes.position.array.slice();m.visible=false;m.renderOrder=-1;scene.add(m);IC.aur.push(m)}}
+// the bands hang in the sky in front of the camera (the island's camera looks down a lot), behind everything else
+const _au=new V3();function aurPlace(m,k,t){_au.set(-.15+k*.05,.5+k*.06+Math.sin(t*.2+k)*.02,.5).unproject(camera).sub(camera.position).normalize();m.position.copy(camera.position).addScaledVector(_au,60+k*3);m.quaternion.copy(camera.quaternion);m.rotateZ(-.12+k*.03)}
+updaters.push((t,dt)=>{if(!ICI.on||VISIT||!S.farm||!started)return;
+ if(AUR.on){const u=T-AUR.t0;for(let k=0;k<IC.aur.length;k++){const m=IC.aur[k],on=u>3+k*4,op=on?Math.min(.32,(u-3-k*4)*.15)*(u>AUR.dur-6?Math.max(0,(AUR.dur-u)/6):1):0;m.visible=op>.005&&where==='out'&&igor.position.distanceTo(new V3(ICI.cx,0,ICI.cz))<26;m.material.opacity=op;if(m.visible)aurPlace(m,k,t);
+   if(m.visible){const p=m.geometry.attributes.position,b=m.userData.base;for(let i=0;i<p.count;i++){const x=b[i*3];p.array[i*3+2]=b[i*3+2]+Math.sin(x*.35+t*.6+k)*1.2;p.array[i*3+1]=b[i*3+1]+Math.sin(x*.2+t*.4+k*.7)*.5}p.needsUpdate=true}}
+  if(T>=AUR.next&&AUR.k<8){const near=where==='out'&&igor.position.distanceTo(new V3(ICI.cx,0,ICI.cz))<22;if(near)snd('harm',{f:65.41*(AUR.k+1),d:AUR.dur-3-AUR.k*4,g:1/(1+AUR.k*.25)});AUR.k++;AUR.next=AUR.t0+3+AUR.k*4}
+  if(AUR.k>=8&&!AUR.vv&&T>AUR.t0+36){AUR.vv=1;if(where==='out'&&igor.position.distanceTo(VV_P)<22)vvPlay(WTUNE,.8)}
+  if(T>AUR.t0+AUR.dur){AUR.on=false;for(const m of IC.aur)m.visible=false}return}
+ if((auT-=dt)>0)return;auT=7;if(where!=='out')return;const L=icF(),d=new Date(),td=d.toDateString(),h=d.getHours()+d.getMinutes()/60;
+ if(!L.met||L.aur===td||!(SKY.el<-10)||h<18||h>23.4||(SKY.cover||0)>.6||(typeof FNT!=='undefined'&&FNT.on)||(typeof LKE!=='undefined'&&LKE.on))return;
+ if(FOI.on&&S.farm&&foF().met&&foF().night!==td&&h<21)return; // the fireflies first
+ L.aur=td;fmDirty=true;save();Object.assign(AUR,{on:true,t0:T,k:0,next:T+3,dur:62,vv:0});
+ let n=0;for(const[,o]of igObjs){if(o.mode!=='idle'||!o.grp.visible)continue;const A=o.act;if(A&&/^(ride|wh|lead|rope|ball|ring)$/.test(A.k))continue;if(A&&A.k==='isl')islOff(o);o.act={k:'isl',i:3,s:'aurora',n:n++,st:0,until:T+70,goal:new V3(ICI.cx,0,ICI.cz)}}
+ const near=igor.position.distanceTo(new V3(ICI.cx,0,ICI.cz))<18;bubbleQ.length=0;bubbleT=0;
+ if(near)say(tt('Look up! The aurora… every colour is a harmonic of the same note. Listen!','Guarda in alto! L’aurora… ogni colore è un armonico della stessa nota. Ascolta!'),4.5);
+ else toast(tt('🌌 Over the ice island there is the aurora: go and listen!','🌌 Sull’isola di ghiaccio c’è l’aurora: vai ad ascoltarla!'))});
+/* ---------- the Igorlets on the ice ---------- */
+Object.assign(ISPOT.ice,{vivaldi:[2,{music:7,shy:2,sleepy:1}],chick:[2,{keen:3,shy:3,foodie:2,sporty:1}]});
+Object.assign(ISAY,{
+ vivaldi:[['Bravo, Vivaldigor! Encore!','An ice violin… and it doesn’t even squeak!','Brrr… what beautiful cold music.'],['Bravo, Vivaldigor! Bis!','Un violino di ghiaccio… e non stride nemmeno!','Brrr… che bella musica fredda.']],
+ chick:[['Hello little chick! Shall we slide?','It called me! Or maybe not…','Chirp chirp! Now I speak penguin.'],['Ciao pulcino! Scivoliamo?','Mi ha chiamato! O forse no…','Pio pio! Ora parlo pinguino.']],
+ aurora:[['Ooooh… the sky is singing.','Green, blue, violet… and every colour is a note!','I could stay here all night. Almost.'],['Ooooh… il cielo canta.','Verde, blu, viola… e ogni colore è una nota!','Starei qui tutta la notte. Quasi.']]});
+{const _ok=islOk;islOk=function(I,s){if(I!==ICI)return _ok(I,s);switch(s){case'chick':return!!(S.farm&&icF().ch.length);case'aurora':return false;default:return _ok(I,s)}}}
+const ICSPOT={
+ vivaldi(I,A,o,t){return{p:VV_P.clone().add(new V3(.8+(A.n||0)*.45,0,.7)),ic:T<vvPlayT?'note':'heart',hop:T<vvPlayT?.4:0}},
+ chick(I,A,o,t){const L=icF(),c=L.ch[(A.n||0)%Math.max(1,L.ch.length)];if(!c)return{p:NEST.clone(),ic:'heart'};const a=t*.6+(A.n||0)*2;return{p:new V3(c.x+Math.cos(a)*.7,0,c.z+Math.sin(a)*.5),ic:'heart',hop:.3}},
+ aurora(I,A,o,t){const a=(A.n||0)*.8;return{p:new V3(ICI.cx+Math.cos(a)*2.4,0,ICI.cz-1.2+Math.sin(a)*1.2),pose:'lie',ic:'heart',y:.12,quiet:A.n>0}}};
+{const _isp=islSpot;islSpot=function(I,A,o,t,dt){if(I===ICI&&ICSPOT[A.s])return ICSPOT[A.s](I,A,o,t,dt);return _isp(I,A,o,t,dt)}}
+
 /* ================= 10 Nov 2026: Igor's house, made your own: parts, colours and whole styles. Try for free, pay to keep ================= */
 const HSTY={
  cottage:{N:['Cottage','Cottage'],ic:'🏡',lv:1,t:0,c:{shape:'box',wall:'plaster',beams:1,wcol:'#e8dcc2',roof:'tiles',rcol:'#b4553f',win:'shutters',door:'round',dcol:'#5e8a6a',chim:'stone'}},
@@ -6607,7 +7408,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-1720';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-1830';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
