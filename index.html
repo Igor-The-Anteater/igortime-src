@@ -4058,7 +4058,7 @@ const camOwned=()=>{if(INSPECT)return false;const H=VISIT&&_HOME?_HOME:S;return!
 camV.addEventListener('click',e=>{if(e.target.closest('button')||camV._busy)return;const cx=e.clientX,cy=e.clientY,a=camAim(cx,cy),bx=camV.querySelector('.bx');
  bx.style.left=(a?a.x:cx)+'px';bx.style.top=(a?a.y:cy)+'px';bx.classList.add('aim');camV._busy=1;setTimeout(()=>{camV._busy=0;snapAt(a?a.x:cx,a?a.y:cy);setTimeout(()=>bx.classList.remove('aim'),400)},260)});
 // the viewfinder jumps onto the animal nearest to where you tapped
-function camAim(cx,cy){let best=null,bd=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;const x=(v.x*.5+.5)*innerWidth,y=(-v.y*.5+.5)*innerHeight,d=Math.hypot(x-cx,y-cy);if(d<bd){bd=d;best={x,y}}}
+function camAim(cx,cy){let best=null,bd=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>(a.far||34))continue;const v=projC(wp.clone());if(v.z>1)continue;const x=(v.x*.5+.5)*innerWidth,y=(-v.y*.5+.5)*innerHeight,d=Math.hypot(x-cx,y-cy);if(d<bd){bd=d;best={x,y}}}
  const g=igAim(cx,cy);if(g&&g.d<bd)best={x:g.x,y:g.y};return best}
 // the Igorlets can be photographed too: each one has its own picture in the photo board
 function igAim(cx,cy){let best=null,bd=95;const wp=new V3();for(const[id,o]of igObjs){if(!isShown(o.grp))continue;o.grp.getWorldPosition(wp);wp.y+=IGH*.5;if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;
@@ -4070,9 +4070,9 @@ function igSnap(id){const g=igById(id);if(!g)return false;const o=igObjs.get(id)
  if(!VISIT){const U=FUN();U.phI=U.phI||{};fresh=!U.phI[id];U.phI[id]=(U.phI[id]|0)+1;fmDirty=true}
  el.innerHTML=`<canvas width="300" height="220"></canvas>${fresh?`<b>${tt('NEW!','NUOVO!')}</b> `:''}${esc(g.name)}`;phDrawIg(el.querySelector('canvas'),g,300,220);el.style.opacity=1;clearTimeout(phTT);phTT=setTimeout(()=>el.style.opacity=0,2600);
  snd(fresh?'star':'pop',2);bubbleQ.length=0;bubbleT=0;say(pick(tt([`${g.name}: “Cheese!”`,`${g.name} strikes a pose!`,`${g.name}: “Did I come out well?”`],[`${g.name}: “Cheese!”`,`${g.name} si mette in posa!`,`${g.name}: “Sono venuto bene?”`])),2.6);return true}
-function snapAt(cx,cy){{const gi=igAim(cx,cy),aa=(()=>{let b=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;b=Math.min(b,Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy))}return b})();
+function snapAt(cx,cy){{const gi=igAim(cx,cy),aa=(()=>{let b=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>(a.far||34))continue;const v=projC(wp.clone());if(v.z>1)continue;b=Math.min(b,Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy))}return b})();
   if(gi&&gi.d<aa){snd('shutter');camF.style.transition='none';camF.style.opacity=.85;requestAnimationFrame(()=>{camF.style.transition='opacity .35s';camF.style.opacity=0});igSnap(gi.id);return}}
- let best=null,bd=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>34)continue;const v=projC(wp.clone());if(v.z>1)continue;const d=Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy);if(d<bd){bd=d;best=a}}
+ let best=null,bd=95;const wp=new V3();for(const a of ANIM){if(!isShown(a.o)||!a.ok())continue;a.o.getWorldPosition(wp);if(wp.distanceTo(igor.position)>(a.far||34))continue;const v=projC(wp.clone());if(v.z>1)continue;const d=Math.hypot((v.x*.5+.5)*innerWidth-cx,(-v.y*.5+.5)*innerHeight-cy);if(d<bd){bd=d;best=a}}
  snd('shutter');camF.style.transition='none';camF.style.opacity=.85;requestAnimationFrame(()=>{camF.style.transition='opacity .35s';camF.style.opacity=0});
  if(!best){say(tt('Nothing there… try right on an animal!','Lì non c’è niente… prova proprio su un animale!'),2);return}
  const H=VISIT&&_HOME?_HOME:S,P=((H.farm.fun=H.farm.fun||{}).ph=H.farm.fun.ph||{}),sp=best.sp,S0=SPECIES[sp],fresh=!P[sp];P[sp]=(P[sp]|0)+1;const look=best.o.userData.look||null;(H.farm.fun.phL=H.farm.fun.phL||{})[sp]=look;
@@ -6873,6 +6873,36 @@ updaters.push((t,dt)=>{if(VISIT||!S.farm||!started)return;const F=FM();
 {const _cs=caseSheet;caseSheet=function(sel){_cs(sel);if(VISIT||sheetKind!=='shells')return;const p=document.createElement('p');p.className='shn';
  p.innerHTML=tt('🔄 <b>Trading shells</b>: visit a friend’s island (from the chat 💬, or by boat with “🧭 Visit a friend”), tap <b>their</b> shell case and choose “Propose a trade”: you give one of your spare shells (the second copies) for one of theirs. When they come back home they accept or say no.','🔄 <b>Scambiare conchiglie</b>: vai sull’isola di un amico (dalla chat 💬, oppure in barca con “🧭 Visita un amico”), tocca il <b>suo</b> espositore e scegli “Proponi uno scambio”: dai una delle tue conchiglie doppie per una delle sue. Quando torna a casa accetta o dice di no. Servono doppie da tutte e due le parti, e il tuo amico deve avere l’espositore.');sb.appendChild(p)}}
 
+/* ================= 12 Nov 2026: whales and sharks can be photographed =================
+   Four new animals in the photo board, in their own row "Giants of the sea": whale, shark, golden whale, golden shark.
+   They are huge and far out at sea, so the camera reaches them from anywhere on the island and the viewfinder catches them
+   wherever you tap on their body (head, middle or tail). */
+Object.assign(SPECIES,{whale:{c:'big',N:['Whale','Balena'],col:'#3d5570',r:2},shark:{c:'big',N:['Shark','Squalo'],col:'#7d8b98',r:2},
+ gwhale:{c:'big',N:['Golden whale','Balena d’oro'],col:'#e0aa22',r:3},gshark:{c:'big',N:['Golden shark','Squalo d’oro'],col:'#e0aa22',r:3}});
+SPKEYS.push('whale','shark','gwhale','gshark');
+SPCLASS.big={N:['Giants of the sea','Giganti del mare'],snd:'marimba'};
+{const _pd=phDraw;phDraw=function(c,sp,w,h,L){const S0=SPECIES[sp];if(!S0||S0.c!=='big')return _pd.apply(this,arguments);
+ const q=c.getContext('2d'),gold=sp[0]==='g',gr=q.createLinearGradient(0,0,0,h);gr.addColorStop(0,gold?'#ffe9a8':'#9fd3ee');gr.addColorStop(.45,gold?'#e8b84a':'#3f8fc0');gr.addColorStop(1,gold?'#8a5a12':'#1d4f78');q.fillStyle=gr;q.fillRect(0,0,w,h);
+ q.fillStyle='rgba(255,255,255,.35)';q.fillRect(0,h*.45,w,2);
+ const s=Math.min(w,h)/110;q.save();q.translate(w/2,h*.56);q.scale(s,s);q.fillStyle=S0.col;q.strokeStyle='#2b2018';q.lineWidth=3;
+ if(sp==='whale'||sp==='gwhale'){q.beginPath();q.ellipse(4,0,46,22,0,0,TAU);q.fill();q.stroke();
+  q.beginPath();q.moveTo(-40,-2);q.lineTo(-58,-20);q.lineTo(-52,0);q.lineTo(-58,18);q.closePath();q.fill();q.stroke();
+  q.fillStyle=gold?'#ffe08a':'#c9d6e0';q.beginPath();q.ellipse(10,10,34,9,0,0,Math.PI);q.fill();
+  q.fillStyle='#141414';q.beginPath();q.arc(36,-4,2.6,0,TAU);q.fill();
+  q.strokeStyle=gold?'#fff3b0':'#ffffff';q.lineWidth=3;for(const a of[-.5,0,.5]){q.beginPath();q.moveTo(26,-22);q.quadraticCurveTo(26+a*10,-36,26+a*22,-40);q.stroke()}}
+ else{q.beginPath();q.moveTo(50,2);q.quadraticCurveTo(20,-22,-34,-6);q.lineTo(-56,-24);q.lineTo(-48,2);q.lineTo(-56,22);q.lineTo(-34,8);q.quadraticCurveTo(20,20,50,2);q.closePath();q.fill();q.stroke();
+  q.beginPath();q.moveTo(0,-14);q.lineTo(-8,-38);q.lineTo(-18,-10);q.closePath();q.fill();q.stroke();
+  q.fillStyle=gold?'#ffe08a':'#e6ecef';q.beginPath();q.moveTo(46,4);q.quadraticCurveTo(10,16,-30,8);q.quadraticCurveTo(10,10,46,4);q.fill();
+  q.fillStyle='#141414';q.beginPath();q.arc(32,-4,2.4,0,TAU);q.fill()}
+ if(gold){q.fillStyle='#fffbe6';for(let k=0;k<9;k++){const x=-50+((k*37)%100),y=-34+((k*23)%60),r=2+(k%3);q.beginPath();q.moveTo(x,y-r*2);q.lineTo(x+r*.6,y);q.lineTo(x,y+r*2);q.lineTo(x-r*.6,y);q.closePath();q.fill()}}
+ q.restore()}}
+// three anchors along the body: the viewfinder snaps to the nearest one
+const bigAnch=[];
+{const _sp=bigSpawn;bigSpawn=function(o0){_sp.apply(this,arguments);const B=BIGW.cur;if(!B)return;const sp=(B.gold?'g':'')+B.kind;
+ for(const z of[2.8,0,-3]){const a=new THREE.Object3D();a.position.set(0,.6,z);B.o.add(a);const e={sp,o:a,far:90,ok:()=>BIGW.cur===B&&B.o.position.y>-2.6};ANIM.push(e);bigAnch.push(e)}
+ // if Igor has the camera, he reminds you
+ if(started&&!VISIT&&FUN().cam&&!PH()[sp])setTimeout(()=>{if(BIGW.cur!==B||where!=='out')return;say(tt('Quick, the camera 📷! It isn’t in the photo board yet!','Presto, la macchina fotografica 📷! Non è ancora nella bacheca delle foto!'),3.2)},7000)}}
+{const _be=bigEnd;bigEnd=function(){_be.apply(this,arguments);for(const e of bigAnch.splice(0)){const i=ANIM.indexOf(e);if(i>=0)ANIM.splice(i,1)}}}
 /* ================= 10 Nov 2026: Igor's house, made your own: parts, colours and whole styles. Try for free, pay to keep ================= */
 const HSTY={
  cottage:{N:['Cottage','Cottage'],ic:'🏡',lv:1,t:0,c:{shape:'box',wall:'plaster',beams:1,wcol:'#e8dcc2',roof:'tiles',rcol:'#b4553f',win:'shutters',door:'round',dcol:'#5e8a6a',chim:'stone'}},
@@ -7731,7 +7761,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-2115';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-2135';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
