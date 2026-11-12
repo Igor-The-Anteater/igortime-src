@@ -442,7 +442,7 @@ const gg=new THREE.PlaneGeometry(116,116,203,203);gg.rotateX(-Math.PI/2);
   if(r>R+2.6){y=-.6;t.copy(sea)}else if(r>R){y=-.2*(r-R)/2.6;t.copy(sand)}
   else{const n=Math.sin(x*.37)*Math.cos(z*.31)+Math.sin((x-z)*.13);t.copy(n>.5?c:n>-.25?a:b);y=Math.max(0,Math.sin(x*.21+1)*Math.cos(z*.19)*.25-.05);
    // footpaths: house ↔ field, house ↔ school, house ↔ shore
-   const dpath=Math.min(segD(x,z,0,3,7.6,8.6),segD(x,z,0,-4.2,8,-0.5),segD(x,z,0,-4.2,-9,-7.5),segD(x,z,0,-4.2,0,8),segD(x,z,0,3,-10.5,5));if(dpath<.75){t.lerp(path,.6*(1-dpath/.75));y*=.3}}
+   const dpath=Math.min(segD(x,z,0,-4.2,8,-0.5),segD(x,z,0,-4.2,-9,-7.5),segD(x,z,0,-4.2,0,8),segD(x,z,0,3,-10.5,5));if(dpath<.75){t.lerp(path,.6*(1-dpath/.75));y*=.3}}
   pos.setY(i,y);cols.push(t.r,t.g,t.b)}
  gg.setAttribute('color',new THREE.Float32BufferAttribute(cols,3));gg.computeVertexNormals()}
 function segD(px,pz,ax,az,bx,bz){const dx=bx-ax,dz=bz-az,u=clamp(((px-ax)*dx+(pz-az)*dz)/(dx*dx+dz*dz),0,1);return Math.hypot(px-ax-u*dx,pz-az-u*dz)}
@@ -1179,7 +1179,7 @@ updaters.push((t,dt)=>{if(birds.visible){birds.children.forEach(b=>{const a=t*1.
 function farmSky(){const F=S.farm;if(!F||!F.ev)return null;const E=F.ev,tn=Date.now();return E.started&&tn<E.end&&EVK[E.k].sky?EVK[E.k].sky:null}
 
 /* --- placing fields and buildings where you like; trees and rocks in the way are cleared (1 tofu ant each) --- */
-const FIXB=[[15.8,-5.2,1.8],[0,-7.1,2.9],[0,-4.3,1.1],[-10,-9.5,2.9],[-8.7,-7.1,1],[7.6,6.6,2.3],[7.6,8.6,.9],[-11.5,5.5,2.2],[-9.4,4.6,.9],[-1.55,-4.75,.4],[1.75,-4.6,.4]];
+const FIXB=[[15.8,-5.2,1.8],[0,-7.1,2.9],[0,-4.3,1.1],[-10,-9.5,2.9],[-8.7,-7.1,1],[-11.5,5.5,2.2],[-9.4,4.6,.9],[-1.55,-4.75,.4],[1.75,-4.6,.4]];
 const ghM=curve(new THREE.MeshBasicMaterial({color:'#9be38a',transparent:true,opacity:.38,depthWrite:false})),ghL=curve(new THREE.MeshBasicMaterial({color:'#9be38a',transparent:true,opacity:.95,depthWrite:false}));
 const ghost=(()=>{const g=new THREE.Group();const sq=new THREE.Mesh(new THREE.BoxGeometry(1,.12,1),ghM);sq.position.y=.07;g.add(sq);const ring=new THREE.Mesh(new THREE.RingGeometry(.93,1,48).rotateX(-Math.PI/2),ghL);ring.position.y=.1;g.add(ring);g.visible=false;scene.add(g);return{g,sq,ring}})();
 let PL=null;
@@ -1243,7 +1243,7 @@ let RUSH=0;function rideSp(){return(RIDE?VEH[RIDE].sp:1)*(!RIDE&&RUSH>T?1.9:1)}
 function rideY(){if(!RIDE)return 0;const V=VEH[RIDE];return(V.kind==='water'?-.5:0)+(V.kind==='air'?rideH:0)+V.seat}
 function rideCamY(){return RIDE&&VEH[RIDE].kind==='air'?rideH*.7:0}
 function rideAirOrSea(){return!!RIDE&&VEH[RIDE].kind!=='land'}
-function rideOk(x,z){if(!RIDE)return null;const V=VEH[RIDE],r=Math.hypot(x,z*1.12);if(V.kind==='water')return r>R+2.4&&r<R+28&&isleE(x,z)>1.3&&isleNeck(x,z)>1.9;if(V.kind==='air')return r<R+16||isleE(x,z)<1.6;return null}
+function rideOk(x,z){if(!RIDE)return null;const V=VEH[RIDE],r=Math.hypot(x,z*1.12);if(V.kind==='water')return r>R+2.4&&r<R+28&&isleE(x,z)>1.3&&isleNeck(x,z)>1.9&&jettyD(x,z)>1.9&&Math.hypot(x-POOL.x,z-POOL.z)>3.6;if(V.kind==='air')return r<R+16||isleE(x,z)<1.6;return null}
 function vehPaint(k){const o=VO[k];if(o)o.paint.color.set(FM().veh[k].c)}
 function riderOf(k,j=0){for(const[,o]of igObjs)if(o.act&&o.act.k==='ride'&&o.act.v===k&&(o.act.j||0)===j)return o;return null}
 const vehN=k=>{const v=FM().veh[k];return v?Math.max(1,v.n|0):0},vehMax=()=>Math.min(9,FM().igs.length+1);
@@ -1364,9 +1364,15 @@ const maestroOut=(()=>{const grp=new THREE.Group();grp.position.set(MOUT.x,0,MOU
   setTimeout(()=>say(tt('Look! In front of the music school there are two new teachers, Wolfgang Amadigor and Sofia Gubaigorina: they are waiting for you for a lesson!','Guarda! Davanti alla scuola di musica ci sono due maestri nuovi, Wolfgang Amadigor e Sofia Gubaigorina: ti aspettano per una lezione!'),6),6500)});
  return{grp,L}})();
 
-/* --- the deep pool: dive into the abyss --- */
-const POOL=new V3(7.6,0,6.6);
-{const t=new THREE.Group();t.position.copy(POOL);PLACES.abyss={pos:new V3(POOL.x,0,POOL.z+2.15),open:()=>dive(),name:'The deep pool'};
+/* --- the deep pool: dive into the abyss ---
+   12 Nov 2026 (Fabio): it was too much in the middle of the island. Now it is out in the sea to the north-north-east (between the forest
+   island and the sand island), on a stone base, reached by a wooden jetty from the beach. POOL0 is where it was: the trees, rocks and
+   the old saves were worked out with it there, so those keep using it. */
+const POOL0=new V3(7.6,0,6.6);
+const JANG=-1.17,POOL=new V3(Math.cos(JANG)*(R+8),0,Math.sin(JANG)*(R+8)/1.12);
+JTY={a:new V3(Math.cos(JANG)*(R-.7),0,Math.sin(JANG)*(R-.7)/1.12),b:POOL.clone(),w:.78};
+const POOLU=JTY.a.clone().sub(POOL).normalize(),poolOut=d=>POOL.clone().addScaledVector(POOLU,d);
+{const t=new THREE.Group();t.position.copy(POOL);PLACES.abyss={pos:poolOut(2.15),open:()=>dive(),name:'The deep pool'};
  const stone=lam('#9a958b'),stoneD=lam('#7d786f');
  for(let k=0;k<18;k++){const a=k/18*TAU;const st=new THREE.Mesh(new THREE.RoundedBoxGeometry(.62,.34,.46,2,.08),k%3?stone:stoneD);st.position.set(Math.cos(a)*1.55,.17,Math.sin(a)*1.55);st.rotation.y=-a;t.add(st)}
  const water=new THREE.Mesh(new THREE.CircleGeometry(1.35,40).rotateX(-Math.PI/2),glowM('#1aa6c4',.9));water.position.y=.06;t.add(water);
@@ -1375,20 +1381,34 @@ const POOL=new V3(7.6,0,6.6);
  const rings=[];for(let k=0;k<3;k++){const r=new THREE.Mesh(new THREE.RingGeometry(.5,.56,40).rotateX(-Math.PI/2),curve(new THREE.MeshBasicMaterial({color:'#bff6ff',transparent:true,opacity:0,depthWrite:false})));r.position.y=.08;t.add(r);rings.push({r,u:k/3})}
  const bub=[];for(let k=0;k<8;k++){const b=halo('#dffbff',.18,.0);t.add(b);bub.push({b,u:Math.random(),x:(Math.random()-.5)*1.6,z:(Math.random()-.5)*1.6})}
  // a little diving board on the near side
- const board=new THREE.Mesh(new THREE.RoundedBoxGeometry(.55,.1,1.3,1,.04),lam('#c9a36e'));board.position.set(0,.4,1.45);t.add(board);
- const leg=new THREE.Mesh(new THREE.BoxGeometry(.4,.36,.2),stoneD);leg.position.set(0,.18,2.0);t.add(leg);
+ const bAng=Math.atan2(POOLU.x,POOLU.z),bd=new THREE.Group();bd.rotation.y=bAng;t.add(bd);
+ const board=new THREE.Mesh(new THREE.RoundedBoxGeometry(.55,.1,1.3,1,.04),lam('#c9a36e'));board.position.set(0,.4,1.15);bd.add(board);
+ const leg=new THREE.Mesh(new THREE.BoxGeometry(.4,.36,.2),stoneD);leg.position.set(0,.18,1.6);bd.add(leg);
+ // the stone base standing in the sea, with a ring of foam around it
+ const base=new THREE.Mesh(new THREE.CylinderGeometry(1.9,2.2,1.3,40,1,true),stoneD);base.position.y=-.6;t.add(base);
+ const cap=new THREE.Mesh(new THREE.RingGeometry(1.3,1.92,40).rotateX(-Math.PI/2),stone);cap.position.y=.03;t.add(cap);
+ const foam=new THREE.Mesh(new THREE.RingGeometry(2.15,2.6,48).rotateX(-Math.PI/2),curve(new THREE.MeshBasicMaterial({color:'#cfefff',transparent:true,opacity:.25,depthWrite:false})));foam.position.y=-.58;t.add(foam);
+ updaters.push(tt=>{foam.material.opacity=.16+.1*Math.sin(tt*1.3);const s=1+.04*Math.sin(tt*1.3);foam.scale.set(s,1,s)});
+ // the jetty: planks from the beach to the pool, on posts in the water, two lanterns at each end
+ {const A=JTY.a,E=poolOut(1.6),L=A.distanceTo(E),jg=new THREE.Group();jg.position.copy(A);jg.rotation.y=Math.atan2(E.x-A.x,E.z-A.z);scene.add(jg);
+  const pk=[lam('#8a6747'),lam('#9b7752'),lam('#7c5c3f')],beam=lam('#5e4530'),post=lam('#4f3b2a');const n=Math.ceil(L/.32);
+  for(let i=0;i<n;i++){const pl=new THREE.Mesh(new THREE.BoxGeometry(JTY.w*2,.07,.27),pk[i%3]);pl.position.set(0,.1,(i+.5)*L/n);pl.rotation.y=(i%2?.02:-.02);jg.add(pl)}
+  for(const sx of[-1,1]){const bm=new THREE.Mesh(new THREE.BoxGeometry(.1,.12,L),beam);bm.position.set(sx*(JTY.w-.06),.02,L/2);jg.add(bm);
+   for(let z=.3;z<L;z+=1.55){const ps=new THREE.Mesh(new THREE.CylinderGeometry(.08,.09,1.6,8),post);ps.position.set(sx*(JTY.w+.02),-.55,z);jg.add(ps)}
+   for(const z of[.25,L-.15]){const ps=new THREE.Mesh(new THREE.CylinderGeometry(.06,.07,1.1,8),post);ps.position.set(sx*(JTY.w+.02),.45,z);jg.add(ps);
+    const lt=new THREE.Mesh(new THREE.SphereGeometry(.11,10,8),glowM('#ffd38a',.95));lt.position.set(sx*(JTY.w+.02),1.05,z);jg.add(lt);const h=halo('#ffcf7a',1.2,.5);h.position.copy(lt.position);jg.add(h)}}}
  updaters.push((tt,dt)=>{for(const o of rings){o.u=(o.u+dt*.25)%1;const s=.4+o.u*2.1;o.r.scale.set(s,1,s);o.r.material.opacity=.5*(1-o.u)}
   for(const o of bub){o.u=(o.u+dt*.35)%1;o.b.position.set(o.x*.7,.1+o.u*1.2,o.z*.7);o.b.material.opacity=.7*Math.sin(o.u*Math.PI)}glow.material.opacity=.38+.08*Math.sin(tt*1.6)});
- blob(t,2,.95);scene.add(t);block(POOL.x,POOL.z,1.75);hit(t,1.8,()=>goTo('abyss'),'abyss',.4);glowObj(t,'out',POOL.x,POOL.z,.8,8,2.3);
+ blob(t,2,.95);scene.add(t);block(POOL0.x,POOL0.z,1.75);POOLB=blocked[blocked.length-1];hit(t,1.8,()=>goTo('abyss'),'abyss',.4);glowObj(t,'out',POOL.x,POOL.z,.8,8,2.3);
  label(['The abyss','L’abisso'],['walk into the pool','tuffati nel pozzo'],new V3(POOL.x,3,POOL.z),()=>goTo('abyss'),13);
  zone('out',POOL.x,POOL.z,2.15,()=>dive(),'pool')}
-let diving=0;function dive(){if(diving)return;diving=.001;snd('dive');closeSheet();IG.target=null;IG.arrive=null;say(tt('Hold your breath!','Trattieni il fiato!'),1.4);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}rememberSpot('out',POOL.x,POOL.z+2.6)}
+let diving=0;function dive(){if(diving)return;diving=.001;snd('dive');closeSheet();IG.target=null;IG.arrive=null;say(tt('Hold your breath!','Trattieni il fiato!'),1.4);try{localStorage.setItem('igortime_home',location.pathname)}catch(e){}const O=poolOut(2.6);rememberSpot('out',O.x,O.z)}
 updaters.push((t,dt)=>{if(!diving)return;diving+=dt;const k=Math.min(1,diving/1.1);igor.position.x+=(POOL.x-igor.position.x)*Math.min(1,dt*4);igor.position.z+=(POOL.z-igor.position.z)*Math.min(1,dt*4);igor.position.y=-k*k*2.2;if(diving>1.25){diving=-1;location.href='/abyss/'}});
-addEventListener('pageshow',e=>{if(e.persisted){diving=0;igor.position.y=0;igor.position.set(POOL.x,0,POOL.z+2.6)}});
+addEventListener('pageshow',e=>{if(e.persisted){diving=0;igor.position.y=0;igor.position.copy(poolOut(2.6))}});
 
 /* the jetty became the leaderboards notice board (see later) */
 /* vegetation, kept away from the places */
-const free=(x,z)=>Math.hypot(x-POOL.x,z-POOL.z)<4||segD(x,z,0,3,POOL.x,POOL.z+2)<1.3||Math.hypot(x,z+7)<5.3||(Math.abs(x-FIELD.x)<7&&z>FIELD.z-4.5&&z<FIELD.z+9)||Math.hypot(x+10,z+9.5)<4.2||Math.hypot(x+11,z-5.5)<3.5||Math.hypot(x,z)<4.2||segD(x,z,0,-4.2,0,8)<1.4||segD(x,z,0,-4.2,8,-0.5)<1.3||segD(x,z,0,-4.2,-9,-7.5)<1.4||segD(x,z,0,3,-10.5,5)<1.3;
+const free=(x,z)=>Math.hypot(x-POOL0.x,z-POOL0.z)<4||segD(x,z,0,3,POOL0.x,POOL0.z+2)<1.3||Math.hypot(x,z+7)<5.3||(Math.abs(x-FIELD.x)<7&&z>FIELD.z-4.5&&z<FIELD.z+9)||Math.hypot(x+10,z+9.5)<4.2||Math.hypot(x+11,z-5.5)<3.5||Math.hypot(x,z)<4.2||segD(x,z,0,-4.2,0,8)<1.4||segD(x,z,0,-4.2,8,-0.5)<1.3||segD(x,z,0,-4.2,-9,-7.5)<1.4||segD(x,z,0,3,-10.5,5)<1.3;
 const NB0=blocked.length;let placed=0,tries=0;while(placed<38&&tries<4000){tries++;const a=rnd()*TAU,r=5+rnd()*(R0-6),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z)||blocked.some(b=>Math.hypot(b.x-x,b.z-z)<2.4))continue;(rnd()<.4?pine:roundTree)(x,z,.8+rnd()*.5);placed++}
 for(let i=0;i<14;i++){const a=rnd()*TAU,r=4+rnd()*(R0-4),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z)||blocked.some(b=>Math.hypot(b.x-x,b.z-z)<1.5))continue;rock(x,z,.6+rnd()*.8)}
 for(let i=0;i<90;i++){const a=rnd()*TAU,r=2+rnd()*(R-2.5),x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;if(free(x,z))continue;grass(x,z)}
@@ -1401,6 +1421,7 @@ applyCuts();
 const THIN=(()=>{const L=[];trees.forEach((tr,j)=>{if(tr.t.parent)L.push({j,x:tr.t.position.x,z:tr.t.position.z})});const st=blocked.slice(0,NB0).filter(b=>b.r>0);
  const sc=a=>{let v=0;for(const b of L)if(b!==a){const d=Math.hypot(b.x-a.x,b.z-a.z);if(d<4.6)v+=4.6-d}for(const b of st){const d=Math.hypot(b.x-a.x,b.z-a.z)-b.r;if(d<3.4)v+=(3.4-Math.max(0,d))*.8}return v};
  const out=new Set(),n=Math.round(L.length*.32)+4;for(let k=0;k<n;k++){let bi=-1,bv=-1;L.forEach((a,i)=>{const v=sc(a)+a.j*1e-6;if(v>bv){bv=v;bi=i}});out.add(L[bi].j);L.splice(bi,1)}return out})();
+if(POOLB){POOLB.x=POOL.x;POOLB.z=POOL.z}
 function applyThin(){const tm=(S.farm&&S.farm.tmv)||{};trees.forEach((tr,j)=>{if(!THIN.has(j))return;const o=tr.t;
  if(tm[j]){if(!o.parent&&tr.thin){tr.thin.par.add(o);for(const[b,r]of tr.thin.b)b.r=r;tr.thin=null}return}
  if(o.parent&&!tr.thin){const b=blocked.filter(q=>q.x===o.position.x&&q.z===o.position.z&&q.r>0).map(q=>[q,q.r]);tr.thin={par:o.parent,b};for(const[q]of b)q.r=0;o.parent.remove(o)}})}
@@ -1453,11 +1474,16 @@ function findPath0(from,to,loose){const g=where==='out'?.45:.3,pad=where==='out'
  const out=[];let a=new V3(from.x,0,from.z);for(let k=0;k<pts.length;k++){const nx=pts[k+1];if(!nx||!lineOk(a.x,a.z,nx.x,nx.z)){out.push(pts[k]);a=pts[k]}}return out}
 /* Igor can walk down the beach right to the water's edge (the sea starts at R+2.6) */
 const SHORE=2.2;
-const shoreY=(x,z)=>{const r=Math.hypot(x,z*1.12);return r>R&&!isleLand(x,z)?-.2*Math.min(1,(r-R)/2.6):0};
+/* 12 Nov 2026: the wooden jetty out to the deep pool (JTY is set where the pool is built) */
+var JTY,POOLB; /* no initialiser: they are set earlier, where the pool is built */
+function jettyD(x,z){return JTY?segD(x,z,JTY.a.x,JTY.a.z,JTY.b.x,JTY.b.z):99}
+function onJetty(x,z){return jettyD(x,z)<JTY_W()}
+function JTY_W(){return JTY?JTY.w:0}
+const shoreY=(x,z)=>{const r=Math.hypot(x,z*1.12);if(JTY&&jettyD(x,z)<JTY.w+.05&&r>R-1.2)return .13*clamp((r-(R-1.2))/.9,0,1);return r>R&&!isleLand(x,z)?-.2*Math.min(1,(r-R)/2.6):0};
 /* only the edges (the sea, the walls of a room), not the things standing on the ground */
-function edgeOk(x,z){if(where==='out'){if(RIDE){const ok=rideOk(x,z);if(ok!==null)return ok}return!(Math.hypot(x,z*1.12)>R+SHORE&&!isleLand(x,z))}const Rm=ROOMS[where];return!(Math.abs(x)>Rm.w/2-.7||z<-Rm.d/2+1.1||z>Rm.d/2-.3)}
+function edgeOk(x,z){if(where==='out'){if(RIDE){const ok=rideOk(x,z);if(ok!==null)return ok}return!(Math.hypot(x,z*1.12)>R+SHORE&&!isleLand(x,z)&&!onJetty(x,z))}const Rm=ROOMS[where];return!(Math.abs(x)>Rm.w/2-.7||z<-Rm.d/2+1.1||z>Rm.d/2-.3)}
 function walkable(x,z){if(where==='out'&&RIDE){const ok=rideOk(x,z);if(ok!==null)return ok}if(where!=='out'){const Rm=ROOMS[where];if(Math.abs(x)>Rm.w/2-.7||z<-Rm.d/2+1.1||z>Rm.d/2-.3)return false;return!Rm.blocks.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3)}
- if(Math.hypot(x,z*1.12)>R+SHORE&&!isleLand(x,z))return false;return!blocked.some(b=>{const d=Math.hypot(b.x-x,b.z-z);if(d>=b.r+.3)return false;const d0=Math.hypot(b.x-igor.position.x,b.z-igor.position.z);return!(d0<b.r+.3&&d>d0)})}
+ if(Math.hypot(x,z*1.12)>R+SHORE&&!isleLand(x,z)&&!onJetty(x,z))return false;return!blocked.some(b=>{const d=Math.hypot(b.x-x,b.z-z);if(d>=b.r+.3)return false;const d0=Math.hypot(b.x-igor.position.x,b.z-igor.position.z);return!(d0<b.r+.3&&d>d0)})}
 function goTo(k,arg){const P=PLACES[k];if(!P)return;if(where!=='out'){exitRoom(true);}closeSheet();$('index').hidden=true;IG.target=P.pos.clone();IG.manual=true;IG.arrive=()=>P.open(arg);mark.position.set(IG.target.x,.04,IG.target.z);mark.material.opacity=.8;hideHint();poke();
  if(igor.position.distanceTo(P.pos)<.6){IG.target=null;const f=IG.arrive;IG.arrive=null;f()}else say(pick(LINES['go_'+k]||[tt('Follow me.','Seguimi.')]),2.2)}
 // draw Igor a little towards the camera (same size and place on screen), so walls behind never cut him
@@ -1553,7 +1579,7 @@ function applySeason(Z){const key=[Z.loss.toFixed(2),Z.aut.toFixed(2),Z.spring.t
 
 /* snow lying on the island */
 const snowCv=document.createElement('canvas');snowCv.width=snowCv.height=256;{const g=snowCv.getContext('2d'),im=g.createImageData(256,256);
- for(let py=0;py<256;py++)for(let px=0;px<256;px++){const x=px/256*80-40,z=py/256*80-40,r=Math.hypot(x,z*1.12),n=.78+.22*Math.sin(x*1.3+Math.cos(z*1.1)*2)*Math.cos(z*.9-x*.4),a=sstep(R+.8,R-.6,r)*n*(Math.abs(x-FIELD.x)<4.6&&Math.abs(z-FIELD.z)<2.7?0:1)*sstep(1.7,2.1,Math.hypot(x-POOL.x,z-POOL.z));const o=(py*256+px)*4;im.data[o]=im.data[o+1]=im.data[o+2]=255;im.data[o+3]=a*255}
+ for(let py=0;py<256;py++)for(let px=0;px<256;px++){const x=px/256*80-40,z=py/256*80-40,r=Math.hypot(x,z*1.12),n=.78+.22*Math.sin(x*1.3+Math.cos(z*1.1)*2)*Math.cos(z*.9-x*.4),a=sstep(R+.8,R-.6,r)*n*(Math.abs(x-FIELD.x)<4.6&&Math.abs(z-FIELD.z)<2.7?0:1);const o=(py*256+px)*4;im.data[o]=im.data[o+1]=im.data[o+2]=255;im.data[o+3]=a*255}
  g.putImageData(im,0,0)}
 const snowM=curve(new THREE.MeshLambertMaterial({color:'#f4f7fb',alphaMap:new THREE.CanvasTexture(snowCv),transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4}));
 const snowGround=new THREE.Mesh(gg,snowM);snowGround.position.y=.015;snowGround.visible=false;world.add(snowGround);
@@ -2291,8 +2317,8 @@ updaters.push(()=>{if(!FOLLOW)return;if(IG.target!==FOLLOW.v||where!=='out'){FOL
  const dx=P.x-igor.position.x,dz=P.z-igor.position.z,d=Math.hypot(dx,dz);
  if(d<1.3){const id=FOLLOW.id;FOLLOW=null;IG.target=null;IG.arrive=null;igTap(id);return}
  const k=Math.max(0,d-.9)/d;FOLLOW.v.set(igor.position.x+dx*k,0,igor.position.z+dz*k);mark.position.set(P.x,.04,P.z);if(!igM.hidden)renderIgM()});
-const HELP=()=>tt([['🏠','Play the games in my house and in the music school. You win seeds.'],['🌱','Tap a field. Plow it and sow it.'],['⏳','Wait. The field grows by itself.'],[ICT,'A ready field has tofu ants hopping on it (pieces of tofu!): tap it to pick them. While you are away, the Igorlets pick them.'],['🔔','An Igorlet with a “?” wants to sing: tap it, listen, ring the same bells. +1 seed.'],['🐚','The sea brings 100 kinds of shells and bottles to the beach. Trees sometimes have fruit: tap to shake them.'],['🍎','Each Igorlet has a little wish about once an hour (fruit, a snack, a spare shell, a walk to the sea, jumping together). Make it come true: +1 leaf, and a present every 4 wishes.'],['🎵','The marimba on the beach goes out of tune: one note every hour. Tune it back with the slider. +1 seed per note. Every new level brings a new instrument to tune.'],['★','At night, tap a wish star before it goes.'],['🔨','With the tofu ants you build: tap the hammer.'],['↔','Everything can be moved, except my house: tap it and choose “Move”. Trees move once you build the tree nursery.'],['🧰','The tool shed: tools make everyone faster.'],['🏡','The greenhouse keeps a field safe.'],['💤','Tired Igorlets nap in their little house. Tap one: fruit gives +2 leaves, 2 tofu ants +1. A snack wakes it up.'],['⏱','Little timers float over fields, building sites and sleeping Igorlets.'],['📋','Under the games button: things to do right now. Tap one and Igor goes there.'],['📺','Every day at 6 pm an event hits the island, even when you are away. At the cinema in the sea, up north, Meteogor the weather Igorlet counts down; from 4 pm he says which event is coming. Get ready, or you lose the growing harvest or some notes. See the table below.'],['🏆','Lots of tofu ants? Walk into the prize shop: scooter, bike, tractor, plane… Buy more copies and the Igorlets ride them too.'],['🎾','Toys for the Igorlets (ball, swing, hammock, slide): tap their houses. Naps get shorter.']],
- [['🏠','Gioca ai giochi in casa mia e nella scuola di musica. Vinci semi.'],['🌱','Tocca un campo. Aralo e seminalo.'],['⏳','Aspetta. Il campo cresce da solo.'],[ICT,'Su un campo pronto saltellano le formiche di tofu (pezzi di tofu!): toccalo per raccoglierle. Quando non ci sei, le raccolgono gli Igorlets.'],['🔔','Un Igorlet col “?” vuole cantare: toccalo, ascolta, suona le stesse campanelle. +1 seme.'],['🐚','Il mare porta 100 tipi di conchiglie e bottiglie sulla spiaggia. Gli alberi a volte hanno la frutta: toccali per scuoterli.'],['🍎','Ogni Igorlet ha un piccolo desiderio circa ogni ora (frutta, una merenda, una conchiglia doppia, una passeggiata al mare, saltare insieme). Esaudiscilo: +1 fogliolina, e ogni 4 desideri un regalo.'],['🎵','La marimba sulla spiaggia si scorda: una nota ogni ora. Riaccordala con lo slider. +1 seme per nota. A ogni livello nuovo arriva un altro strumento da accordare.'],['★','Di notte tocca una stella dei desideri prima che sparisca.'],['🔨','Con le formiche di tofu costruisci: tocca il martello.'],['↔','Si può spostare tutto, tranne la mia casa: toccalo e scegli “Sposta”. Gli alberi si spostano quando costruisci il vivaio.'],['🧰','Il capanno: gli attrezzi fanno lavorare tutti più in fretta.'],['🏡','La serra protegge un campo.'],['💤','Gli Igorlets stanchi dormono nella loro casetta. Toccane uno: la frutta dà +2 foglioline, 2 formiche di tofu +1. Una merenda lo sveglia.'],['⏱','Sopra campi, cantieri e Igorlets che dormono ci sono piccoli timer.'],['📋','Sotto il pulsante dei giochi: le cose da fare adesso. Toccane una e Igor ci va.'],['📺','Ogni giorno alle 18 arriva un evento sull’isola, anche se non ci sei. Al cinema nel mare, a nord, Meteogor, l’Igorlet meteorologo, fa il conto alla rovescia; dalle 16 dice quale evento arriva. Preparati, o perdi il raccolto che cresce o qualche nota. Guarda la tabella qui sotto.'],['🏆','Tante formiche di tofu? Entra nel negozietto dei premi: monopattino, bici, trattore, aereo… Comprane altri e li usano anche gli Igorlets.'],['🎾','Giochi per gli Igorlets (palla, altalena, amaca, scivolo): tocca le loro casette. I pisolini diventano più corti.']]);
+const HELP=()=>tt([['🏠','Play the games in my house and in the music school. You win seeds.'],['🌱','Tap a field. Plow it and sow it.'],['⏳','Wait. The field grows by itself.'],[ICT,'A ready field has tofu ants hopping on it (pieces of tofu!): tap it to pick them. While you are away, the Igorlets pick them.'],['🔔','An Igorlet with a “?” wants to sing: tap it, listen, ring the same bells. +1 seed.'],['🐚','The sea brings 100 kinds of shells and bottles to the beach. Trees sometimes have fruit: tap to shake them.'],['✍️','With spare shells you can write on the sand: stop Igor on the beach and tap “Write with shells”. Tap a message to change it.'],['🍎','Each Igorlet has a little wish about once an hour (fruit, a snack, a spare shell, a walk to the sea, jumping together). Make it come true: +1 leaf, and a present every 4 wishes.'],['🎵','The marimba on the beach goes out of tune: one note every hour. Tune it back with the slider. +1 seed per note. Every new level brings a new instrument to tune.'],['★','At night, tap a wish star before it goes.'],['🔨','With the tofu ants you build: tap the hammer.'],['↔','Everything can be moved, except my house: tap it and choose “Move”. Trees move once you build the tree nursery.'],['🧰','The tool shed: tools make everyone faster.'],['🏡','The greenhouse keeps a field safe.'],['💤','Tired Igorlets nap in their little house. Tap one: fruit gives +2 leaves, 2 tofu ants +1. A snack wakes it up.'],['⏱','Little timers float over fields, building sites and sleeping Igorlets.'],['📋','Under the games button: things to do right now. Tap one and Igor goes there.'],['📺','Every day at 6 pm an event hits the island, even when you are away. At the cinema in the sea, up north, Meteogor the weather Igorlet counts down; from 4 pm he says which event is coming. Get ready, or you lose the growing harvest or some notes. See the table below.'],['🏆','Lots of tofu ants? Walk into the prize shop: scooter, bike, tractor, plane… Buy more copies and the Igorlets ride them too.'],['🎾','Toys for the Igorlets (ball, swing, hammock, slide): tap their houses. Naps get shorter.']],
+ [['🏠','Gioca ai giochi in casa mia e nella scuola di musica. Vinci semi.'],['🌱','Tocca un campo. Aralo e seminalo.'],['⏳','Aspetta. Il campo cresce da solo.'],[ICT,'Su un campo pronto saltellano le formiche di tofu (pezzi di tofu!): toccalo per raccoglierle. Quando non ci sei, le raccolgono gli Igorlets.'],['🔔','Un Igorlet col “?” vuole cantare: toccalo, ascolta, suona le stesse campanelle. +1 seme.'],['🐚','Il mare porta 100 tipi di conchiglie e bottiglie sulla spiaggia. Gli alberi a volte hanno la frutta: toccali per scuoterli.'],['✍️','Con le conchiglie doppie scrivi sulla sabbia: ferma Igor sulla spiaggia e tocca “Scrivi con le conchiglie”. Tocca un messaggio per cambiarlo.'],['🍎','Ogni Igorlet ha un piccolo desiderio circa ogni ora (frutta, una merenda, una conchiglia doppia, una passeggiata al mare, saltare insieme). Esaudiscilo: +1 fogliolina, e ogni 4 desideri un regalo.'],['🎵','La marimba sulla spiaggia si scorda: una nota ogni ora. Riaccordala con lo slider. +1 seme per nota. A ogni livello nuovo arriva un altro strumento da accordare.'],['★','Di notte tocca una stella dei desideri prima che sparisca.'],['🔨','Con le formiche di tofu costruisci: tocca il martello.'],['↔','Si può spostare tutto, tranne la mia casa: toccalo e scegli “Sposta”. Gli alberi si spostano quando costruisci il vivaio.'],['🧰','Il capanno: gli attrezzi fanno lavorare tutti più in fretta.'],['🏡','La serra protegge un campo.'],['💤','Gli Igorlets stanchi dormono nella loro casetta. Toccane uno: la frutta dà +2 foglioline, 2 formiche di tofu +1. Una merenda lo sveglia.'],['⏱','Sopra campi, cantieri e Igorlets che dormono ci sono piccoli timer.'],['📋','Sotto il pulsante dei giochi: le cose da fare adesso. Toccane una e Igor ci va.'],['📺','Ogni giorno alle 18 arriva un evento sull’isola, anche se non ci sei. Al cinema nel mare, a nord, Meteogor, l’Igorlet meteorologo, fa il conto alla rovescia; dalle 16 dice quale evento arriva. Preparati, o perdi il raccolto che cresce o qualche nota. Guarda la tabella qui sotto.'],['🏆','Tante formiche di tofu? Entra nel negozietto dei premi: monopattino, bici, trattore, aereo… Comprane altri e li usano anche gli Igorlets.'],['🎾','Giochi per gli Igorlets (palla, altalena, amaca, scivolo): tocca le loro casette. I pisolini diventano più corti.']]);
 const EVT=()=>tt([['⛈','Storm','the growing harvest is lost (it starts again from the seed)','Tarp: +¼ harvest'],['🧊','Hail','the harvest is lost','Strong tarp: +¼ harvest (another tarp: it only grows slower)'],['❄','Frost','the harvest freezes, and grows 1 h slower','Thermal tarp: +⅓ harvest (another tarp: it only grows slower)'],['☀','Heatwave','the seedlings dry up','Water: +¼ harvest'],['🐦','Sparrows','they eat the seedlings','Scarecrow, or 2 seeds to eat far away: +¼ harvest'],['🌧','Out-of-tune rain','5 notes out of tune on every instrument','A tuner for each instrument (10 ants + 1 seed): it stays in tune'],['🌪','Piece-snatching tempest','the pieces of 2 notes of every instrument fly away (a bar, a string, a pipe…): look for them on the island, following their sound','A case on each instrument (4 ants)'],['🌊','Storm surge','waves crash onto the island and carry away the pieces of 2 notes of every instrument, leaving them on the beach; afterwards the sea leaves shells and bottles','Sandbags around each instrument (4 ants)'],['🌈','Everything protected','','+3 seeds'],['👋','Stray Igorlet','some mornings a new Igorlet comes to the village','A snack (10 ants): it stays, with a new little house']],
  [['⛈','Temporale','il raccolto che cresce va perso (ricomincia dal seme)','Telo: +¼ raccolto'],['🧊','Grandine','il raccolto va perso','Telo forte: +¼ raccolto (un altro telo: cresce solo più piano)'],['❄','Gelata','il raccolto gela, e cresce 1 h più piano','Telo termico: +⅓ raccolto (un altro telo: cresce solo più piano)'],['☀','Caldo','le piantine seccano','Annaffia: +¼ raccolto'],['🐦','Passeri','si mangiano le piantine','Spaventapasseri, o 2 semi da mangiare lontano: +¼ raccolto'],['🌧','Pioggia scordatrice','5 note stonate su ogni strumento','Un accordatore per ogni strumento (10 formiche + 1 seme): resta intonato'],['🌪','Tempesta ruba-pezzi','vola via un pezzo di 2 note di ogni strumento (una barretta, una corda, una canna…): cercali sull’isola seguendo il loro suono','Una custodia su ogni strumento (4 formiche)'],['🌊','Mareggiata','le onde si abbattono sull’isola e portano via un pezzo di 2 note di ogni strumento, lasciandoli sulla spiaggia; dopo, il mare lascia conchiglie e bottiglie','Sacchi di sabbia intorno a ogni strumento (4 formiche)'],['🌈','Tutto protetto','','+3 semi'],['👋','Igorlet randagio','certe mattine arriva al villaggio un nuovo Igorlet','Una merenda (10 formiche): resta, con una casetta nuova']]);
 function renderHelp(){helpC.innerHTML=`<div class="hh">${tt('How to play','Come si gioca')}</div>${HELP().map(([i,t])=>`<p><span>${i}</span>${t}</p>`).join('')}<div class="hh hs">${tt('Every day at 6 pm','Ogni giorno alle 18')}</div><table class="evt"><tr><th></th><th>${tt('What','Cosa')}</th><th>${tt('If you do nothing','Se non fai niente')}</th><th>${tt('If you get ready','Se ti prepari')}</th></tr>${EVT().map(([i,n,c,d])=>`<tr><td>${i}</td><td><b>${n}</b></td><td>${c}</td><td>${d}</td></tr>`).join('')}</table><p class="nt"><span>🐚</span>${tt('Shells','Conchiglie')}: ${shellN()}/${SHELLS.length}. ${tt('Commons, then rarer and rarer: 10 very rare ones and 2 legendary. Keep them in the display case (🔨). Spare ones: swap them with friends, or write a message on the beach (✍️ on the sand).','Prima le comuni, poi sempre più rare: 10 rarissime e 2 leggendarie. Si tengono nell’espositore (🔨). Le doppie: scambiale con gli amici, o scrivi un messaggio sulla spiaggia (✍️ sulla sabbia).')}</p><p class="nt"><span>🏡</span>${tt('Fields, Igorlets and buildings are never lost. A field that loses its harvest starts again from the seed, with no new seeds. Greenhouse fields always get the bonus.','Campi, Igorlets ed edifici non si perdono mai. Un campo che perde il raccolto ricomincia dal seme, senza semi nuovi. I campi in serra hanno sempre il bonus.')}</p><button type="button" class="x" aria-label="${tt('Close','Chiudi')}">✕</button>`}
@@ -2485,7 +2511,7 @@ function beachMesh(it){const g=new THREE.Group();if(it.k==='bottle'){const b=new
  g.scale.setScalar(1.6);g.rotation.y=Math.random()*TAU;const S1=it.k==='shell'&&SHELL[it.v],h=halo(it.k==='bottle'?'#dff6ff':S1&&S1.ti>=2?TIERS[S1.ti].c:'#fff3c8',S1&&S1.ti>=3?1.6:.9,S1&&S1.ti>=2?.6:.35);h.position.y=.2;g.add(h);g.userData.h=h;g.position.set(it.x,0,it.z);world.add(g);return g}
 function beachSync(){const B=FUN().beach;const _rm=o=>o&&o.parent&&o.parent.remove(o);while(beachObjs.length>B.length)_rm(beachObjs.pop().g);B.forEach((it,j)=>{if(!beachObjs[j]||beachObjs[j].it!==it){if(beachObjs[j])_rm(beachObjs[j].g);beachObjs[j]={it,g:beachMesh(it)}}})}
 function beachSpot(){for(let k=0;k<40;k++){const a=Math.random()*TAU,r=R-1.05-Math.random()*.4,x=Math.cos(a)*r,z=Math.sin(a)*r/1.12;
-  if(!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.5)&&!FUN().beach.some(o=>Math.hypot(o.x-x,o.z-z)<3))return{x,z}}return null}
+  if(jettyD(x,z)<JTY.w+.8)continue;if(!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.5)&&!FUN().beach.some(o=>Math.hypot(o.x-x,o.z-z)<3))return{x,z}}return null}
 function beachAdd(){const B=FUN().beach;if(B.length>=4)return;const p=beachSpot();if(!p)return;const r=Math.random();
  const it=r<.25?{k:'bottle',v:btlRoll(),...p}:{k:'shell',v:shellRoll(),...p};B.push(it);fmDirty=true;beachSync()}
 function beachTake(j){if(VISIT){visitNo();return}const B=FUN().beach,it=B[j];if(!it)return;B.splice(j,1);fmDirty=true;beachSync();const U=FUN();poke();bubbleQ.length=0;bubbleT=0;
@@ -2510,7 +2536,8 @@ function smBest(C){let best=null;for(const id in C){const c=C[id]|0;if(!SHELL[id
 function smTake(){const C=FUN().col,best=smBest(C);if(!best)return'';C[best]=(C[best]|0)-1;caseDirty=true;return best}
 const smSpan=m=>m.t.length*SMLW/SMR;
 const smUp=a=>Math.sin(a)<0; /* north half: the letters point to the sea; south half: to the land, so the text reads from the usual camera */
-function smFree(a,len,skip){for(const m of smList()){if(m===skip)continue;const d=Math.abs(((a-m.a+Math.PI)%TAU+TAU)%TAU-Math.PI);if(d<(len*SMLW/SMR+smSpan(m))/2+.12)return false}return true}
+const smJetty=(a,len)=>{const d=Math.abs(((a-JANG+Math.PI)%TAU+TAU)%TAU-Math.PI);return d<len*SMLW/SMR/2+(JTY.w+.5)/SMR};
+function smFree(a,len,skip){if(smJetty(a,len))return false;for(const m of smList()){if(m===skip)continue;const d=Math.abs(((a-m.a+Math.PI)%TAU+TAU)%TAU-Math.PI);if(d<(len*SMLW/SMR+smSpan(m))/2+.12)return false}return true}
 const smGeo0=new THREE.SphereGeometry(.075,7,4).toNonIndexed(),smDim=new THREE.Color('#8f8468');
 const smObjs=new Map();
 function smBuild(m){const sg=smUp(m.a)?1:-1,P=[],Nn=[],C=[],col=new THREE.Color(),pp=smGeo0.attributes.position,nn=smGeo0.attributes.normal,L=m.t.length;
@@ -2526,40 +2553,66 @@ function smSync(){const L=smList(),seen=new Set();for(const m of L){const key=m.
    const B0=BUILD;BUILD='out';const anchor=new THREE.Object3D();anchor.position.set(Math.cos(m.a)*SMR,0,Math.sin(m.a)*SMR/1.12);world.add(anchor);hit(anchor,Math.min(1.3,.45+m.t.length*.1),()=>smTap(m),'shellmsg',.1);BUILD=B0;o={mesh,anchor,key};smObjs.set(m,o)}}
  for(const[m,o]of smObjs)if(!seen.has(m)){world.remove(o.mesh);world.remove(o.anchor);smObjs.delete(m)}}
 updaters.push(()=>{if(S.farm)smSync()});
+/* 12 Nov 2026 (Fabio): a message was hard to tap (only its middle answered). Now any letter answers, and Igor walks there */
+function smLetterPos(m,i){const sg=smUp(m.a)?1:-1,L=m.t.length,xi=(i-(L-1)/2)*SMLW,th=m.a+sg*xi/SMR;return new V3(Math.cos(th)*SMR,.05,Math.sin(th)*SMR/1.12)}
+function smPick(cx,cy){if(where!=='out')return false;let best=null,bd=9;for(const m of smList())for(let i=0;i<m.t.length;i++){if(m.t[i]===' ')continue;const P=smLetterPos(m,i),d=scrPick(P,SMLW*.75,cx,cy,22);if(d!=null&&d<bd){bd=d;best={m,P}}}
+ if(!best)return false;const{m,P}=best;smHere=m;walkNear(P,.9,()=>smTap(m));return true}
+/* the message under Igor's feet, if any */
+function smAt(x,z){const a=Math.atan2(z*1.12,x),r=Math.hypot(x,z*1.12);if(Math.abs(r-SMR)>1.7)return null;for(const m of smList()){const d=Math.abs(((a-m.a+Math.PI)%TAU+TAU)%TAU-Math.PI);if(d<smSpan(m)/2+.6/SMR)return m}return null}
+let smHere=null;
 function smMissing(m){let n=0;for(let i=0;i<m.t.length;i++)if(m.t[i]!==' '&&!m.d[i])n++;return n}
 function smFill(m){let n=0;for(let i=0;i<m.t.length;i++)if(m.t[i]!==' '&&!m.d[i]){const id=smTake();if(!id)break;m.d[i]=id;n++}return n}
-function smTap(m){if(where!=='out')return;const P=new V3(Math.cos(m.a)*SMR,.3,Math.sin(m.a)*SMR/1.12),miss=smMissing(m);
+function smTap(m){if(where!=='out')return;const P=new V3(Math.cos(m.a)*SMR,1.7,Math.sin(m.a)*SMR/1.12),miss=smMissing(m);
  if(VISIT){say(tt(`“${m.t}” written in shells on the beach.`,`“${m.t}” scritto con le conchiglie sulla spiaggia.`),2.6);return}
  say(miss?tt(`“${m.t}”: ${miss} letter${miss>1?'s':''} still missing.`,`“${m.t}”: manca${miss>1?'no':''} ancora ${miss} letter${miss>1?'e':'a'}.`):tt(`“${m.t}”, written in shells.`,`“${m.t}”, scritto con le conchiglie.`),2.4);
  chips(P,()=>[miss?{t:`🐚 ${tt('Finish it','Completalo')} <small>${Math.min(miss,smSpare())}/${miss}</small>`,main:1,off:!smSpare(),why:tt('No spare shells right now: the sea will bring more!','Per ora niente conchiglie doppie: il mare ne porterà altre!'),fn:()=>{const n=smFill(m);fmDirty=true;save();smSync();snd('shell',0);
    const left=smMissing(m);say(left?tt(`${n} more letter${n>1?'s':''}! ${left} still missing.`,`${n} letter${n>1?'e':'a'} in più! Ne manca${left>1?'no':''} ancora ${left}.`):tt('Finished! What a beautiful message.','Finito! Che bel messaggio.'),2.6);return false}}:null,
+  {t:'✏️ '+tt('Change it','Modificalo'),main:miss?0:1,fn:()=>{smEditor(m.a,m);return false}},
   {t:'🌊 '+tt('Erase (shells back)','Cancella (le conchiglie tornano)'),fn:()=>{const C=FUN().col;for(const id of m.d)if(id&&SHELL[id])C[id]=(C[id]|0)+1;caseDirty=true;const L=smList();L.splice(L.indexOf(m),1);fmDirty=true;save();smSync();snd('whoosh');
    say(tt('A wave smooths the sand: the shells are back in the display case.','Un’onda liscia la sabbia: le conchiglie tornano nell’espositore.'),2.6);return false}}],'smtap')}
 /* the editor */
-function smPrev(t){const C={...FUN().col},out=[];let used=0;
+function smPrev(t,back){const C={...FUN().col},out=[];let used=0;if(back)for(const id of back.d)if(id&&SHELL[id])C[id]=(C[id]|0)+1;
  for(const ch of t){if(ch===' '){out.push('<i class="sp"></i>');continue}const best=smBest(C);
   if(best){C[best]--;used++;out.push(`<b style="--c:${SHELL[best].c}">${esc(ch)}</b>`)}else out.push(`<b class="no">${esc(ch)}</b>`)}
  return{html:out.join(''),used,need:t.replace(/ /g,'').length}}
-function smEditor(a){const sp=smSpare();
- openSheet('smsg',`<h2>✍️ ${tt('A message in shells','Un messaggio di conchiglie')}</h2><p class="shn">${tt(`Up to ${SMMAX} characters. Every letter uses one spare shell (spaces are free). You have <b>${sp}</b> spare shell${sp===1?'':'s'}.`,`Fino a ${SMMAX} caratteri. Ogni lettera usa una conchiglia doppia (gli spazi sono gratis). Hai <b>${sp}</b> conchigli${sp===1?'a doppia':'e doppie'}.`)}</p>
+let smEd=null;
+function smEditor(a,m){smEd=m||null;const back=m?m.d.filter(id=>id&&SHELL[id]).length:0,sp=smSpare()+back;
+ openSheet('smsg',`<h2>✍️ ${m?tt('Change the message','Modifica il messaggio'):tt('A message in shells','Un messaggio di conchiglie')}</h2><p class="shn">${tt(`Up to ${SMMAX} characters. Every letter uses one spare shell (spaces are free). You have <b>${sp}</b> spare shell${sp===1?'':'s'}.`,`Fino a ${SMMAX} caratteri. Ogni lettera usa una conchiglia doppia (gli spazi sono gratis). Hai <b>${sp}</b> conchigli${sp===1?'a doppia':'e doppie'}.`)}</p>
  <input id="smIn" maxlength="${SMMAX+4}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="CIAO IGOR" style="width:100%;box-sizing:border-box;font:600 22px Fredoka,sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:8px 10px;border-radius:10px;border:2px solid #2b2018">
- <div id="smPv" class="smpv"></div><p class="shn" id="smNt"></p><div class="row"><button type="button" class="main" data-sm="go">✍️ ${tt('Write it on the beach','Scrivilo sulla spiaggia')}</button><button type="button" data-sm="x">${tt('Cancel','Annulla')}</button></div>`);
- sb.dataset.sma=String(a);const inp=$('smIn');const up=()=>{const t=smClean(inp.value);const P=smPrev(t),miss=P.need-P.used;$('smPv').innerHTML=P.html;
+ <div id="smPv" class="smpv"></div><p class="shn" id="smNt"></p><div class="row"><button type="button" class="main" data-sm="go">${m?'✓ '+tt('Save','Salva'):'✍️ '+tt('Write it on the beach','Scrivilo sulla spiaggia')}</button><button type="button" data-sm="x">${tt('Cancel','Annulla')}</button></div>`);
+ sb.dataset.sma=String(a);const inp=$('smIn');if(m)inp.value=m.t;const up=()=>{const t=smClean(inp.value);const P=smPrev(t,smEd),miss=P.need-P.used;$('smPv').innerHTML=P.html;
   $('smNt').textContent=!t?tt('Letters, numbers and ! ? . - + * ♥ (type <3).','Lettere, numeri e ! ? . - + * ♥ (scrivi <3).'):miss>0?tt(`Not enough spare shells: ${miss} letter${miss>1?'s':''} will stay unfinished (you can finish ${miss>1?'them':'it'} later).`,`Non bastano le conchiglie doppie: ${miss>1?miss+' lettere resteranno':'una lettera resterà'} da finire (potrai completarl${miss>1?'e':'a'} più avanti).`):tt(`It uses ${P.used} spare shell${P.used>1?'s':''}.`,`Usa ${P.used} conchigli${P.used>1?'e doppie':'a doppia'}.`)};
- inp.addEventListener('input',up);up();setTimeout(()=>{try{inp.focus()}catch(e){}},80)}
-sb.addEventListener('click',e=>{const b=e.target.closest('button[data-sm]');if(!b)return;e.stopPropagation();if(b.dataset.sm==='x'){closeSheet();return}
+ inp.addEventListener('input',up);up();setTimeout(()=>{try{inp.focus();if(m)inp.select()}catch(e){}},80)}
+sb.addEventListener('click',e=>{const b=e.target.closest('button[data-sm]');if(!b)return;e.stopPropagation();if(b.dataset.sm==='x'){smEd=null;closeSheet();return}
  const t=smClean(($('smIn')||{}).value);if(!t.replace(/ /g,'')){say(tt('Write something first!','Prima scrivi qualcosa!'),2);return}
- let a=+sb.dataset.sma;const L=smList();if(L.length>=SMN){say(tt(`The beach already has ${SMN} messages: erase one first (tap it).`,`Sulla spiaggia ci sono già ${SMN} messaggi: cancellane uno (toccalo).`),3);return}
+ let a=+sb.dataset.sma;const L=smList();
+ /* changing a message: its shells go back first, then it is written again in the same place */
+ if(smEd){const old=smEd;smEd=null;if(L.indexOf(old)<0){closeSheet();return}if(old.t===t){closeSheet();return}
+  const C=FUN().col;for(const id of old.d)if(id&&SHELL[id])C[id]=(C[id]|0)+1;caseDirty=true;L.splice(L.indexOf(old),1);
+  let ok=false;for(let k=0;k<40&&!ok;k++){const b2=a+(k%2?1:-1)*Math.ceil(k/2)*.04;if(smFree(b2,t.length)){a=b2;ok=true}}
+  if(!ok){for(const id of old.d)if(id&&SHELL[id])C[id]=(C[id]|0)-1;L.push(old);say(tt('It doesn’t fit here: try a shorter message.','Qui non ci sta: prova un messaggio più corto.'),2.6);return}
+  const m={t,a:+a.toFixed(4),d:t.split('').map(c=>c===' '?' ':'')};smFill(m);L.push(m);fmDirty=true;save();smSync();closeSheet();snd('shell',1);smHere=m;
+  const miss=smMissing(m);bubbleQ.length=0;bubbleT=0;say(miss?tt(`Changed! ${miss} letter${miss>1?'s are':' is'} still a dimple in the sand.`,`Cambiato! ${miss>1?miss+' lettere sono ancora':'Una lettera è ancora'} una conca nella sabbia.`):tt('Changed! Now it says “'+t+'”.','Cambiato! Ora dice “'+t+'”.'),3);return}
+ if(L.length>=SMN){say(tt(`The beach already has ${SMN} messages: erase one first (tap it).`,`Sulla spiaggia ci sono già ${SMN} messaggi: cancellane uno (toccalo).`),3);return}
  let ok=false;for(let k=0;k<40&&!ok;k++){const b2=a+(k%2?1:-1)*Math.ceil(k/2)*.08;if(smFree(b2,t.length)){a=b2;ok=true}}
  if(!ok){say(tt('No free stretch of beach here: try another spot.','Qui non c’è un tratto di spiaggia libero: prova da un’altra parte.'),2.6);return}
- const m={t,a:+a.toFixed(4),d:t.split('').map(c=>c===' '?' ':'')};smFill(m);L.push(m);fmDirty=true;save();smSync();closeSheet();snd('shell',1);
+ const m={t,a:+a.toFixed(4),d:t.split('').map(c=>c===' '?' ':'')};smFill(m);L.push(m);fmDirty=true;save();smSync();closeSheet();snd('shell',1);smHere=m;
  const miss=smMissing(m);bubbleQ.length=0;bubbleT=0;say(miss?tt(`Written! ${miss} letter${miss>1?'s are':' is'} still a dimple in the sand: more spare shells will finish ${miss>1?'them':'it'}.`,`Scritto! ${miss>1?miss+' lettere sono ancora':'Una lettera è ancora'} una conca nella sabbia: con altre conchiglie doppie si completa.`):tt('Written in shells! Everyone who visits will read it.','Scritto con le conchiglie! Chi viene in visita lo leggerà.'),3.2)});
 {const st=document.createElement('style');st.textContent=`.smpv{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0 2px;min-height:34px}.smpv b{display:grid;place-items:center;width:28px;height:32px;border-radius:8px;background:var(--c);color:#2b2018;font:700 17px Fredoka,sans-serif;box-shadow:inset -2px -3px 0 #0002}.smpv b.no{background:none;border:2px dashed #b9a98a;color:#b9a98a}.smpv i.sp{width:12px}`;document.head.appendChild(st)}
 /* where Igor can write: on the sand. The offer comes once each time he stops on the beach (if he has spare shells) */
-function smOffer(){const p=igor.position,a=Math.atan2(p.z*1.12,p.x);chips(p.clone().add(new V3(0,1.5,0)),()=>[{t:'✍️ '+tt('Write with shells','Scrivi con le conchiglie'),main:1,fn:()=>{smEditor(a);return false}}],'smoffer')}
-{let on=0,still=0,offered=false;updaters.push((t,dt)=>{if(!S.farm||VISIT||!started||where!=='out'||RIDE){on=0;return}const p=igor.position,r=Math.hypot(p.x,p.z*1.12);
- if(r<R-.15||r>R+2.4||isleLand(p.x,p.z)){on=0;offered=false;return}on+=dt;still=IG.target?0:still+dt;
- if(!offered&&still>1.2&&on>1.2&&!CH&&sheet.hidden&&smSpare()>0&&smList().length<SMN){offered=true;smOffer()}})}
+function smOffer(){const p=igor.position,a=Math.atan2(p.z*1.12,p.x),sp=smSpare(),full=smList().length>=SMN;
+ chips(p.clone().add(new V3(0,1.5,0)),()=>[{t:'✍️ '+tt('Write with shells','Scrivi con le conchiglie')+` <small>${sp} 🐚</small>`,main:1,off:!sp||full,
+  why:full?tt(`The beach already has ${SMN} messages: tap one to change or erase it.`,`Sulla spiaggia ci sono già ${SMN} messaggi: toccane uno per cambiarlo o cancellarlo.`):tt('You need spare shells (the second copy of a shell): the sea brings more!','Servono conchiglie doppie (la seconda copia di una conchiglia): il mare ne porta altre!'),
+  fn:()=>{smEditor(a);return false}}],'smoffer')}
+/* 12 Nov 2026 (Fabio): it wasn't clear when the offer appeared. Now: whenever Igor stops on the sand (the light strip by the sea) the pill comes,
+   again at every new stop a few steps away; standing on a message, it offers to change that message instead. With no spare shells yet,
+   the pill shows greyed (tapping it says why), but only if you already have shells, so new players aren't bothered. */
+{let on=0,still=0,last=null;updaters.push((t,dt)=>{if(!S.farm||VISIT||!started||where!=='out'||RIDE){on=0;return}const p=igor.position,r=Math.hypot(p.x,p.z*1.12);
+ if(r<R-.4||r>R+2.4||isleLand(p.x,p.z)||onJetty(p.x,p.z)){on=0;last=null;return}on+=dt;still=IG.target?0:still+dt;
+ if(still<.6||on<.6||CH||!sheet.hidden)return;const m=smAt(p.x,p.z);
+ if(m){if(last&&last.m===m)return;last={m,x:p.x,z:p.z};if(smHere===m){smHere=null;return}smTap(m);return}
+ if(last&&!last.m&&Math.hypot(p.x-last.x,p.z-last.z)<3)return;last={m:null,x:p.x,z:p.z};
+ const any=Object.keys(FUN().col||{}).length>0;if(smSpare()>0||any)smOffer()})}
 updaters.push(()=>{if(S.farm&&!S.farm.geo2&&!VISIT&&!window.__igInspect){geoMig(S.farm);fmDirty=true;save();setTimeout(()=>location.reload(),400)}});
 function beachPick(cx,cy){let best=-1,bd=9;beachObjs.forEach((o,j)=>{const d=scrPick(o.g.position.clone().add(new V3(0,.1,0)),.35,cx,cy,30);if(d!=null&&d<bd){bd=d;best=j}});if(best<0)return false;
  const it=FUN().beach[best];walkNear(new V3(it.x,0,it.z),.55,()=>{const j=FUN().beach.indexOf(it);if(j>=0)beachTake(j)});return true}
@@ -2659,7 +2712,7 @@ wishB.onclick=e=>{e.stopPropagation();if(!wishS)return;const r=wishB.getBounding
  say(msg,3.4);if(U.wishN>=3)setTimeout(()=>say(tt('Three wishes tonight. The sky is resting now.','Tre desideri stanotte. Ora il cielo riposa.'),3),3800)};
 
 /* ---------- taps, ticks, Igorlet icons ---------- */
-function funPick(cx,cy){if(where!=='out')return false;return beachPick(cx,cy)||ftPick(cx,cy)}
+function funPick(cx,cy){if(where!=='out')return false;return beachPick(cx,cy)||smPick(cx,cy)||ftPick(cx,cy)}
 {const _it=igTap;igTap=function(id){if(PL)return;const o=igObjs.get(id);
   if(whCall&&whCall.id===id&&!WH.st){whCall=null;const go=()=>whStart(id);if(o&&igor.position.distanceTo(o.grp.position)>3.2)walkNear(o.grp.position.clone(),1.4,go);else go();return}
   if(hungry(id)&&o&&o.mode==='idle'){const go=()=>wishChips(id);if(igor.position.distanceTo(o.grp.position)>4)walkNear(o.grp.position.clone(),1.3,go);else go();return}
@@ -6036,7 +6089,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261111-2800';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261112-0100';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
