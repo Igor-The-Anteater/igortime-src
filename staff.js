@@ -254,7 +254,10 @@ async function onClick(e){const t=e.target.closest('[data-a],[data-tab],[data-f]
  }catch(err){console.warn('admin',a,err);toast(tt('Something went wrong (rules?).','Qualcosa non ha funzionato (regole?).'));t.disabled=false}}
 function open(){if(!panel)makePanel();panel.hidden=false;sfx('open');render();reload();clearInterval(presT);presT=setInterval(async()=>{if(panel.hidden)return;await loadPres();if(!sel&&view==='online')render()},30000)}
 function close(){if(panel)panel.hidden=true;clearInterval(presT)}
-const VEHS={scooter:['🛴','Scooter','Monopattino'],bike:['🚲','Bike','Bici'],moto:['🏍','Motorbike','Moto'],tractor:['🚜','Tractor','Trattore'],car:['🚗','Car','Auto'],boat:['⛵','Boat','Barchetta'],heli:['🚁','Helicopter','Elicottero'],plane:['✈','Plane','Aeroplano']};
+/* 13 Nov 2026: the prizes an admin can give are exactly the prize shop: every vehicle (raft and rowing boat too) and the camera.
+   The list comes from the island itself (window.IgorPrizes, index.html), so a new vehicle shows up here on its own; this one is only the fallback. */
+const VEHS=(()=>{try{const L=window.IgorPrizes&&window.IgorPrizes();if(L&&L.length)return Object.fromEntries(L.map(([k,ic,en,it])=>[k,[ic,en,it]]))}catch(e){}
+ return{raft:['🪵','Raft','Zattera'],scooter:['🛴','Scooter','Monopattino'],bike:['🚲','Bike','Bici'],moto:['🏍','Motorbike','Moto'],row:['🛶','Rowing boat','Barca a remi'],tractor:['🚜','Tractor','Trattore'],car:['🚗','Car','Auto'],boat:['🚤','Motorboat','Barca a motore'],heli:['🚁','Helicopter','Elicottero'],plane:['✈','Plane','Aeroplano'],cam:['📷','Camera','Macchina fotografica']}})();
 const DECOS={fire:['🔥','Campfire','Falò'],lights:['💡','Lights and flowerbeds','Lucine e aiuole'],totem:['🗿','Igor totem','Totem di Igor'],beach:['⛱️','Beach kit','Kit da spiaggia'],tele:['🔭','Telescope','Telescopio'],fount:['⛲','Fountain','Fontana'],stage:['🎤','Music stage','Palco della musica'],treeh:['🛖','Tree house','Casetta sull’albero'],wheel:['🎡','Ferris wheel','Ruota panoramica'],caro:['🎠','Carousel','Giostra']};
 const dName=k=>DECOS[k]?DECOS[k][0]+' '+tt(DECOS[k][1],DECOS[k][2]):k;
 /* house customisations: v = 'h<part>.<index>' (same order as HSTY / HPART / HCOL in index.html) */
