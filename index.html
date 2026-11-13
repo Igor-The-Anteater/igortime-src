@@ -489,11 +489,16 @@ function layoutLabels(LV,first){const G=8,top0=(window._hh||60)+(window._evh||0)
  const hit=(l,t,r,b)=>placed.some(q=>l<q.r+G&&r>q.l-G&&t<q.b+G&&b>q.t-G);
  for(const L of LV){const w=L.el.offsetWidth,h=L.el.offsetHeight+12,x0=L._x,y0=L._y;const ok=(cx,by)=>cx-w/2>=4&&cx+w/2<=W-4&&by-h>=top0&&by<=H-4&&!hit(cx-w/2,by-h,cx+w/2,by);
   let best=null,bd=1e9;const tryP=(cx,by)=>{if(!ok(cx,by))return;const d=Math.hypot(cx-x0,(by-y0)*1.2);if(d<bd){bd=d;best=[cx,by]}};
-  tryP(x0,y0);if(!best||bd>0)for(const q of placed){tryP(x0,q.t-G-1);tryP(x0,q.b+h+G+1);tryP(q.l-G-1-w/2,y0);tryP(q.r+G+1+w/2,y0);tryP(clamp(x0,w/2+4,W-w/2-4),q.t-G-1)}
+  tryP(x0,y0);let keep=null;if(bd>0&&L._tx!=null&&ok(x0+L._tx,y0+L._ty)){keep=[x0+L._tx,y0+L._ty]}
+  if(!best||bd>0)for(const q of placed){tryP(x0,q.t-G-1);tryP(x0,q.b+h+G+1);tryP(q.l-G-1-w/2,y0);tryP(q.r+G+1+w/2,y0);tryP(clamp(x0,w/2+4,W-w/2-4),q.t-G-1)}
   /* phones: at most 2 labels (1 while Igor talks), and together they never take more than about a quarter of the screen */
   if(best&&PH){const nb=placed.length-nFix;if(nb>=(bubble.style.opacity==='1'?1:2)||(area+w*h)>W*H*.24)best=null}
-  if(!best){L.el.style.visibility='hidden';L._sx=null;continue}L.el.style.visibility='';area+=w*h;
-  if(L._sx==null||Math.hypot(best[0]-L._sx,best[1]-L._sy)>140){L._sx=best[0];L._sy=best[1]}else{L._sx+=(best[0]-L._sx)*.35;L._sy+=(best[1]-L._sy)*.35}
+  /* 13 Nov 2026: the labels trembled. They were smoothed as a whole screen position, so while the camera glided they lagged
+     behind their place and caught up again; and a displaced label could flip between two free spots. Now a label is glued to
+     its place in the scene: only the sideways/upwards shift is smoothed, and a shift that is still free is kept (no flipping). */
+  if(keep&&best&&best!==keep&&Math.hypot(best[0]-x0,(best[1]-y0)*1.2)>Math.hypot(keep[0]-x0,(keep[1]-y0)*1.2)-14&&!(best[0]===x0&&best[1]===y0))best=keep;
+  if(!best){L.el.style.visibility='hidden';L._sx=null;L._tx=null;continue}L.el.style.visibility='';area+=w*h;
+  {const tx=best[0]-x0,ty=best[1]-y0;if(L._sx==null||L._ox==null||Math.hypot(tx-L._ox,ty-L._oy)>140){L._ox=tx;L._oy=ty}else{L._ox+=(tx-L._ox)*.35;L._oy+=(ty-L._oy)*.35;if(Math.abs(tx-L._ox)<.3&&Math.abs(ty-L._oy)<.3){L._ox=tx;L._oy=ty}}L._tx=tx;L._ty=ty;L._sx=x0+L._ox;L._sy=y0+L._oy}
   const moved=Math.hypot(best[0]-x0,best[1]-y0)>3;if(L.el.classList.contains('mv')!==moved)L.el.classList.toggle('mv',moved);
   placed.push({l:best[0]-w/2,t:best[1]-h,r:best[0]+w/2,b:best[1]});L.el.style.transform=`translate(-50%,-100%) translate(${L._sx}px,${L._sy}px)`}}
 function relabel(){for(const L of labels)if(Array.isArray(L.text)||Array.isArray(L.sub))L.el.innerHTML=N(L.text)+(L.sub?`<small>${N(L.sub)}</small>`:'')}
@@ -875,6 +880,8 @@ function buyVeh(k,more){const F=FM(),V=VEH[k],own=F.veh[k];if(own&&!more)return;
  say(own?tt(`Another ${N(V.N).toLowerCase()} for the Igorlets! Now there are ${n+1}.`,`${N(V.N)} per gli Igorlets! Adesso ce ne sono ${n+1}.`):tt(`A ${N(V.N).toLowerCase()}! Tap ${V.ic} to hop on.`,`${N(V.N)}! Tocca ${V.ic} per salire.`),3.2);save();fmRender()}
 function buyToy(k){const F=FM();if(F.toys[k])return;if(!pay({s:TOYS[k].s}))return say(NEED({s:TOYS[k].s}),2.4);F.toys[k]=1;say(tt(`A ${N(TOYS[k].N).toLowerCase()} for the yard!`,`${N(TOYS[k].N)} per il cortile!`),2.4);save();fmRender()}
 /* gifts from the admins (staff.js): seeds, tofu ants, a vehicle; F.gifts[id] remembers each one so it is applied once and only what was given can be taken back */
+/* 13 Nov 2026: what the admins can give as a prize = the prize shop (all the vehicles, in shop order, and the camera) */
+window.IgorPrizes=()=>[...VKEYS.map(k=>[k,VEH[k].ic,VEH[k].N[0],VEH[k].N[1]]),['cam','📷','Camera','Macchina fotografica']];
 window.IgorGift={
  apply(g){ensureFarm();const F=FM();F.gifts=F.gifts||{};if(F.gifts[g.id])return false;const n=Math.max(0,g.n|0),r={k:g.k,n,v:g.v||'',at:Date.now()};let txt='';
   const gp=F.gp=F.gp||{s:0,t:0,ls:-1,lt:-1};if(g.k==='seeds'){S.seeds=(S.seeds|0)+n;gp.s+=n;gp.ls=S.seeds;txt=tt(`+${n} ${n===1?'seed':'seeds'}`,`+${n} ${n===1?'seme':'semi'}`)}
@@ -884,6 +891,7 @@ window.IgorGift={
    txt=hGiftName(hk)+(r.had?tt(' (you already had it)',' (ce l’avevi già)'):'');if(!r.had)setTimeout(()=>say(tt('Try it: hammer 🔨 → Igor’s house.','Provala: martello 🔨 → Casa di Igor.'),3.5),4800)}
   else if(g.k==='veh'&&/^d:/.test(g.v||'')){const k=g.v.slice(2),D=DECO[k];if(!D)return false;const M=DEC();r.d=k;if(M[k])r.had=true;else{M[k]={at:Date.now(),gift:1};r.place=1}
    txt=`${D.ic} ${N(D.N)}`+(r.had?tt(' (you already had it)',' (ce l’avevi già)'):'');if(r.place)setTimeout(()=>say(tt('Tap the hammer 🔨 to put it where you like.','Tocca il martello 🔨 per metterlo dove vuoi.'),3.5),4800)}
+  else if(g.k==='veh'&&g.v==='cam'){const U=FUN();if(U.cam)r.had=true;else{U.cam=1;r.cam=1}txt='📷 '+tt('Camera','Macchina fotografica')+(r.had?tt(' (you already had it)',' (ce l’avevi già)'):'');if(!r.had)setTimeout(()=>say(tt('Tap 📷 next to the vehicles and photograph the animals!','Tocca 📷 accanto ai mezzi e fotografa gli animali!'),3.5),4800)}
   else if(g.k==='veh'&&VEH[g.v]){const V=VEH[g.v];if(F.veh[g.v]){const n=vehN(g.v);if(n<9){F.veh[g.v].n=n+1;F.veh[g.v].cs=F.veh[g.v].cs||[];F.veh[g.v].cs[n]=pick(VCOL.filter(c=>c!==F.veh[g.v].c));r.copy=true}else r.had=true}else F.veh[g.v]={c:V.c,n:1};txt=`${V.ic} ${N(V.N)}`+(r.copy?tt(' (one more!)',' (un altro!)'):r.had?tt(' (you already had it)',' (ce l’avevi già)'):'')}
   else return false;
   F.gifts[g.id]=r;fmDirty=true;save();fmRender();refresh();snd('buy');
@@ -895,6 +903,7 @@ window.IgorGift={
   else if(r.fuel){const U=FUEL();tk=Math.min(r.n,gp.f|0,Math.max(0,Math.floor(U.n)));U.n-=tk;gp.f=(gp.f||0)-tk;gp.lf=U.n}
   else if(r.hk){const H=HSV();const i=H.own.indexOf(r.hk);if(!r.had&&i>=0){H.own.splice(i,1);tk=1;const c=H.c,ks=['st:'+c.st,...Object.keys(HPART).map(k=>k+':'+c[k]),...Object.keys(HCOL).map(k=>k+':'+c[k])];if(ks.some(k=>!hOwn(k))){H.c=HDEF();if(HPV&&!hp.hidden)HPV={...H.c}}}}
   else if(r.d){const M=DEC();if(!r.had&&M[r.d]){if(PL&&PL.k==='deco'&&PL.id===r.d)endPlace();for(const[,o]of igObjs)if(o.act&&o.act.k==='deco'&&o.act.d===r.d)o.act=null;delete M[r.d];tk=1}}
+  else if(r.cam){const U=FUN();if(U.cam){U.cam=0;tk=1}}
   else if(r.k==='veh'&&r.copy&&F.veh[r.v]){const n=vehN(r.v);if(n>1){F.veh[r.v].n=n-1;tk=1}}
   else if(r.k==='veh'&&!r.had&&F.veh[r.v]){if(RIDE===r.v)dismount(true);for(const[,o]of igObjs)if(o.act&&o.act.k==='ride'&&o.act.v===r.v)o.act=null;
    const n=vehN(r.v);if(n>1)F.veh[r.v].n=n-1;else delete F.veh[r.v];tk=1}
@@ -1131,14 +1140,14 @@ function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>
  for(const o of idle){const A=o.act;if(!A)continue;
   if(A.k==='ring'){if(idle.filter(q=>q.act&&q.act.k==='ring').length<3){o.act=null;continue}const a=t*.8+A.i/A.n*TAU;o.goal.set(A.c.x+Math.cos(a)*1,0,A.c.z+Math.sin(a)*1)}
   else if(A.k==='wave'){o.goal.copy(igor.position).add(new V3(1.2,0,.6));if(o.grp.position.distanceTo(o.goal)<.4&&o.jump<=0&&Math.random()<dt*.8)o.jump=.5}
-  else if(A.k==='ride'){if(!o.ride){if(o.grp.position.distanceTo(A.goal)<.35){A.t0=t;o.ride=ridePath(A,t)}else o.goal.copy(A.goal)}if(o.ride){o.ride=ridePath(A,t);if(!o.ride){o.act=null;o.grp.position.copy(parkOf(A.v,A.j||0)).add(new V3(.8,0,.6));o.goal.copy(o.grp.position)}else{o.grp.position.copy(o.ride.pos);o.goal.copy(o.ride.pos)}}}
+  else if(A.k==='ride'){if(!o.ride){if(o.grp.position.distanceTo(A.goal)<.35){A.t0=t;o.ride=ridePath(A,t)}else o.goal.copy(A.goal)}if(o.ride){o.ride=ridePath(A,t);if(!o.ride){o.act=null;{const P0=parkOf(A.v,A.j||0);if(VEH[A.v].kind==='water'){o.grp.position.copy(shoreNear(P0));o.jump=.4}else o.grp.position.copy(P0.add(new V3(.8,0,.6)))}o.goal.copy(o.grp.position)}else{o.grp.position.copy(o.ride.pos);o.goal.copy(o.ride.pos)}}}
   else if(A.goal)o.goal.copy(A.goal);
   if(A.k==='think'&&o.grp.position.distanceTo(o.goal)<.3){o.ic.visible=true;o.ic.material.map=iconTex[A.ic];o.ic.position.y=IGH+.25+Math.sin(t*2)*.05}}
  // the ball flies between two Igorlets
  if(ballO.a&&ballO.c&&ballO.a.act&&ballO.a.act.k==='ball'&&ballO.c.act&&ballO.c.act.k==='ball'&&ballO.a.grp.position.distanceTo(ballO.a.goal)<.3&&ballO.c.grp.position.distanceTo(ballO.c.goal)<.3){ballO.u+=dt*.7;const u=ballO.u%2,k=u<1?u:2-u,A=ballO.a.grp.position,B=ballO.c.grp.position;
   ballO.b.visible=true;ballO.b.position.set(A.x+(B.x-A.x)*k,.5+Math.sin(k*Math.PI)*1.1,A.z+(B.z-A.z)*k);toyObj.ball.visible=false;if(Math.abs(k-1)<.04&&ballO.c.jump<=0)ballO.c.jump=.35;if(k<.04&&ballO.a.jump<=0)ballO.a.jump=.35}
  else{ballO.b.visible=false;toyObj.ball.visible=!!F.toys.ball}
- for(const[oid,o]of igObjs){const p=o.grp.position,v=(o.ride?o.goal:isleVia(o.goal,p)).clone().sub(p);v.y=0;const L=v.length();let moving=false;
+ for(const[oid,o]of igObjs){const p=o.grp.position,v=(o.ride?o.goal:isleVia(igDry(o),p)).clone().sub(p);v.y=0;const L=v.length();let moving=false;
   if(L>.08){const sp=Math.min(L,(o.mode==='work'?2.8:1.9)*dt);v.divideScalar(L);p.x+=v.x*sp;p.z+=v.z*sp;moving=true;o.walk+=dt*12;const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0),d=v.dot(cr);if(Math.abs(d)>.2)o.face=d>0?1:-1}
   igSnd(oid,o,moving,dt);o.jump-=dt;const jy=o.jump>0?Math.sin(o.jump/.5*Math.PI)*.35:0;
   const working=o.mode==='work'&&!moving&&!o.doze,sleeping=(o.mode==='sleep'||o.mode==='work'&&o.doze)&&!moving;
@@ -1266,6 +1275,19 @@ function vehPaint(k){const o=VO[k];if(o)o.paint.color.set(FM().veh[k].c)}
 /* 13 Nov 2026: an Igorlet gets off a vehicle for good: on land nearby (never left in the sea or in mid-air) */
 function landNear(P){const ok=(x,z)=>(Math.hypot(x,z*1.12)<R-1.2||isleLand(x,z,.4))&&!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3);if(ok(P.x,P.z))return new V3(P.x,0,P.z);
  for(let r=.6;r<30;r+=.6)for(let k=0;k<20;k++){const a=k/20*TAU,x=P.x+Math.cos(a)*r,z=P.z+Math.sin(a)*r;if(ok(x,z))return new V3(x,0,z)}return new V3(0,0,2)}
+/* 13 Nov 2026, midday: with Igor in a boat (or up in the air) the Igorlets that follow him (the whistle call, a wave, a race
+   invite…) stopped right next to him: in the sea. Now they wait on the beach nearest to him. And Igor in a boat, sent to a
+   place on land, goes to the nearest bit of sea and stops, instead of sliding to and fro against the beach. */
+function igAfloat(){return where==='out'&&!!RIDE&&VEH[RIDE].kind!=='land'}
+function shoreNear(P){const ok=(x,z)=>(Math.hypot(x,z*1.12)<R+.6||isleLand(x,z,.3)||onJetty(x,z))&&!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3);if(ok(P.x,P.z))return new V3(P.x,0,P.z);
+ for(let r=.4;r<34;r+=.4)for(let k=0;k<24;k++){const a=k/24*TAU,x=P.x+Math.cos(a)*r,z=P.z+Math.sin(a)*r;if(ok(x,z))return new V3(x,0,z)}return new V3(0,0,2)}
+function seaNear(P){const ok=(x,z)=>rideOk(x,z)&&rideOk(x+(x-P.x)*.05,z+(z-P.z)*.05);{const Q=igor.position,L=Math.hypot(Q.x-P.x,Q.z-P.z);let best=null;for(let r=.3;r<7;r+=.3){for(let k=0;k<32;k++){const a=k/32*TAU,x=P.x+Math.cos(a)*r,z=P.z+Math.sin(a)*r;if(rideOk(x,z)&&rideOk(x+Math.cos(a)*.4,z+Math.sin(a)*.4)){best=new V3(x,0,z);break}}if(best)return best}
+ for(let d=0;d<=L;d+=.3){const x=P.x+(Q.x-P.x)*d/L,z=P.z+(Q.z-P.z)*d/L;if(rideOk(x,z)){const e=Math.min(L,d+.4);return new V3(P.x+(Q.x-P.x)*e/L,0,P.z+(Q.z-P.z)*e/L)}}}
+ for(let r=.3;r<20;r+=.3)for(let k=0;k<32;k++){const a=k/32*TAU,x=P.x+Math.cos(a)*r,z=P.z+Math.sin(a)*r;if(rideOk(x,z)&&rideOk(x+Math.cos(a)*.4,z+Math.sin(a)*.4))return new V3(x,0,z)}return null}
+function igSeaTg(){if(where==='out'&&RIDE&&VEH[RIDE].kind==='water'&&!IG.target.wq&&!rideOk(IG.target.x,IG.target.z)){const q=seaNear(IG.target);IG.arrive=null;IG.path=null;IG.pathFor=null;if(q){q.wq=1;IG.target=q;mark.position.set(q.x,.04,q.z)}else IG.target=null}return!!IG.target}
+function igDry(o){const g=o.goal;if(!igAfloat()){o.dry=null;return g}const A=o.act;if(A&&!/^(wh|wave|rinv|rope|lead|sea|wander|think)$/.test(A.k))return g;
+ if(Math.hypot(g.x,g.z*1.12)<=R+SHORE||isleLand(g.x,g.z)||onJetty(g.x,g.z)){o.dry=null;return g}
+ if(o.dry&&Math.hypot(o.dry.sx-g.x,o.dry.sz-g.z)<1.2)return o.dry.p;const p=shoreNear(g);o.dry={sx:g.x,sz:g.z,p};return p}
 function igUnride(o){const A=o.act;o.act=null;if(!A||A.k!=='ride')return;const P=o.ride?o.ride.pos:o.grp.position;o.ride=null;const q=landNear(VEH[A.v].kind==='land'?P:parkOf(A.v,A.j||0));
  o.grp.position.set(q.x,0,q.z);o.goal.copy(q);o.jump=.4}
 function riderOf(k,j=0){for(const[,o]of igObjs)if(o.act&&o.act.k==='ride'&&o.act.v===k&&(o.act.j||0)===j)return o;return null}
@@ -1541,14 +1563,16 @@ if(walkable(P.x+mx*sp,P.z+mz*sp)){P.x+=mx*sp;P.z+=mz*sp;IG.mside=0;IG.sq=0;retur
  if(walkable(P.x+mx*sp,P.z)){P.x+=mx*sp;return true}if(walkable(P.x,P.z+mz*sp)){P.z+=mz*sp;return true}
  // still stuck (a tight corner, a crowd of things): after a moment Igor squeezes through, a little slower, never into the sea or through a wall
  if(T-(IG.stuck0&&T-IG.stuckL<.2?IG.stuck0:(IG.stuck0=T))>.3){IG.stuckL=T;IG.sq=1;const k=sp*.6;if(edgeOk(P.x+mx*k,P.z+mz*k)){P.x+=mx*k;P.z+=mz*k;return true}}else IG.stuckL=T;return false}
+/* 13 Nov 2026: Igor's figure is turned to the camera and brought towards it again once the camera has moved (no one-frame lag) */
+function igPost(){const P=IG._pv;if(!P)return;igPlane.position.set(P.x,P.y,P.z);igPlane.quaternion.copy(camera.quaternion);if(P.rz)igPlane.rotateZ(P.rz);igPlane.scale.set(P.sx,P.sy,1);igBring()}
 function igorUpdate(t,dt){blink(t);let moving=false;
- if(diving){igPlane.quaternion.copy(camera.quaternion);igPlane.scale.set(IG.face,1,1);return}
+ if(diving){IG._pv=null;igPlane.quaternion.copy(camera.quaternion);igPlane.scale.set(IG.face,1,1);return}
  const il=Math.hypot(IN.x,IN.z);
  if(il>.12&&started){IG.target=null;IG.arrive=null;IG.manual=true;const y=CAM.yaw,k=Math.min(1,il),ix=IN.x/il,iz=IN.z/il;
   const mx=ix*Math.cos(y)+iz*Math.sin(y),mz=-ix*Math.sin(y)+iz*Math.cos(y),sp=4.4*rideSp()*k*dt;const nx=igor.position.x+mx*sp,nz=igor.position.z+mz*sp;
   slideMove(mx,mz,sp);
   if(Math.abs(ix)>.2)IG.face=ix>0?1:-1;moving=true;IG.walk+=dt*10*k;hideHint();poke()}
- else if(IG.target){const DS=where==='out'?isleVia(IG.target):IG.target;if(IG.pathFor!==DS){IG.pathFor=DS;IG.path=lineOk(igor.position.x,igor.position.z,DS.x,DS.z)?null:findPath(igor.position,DS);if(IG.path&&IG.path.length)IG.path[IG.path.length-1]=DS}
+ else if(IG.target&&igSeaTg()){const DS=where==='out'?isleVia(IG.target):IG.target;if(IG.pathFor!==DS){IG.pathFor=DS;IG.path=lineOk(igor.position.x,igor.position.z,DS.x,DS.z)?null:findPath(igor.position,DS);if(IG.path&&IG.path.length)IG.path[IG.path.length-1]=DS}
   const TG=IG.path&&IG.path.length?IG.path[0]:DS;if(TG!==IG.target&&IG.tgw!==TG){IG.tgw=TG;IG.best=1e9;IG.bestT=T}const v=TG.clone().sub(igor.position);v.y=0;const L=v.length();
   if(L<(T-IG.bestT>.6?.45:.15)&&TG!==IG.target){if(IG.path&&IG.path[0]===TG){IG.path.shift();if(!IG.path.length)IG.path=null}IG.best=1e9;IG.bestT=T}else if(L<.15){IG.target=null;IG.path=null;IG.pathFor=null;if(IG.arrive){const f=IG.arrive;IG.arrive=null;f()}}
   else{v.divideScalar(L);const sp=Math.min(L,4.2*rideSp()*dt);const nx=igor.position.x+v.x*sp,nz=igor.position.z+v.z*sp;
@@ -1559,6 +1583,7 @@ function igorUpdate(t,dt){blink(t);let moving=false;
  if(IG.jy>0){IG.jv-=17*dt;IG.jy+=IG.jv*dt;if(IG.jy<=0){IG.jy=0;IG.jv=0}}{const sy=where==='out'&&!RIDE?shoreY(igor.position.x,igor.position.z)+isleY(igor.position.x,igor.position.z)+mainY(igor.position.x,igor.position.z):0;igPlane.position.y+=IG.jy+rideY()+sy;const bl=igor.userData.blob||(igor.userData.blob=igor.children.find(c=>c.material===shadowMat));if(bl)bl.position.y=.02+sy}if(RIDE)igPlane.position.y-=moving?Math.abs(Math.sin(IG.walk))*.16:0;
  igPlane.quaternion.copy(camera.quaternion);if(moving)igPlane.rotateZ(Math.sin(IG.walk)*.05);
  igPlane.scale.set(IG.face,IG.jy>0?1+clamp(IG.jv*.025,-.08,.1):moving?1:1+Math.sin(t*2)*.012,1);
+ IG._pv={x:igPlane.position.x,y:igPlane.position.y,z:igPlane.position.z,sx:igPlane.scale.x,sy:igPlane.scale.y,rz:moving?Math.sin(IG.walk)*.05:0};
  igBring();
  mark.material.opacity*=IG.target?1:.94}
 
@@ -2761,7 +2786,7 @@ wishB.onclick=e=>{e.stopPropagation();if(!wishS)return;const r=wishB.getBounding
 /* ---------- taps, ticks, Igorlet icons ---------- */
 function funPick(cx,cy){if(where!=='out')return false;return beachPick(cx,cy)||smPick(cx,cy)||ftPick(cx,cy)}
 {const _it=igTap;igTap=function(id){if(PL)return;const o=igObjs.get(id);
-  if(whCall&&whCall.id===id&&!WH.st){whCall=null;const go=()=>whStart(id);if(o&&igor.position.distanceTo(o.grp.position)>3.2)walkNear(o.grp.position.clone(),1.4,go);else go();return}
+  if(whCall&&whCall.id===id&&!WH.st){whCall=null;const go=()=>whStart(id);if(o&&igor.position.distanceTo(o.grp.position)>3.2&&!igAfloat())walkNear(o.grp.position.clone(),1.4,go);else go();return}
   if(hungry(id)&&o&&o.mode==='idle'){const go=()=>wishChips(id);if(igor.position.distanceTo(o.grp.position)>4)walkNear(o.grp.position.clone(),1.3,go);else go();return}
   // asleep, napping or sheltering: a wish you can hand over (fruit, a tofu ant, a shell) is granted all the same: it comes out of the little house for a moment
   if(hungry(id)&&o&&(['fruit','ant','shell'].includes(wishOf(id).k)||o.mode!=='work')){const go=()=>{_it(id);setTimeout(()=>{if(hungry(id))wishChips(id)},900)},P=igSpot(id)||o.grp.position;if(Math.hypot(igor.position.x-P.x,igor.position.z-P.z)>3)walkNear(P.clone(),1.4,go);else go();return}_it(id)}}
@@ -2773,7 +2798,7 @@ updaters.push((t,dt)=>{if(!S.farm)return;const U=FUN();if(!funT){funT=1;beachSyn
  if(live&&T>ftNext){ftNext=T+fT(170+Math.random()*130);ftAdd()}
  wishTick();marTick(t,dt);
  whTick(t);wishTick(dt);
- for(const[id,o]of igObjs){if(o.act&&o.act.k==='wh'){const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0).multiplyScalar(1.4);o.act.goal.copy(igor.position).add(cr).add(new V3(0,0,.4));if(!walkable(o.act.goal.x,o.act.goal.z))o.act.goal.copy(igor.position).sub(cr)}
+ for(const[id,o]of igObjs){if(o.act&&o.act.k==='wh'&&igAfloat())o.act.goal.copy(igor.position);else if(o.act&&o.act.k==='wh'){const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0).multiplyScalar(1.4);o.act.goal.copy(igor.position).add(cr).add(new V3(0,0,.4));if(!walkable(o.act.goal.x,o.act.goal.z))o.act.goal.copy(igor.position).sub(cr)}
   const near=o.grp.position.distanceTo(igor.position)<9;
   if(o.mode==='idle'&&(whCall&&whCall.id===id||WH.st&&WH.id===id)){o.ic.visible=true;o.ic.material.map=iconTex.note;o.ic.position.y=IGH+.28+Math.abs(Math.sin(t*3))*.1}
   else if(o.mode==='idle'&&hungry(id)&&near){o.ic.visible=true;o.ic.material.map=WISHICO[wishOf(id).k]||FOODICO;o.ic.position.y=IGH+.25+Math.sin(t*2.4)*.05}}
@@ -4793,9 +4818,15 @@ function souvMesh(t,s){const g=new THREE.Group(),m=c=>lam(c);
 function souvTap(j){const F=FM(),s=F.souv&&F.souv[j];if(!s)return;const o=SOUV[s.t]||SOUV.flower,d=new Date(s.at||Date.now()).toLocaleDateString(LANG==='it'?'it-IT':'en-GB',{day:'numeric',month:'long'});
  bubbleQ.length=0;bubbleT=0;say(tt(`${cap1(an(o))} left by ${s.by||'a friend'} on ${d}.`,`${cap1(an(o))} lasciato da ${s.by||'un amico'} il ${d}.`),3.4);if(VISIT)return;
  chips(new V3(s.x,1,s.z),()=>[{t:tt('Keep it','Tienilo'),main:1,fn:()=>false},...(VISIT?[]:[{t:'↔ '+tt('Move','Sposta'),fn:()=>{startPlace({k:'souv',j});return false}}]),{t:tt('Put it away','Mettilo via'),fn:()=>{F.souv.splice(j,1);fmDirty=true;save();return false}}],'souv'+j)}
+/* 13 Nov 2026: the dolls sank into the ground (they sat at height 0, the island is higher in places) and could hardly be tapped.
+   Now every souvenir stands on the ground; a doll has its little label "<player>'s doll" (tap it: move it, put it away);
+   the old dolls (the generic green one, from before the dolls looked like the visitor's Igor) are taken away. */
+const souvY=(x,z)=>{try{return Math.max(0,groundAt(x,z)+mainY(x,z))}catch(e){return 0}};
+updaters.push(()=>{if(!S.farm||VISIT)return;const F=FM();if(F.souv&&F.souv.some(s=>s.t==='doll'&&!s.av)){F.souv=F.souv.filter(s=>!(s.t==='doll'&&!s.av));fmDirty=true}});
 updaters.push(()=>{if(!S.farm)return;const L=FM().souv||[],keys=new Set(L.map((s,j)=>`${j}|${s.t}|${s.x}|${s.z}`+(s.av?'|av':'')));
- for(const[k,o]of souvObjs)if(!keys.has(k)){world.remove(o);const i=clickables.indexOf(o.userData.hit);if(i>=0)clickables.splice(i,1);souvObjs.delete(k)}
- L.forEach((s,j)=>{const k=`${j}|${s.t}|${s.x}|${s.z}`+(s.av?'|av':'');if(souvObjs.has(k)){const b=souvObjs.get(k).userData.bb;if(b){b.pl.quaternion.copy(camera.quaternion);b.pl.parent&&b.pl.quaternion.premultiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,-souvObjs.get(k).rotation.y,0)));if(!b.ok&&igorOK){b.ok=true;b.mat.map=igTex(b.G0,'');b.mat.needsUpdate=true}}return}const B0=BUILD;BUILD='out';const g=souvMesh(s.t,s);g.position.set(s.x,0,s.z);g.scale.setScalar(1.6);g.rotation.y=(j*1.7)%TAU;world.add(g);g.userData.hit=hit(g,.4,()=>souvTap(j),'souv',.3);BUILD=B0;souvObjs.set(k,g)})});
+ for(const[k,o]of souvObjs)if(!keys.has(k)){world.remove(o);if(o.userData.L){o.userData.L.el.remove();const li=labels.indexOf(o.userData.L);if(li>=0)labels.splice(li,1)}const i=clickables.indexOf(o.userData.hit);if(i>=0)clickables.splice(i,1);souvObjs.delete(k)}
+ L.forEach((s,j)=>{const k=`${j}|${s.t}|${s.x}|${s.z}`+(s.av?'|av':'');if(souvObjs.has(k)){const b=souvObjs.get(k).userData.bb;if(b){b.pl.quaternion.copy(camera.quaternion);b.pl.parent&&b.pl.quaternion.premultiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,-souvObjs.get(k).rotation.y,0)));if(!b.ok&&igorOK){b.ok=true;b.mat.map=igTex(b.G0,'');b.mat.needsUpdate=true}}return}const B0=BUILD;BUILD='out';const g=souvMesh(s.t,s),gy=souvY(s.x,s.z);g.position.set(s.x,gy,s.z);g.scale.setScalar(1.6);g.rotation.y=(j*1.7)%TAU;world.add(g);g.userData.hit=hit(g,s.t==='doll'?.5:.4,()=>souvTap(j),'souv',s.t==='doll'?.45:.3);
+ if(s.t==='doll'){const Lb=label(tt(`🧸 ${s.by||'A friend'}’s doll`,`🧸 Bambola di ${s.by||'un amico'}`),'',new V3(s.x,gy+1.55,s.z),()=>souvTap(j),0);Lb.el.classList.add('plot');g.userData.L=Lb}BUILD=B0;souvObjs.set(k,g)})});
 
 /* ---------- the guest book, by the jetty ---------- */
 const GB=new V3(-8.3,0,6.4);
@@ -5094,7 +5125,7 @@ const wrY=()=>{if(!WR||!decoO.wheel)return 0;const w=new V3();decoO.wheel.parts.
   if(!o||where!=='out'||Math.hypot(IN.x,IN.z)>.12||IG.target){const early=!!o&&where==='out';if(!o||where!=='out'){WR=null;return _iu(t,dt)}wheelOff(early);return _iu(t,dt)}
   o.spin=T+1;const W=o.parts.W,w=new V3();o.parts.G[WR.ci].getWorldPosition(w);igor.position.x=w.x;igor.position.z=w.z+.05;lastAct=T;IG.idle=5;
   const turned=Math.abs(W.rotation.z-WR.a0);WR.k=Math.min(1,WR.k+dt*.5);if(turned>1.2&&!WR.said){WR.said=1;say(pick(tt(['Look! You can see the whole island!','How small everything looks from up here!'],['Guarda! Si vede tutta l’isola!','Com’è piccolo tutto da quassù!'])),3)}
-  _iu(t,dt);igPlane.scale.set(IG.face*.55,.55,1);if(turned>=TAU-.05)wheelOff(false)}}
+  _iu(t,dt);igPlane.scale.set(IG.face*.55,.55,1);if(IG._pv){IG._pv.sx=IG.face*.55;IG._pv.sy=.55}if(turned>=TAU-.05)wheelOff(false)}}
 {const _ry=rideY;rideY=function(){return WR?wrY():_ry()}}
 {const _rc=rideCamY;rideCamY=function(){return WR?wrY()*.5:_rc()}}
 {const _ct=camTarget;camTarget=function(){const g=_ct();if(WR&&where==='out'){const k=WR.k*WR.k*(3-2*WR.k);g.x+=Math.sin(CAM.yaw)*7*k;g.z+=Math.cos(CAM.yaw)*7*k;g.y+=wrY()*.6+9*k;FOC.ex+=Math.hypot(9*k,7*k)}return g}}
@@ -6874,7 +6905,7 @@ updaters.push((t,dt)=>{if(VISIT||!S.farm||!started)return;const F=FM();
   if(left<=0)raceEnd('time');return}
  // an Igorlet walking over to challenge Igor
  for(const[,o]of igObjs){const A=o.act;if(!A||A.k!=='rinv')continue;if(T>A.until){o.act=null;continue}A.goal.copy(igor.position).add(new V3(1.1,0,.5));
-  if(!A.asked&&o.grp.position.distanceTo(igor.position)<2.2){A.asked=1;raceAsk(o,A.v)}}
+  if(!A.asked&&o.grp.position.distanceTo(igor.position)<(igAfloat()?4.5:2.2)){A.asked=1;raceAsk(o,A.v)}}
  if(T<raceNext||where!=='out'||!sheet.hidden||CH||(typeof igQuiet==='function'&&igQuiet()))return;raceNext=T+20;
  if((RIDE&&!VEH[RIDE])||typeof LEADPL!=='undefined'&&Object.values(LEADPL).some(Boolean))return;
  const pairs=VKEYS.filter(k=>F.veh[k]&&vehN(k)>=2&&!riderOf(k,1)&&(!MOTOR[k]||FUEL().n>=8)&&(!RIDE||RIDE===k));
@@ -7489,7 +7520,7 @@ if(INSPECT){
   if(s&&IXP.follow){if(s.w!==where){if(s.w==='out')exitRoom(true);else if(ROOMS[s.w])enterRoom(s.w,new V3(s.x,0,s.z))}
    if(where==='out'){const r=s.r&&FM().veh&&FM().veh[s.r]?s.r:null;if(r!==RIDE){RIDE=r;camSnap=true}rideH=RIDE?s.h:0;igHead=s.hd}
    const px=igor.position.x,pz=igor.position.z;igor.position.set(s.x,0,s.z);const d=Math.hypot(s.x-px,s.z-pz);IXP.mv=IXP.mv*.8+(dt>0?d/dt:0)*.2;
-   IG.face=s.f;IG.target=null;IG.arrive=null;lastAct=T;IG.idle=6;igor.visible=true;_iu0(t,dt);if(IXP.mv>.4){IG.walk+=dt*10;igPlane.position.y+=Math.abs(Math.sin(IG.walk))*.16;igPlane.rotateZ(Math.sin(IG.walk)*.05)}return}
+   IG.face=s.f;IG.target=null;IG.arrive=null;lastAct=T;IG.idle=6;igor.visible=true;_iu0(t,dt);if(IXP.mv>.4){IG.walk+=dt*10;igPlane.position.y+=Math.abs(Math.sin(IG.walk))*.16;igPlane.rotateZ(Math.sin(IG.walk)*.05);if(IG._pv){IG._pv.y+=Math.abs(Math.sin(IG.walk))*.16;IG._pv.rz+=Math.sin(IG.walk)*.05}}return}
   /* 11 Nov 2026 (Fabio): no Igor for the admin — when not following them, you only move the camera */
   igor.visible=false;lastAct=T;IG.idle=6;if(RIDE){RIDE=null;rideH=0;camSnap=true}
   _iu0(t,dt)};
@@ -7755,6 +7786,10 @@ function frameBody(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  // keyboard + joystick
  IN.x=(keys.ArrowRight||keys.d?1:0)-(keys.ArrowLeft||keys.a?1:0)+JOY.x;IN.z=(keys.ArrowDown||keys.s?1:0)-(keys.ArrowUp||keys.w?1:0)+JOY.z;
  igorUpdate(t,dt);
+ /* 13 Nov 2026: icons and labels trembled a little. The camera moved AFTER the updaters, so everything they turned towards it
+    (the Igorlets, the dolls, the characters' faces) or placed on the screen (the chips) was one frame behind while the view glided.
+    Now the camera moves first, right after Igor, and the updaters already see this frame's view. */
+ if(camSnap){camera.position.copy(camTarget());lookS.copy(lookTarget());camSnap=false}else{const f=1-Math.exp(-dt*3);camera.position.lerp(camTarget(),f);lookS.lerp(lookTarget(),f)}camera.lookAt(lookS.x,where==='out'?.9+rideCamY():1.1,lookS.z);camera.updateMatrixWorld();try{igPost()}catch(e){}
  if(where==='out'){const cx=camera.position.x-igor.position.x,cz=camera.position.z-igor.position.z,cl=Math.hypot(cx,cz)||1;
   for(const tr of trees){const tx=tr.t.position.x-igor.position.x,tz=tr.t.position.z-igor.position.z,al=(tx*cx+tz*cz)/cl,pp=Math.abs(tx*cz-tz*cx)/cl;const want=(al>.6&&al<cl&&pp<2.7)?.22:1;
    if(Math.abs(tr.o-want)>.01){tr.o+=(want-tr.o)*Math.min(1,dt*6);for(const m of tr.ms){m.opacity=tr.o;m.depthWrite=tr.o>.9}}}}
@@ -7765,9 +7800,10 @@ function frameBody(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  sky.rotation.y+=dt*.006;if(sky.userData.big)sky.userData.big.opacity=(.62+.18*Math.sin(t*1.3))*(SKY.P?SKY.P.stars:1);
  shoot.next-=dt;if(shoot.next<=0&&shoot.t<0&&!reduce&&SKY.nk>.8&&SKY.W.cloud<.5){shoot.t=0;shoot.next=9+Math.random()*12;shoot.m.position.set(camera.position.x+(Math.random()-.5)*60,42+Math.random()*12,camera.position.z-80);shoot.m.rotation.set(0,0,-.32)}
  if(shoot.t>=0){shoot.t+=dt;shoot.m.position.x+=dt*55;shoot.m.position.y-=dt*18;shoot.m.material.opacity=Math.sin(Math.min(shoot.t/1.1,1)*Math.PI)*.8;if(shoot.t>1.1){shoot.t=-1;shoot.m.material.opacity=0}}
- if(camSnap){camera.position.copy(camTarget());lookS.copy(lookTarget());camSnap=false}else{const f=1-Math.exp(-dt*3);camera.position.lerp(camTarget(),f);lookS.lerp(lookTarget(),f)}camera.lookAt(lookS.x,where==='out'?.9+rideCamY():1.1,lookS.z);camera.updateMatrixWorld();try{tmPlace()}catch(e){}
+ /* 13 Nov 2026: the camera already moved before the updaters (see above); here it only snaps if something teleported Igor or changed room */
+ if(camSnap){camera.position.copy(camTarget());lookS.copy(lookTarget());camSnap=false;camera.lookAt(lookS.x,where==='out'?.9+rideCamY():1.1,lookS.z);camera.updateMatrixWorld();try{igPost()}catch(e){}}try{tmPlace()}catch(e){}try{chipTick()}catch(e){}
  // labels
- let lbN=null,lbD=1e9;const LV=[];for(const L of labels){projC(pv.copy(L.pos));const ld=Math.hypot(L.pos.x-igor.position.x,L.pos.z-igor.position.z),out=(L.room||'out')==='out',lr0=out&&!L.far?Math.min(L.near||LBLR,LBLR):L.near,lr=isPhone()&&L.far&&lr0>9?9:lr0;const vis=started&&!L.hidden&&(L.room||'out')===where&&(!lr||ld<lr*(portrait()?.8:1))&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis&&ld<lbD){lbD=ld;lbN=L}if(vis){const lx=clamp((pv.x*.5+.5)*innerWidth,L.el.offsetWidth/2+6,innerWidth-L.el.offsetWidth/2-6),ly=Math.max((-pv.y*.5+.5)*innerHeight,(window._hh||60)+(window._evh||0)+L.el.offsetHeight+4);L._x=lx;L._y=ly;L._d=ld;LV.push(L)}else L._sx=null}for(const L of labels){const on=L===lbN;if(L.el.classList.contains('nr')!==on)L.el.classList.toggle('nr',on)}
+ let lbN=null,lbD=1e9;const LV=[];for(const L of labels){projC(pv.copy(L.pos));const ld=Math.hypot(L.pos.x-igor.position.x,L.pos.z-igor.position.z),out=(L.room||'out')==='out',lr0=out&&!L.far?Math.min(L.near||LBLR,LBLR):L.near,lr=isPhone()&&L.far&&lr0>9?9:lr0;const vis=started&&!L.hidden&&(L.room||'out')===where&&(!lr||ld<lr*(portrait()?.8:1)+(L._vis?.6:0))&&pv.z<1&&Math.abs(pv.x)<(L._vis?1.1:1.05)&&Math.abs(pv.y)<(L._vis?1.1:1.05);L._vis=vis;L.el.style.display=vis?'block':'none';if(vis&&ld<lbD){lbD=ld;lbN=L}if(vis){const lx=clamp((pv.x*.5+.5)*innerWidth,L.el.offsetWidth/2+6,innerWidth-L.el.offsetWidth/2-6),ly=Math.max((-pv.y*.5+.5)*innerHeight,(window._hh||60)+(window._evh||0)+L.el.offsetHeight+4);L._x=lx;L._y=ly;L._d=ld;LV.push(L)}else L._sx=null}for(const L of labels){const on=L===lbN;if(L.el.classList.contains('nr')!==on)L.el.classList.toggle('nr',on)}
  if(bubbleT>0){bubbleT-=dt;bubbleS+=dt}else if(bubbleQ.length){const[q,s2]=bubbleQ.shift();bubble.textContent=q;bubbleT=s2;bubbleS=0;snd('say')}placeBubble();layoutLabels(LV,lbN);chatter();
  renderer.render(scene,camera)}
 addEventListener('resize',()=>{if(!innerWidth||!innerHeight)return;camera.aspect=innerWidth/innerHeight;camera.fov=fovFor();camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);hh()});
@@ -7779,7 +7815,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261113-1100';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261113-1300';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
@@ -7856,7 +7892,7 @@ function follow(uid){if(unSave)unSave(),unSave=null;if(!uid)return;
 window.IgorCloud=C;
 /* events forced by the admins for everyone (gev/<id>): every island listens to the last ones */
 try{onSnapshot(query(collection(db,'gev'),orderBy('at','desc'),limit(10)),q=>{if(window.IgorForce)window.IgorForce.global(q.docs.map(d=>{const x=d.data();return{id:d.id,k:x.k,lead:x.lead|0,st:x.st,at:x.at&&x.at.toMillis?x.at.toMillis():0}}))},e=>console.warn('gev',e&&e.code||e))}catch(e){console.warn('gev',e)}
-{const s=document.createElement('script');s.src='/chat.js?v=20';document.head.appendChild(s)}
+{const s=document.createElement('script');s.src='/chat.js?v=21';document.head.appendChild(s)}
 onAuthStateChanged(auth,async u=>{
  C.ready=false;
  if(u){const google=u.providerData.some(p=>p.providerId==='google.com');C.user={uid:u.uid,nick:pendingNick||(!google&&u.displayName)||'',email:u.email||''};ready=false;
