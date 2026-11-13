@@ -1263,12 +1263,17 @@ function rideCamY(){return RIDE&&VEH[RIDE].kind==='air'?rideH*.7:0}
 function rideAirOrSea(){return!!RIDE&&VEH[RIDE].kind!=='land'}
 function rideOk(x,z){if(!RIDE)return null;const V=VEH[RIDE],r=Math.hypot(x,z*1.12);if(V.kind==='water')return r>R+2.4&&r<R+28&&isleE(x,z)>1.3&&isleNeck(x,z)>1.9&&jettyD(x,z)>1.9&&Math.hypot(x-POOL.x,z-POOL.z)>3.6;if(V.kind==='air')return r<R+16||isleE(x,z)<1.6;return null}
 function vehPaint(k){const o=VO[k];if(o)o.paint.color.set(FM().veh[k].c)}
+/* 13 Nov 2026: an Igorlet gets off a vehicle for good: on land nearby (never left in the sea or in mid-air) */
+function landNear(P){const ok=(x,z)=>(Math.hypot(x,z*1.12)<R-1.2||isleLand(x,z,.4))&&!blocked.some(b=>Math.hypot(b.x-x,b.z-z)<b.r+.3);if(ok(P.x,P.z))return new V3(P.x,0,P.z);
+ for(let r=.6;r<30;r+=.6)for(let k=0;k<20;k++){const a=k/20*TAU,x=P.x+Math.cos(a)*r,z=P.z+Math.sin(a)*r;if(ok(x,z))return new V3(x,0,z)}return new V3(0,0,2)}
+function igUnride(o){const A=o.act;o.act=null;if(!A||A.k!=='ride')return;const P=o.ride?o.ride.pos:o.grp.position;o.ride=null;const q=landNear(VEH[A.v].kind==='land'?P:parkOf(A.v,A.j||0));
+ o.grp.position.set(q.x,0,q.z);o.goal.copy(q);o.jump=.4}
 function riderOf(k,j=0){for(const[,o]of igObjs)if(o.act&&o.act.k==='ride'&&o.act.v===k&&(o.act.j||0)===j)return o;return null}
 const vehN=k=>{const v=FM().veh[k];return v?Math.max(1,v.n|0):0},vehMax=()=>Math.min(9,FM().igs.length+1);
 function vSpot(k){const F=S.farm,p=F&&F.vpos&&F.vpos[k];return p&&VEH[k].kind!=='water'?new V3(p.x,0,p.z):VPARK[k]}
 function parkOf(k,j){const P=(j?VPARK[k]:vSpot(k)).clone();if(!j)return P;const V=VEH[k];if(V.kind==='water'){const a=(VANG[k]||JET_A)+(j%2?1:-1)*Math.ceil(j/2)*.12;return wpos(a)}
  if(V.kind==='air')return P.add(new V3((k==='plane'?2.9:-2.5)*Math.ceil(j/2)*(j%2?1:.6),0,(j%2?0:-2.2)));return P.add(new V3(.3*j,0,1.15*j))}
-function mount(k){const F=FM();if(!F.veh[k])return;if(where!=='out')exitRoom(true);if(RIDE)dismount(true);const r=riderOf(k,0);if(r)r.act=null;RIDE=k;const V=VEH[k];snd('mount');
+function mount(k){const F=FM();if(!F.veh[k])return;if(where!=='out')exitRoom(true);if(RIDE)dismount(true);const r=riderOf(k,0);if(r)igUnride(r);RIDE=k;const V=VEH[k];snd('mount');
  if(V.kind==='water'){igor.position.copy(VPARK[k]);camSnap=true;say(k==='raft'?tt('All aboard the raft! Slowly, slowly…','Tutti sulla zattera! Piano piano…'):k==='row'?tt('Row, row, row your boat!','Remiamo, remiamo!'):tt('Ahoy! Full speed around the island.','Ahoy! A tutto motore intorno all’isola.'),3)}
  else if(V.kind==='air'){rideH=0;say(tt('Up we go!','Si vola!'),2.4)}else say(RIDE==='bike'?tt('Ring ring! Off we go.','Drin drin! Si parte.'):pick(tt(['Vroom!','Let’s go!'],['Brum brum!','Andiamo!'])),2);IG.target=null;IG.arrive=null}
 function dismount(quiet){if(!RIDE)return;bubbleQ.length=0;bubbleT=0;const V=VEH[RIDE],vk=RIDE;RIDE=null;rideH=0;
@@ -1295,6 +1300,8 @@ function ridePath(A,t){const V=VEH[A.v],C=VC[V.kind],P0=parkOf(A.v,A.j||0),ez=V.
 // tapping a parked vehicle: Igor walks to it and gets on (on a friend's island too)
 function vehPark(k){if(PL)return;if(RIDE===k){vehChips();return}const o=VO[k];if(!o)return;if(VEH[k].kind==='water'){mount(k);return}walkNear(o.g.position.clone().setY(0),1.2,()=>mount(k))}
 updaters.push(giftSpend);
+updaters.push(()=>{const own={};for(const[,o]of igObjs){const A=o.act;if(!A||A.k!=='ride')continue;const key=A.v+'|'+(A.j||0);
+ if(!(A.j||0)&&RIDE===A.v){igUnride(o);continue}const p=own[key];if(!p){own[key]=o;continue}if(A.race){igUnride(p);own[key]=o}else igUnride(o)}});
 updaters.push((t,dt)=>{const F=FM();
  if(RIDE&&!F.veh[RIDE])RIDE=null;vehCopies(t,dt);if(RIDE&&where!=='out')dismount(true);
  if(RIDE&&VEH[RIDE].kind==='air')rideH+=(VEH[RIDE].h-rideH)*Math.min(1,dt*1.2);
@@ -4204,10 +4211,13 @@ function tmItems(){const F=FM(),tn=Date.now(),L=[];
 function tmTick(dt){const show=started&&where==='out'&&!leaving&&!PL;tmBox.style.display=show?'':'none';if(!show)return;
  if((tmAcc+=dt)>=.5){tmAcc=0;const L=tmItems(),seen=new Set();for(const it of L){seen.add(it.k);let o=TMS.get(it.k);if(!o){const el=document.createElement('button');el.type='button';el.className='tm';el.dataset.snd='0';tmBox.appendChild(el);o={el};TMS.set(it.k,o);el.addEventListener('pointerdown',e=>e.stopPropagation());el.addEventListener('click',e=>{e.stopPropagation();if(o.go)o.go()})}
    o.P=it.P;o.go=it.go;const h=it.t;if(o.h!==h){o.h=h;o.el.textContent=h}const cl='tm'+(it.c?' '+it.c:'');if(o.el.className!==cl)o.el.className=cl}
-  for(const[k,o]of TMS)if(!seen.has(k)){o.el.remove();TMS.delete(k)}}
+  for(const[k,o]of TMS)if(!seen.has(k)){o.el.remove();TMS.delete(k)}}}
+/* 13 Nov 2026: the timers wobbled. They were placed before the camera moved in the frame (one frame behind) and rounded to the pixel:
+   now they are placed right after the camera, with sub-pixel steps */
+function tmPlace(){if(tmBox.style.display==='none')return;
  const W=innerWidth,H=innerHeight,top=(window._hh||60);for(const[,o]of TMS){if(!o.P)continue;const d=Math.hypot(o.P.x-igor.position.x,o.P.z-igor.position.z);projC(pv.copy(o.P));
   if(pv.z>1||d>15){o.el.style.transform='translate(-999px,-999px)';continue}const x=(pv.x*.5+.5)*W,y=(-pv.y*.5+.5)*H;if(y<top||x<-40||x>W+40||y>H){o.el.style.transform='translate(-999px,-999px)';continue}
-  o.el.style.opacity=String(d>7?Math.max(.3,.8-(d-7)/16):.8);o.el.style.transform=`translate(${Math.round(x-o.el.offsetWidth/2)}px,${Math.round(y-o.el.offsetHeight)}px)`}}
+  o.el.style.opacity=String(d>7?Math.max(.3,.8-(d-7)/16):.8);if(o.w==null||o.hh!==o.h){o.hh=o.h;o.w=o.el.offsetWidth;o.hgt=o.el.offsetHeight}o.el.style.transform=`translate(${(x-o.w/2).toFixed(1)}px,${(y-o.hgt).toFixed(1)}px)`}}
 updaters.push((t,dt)=>tmTick(dt));
 
 /* ---------- the to-do list under the games button: 3 to 6 things you can do right now; tap one and Igor goes there ---------- */
@@ -5213,6 +5223,11 @@ function islOff(o){if(o._cup)o._cup.visible=false;o.pl.position.x=0;o.pl.positio
 // and treat both ends of a walk on the same island as being on it
 {const _iv=isleVia;isleVia=function(tg,from){if(!tg)return tg;const p=from||igor.position;for(const I of ISLES){if(!I.on)continue;const ep=isleE1(I,p.x,p.z);
  if(ep<1.03){if(isleE1(I,tg.x,tg.z)<1.03)return tg;if(ep>=.86){const k=.8/ep;return _iv(tg,new V3(I.cx+(p.x-I.cx)*k,0,I.cz+(p.z-I.cz)*k))}}}return _iv(tg,from)}}
+/* 13 Nov 2026: the Igorlet going quickly left-right-left. A goal on the rim of an islet (the canoe, the treasure, the shore games: just
+   outside the oval the islet counts as "main") made the way flip every frame at the start of the strip: "main, go straight" → one step onto the
+   strip → "strip, go back to the big island" → … Now such a goal counts as being on its islet: across the strip first, then straight to it. */
+{const _iv2=isleVia;isleVia=function(tg,from){if(!tg)return tg;const p=from||igor.position;for(const I of ISLES){if(!I.on)continue;const et=isleE1(I,tg.x,tg.z);
+ if(et>=.86&&et<1.03&&isleE1(I,p.x,p.z)>=1.03){const k=.8/et,q=new V3(I.cx+(tg.x-I.cx)*k,0,I.cz+(tg.z-I.cz)*k),w=_iv2(q,from);return w===q?tg:w}}return _iv2(tg,from)}}
 function islApp(I,p){const e=isleE1(I,p.x,p.z);if(e<=.8)return p;const k=.78/e;return new V3(I.cx+(p.x-I.cx)*k,0,I.cz+(p.z-I.cz)*k)}
 // every frame: walk there, then play
 updaters.push((t,dt)=>{let ham=0,canoe=0,chest=0;
@@ -6835,7 +6850,10 @@ function raceAsk(o,k){const g=igById(o.id);if(!g)return;const V=VEH[k];o.showT=T
  chips(igor.position.clone().add(new V3(0,1.7,0)),()=>[{t:`🏁 ${tt('Let’s race!','Gara!')}`,main:1,fn:()=>{raceGo(o,k);return false}},{t:tt('Later','Dopo'),fn:()=>{if(o.act&&o.act.k==='rinv')o.act=null;return false}}],'race',1)}
 function raceGo(o,k){const F=FM();if(!F.veh[k]||vehN(k)<2||where!=='out'){if(o.act)o.act=null;return}hideChips();
  if(RIDE!==k)mount(k);if(RIDE!==k){o.act=null;return}const V=VEH[k];
- const A={k:'ride',v:k,j:1,race:1,dir:Math.random()<.5?1:-1,goal:o.grp.position.clone()};const{C,ez,r}=raceTrack(A);
+ /* 13 Nov 2026: never race on nothing. A free copy if there is one; otherwise the Igorlet on copy 1 gets off and leaves it */
+ let rj=0;for(let j=1;j<vehN(k);j++){const r=riderOf(k,j);if(!r||r===o){rj=j;break}}
+ if(!rj){rj=1;const r=riderOf(k,1);if(r){igUnride(r);const g2=igById(r.id);if(g2){r.showT=T+5;setTimeout(()=>{try{bubbleQ.push([`${g2.name}: “${pick(tt(['Here, it’s yours! Have a good race!','Off I get: go, go!'],['Tieni, è tua! Buona gara!','Scendo io: forza, forza!']))}”`,2.4])}catch(e){}},2600)}}}
+ const A={k:'ride',v:k,j:rj,race:1,dir:Math.random()<.5?1:-1,goal:o.grp.position.clone()};const{C,ez,r}=raceTrack(A);
  A.a=raceAng(A,igor.position)+A.dir*.75;
  if(V.kind==='water'){const a0=raceAng(A,parkOf(k,1)),c=wArc(a0,r);if(!c.full){A.arc={lo:a0+c.lo+.05,hi:a0+c.hi-.05};A.a=Math.max(A.arc.lo,Math.min(A.arc.hi,A.a))}}
  o.act=A;RACE={k,o,id:o.id,A,t0:T,dur:120,n:0,safe:T+2};
@@ -7747,7 +7765,7 @@ function frameBody(){const dt=Math.min(clock.getDelta(),.05);T+=dt;const t=T;
  sky.rotation.y+=dt*.006;if(sky.userData.big)sky.userData.big.opacity=(.62+.18*Math.sin(t*1.3))*(SKY.P?SKY.P.stars:1);
  shoot.next-=dt;if(shoot.next<=0&&shoot.t<0&&!reduce&&SKY.nk>.8&&SKY.W.cloud<.5){shoot.t=0;shoot.next=9+Math.random()*12;shoot.m.position.set(camera.position.x+(Math.random()-.5)*60,42+Math.random()*12,camera.position.z-80);shoot.m.rotation.set(0,0,-.32)}
  if(shoot.t>=0){shoot.t+=dt;shoot.m.position.x+=dt*55;shoot.m.position.y-=dt*18;shoot.m.material.opacity=Math.sin(Math.min(shoot.t/1.1,1)*Math.PI)*.8;if(shoot.t>1.1){shoot.t=-1;shoot.m.material.opacity=0}}
- if(camSnap){camera.position.copy(camTarget());lookS.copy(lookTarget());camSnap=false}else{const f=1-Math.exp(-dt*3);camera.position.lerp(camTarget(),f);lookS.lerp(lookTarget(),f)}camera.lookAt(lookS.x,where==='out'?.9+rideCamY():1.1,lookS.z);
+ if(camSnap){camera.position.copy(camTarget());lookS.copy(lookTarget());camSnap=false}else{const f=1-Math.exp(-dt*3);camera.position.lerp(camTarget(),f);lookS.lerp(lookTarget(),f)}camera.lookAt(lookS.x,where==='out'?.9+rideCamY():1.1,lookS.z);camera.updateMatrixWorld();try{tmPlace()}catch(e){}
  // labels
  let lbN=null,lbD=1e9;const LV=[];for(const L of labels){projC(pv.copy(L.pos));const ld=Math.hypot(L.pos.x-igor.position.x,L.pos.z-igor.position.z),out=(L.room||'out')==='out',lr0=out&&!L.far?Math.min(L.near||LBLR,LBLR):L.near,lr=isPhone()&&L.far&&lr0>9?9:lr0;const vis=started&&!L.hidden&&(L.room||'out')===where&&(!lr||ld<lr*(portrait()?.8:1))&&pv.z<1&&Math.abs(pv.x)<1.05&&Math.abs(pv.y)<1.05;L.el.style.display=vis?'block':'none';if(vis&&ld<lbD){lbD=ld;lbN=L}if(vis){const lx=clamp((pv.x*.5+.5)*innerWidth,L.el.offsetWidth/2+6,innerWidth-L.el.offsetWidth/2-6),ly=Math.max((-pv.y*.5+.5)*innerHeight,(window._hh||60)+(window._evh||0)+L.el.offsetHeight+4);L._x=lx;L._y=ly;L._d=ld;LV.push(L)}else L._sx=null}for(const L of labels){const on=L===lbN;if(L.el.classList.contains('nr')!==on)L.el.classList.toggle('nr',on)}
  if(bubbleT>0){bubbleT-=dt;bubbleS+=dt}else if(bubbleQ.length){const[q,s2]=bubbleQ.shift();bubble.textContent=q;bubbleT=s2;bubbleS=0;snd('say')}placeBubble();layoutLabels(LV,lbN);chatter();
@@ -7761,7 +7779,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261112-2135';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261113-1100';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
