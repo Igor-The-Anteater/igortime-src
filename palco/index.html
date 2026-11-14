@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Il palco · Igor time</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--card:#1b2758;--line:#2c3c7a;--tx:#eef1ff;--mut:#9fb0e6;--gold:#ffd166;--grn:#8fd14f;--R:#ff8a5c;--M:#4fc3ff;--A:#b98cff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:radial-gradient(ellipse at top,#241a6b 0%,#0d1430 55%,#070b1c 100%);color:var(--tx);font-family:Fredoka,system-ui,sans-serif;min-height:100%}
+body{min-height:100vh}
+#app{max-width:600px;margin:0 auto;padding:8px 10px 92px}
+header{display:flex;flex-wrap:wrap;gap:6px;position:sticky;top:0;z-index:20;padding:6px 0;background:linear-gradient(#0d1430f2,#0d1430c8)}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;white-space:nowrap}.pill b{color:var(--gold);font-weight:600}
+h2{font-size:21px;margin:12px 0 6px;font-weight:600}h3{font-size:16px;margin:10px 0 6px;font-weight:600}
+p{margin:6px 0;line-height:1.35}.mut{color:var(--mut);font-size:13px}
+.card{background:linear-gradient(180deg,#1f2c63,#18224f);border:1px solid var(--line);border-radius:18px;padding:12px;margin:10px 0;box-shadow:0 6px 20px #0004}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{font-family:inherit;font-size:15px;border:0;border-radius:12px;padding:10px 14px;background:#3a4b98;color:#fff;cursor:pointer;font-weight:500}
+.btn.big{font-size:18px;padding:14px 18px;width:100%;border-radius:16px}
+.btn.gold{background:linear-gradient(#ffe08a,#ffc23d);color:#3a2a00;box-shadow:0 4px 0 #b8860b}
+.btn.grn{background:linear-gradient(#b6ec7d,#7fc63d);color:#173000;box-shadow:0 4px 0 #4f8a1f}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--tx)}
+.btn:disabled{opacity:.45;cursor:default;box-shadow:none}.btn.sm{font-size:13px;padding:6px 10px;border-radius:10px}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;background:#0a1028f2;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+nav .in{display:flex;gap:2px;max-width:600px;width:100%}
+nav button{flex:1;font-family:inherit;background:none;border:0;color:var(--mut);font-size:11px;padding:4px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;position:relative}
+nav button .i{font-size:20px}nav button.on{color:var(--gold)}nav button .dot{position:absolute;top:2px;right:28%;width:8px;height:8px;border-radius:50%;background:#ff5c7a}
+#host{position:fixed;left:50%;transform:translateX(-50%);top:58px;z-index:70;width:min(560px,94vw);display:flex;gap:8px;align-items:flex-start;pointer-events:none;opacity:0;transition:opacity .25s}
+#host.on{opacity:1;pointer-events:none}#host .who{width:54px;height:54px;flex:none;position:relative}
+#host .txt{background:#fff;color:#1b1b30;border-radius:4px 16px 16px 16px;padding:9px 12px;font-size:15px;line-height:1.3;box-shadow:0 4px 18px #0006;flex:1}
+#host .txt small{display:block;color:#7a6a20;font-weight:600;font-size:11px;margin-bottom:2px}
+.igor{display:block;width:100%;height:100%;object-fit:contain}
+.ig{position:relative;display:inline-block}.ig .cap{position:absolute;top:-6%;left:52%;width:34%;height:22%;border-radius:50% 50% 8% 8%}
+.bow{position:absolute;left:44%;bottom:6%;width:34%;height:15%}
+.bow:before,.bow:after{content:"";position:absolute;top:0;width:50%;height:100%;background:#111;clip-path:polygon(0 0,100% 40%,100% 60%,0 100%)}.bow:after{right:0;transform:scaleX(-1)}
+/* island map */
+.map{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
+.map svg{display:block;width:100%;height:auto}
+/* sequencer */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 24px 6px 0;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}
+@media(max-width:600px){.grid .c{height:30px;border-radius:5px}.grid{gap:2px}.grid .lab{font-size:10px;padding-right:2px}}
+.chip{flex:none;font-family:inherit;border:2px solid transparent;border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;color:#111;cursor:pointer}
+.chip.off{opacity:.35;filter:grayscale(.7);cursor:default;color:#222}.chip.on{border-color:#fff;box-shadow:0 0 0 2px #0006}
+.grid{display:grid;gap:2px;user-select:none;touch-action:manipulation}
+.grid .c{height:24px;border-radius:5px;background:#0f1840;border:1px solid #22306a;cursor:pointer;font-size:10px;font-weight:700;color:#111;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.grid .c.beat{background:#16225a}.grid .c.tie{opacity:.62;border-top-left-radius:0;border-bottom-left-radius:0;border-left-color:transparent;margin-left:-3px}.grid .c.tn{border-top-right-radius:0;border-bottom-right-radius:0;border-right-color:transparent}.grid .c.tp{background:rgba(255,255,255,.35)!important}.grid{touch-action:pan-y}
+.barstrip{display:flex;gap:5px;overflow-x:auto;padding:2px 0 8px}
+.bb{flex:1 0 64px;max-width:120px;font-family:inherit;background:#0f1840;border:2px solid #2c3c7a;border-radius:12px;color:#cfd8ff;padding:4px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:3px;border-top:5px solid var(--bc)}
+.bb b{font-size:15px}.bb small{font-size:10px;color:var(--mut);min-height:12px;white-space:nowrap;overflow:hidden;max-width:100%}
+.bb .mini{display:grid;grid-template-columns:repeat(16,1fr);gap:1px;width:100%}.bb .mini i{height:5px;background:#1d2a5c;border-radius:1px}.bb .mini i.y{background:var(--bc)}
+.bb.on{border-color:var(--bc);background:#1d2a5c;box-shadow:0 0 0 2px #0006}.bb.pl{animation:blink .5s infinite alternate}
+@keyframes blink{from{filter:brightness(1)}to{filter:brightness(1.6)}}
+.bhead{display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 0 6px;padding:6px;border-radius:12px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--bc) 25%,transparent),transparent)}
+.bhead b{font-size:18px;color:var(--bc)}
+.notes{display:grid;gap:2px;margin-bottom:6px}.notes input{width:100%;min-width:0;font-family:inherit;font-size:13px;font-weight:600;background:#0c1330;color:#ffe9a8;border:1px dashed #3a4b98;border-radius:6px;padding:4px 5px}
+.notes input::placeholder{color:#4a5a99}.grid .c.hold{opacity:.35}
+.grid .c.ph{box-shadow:inset 0 0 0 2px var(--gold)}
+.grid .lab{font-size:11px;color:var(--mut);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;white-space:nowrap}
+.bars3{display:flex;flex-direction:column;gap:6px}
+.b3{display:flex;align-items:center;gap:8px;font-size:14px}.b3 .t{width:92px;white-space:nowrap}.b3 .tr{flex:1;height:12px;background:#0c1330;border-radius:7px;overflow:hidden}.b3 .tr i{display:block;height:100%;border-radius:7px;transition:width .5s}.b3 .v{width:38px;text-align:right;font-weight:600}
+.locked{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line);font-size:14px}.locked.ok{color:var(--grn)}
+/* listen stage */
+.lstage{position:relative;height:300px;border-radius:20px;overflow:hidden;background:linear-gradient(#120f3a,#2a1660 62%,#3d1e63);border:1px solid var(--line)}
+.lstage .beam{position:absolute;top:-20px;width:160px;height:240px;transform-origin:top center;opacity:.35;transition:opacity .2s}
+.lstage .floor{position:absolute;left:0;right:0;top:150px;height:40px;background:linear-gradient(#7a4a30,#4a2a1d);border-top:3px solid #c27c47}
+.lstage .stagemus{position:absolute;top:96px;width:56px;text-align:center;font-size:10px}
+.lstage .crowd{position:absolute;left:0;right:0;bottom:0;height:110px;background:linear-gradient(transparent,#0007)}
+.aud{position:absolute;bottom:14px;width:78px;text-align:center;font-size:11px}
+.aud .ig{width:62px;height:62px;transition:transform .12s}
+.aud.R.hit .ig{transform:translateY(-12px) rotate(-6deg)}
+.aud.M.hit .ig{transform:rotate(10deg) translateX(4px)}
+.aud.A.hit .ig{filter:drop-shadow(0 0 12px #d7b8ff) brightness(1.2);transform:scale(1.08)}
+.aud .bub{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);font-size:18px;opacity:0;transition:opacity .2s}
+.aud.hit .bub{opacity:1}
+.prog{height:8px;background:#0c1330;border-radius:6px;overflow:hidden;margin:8px 0}.prog i{display:block;height:100%;background:var(--gold);transition:width .2s linear}
+.vote{display:flex;justify-content:center;gap:6px;margin:8px 0}.vote button{font-size:30px;background:none;border:0;cursor:pointer;filter:grayscale(1);opacity:.35;transition:transform .1s}.vote button.on{filter:none;opacity:1;transform:scale(1.12)}
+.judge{display:flex;gap:8px;align-items:flex-start;margin:8px 0}.judge .face{width:46px;height:46px;flex:none}
+.judge .sp{background:#fff;color:#1b1b30;border-radius:14px;padding:8px 10px;font-size:14px;flex:1}.judge .sp b{display:block;font-size:11px}
+.listen-row{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.ghost{display:inline-block;border:1.5px dashed var(--mut);border-radius:6px;font-size:10px;padding:0 5px;color:var(--mut);margin-left:4px;vertical-align:middle}
+.toast{position:fixed;top:150px;left:50%;transform:translateX(-50%);background:var(--gold);color:#3a2a00;border-radius:12px;padding:8px 14px;z-index:80;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center;max-width:90vw}
+.toast.on{opacity:1}
+.test{border-style:dashed}
+.topbar{display:flex;align-items:center;gap:10px;padding:6px 0 2px}.topbar b{font-size:17px}.igback{color:#ffe08a;text-decoration:none;font-weight:600;border:1px solid #3a4b98;border-radius:999px;padding:4px 10px;font-size:14px}
+.rank{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}.rank .n{width:26px;text-align:center;font-weight:700;color:var(--gold)}.rank.me{background:#ffd16614;border-radius:10px}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+</style>
+</head>
+<body>
+<div id="app"><div class="topbar"><a class="igback" href="/" id="igback">← Isola</a><b>Il palco di Igor</b><span id="who" class="mut"></span></div><header id="hdr"></header><main id="view"></main></div>
+<nav><div class="in" id="nav"></div></nav>
+<div id="host"><div class="who"><div class="ig" style="width:100%;height:100%"><img class="igor" src="/igor.webp" alt=""><div class="bow"></div></div></div><div class="txt"><small>IGORBAUDO</small><span id="hostTxt"></span></div></div>
+<div class="toast" id="toast"></div>
+<script>
+'use strict';
+const IGOR='/igor.webp';const $=s=>document.querySelector(s);
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const pick=(r,a)=>a[Math.floor(r()*a.length)],clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+/* ================= AUDIO ================= */
+const AC=window.AudioContext||window.webkitAudioContext;let ac=null,master=null,noiseBuf=null;
+function audio(){if(!ac){try{ac=new AC();master=ac.createGain();master.gain.value=.8;const c=ac.createDynamicsCompressor();master.connect(c);c.connect(ac.destination);noiseBuf=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}catch(e){ac=null}}if(ac&&ac.state==='suspended')ac.resume();return ac}
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+function osc(type,f,t,dur,vol,att=.01,dest=master){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+att);g.gain.exponentialRampToValueAtTime(.0005,t+dur);o.connect(g);g.connect(dest);o.start(t);o.stop(t+dur+.05);return o}
+function sus(type,f,t,dur,vol,att=.05,rel=.15,dest=master){const o=ac.createOscillator(),g=ac.createGain(),end=t+Math.max(att+.02,dur);o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+att);g.gain.setValueAtTime(vol,end);g.gain.exponentialRampToValueAtTime(.0005,end+rel);o.connect(g);g.connect(dest);o.start(t);o.stop(end+rel+.05);return o}
+function noise(t,dur,vol,type,freq,q=1){const s=ac.createBufferSource();s.buffer=noiseBuf;const f=ac.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;const g=ac.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0005,t+dur);s.connect(f);f.connect(g);g.connect(master);s.start(t);s.stop(t+dur+.02)}
+const DRUM=[t=>{const o=osc('sine',150,t,.28,.9,.002);o.frequency.exponentialRampToValueAtTime(42,t+.18)},t=>{noise(t,.18,.45,'bandpass',1800,.8);osc('triangle',190,t,.1,.3,.002)},t=>noise(t,.05,.22,'highpass',7500),t=>noise(t,.9,.25,'highpass',5000)];
+const SCALE=[0,2,4,5,7,9,11];const deg=(n,base)=>base+SCALE[((n%7)+7)%7]+12*Math.floor(n/7);
+const NN=['Do','Do#','Re','Mib','Mi','Fa','Fa#','Sol','Lab','La','Sib','Si'];const WHITE=[0,2,4,5,7,9,11];
+const QUAL={'':[0,4,7],m:[0,3,7],'7':[0,4,7,10],maj7:[0,4,7,11],m7:[0,3,7,10],'°':[0,3,6],'ø':[0,3,6,10],'+':[0,4,8],sus4:[0,5,7],sus2:[0,2,7],'6':[0,4,7,9],m6:[0,3,7,9],'9':[0,4,7,10,14],add9:[0,4,7,14]};
+const QORDER=['','m','7','maj7','m7','°','ø','+','sus4','sus2','6','m6','9','add9'];
+const DIA=[{r:0,q:''},{r:2,q:'m'},{r:4,q:'m'},{r:5,q:''},{r:7,q:''},{r:9,q:'m'},{r:11,q:'°'}];
+const chName=c=>NN[c.r]+c.q;
+function guess(pcs){let best=null,bs=0;for(let r=0;r<12;r++)for(const q of QORDER){const t=QUAL[q].map(x=>(r+x)%12);const hit=t.filter(p=>pcs.includes(p)).length,extra=pcs.filter(p=>!t.includes(p)).length;const sc=hit-extra*1.2+(pcs.includes(r)?.3:0);if(hit>=Math.min(3,t.length)&&sc>bs){bs=sc;best={r,q}}}return best}const chPcs=c=>QUAL[c.q].map(x=>(c.r+x)%12);
+const noteName=m=>NN[m%12]+(Math.floor(m/12)-1);
+function lp(f){const x=ac.createBiquadFilter();x.type='lowpass';x.frequency.value=f;x.connect(master);return x}
+const VOICE={
+ bs:(m,t,d)=>{const f=lp(750),dd=Math.max(.2,d-.02);sus('sawtooth',mtof(m),t,dd,.24,.01,.12,f);sus('sine',mtof(m),t,dd,.28,.01,.12)},
+ pn:(ns,t,d)=>{const v=.11/Math.sqrt(Math.max(1,ns.length/2));ns.forEach(m=>{osc('triangle',mtof(m),t,Math.max(1,d+.2),v,.008);osc('sine',mtof(m+12),t,.45,v*.25,.008)})},
+ vl:(m,t,d)=>{const f=lp(2800),dd=Math.max(.16,d-.02),fq=mtof(m);const o1=sus('sawtooth',fq,t,dd,.075,.08,.18,f),o2=sus('sawtooth',fq*1.003,t,dd,.05,.1,.18,f);const l=ac.createOscillator(),lg=ac.createGain();l.frequency.value=5.3;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(fq*.006,t+Math.min(.35,dd));l.connect(lg);lg.connect(o1.frequency);lg.connect(o2.frequency);l.start(t);l.stop(t+dd+.3)},
+ gt:(c,t,d)=>{const base=52+((c.r-4+12)%12),dd=Math.min(2.2,d+.2);QUAL[c.q].concat([12]).forEach((x,i)=>osc('triangle',mtof(base+x),t+i*.025,dd,.1,.003))},
+ mr:(m,t,d)=>{osc('sine',mtof(m),t,Math.max(.35,d),.3,.002);osc('sine',mtof(m)*4,t,.08,.06,.002)},
+ bt:(m,t,d)=>{const dd=Math.max(.35,d-.02);sus('sine',mtof(m),t,dd,.2,.06,.2);sus('sine',mtof(m)*2,t,dd,.03,.08,.15);noise(t,Math.min(.25,dd),.04,'bandpass',mtof(m)*2,4)},
+ gh:(ns,t,d)=>{const v=.12/Math.sqrt(Math.max(1,ns.length/2));ns.forEach(m=>{const dd=Math.max(.6,d);sus('sine',mtof(m),t,dd,v,.18,.5);sus('sine',mtof(m)*1.004,t,dd,v*.5,.25,.5);sus('sine',mtof(m)*2,t,dd,v*.15,.2,.3)})},
+ pp:(ns,t,d)=>{ns.forEach(m=>{const kind=(m*7)%4,f=mtof(m);if(kind===0){osc('sine',f,t,.25,.22,.002);noise(t,.05,.12,'lowpass',900)}else if(kind===1){[1,2.76,5.4,8.93].forEach((r,i)=>osc('sine',f*r,t,1.1/(i+1),.12/(i+1),.002))}else if(kind===2){osc('triangle',f,t,.6,.14,.002);for(let i=0;i<5;i++)noise(t+.02+i*.035,.03,.06,'bandpass',3000+i*400,6)}else{osc('square',f/2,t,.12,.08,.002);noise(t,.15,.14,'bandpass',f*3,2)}})}};
+const isOn=(k,v)=>TRK[k].poly?!!v:TRK[k].multi?!!(Array.isArray(v)&&v.length):TRK[k].chord?!!v:v>=0;
+const HOLD=k=>TRK[k].multi?'H':-2;const isHold=(k,v)=>v===HOLD(k);
+/* ================= DATA ================= */
+const TRK={dr:{n:'Batteria',k:'R',rows:['Cassa','Rullante','Charleston','Piatto'],poly:1,col:'#ff8a5c'},bs:{n:'Basso',k:'R',lo:24,hi:55,def:36,col:'#ffb35c'},pn:{n:'Piano',k:'A',multi:1,lo:36,hi:96,def:60,col:'#b98cff'},
+ vl:{n:'Violino',k:'M',lo:55,hi:96,def:72,col:'#4fc3ff'},gt:{n:'Chitarra',k:'A',chord:1,col:'#e0a0ff'},mr:{n:'Marimba',k:'M',lo:48,hi:96,def:72,col:'#5cd6c0'},bt:{n:'Bottiglie',k:'M',lo:60,hi:96,def:72,col:'#8fd8ff'},gh:{n:'Glassarmonica',k:'M',multi:1,lo:55,hi:96,def:72,col:'#a8f0ff'},pp:{n:'Piano preparato',k:'R',multi:1,lo:36,hi:84,def:48,col:'#d9c49a'}};
+const ORDER=['dr','mr','bs','pn','vl','gt','bt','gh','pp'];
+const UNL=[null,{t:['dr','mr'],bars:1,txt:'Batteria e Marimba · 1 battuta · tasti bianchi (Do maggiore / La minore)'},{t:'bs',bars:2,txt:'il Basso · 2 battute'},{t:'pn',bars:3,txt:'il Piano · 3 battute'},{t:'vl',bars:4,txt:'il Violino · 4 battute'},{t:'gt',bars:5,pcs:[6,1],txt:'la Chitarra · 5 battute · Fa# e Do# (Sol e Re maggiore)'},{t:'bt',bars:6,pcs:[8,3],txt:'le Bottiglie · 6 battute · Sol# e Re# (La e Mi maggiore)'},{pcs:[10],bars:8,txt:'il totale cromatico · 8 battute'},{allch:1,txt:'tutti gli accordi della chitarra (settime, diminuiti, sospesi…)'},{t:'gh',txt:'la Glassarmonica'},{bars:12,txt:'12 battute'},{bars:16,txt:'16 battute'},{t:'pp',txt:'il Piano preparato di John Cage'}];
+const LVXP=[0,0,8,20,36,56,80,110,145,185,230,280,340];const LVMAX=12;
+function ec(){const c=caps(S.lv);c.max=c.bars;c.bars=clamp(S.useBars||1,1,c.max);return c}
+function caps(lv){const c={tracks:[],steps:16,bars:1,pcs:new Set(WHITE)};for(let i=1;i<=lv&&i<UNL.length;i++){const u=UNL[i];if(u.t)[].concat(u.t).forEach(t=>c.tracks.push(t));if(u.bars)c.bars=u.bars;if(u.pcs)u.pcs.forEach(p=>c.pcs.add(p));if(u.allch)c.allch=1}c.chrom=c.pcs.size===12;return c}
+const KN={R:'Ritmo',M:'Melodia',A:'Armonia'},KC={R:'#ff8a5c',M:'#4fc3ff',A:'#b98cff'},KI={R:'🥁',M:'🎻',A:'🎹'};
+const CAPC=['#ff6b6b','#4ecdc4','#ffd166','#c69cff','#ff9f43','#7bed9f','#70a1ff','#f78fb3'];
+const BANDS=['Banda del Molo','Tofu Express','Quartetto Lingualunga','Le Code Verdi','I Grilli di Mezzanotte','Orchestra Mirtillo','Gli Zampettoni','I Muso Lungo','Tofu & Tamburi','Le Lingue Lunghe'];
+const IGN=['Pip','Lulù','Bobo','Tic','Mirtillo','Zuzu','Fagiolo','Nina','Bric','Lollo','Teo','Brina'];
+/* ================= STATE ================= */
+const KEY='igortime_palco';
+const SITE=/igortime\.com$|igortime\.pages\.dev$/.test(location.hostname);
+const TESTMODE=!SITE||/[?&]test\b/.test(location.search);
+const ISLAND_LVX=[0,20,60,150,300,500,800,1200,1700,2300,3000,3800,4700,5700,6800,8000];
+function islandLv(){try{const h=JSON.parse(localStorage.getItem('igortime_v1'))||{};const t=(h.farm&&h.farm.total)||0;return Math.max(1,ISLAND_LVX.filter(x=>t>=x).length)}catch(e){return 1}}
+function ACCT(){try{const a=JSON.parse(localStorage.getItem('igortime_acct'));return a&&a.uid?a:null}catch(e){return null}}
+function addSeeds(n){if(!SITE){S.seeds+=n;return}try{const p=JSON.parse(localStorage.getItem('igortime_pending'))||{};p.seeds=(p.seeds|0)+n;localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}}
+window.weekKeyPub=()=>weekKey();function weekKey(t=Date.now()){const d=new Date(t);d.setHours(0,0,0,0);d.setDate(d.getDate()+3-((d.getDay()+6)%7));const w1=new Date(d.getFullYear(),0,4);return d.getFullYear()+'-'+String(1+Math.round(((d-w1)/864e5-3+((w1.getDay()+6)%7))/7)).padStart(2,'0')}
+const EMPTY=k=>TRK[k].poly?0:(TRK[k].chord||TRK[k].multi)?null:-1;
+function emptySong(){const s={};for(const k of ORDER)s[k]=Array.from({length:16},()=>Array(16).fill(EMPTY(k)));s.dr[0][0]=1;s.dr[0][8]=1;s._v=3;return s}
+function migrate(song){if(!song||song._v===3)return song;for(const k of ORDER)if(!song[k])song[k]=Array.from({length:16},()=>Array(16).fill(EMPTY(k)));const base={bs:36,vl:72,mr:72,bt:72};if(!song._v)for(const k of ORDER){if(!song[k])continue;song[k]=song[k].map(bar=>bar.map(v=>{if(TRK[k].poly)return v;if(k==='pn'||k==='gt')return typeof v==='number'&&v>=0?DIA[v]:null;return v>=0?deg(v,base[k]):-1}))}
+ if(song.pn)song.pn=song.pn.map(bar=>bar.map(v=>v&&!Array.isArray(v)&&v.q!=null?QUAL[v.q].map(x=>60+v.r+x):v&&Array.isArray(v)&&v.length?v:null));song._v=3;return song}
+function fresh(){return{lv:1,xp:0,seeds:5,song:emptySong(),pub:null,ver:0,listens:[],pending:[],clock:0,speed:1,nextL:60,dayShift:0,given:0,day:0,visited:[],band:[{n:'Pip',k:'R',xp:0,cap:0},{n:'Lulù',k:'M',xp:0,cap:1},{n:'Bobo',k:'A',xp:0,cap:2}],useBars:1,oct:{},met:false,tab:'palco',trk:'dr',bar:0,flowers:0}}
+let S;try{S=Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)||localStorage.getItem('igor_palco_v1')||'{}'))}catch(e){S=fresh()}
+function syncLv(){S.lv=Math.min(LVMAX,TESTMODE&&S.testLv?S.testLv:islandLv())}syncLv();
+migrate(S.song);if(S.pub){migrate(S.pub.song);for(const k of ORDER)if(!S.pub.song[k])S.pub.song[k]=Array.from({length:16},()=>Array(16).fill(EMPTY(k)))}for(const k of ORDER){S.song[k]=S.song[k]||[];while(S.song[k].length<16)S.song[k].push(Array(16).fill(EMPTY(k)))}S.song._v=3;S.oct=S.oct||{};
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let draftT=null;function save(){S.at=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}clearTimeout(draftT);draftT=setTimeout(()=>{if(window.PalcoCloud)PalcoCloud.saveDraft({song:S.song,useBars:S.useBars,notes:S.notes||{},at:S.at})},4000)}
+/* ================= HELPERS ================= */
+function face(cap,size=46,bow){return `<div class="ig" style="width:${size}px;height:${size}px"><img class="igor" src="${IGOR}" alt="">${cap!=null?`<div class="cap" style="background:${CAPC[cap%CAPC.length]}"></div>`:''}${bow?'<div class="bow"></div>':''}</div>`}
+let hostT=null;function say(t,ms=4500){$('#hostTxt').textContent=t;$('#host').classList.add('on');clearTimeout(hostT);hostT=setTimeout(()=>$('#host').classList.remove('on'),ms)}
+$('#host').onclick=()=>$('#host').classList.remove('on');
+let toastT=null;function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('on'),2600)}
+const f1=x=>x.toFixed(1).replace('.',',');
+const claps=v=>'👏'.repeat(Math.round(v))||'👏';
+/* ================= ANALYSIS (what the Igorlets hear) ================= */
+const chordPcs=c=>chPcs(c);
+/* ===== Musical analysis: what the Igorlets hear (rhythm, melody, harmony, 1..5) ===== */
+const KK_MAJ=[6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88],KK_MIN=[6.33,2.68,3.52,5.38,2.6,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+const SC_MAJ=[0,2,4,5,7,9,11],SC_MIN=[0,2,3,5,7,8,10,11];
+const bell=(x,lo,hi,soft)=>x<lo?Math.max(0,1-(lo-x)/soft):x>hi?Math.max(0,1-(x-hi)/soft):1;
+function corr(a,b){const ma=a.reduce((s,x)=>s+x,0)/12,mb=b.reduce((s,x)=>s+x,0)/12;let n=0,da=0,db=0;for(let i=0;i<12;i++){n+=(a[i]-ma)*(b[i]-mb);da+=(a[i]-ma)**2;db+=(b[i]-mb)**2}return da&&db?n/Math.sqrt(da*db):0}
+const TEMPL=[['',[0,4,7]],['m',[0,3,7]],['7',[0,4,7,10]],['maj7',[0,4,7,11]],['m7',[0,3,7,10]],['°',[0,3,6]],['ø',[0,3,6,10]],['+',[0,4,8]],['sus4',[0,5,7]],['sus2',[0,2,7]],['6',[0,4,7,9]],['m6',[0,3,7,9]],['9',[0,4,7,10,2]],['add9',[0,4,7,2]]];
+function recog(pcs,bass){/* returns {r,q} if pcs is a recognisable chord */let best=null,bs=-9;for(let r=0;r<12;r++)for(const[q,iv]of TEMPL){const t=iv.map(x=>(r+x)%12);if(!t.every(p=>pcs.includes(p)))continue;if(pcs.some(p=>!t.includes(p)))continue;const sc=-t.length*.1+(bass!=null&&bass%12===r?.5:0)+(q===''||q==='m'?.3:0);if(sc>bs){bs=sc;best={r,q}}}
+ if(!best&&pcs.length>=3){/* allow one missing fifth */for(let r=0;r<12;r++)for(const[q,iv]of TEMPL){const t=iv.map(x=>(r+x)%12);if(pcs.some(p=>!t.includes(p)))continue;if(!pcs.includes(r))continue;if(t.length-pcs.filter(p=>t.includes(p)).length<=1&&pcs.length>=t.length-1){best={r,q};break}}}return best}
+function analyze(song,c){const has=k=>c.tracks.includes(k);const N=c.bars*16;const at=(k,i)=>song[k][Math.floor(i/16)][i%16];
+ /* ---------- collect pitched material ---------- */
+ const hist=Array(12).fill(0);const add=(m,w)=>{hist[((m%12)+12)%12]+=w};
+ const melo=[],bassAt=Array(N).fill(null),chordAt=Array(N).fill(null);
+ for(let i=0;i<N;i++){const acc=i%4===0?1.5:1;let top=null;
+  for(const k of['mr','vl','bt']){if(!has(k))continue;const v=at(k,i);if(v>=0){add(v,acc);if(top==null||v>top)top=v}}
+  for(const k of['gh','pn']){if(!has(k))continue;const v=at(k,i);if(Array.isArray(v)&&v.length){v.forEach(m=>add(m,acc*.8));if(v.length<=2){const t=Math.max(...v);if(top==null||t>top)top=t}}}
+  if(has('bs')){const v=at('bs',i);if(v>=0){add(v,acc*1.6);bassAt[i]=v}}
+  if(has('gt')){const v=at('gt',i);if(v){chordPcs(v).forEach(p=>hist[p]+=.8*acc)}}
+  if(top!=null)melo.push({i,m:top})}
+ /* chords: multi-note onsets of pn/gh, or guitar */
+ for(let i=0;i<N;i++){let pcs=null;for(const k of['pn','gh']){if(!has(k))continue;const v=at(k,i);if(Array.isArray(v)&&v.length>=3){pcs=[...new Set(v.map(m=>m%12))];break}}if(!pcs&&has('gt')){const v=at('gt',i);if(v)pcs=chordPcs(v)}if(pcs&&pcs.length>=3)chordAt[i]=pcs}
+ /* ---------- key ---------- */
+ let key={t:0,minor:false},kc=-2;for(let t=0;t<12;t++){const rot=hist.slice(t).concat(hist.slice(0,t));const a=corr(rot,KK_MAJ),b=corr(rot,KK_MIN);if(a>kc){kc=a;key={t,minor:false}}if(b>kc){kc=b;key={t,minor:true}}}
+ const scale=(key.minor?SC_MIN:SC_MAJ).map(x=>(x+key.t)%12);const inKey=m=>scale.includes(((m%12)+12)%12);const deg=pc=>((pc-key.t)%12+12)%12;
+ /* ---------- RITMO ---------- */
+ let R=1;{const dr=has('dr')?Array.from({length:N},(_,i)=>at('dr',i)):Array(N).fill(0);
+  const perc=dr.map((m,i)=>m|| (has('pp')&&at('pp',i)&&at('pp',i).length?16:0));const hits=perc.filter(Boolean).length;
+  if(hits){const dens=hits/N;const kick=i=>dr[i]&1,snare=i=>dr[i]&2,hat=i=>dr[i]&4;
+   let anchor=0,anc=0;for(let b=0;b<c.bars;b++){anc++;if(kick(b*16)||perc[b*16])anchor++}anchor/=anc;
+   let back=0,bc=0;for(let b=0;b<c.bars;b++)for(const s of[4,12]){bc++;if(snare(b*16+s))back++}back/=bc;
+   const onBeat=perc.filter((m,i)=>m&&i%4===0).length/hits,off=1-onBeat;
+   /* repetition with variation: compare halves of each bar and bars with each other */
+   const sim=(a,b)=>{let same=0,tot=0;for(let k=0;k<a.length;k++){if(a[k]||b[k]){tot++;if(a[k]===b[k])same++}}return tot?same/tot:1};
+   let rep=0,rc=0;for(let b=0;b<c.bars;b++){const x=perc.slice(b*16,b*16+8),y=perc.slice(b*16+8,b*16+16);rep+=sim(x,y);rc++}
+   for(let b=1;b<c.bars;b++){rep+=sim(perc.slice(0,16),perc.slice(b*16,b*16+16));rc++}rep/=rc;
+   const voices=[1,2,4,8].filter(f=>dr.some(m=>m&f)).length+(has('pp')&&perc.some(m=>m===16)?1:0);
+   let lock=.5;if(has('bs')){const bon=bassAt.map((v,i)=>v!=null?i:-1).filter(i=>i>=0);if(bon.length)lock=bon.filter(i=>kick(i)||i%4===0).length/bon.length}
+   const sc=.2*anchor+.16*back+.16*bell(rep,.55,.95,.35)+.14*bell(dens,.2,.7,.2)+.12*bell(off,.15,.55,.25)+.12*Math.min(1,(voices-1)/2)+.1*lock;
+   R=1+4*Math.max(0,Math.min(1,(sc-.1)/.8))}
+  else if(has('bs')){const n=bassAt.filter(v=>v!=null).length;R=1+Math.min(1,n/(N*.25))}}
+ /* ---------- MELODIA ---------- */
+ let M=1;if(melo.length>=3){const ms=melo.map(x=>x.m),n=ms.length;
+  const ink=ms.filter(inKey).length/n;
+  let st=0,lp=0,rec=0,big=0,pp=0;for(let j=1;j<n;j++){const iv=ms[j]-ms[j-1];if(Math.abs(iv)<=2&&iv!==0)st++;else if(Math.abs(iv)>2)lp++;
+   if(Math.abs(iv)>=5){big++;if(j+1<n){const nx=ms[j+1]-ms[j];if(Math.sign(nx)===-Math.sign(iv)&&Math.abs(nx)<=Math.abs(iv))rec++}}
+   if(j>=2&&Math.abs(iv)>=7&&Math.abs(ms[j-1]-ms[j-2])>=7&&Math.sign(iv)!==Math.sign(ms[j-1]-ms[j-2]))pp++}
+  const moves=st+lp||1,stepR=st/moves,recR=big?rec/big:1,ppR=pp/Math.max(1,n-2);
+  /* phrasing: rests between notes */
+  let gaps=0;for(let j=1;j<n;j++)if(melo[j].i-melo[j-1].i>=3)gaps++;const fill=n/N;const phr=Math.min(1,gaps/Math.max(1,c.bars*.75))*bell(fill,.2,.65,.3);
+  const last=deg(ms[n-1]%12),end=last===0?1:last===7?.7:(last===4||last===3)?.6:.2;
+  const hi=Math.max(...ms),climax=ms.filter(m=>m===hi).length<=Math.max(1,n/6)?1:.5;
+  const range=hi-Math.min(...ms),rng=bell(range,5,14,6);
+  /* motif: a repeated shape of 3 intervals */
+  const ivs=[];for(let j=1;j<n;j++)ivs.push(ms[j]-ms[j-1]);const grams=new Map();for(let j=0;j+2<ivs.length;j++){const g=ivs.slice(j,j+3).join(',');grams.set(g,(grams.get(g)||0)+1)}const motif=[...grams.values()].some(v=>v>=2)?1:.35;
+  const dist=new Set(ms).size,variety=bell(dist,3,10,3);
+  const sc=.18*ink+.16*bell(stepR,.5,.9,.35)+.1*recR+.14*phr+.12*end+.08*climax+.08*rng+.08*motif+.06*variety-.25*ppR;
+  M=1+4*Math.max(0,Math.min(1,(sc-.15)/.75))}
+ else if(melo.length)M=1.5;
+ /* ---------- ARMONIA ---------- */
+ let A=1;{const evs=[];for(let i=0;i<N;i++)if(chordAt[i]){const b=bassAt[i]!=null?bassAt[i]:null;const g=recog(chordAt[i],b);evs.push({i,pcs:chordAt[i],g,b})}
+  const layers=Array.from({length:N},(_,i)=>c.tracks.filter(k=>isOn(k,at(k,i))).length).reduce((a,b)=>a+b,0)/N;
+  if(evs.length){const segs=[];for(const e of evs){const prev=segs[segs.length-1];const name=e.g?e.g.r+e.g.q:'x'+e.pcs.sort().join('');if(prev&&prev.name===name)continue;segs.push({...e,name})}
+   /* intentional clusters: an unrecognised sonority repeated 3+ times counts as a colour, not as noise */
+   const cnt={};evs.forEach(e=>{if(!e.g){const k=e.pcs.slice().sort((a,b)=>a-b).join();cnt[k]=(cnt[k]||0)+1}});
+   const recR=evs.filter(e=>e.g||cnt[e.pcs.slice().sort((a,b)=>a-b).join()]>=3).length/evs.length;
+   const fn=g=>{if(!g)return null;const d=deg(g.r);const dia=key.minor?{0:'T',2:'S',3:'T',5:'S',7:'D',8:'S',10:'D',11:'D'}:{0:'T',2:'S',4:'T',5:'S',7:'D',9:'T',11:'D'};return dia[d]||(g.q===''||g.q==='7'?'X':null)};
+   const fns=segs.map(s=>fn(s.g));const diat=fns.filter(f=>f&&f!=='X').length/segs.length;
+   const TR={TS:1,SD:1,DT:1,TD:.8,ST:.7,TT:.5,SS:.6,DD:.5,DS:.25,XT:.8,XS:.8,XD:.9,TX:.7,SX:.7,DX:.6,XX:.5};
+   let prog=.4;if(segs.length>=2){let s=0,k=0;for(let j=1;j<segs.length;j++){const a=fns[j-1],b=fns[j];if(a&&b){s+=TR[a+b]??.4;k++}else{s+=.1;k++}}prog=s/k}
+   const lastS=segs[segs.length-1],firstS=segs[0];let cad=0;if(lastS.g&&deg(lastS.g.r)===0)cad=1;else if(lastS.g&&deg(lastS.g.r)===7)cad=.6;
+   for(let j=1;j<segs.length;j++)if(segs[j-1].g&&segs[j].g&&deg(segs[j-1].g.r)===7&&deg(segs[j].g.r)===0)cad=Math.max(cad,.9);
+   if(firstS.g&&deg(firstS.g.r)===0)cad=Math.min(1,cad+.1);
+   const perBar=segs.length/c.bars,hr=c.bars===1&&segs.length===1?.3:bell(perBar,1,4,2.5);
+   let bsup=.5;{let ok=0,tot=0;for(const s of segs){let b=s.b;if(b==null){for(let i=s.i;i<Math.min(N,s.i+4);i++)if(bassAt[i]!=null){b=bassAt[i];break}}if(b==null)continue;tot++;if(s.g&&b%12===s.g.r)ok+=1;else if(s.pcs.includes(b%12))ok+=.6}if(tot)bsup=ok/tot}
+   const rich=segs.filter(s=>s.g&&s.pcs.length>=4).length/segs.length;
+   const sc=.18*recR+.14*diat+.18*prog+.12*cad+.1*hr+.2*bsup+.04*Math.min(1,rich*2)+.04*bell(layers,1.2,3.5,1);
+   A=1+4*Math.max(0,Math.min(1,(sc-.15)/.75));if(segs.length===1)A=Math.min(A,2.2)}
+  else A=1+Math.min(1,Math.max(0,layers-.5)*.8)}
+ const cl=x=>Math.max(1,Math.min(5,x));return{R:cl(R),M:cl(M),A:cl(A),key}}
+
+const PHR={R:[['Mi piacerebbe un po\' più di batteria… ma che pace!','Con qualche colpo in più ballerei!'],['Bel passo! Con qualche controtempo ballerei di più.','Il piede batteva da solo!'],['Che groove! Non riuscivo a stare fermo!','Ritmo da far tremare il palco!']],
+ M:[['Aspetto una melodia da canticchiare!','Una melodia qui e volerei.'],['Bella linea! Un salto in più e volo.','Me la sto già fischiettando!'],['Questa melodia me la porto a casa!','Che linea! Mi sono commosso!']],
+ A:[['Qualche accordo e diventa un abbraccio.','Mi manca un po\' di armonia, ma ci siamo!'],['Accordi belli! Prova a cambiarli più spesso.','Che bel colore!'],['Che armonie… ho chiuso gli occhi!','Accordi da pelle d\'oca!']]};
+const phrase=(k,v,r=Math.random)=>pick(r,PHR[k][v<2.6?0:v<3.8?1:2]);
+/* ================= PLAYER ================= */
+const BPM=96,SD=60/BPM/4;let PL=null;
+function playSong(song,c,o={}){stopSong();const a=audio();if(!a)return;const loops=o.loops||0;const tot=c.bars*16;let step=0,loop=0,next=a.currentTime+.08;const held={};
+ PL={song,c,o,timer:setInterval(()=>{while(next<a.currentTime+.12){const b=Math.floor(step/16),s=step%16;const show=c.steps===16||s%2===0;
+  if(show)for(const k of c.tracks){const T=TRK[k],v=song[k][b][s];if(T.poly){if(v){for(let i=0;i<4;i++)if(v>>i&1)DRUM[i](next);ev('R',next,o)}}else if(isOn(k,v)){let d=SD;let j=step+1;if(T.chord){while(j<tot){const bb=Math.floor(j/16),ss=j%16;if(isOn(k,song[k][bb][ss]))break;d+=SD;j++;if(d>2.4)break}}else{while(j<tot&&isHold(k,song[k][Math.floor(j/16)][j%16])){d+=SD;j++}}VOICE[k](v,next,d);ev(T.k==='R'?'R':T.k,next,o,k,v)}}
+  if(o.onStep){const st=step,t=next;setTimeout(()=>{if(PL&&PL.o===o)o.onStep(st,tot,loop)},Math.max(0,(t-a.currentTime)*1000))}
+  next+=SD;step++;if(step>=tot){step=0;loop++;if(loops&&loop>=loops){const t=next;clearInterval(PL.timer);setTimeout(()=>{if(PL&&PL.o===o){PL=null;o.onEnd&&o.onEnd()}},(t-a.currentTime)*1000+300);break}}}},25)}}
+function ev(k,t,o){if(o.onEv){const a=ac;setTimeout(()=>o.onEv(k),Math.max(0,(t-a.currentTime)*1000))}}
+function stopSong(){if(PL){clearInterval(PL.timer);PL=null}}
+/* ================= CLOCK & LISTENERS ================= */
+let lastTs=performance.now();
+const dayNow=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*60000)/864e5)+(S.dayShift||0);
+const fakeRate=()=>Math.max(0,1-(S.realStages||0)/30);
+function offline(min){/* Igorbaudo's resident bands fill in while real players are few: about one every 2 hours, at most 8, fewer as real stages grow */const n=Math.min(8,Math.floor(min/120*fakeRate()+Math.random()*.8*fakeRate()));for(let i=0;i<n;i++)botListen(true)}
+(function(){const dn=dayNow();if(S.day!==dn){S.day=dn;S.visited=[]}if(S.lastReal&&S.pub){const away=(Date.now()-S.lastReal)/60000;if(away>5)offline(away)}S.lastReal=Date.now()})();
+setInterval(()=>{const n=performance.now(),dt=(n-lastTs)/1000;lastTs=n;advance(dt/60*S.speed)},1000);
+function advance(min){if(min<=0)return;S.clock+=min;S.lastReal=Date.now();if(S.pub){S.nextL-=min;while(S.nextL<=0){S.nextL+=60+Math.random()*60;if(Math.random()<fakeRate())botListen()}}const d=dayNow();if(d!==S.day){S.day=d;S.visited=[]}saveLocal();hdr()}
+function botListen(quiet){const r=Math.random,sc=S.pub.score;const band=[0,1,2].map(()=>({n:pick(r,IGN),k:pick(r,['R','M','A']),cap:Math.floor(r()*8)}));
+ const igs=band.map(b=>{const v=Math.max(1,Math.min(5,sc[b.k]+(Math.random()-.5)*.9));return{...b,v,ph:phrase(b.k,v)}});const igAvg=igs.reduce((a,b)=>a+b.v,0)/3;const pv=clamp(Math.round((sc.R+sc.M+sc.A)/3+.6+(r()*2-1)),1,5);
+ const fin=.5*pv+.5*igAvg;const fl=r()<.3;const L={who:pick(r,BANDS),ver:S.ver,pv,igs,fin,fl,fake:true};S.listens.unshift(L);S.pending.push(L);if(fl)S.flowers++;gainXP(fin);if(!quiet&&S.tab==='palco'&&!PL){const y=window.scrollY;render();window.scrollTo(0,y)}}
+function gainXP(x){const wk=weekKey();if(S.wk!==wk){S.wk=wk;S.wkAppl=0}S.wkAppl=(S.wkAppl||0)+x;S.applAll=(S.applAll||0)+x}
+function stats(ver){const l=S.listens.filter(x=>ver==null||x.ver===ver);return{n:l.length,avg:l.length?l.reduce((a,b)=>a+b.fin,0)/l.length:0}}
+/* ================= VIEWS ================= */
+const TABS=[['palco','🏝️','Il mio palco'],['comp','🎼','Componi'],['visit','🎟️','Visita'],['rank','🏆','Classifica']].concat(TESTMODE?[['test','🧪','Test']]:[]);
+let navH='',hdrH='';
+function hdr(){const st=stats(S.ver);syncLv();const a=ACCT();const w=$('#who');if(w)w.textContent=a?a.name:(SITE?'ospite':'anteprima');const h=`<span class="pill">⭐ Isola livello <b>${S.lv}</b></span><span class="pill">👏 settimana <b>${f1(S.wk===weekKey()?S.wkAppl||0:0)}</b></span><span class="pill">🎧 <b>${st.n}</b> ascolti</span><span class="pill">👏 <b>${st.n?f1(st.avg):'–'}</b></span><span class="pill">🌸 <b>${S.flowers}</b> ricevuti · ${S.given||0} dati</span>`;if(h!==hdrH){hdrH=h;$('#hdr').innerHTML=h}
+ const n=TABS.map(([k,i,t])=>`<button data-tab="${k}" class="${S.tab===k?'on':''}"><span class="i">${i}</span>${t}${k==='palco'&&S.pending.length?'<span class="dot"></span>':''}</button>`).join('');if(n!==navH){navH=n;$('#nav').innerHTML=n}}
+function render(keep){if(!keep)stopSong();if(CH&&S.tab!=='comp'){CH=null;drawCh()}hdr();if(S.tab==='test'&&!TESTMODE)S.tab='palco';$('#view').innerHTML=({palco:vPalco,comp:vComp,visit:vVisit,rank:vRank,test:vTest})[S.tab]();if(S.tab==='rank')loadRank();if(S.tab==='comp')wireGrid();window.dispatchEvent(new Event('rendered'))}
+function islandSVG(){const aud=Math.min(14,stats(S.ver).n);let crowd='';for(let i=0;i<aud;i++){const x=78+((i*37)%70),y=318+((i*23)%20);crowd+=`<circle cx="${x}" cy="${y}" r="4" fill="${['#8fd14f','#7fbf3f','#a6e06a'][i%3]}"/>`}
+ return `<svg viewBox="0 0 400 400"><defs><radialGradient id="sea" cx=".5" cy=".4" r=".8"><stop offset="0" stop-color="#1f3f8a"/><stop offset="1" stop-color="#0b1a45"/></radialGradient><radialGradient id="spot" cx=".5" cy="0" r="1"><stop offset="0" stop-color="#ffd166" stop-opacity=".55"/><stop offset="1" stop-color="#ffd166" stop-opacity="0"/></radialGradient></defs>
+ <rect width="400" height="400" fill="url(#sea)"/>${Array.from({length:40},(_,i)=>`<circle cx="${(i*97)%400}" cy="${(i*53)%400}" r="${i%3?0.8:1.4}" fill="#fff" opacity=".35"/>`).join('')}
+ <ellipse cx="250" cy="150" rx="150" ry="120" fill="#e8d39a"/><ellipse cx="250" cy="146" rx="138" ry="108" fill="#5aa046"/><ellipse cx="250" cy="146" rx="110" ry="84" fill="#69b350"/>
+ <rect x="232" y="118" width="40" height="30" rx="4" fill="#c97f4f"/><polygon points="226,120 252,96 278,120" fill="#8a4a2e"/><text x="252" y="170" font-size="11" text-anchor="middle" fill="#13300a" font-family="Fredoka">casa di Igor</text>
+ <circle cx="190" cy="110" r="10" fill="#3f8a35"/><circle cx="310" cy="190" r="12" fill="#3f8a35"/><circle cx="300" cy="100" r="9" fill="#3f8a35"/>
+ <path d="M150 230 Q 135 262 118 280" stroke="#d9c38a" stroke-width="12" fill="none" stroke-linecap="round"/>
+ <ellipse cx="105" cy="315" rx="78" ry="56" fill="#e8d39a"/><ellipse cx="105" cy="311" rx="68" ry="47" fill="#62ab4b"/>
+ <rect x="78" y="268" width="56" height="10" fill="url(#spot)" opacity="0"/><polygon points="80,262 130,262 150,330 60,330" fill="url(#spot)"/>
+ <rect x="74" y="276" width="62" height="30" rx="4" fill="#7a4a30"/><rect x="74" y="276" width="62" height="6" fill="#c27c47"/><rect x="72" y="262" width="4" height="44" fill="#333"/><rect x="134" y="262" width="4" height="44" fill="#333"/><rect x="72" y="258" width="66" height="6" rx="2" fill="#222"/>
+ <circle cx="80" cy="262" r="3" fill="#ffd166"/><circle cx="130" cy="262" r="3" fill="#4fc3ff"/><circle cx="105" cy="262" r="3" fill="#b98cff"/>
+ <image href="${IGOR}" x="92" y="276" width="24" height="24"/>${crowd}
+ <text x="105" y="356" font-size="13" text-anchor="middle" fill="#fff" font-family="Fredoka" font-weight="600">Il tuo palco</text><text x="105" y="370" font-size="10" text-anchor="middle" fill="#cfd8ff" font-family="Fredoka">isolotto sud-ovest · c'è da subito</text></svg>`}
+function vPalco(){const c=caps(S.lv),st=stats(S.ver);let h=`<h2>Il mio palco</h2><div class="map">${islandSVG()}</div>`;
+ if(S.pending.length){const p=S.pending,fl=p.filter(x=>x.fl).length,avg=p.reduce((a,b)=>a+b.fin,0)/p.length;h+=`<div class="card"><h3>Mentre non c'eri</h3><p><b>${p.length}</b> ${p.length===1?'band ha':'band hanno'} ascoltato il tuo brano: media <b>${f1(avg)} 👏</b>${fl?` e <b>${fl} 🌸</b>`:''}.</p>${p.slice(0,4).map(L=>listenRow(L)).join('')}<button class="btn sm" data-act="clearPending" style="margin-top:6px">Grazie a tutti!</button></div>`}
+ h+=`<div class="card"><h3>Il tuo brano pubblico</h3>`;
+ if(!S.pub)h+=`<p>Non l'hai ancora pubblicato. Componi qualcosa (anche solo la batteria) e premi <b>Pubblica</b>: le band dell'isola verranno ad ascoltarlo.</p><button class="btn gold" data-tab="comp">Vai a comporre</button>`;
+ else{const sc=S.pub.score;h+=`<p>Versione ${S.ver} · <b>${st.n}</b> ascolti · media <b>${st.n?f1(st.avg):'–'} 👏</b></p><div class="row"><button class="btn" data-act="playPub">▶ Ascolta il tuo brano</button></div>
+  <h3 style="margin-top:12px">Come lo sentono gli Igorlets</h3><div class="bars3">${['R','M','A'].map(k=>`<div class="b3"><span class="t">${KI[k]} ${KN[k]}</span><span class="tr"><i style="width:${sc[k]/5*100}%;background:${KC[k]}"></i></span><span class="v">${f1(sc[k])}</span></div>`).join('')}</div><p class="mut">Gli Igorlets ritmici guardano batteria e basso, i melodici la melodia, gli armonici gli accordi. Il voto finale è metà loro e metà del giocatore.</p>`}
+ h+=`</div>`;
+ if(S.listens.length&&!S.pending.length)h+=`<div class="card"><h3>Ultimi ascolti</h3>${S.listens.slice(0,5).map(L=>listenRow(L)).join('')}</div>`;
+ h+=`<div class="card"><h3>La tua band di ascoltatori</h3><p class="mut">Ti accompagnano quando visiti i palchi degli altri, e imparano da quello che ascoltano.</p><div class="row" style="justify-content:space-around">${S.band.map(b=>`<div style="text-align:center">${face(b.cap,54)}<div><b>${b.n}</b></div><div style="color:${KC[b.k]};font-size:13px">${KI[b.k]} ${KN[b.k]} · liv ${1+Math.floor(b.xp/10)}</div></div>`).join('')}</div></div>`;
+ h+=`<div class="card"><h3>Cosa sblocchi salendo di livello sull'isola</h3>${UNL.slice(1).map((u,i)=>`<div class="locked ${S.lv>=i+1?'ok':''}"><span>Livello ${i+1}: ${u.txt}</span><span>${S.lv>=i+1?'✓':'🔒'}</span></div>`).join('')}<p class="mut">Il palco cresce con l'isola: i livelli si guadagnano raccogliendo formiche di tofu. Gli applausi che ricevi servono per la classifica.</p></div>`;
+ return h}
+function listenRow(L){return `<div class="listen-row"><div><b>${L.who}</b>${L.fake?'<span class="ghost">finta</span>':''}<div class="mut">${L.igs.map(i=>`<span style="color:${KC[i.k]}">${i.n} ${KI[i.k]} ${'👏'.repeat(Math.max(1,Math.round(i.v)))}</span>`).join(' · ')}</div><div class="mut">«${L.igs[0].ph}»</div></div><div style="text-align:right;white-space:nowrap"><b>${f1(L.fin)} 👏</b>${L.fl?'<div>🌸</div>':''}</div></div>`}
+/* ---------- composer ---------- */
+function vComp(){const c=ec();if(!c.tracks.includes(S.trk))S.trk='dr';if(S.bar>=c.bars)S.bar=0;const T=TRK[S.trk];
+ let h=`<h2>Componi il tuo brano</h2><p class="mut">Ogni strumento ha la sua griglia. Tocca le caselle per mettere i suoni. Crescendo sblocchi strumenti, passi e battute.</p><div class="chips">${ORDER.map(k=>{const on=c.tracks.includes(k);return `<button class="chip ${on?'':'off'} ${S.trk===k?'on':''}" data-trk="${k}" style="background:${TRK[k].col}">${on?'':'🔒 '}${TRK[k].n}</button>`}).join('')}</div>`;
+ if(c.max>1)h+=`<div class="card" style="padding:8px 12px"><div class="row" style="justify-content:space-between"><span>Battute in loop: <b style="font-size:18px">${c.bars}</b> <span class="mut">(ne hai sbloccate ${c.max})</span></span><span class="row"><button class="btn sm" data-act="ubar" data-d="-1" ${c.bars<=1?'disabled':''}>−</button><button class="btn sm" data-act="ubar" data-d="1" ${c.bars>=c.max?'disabled':''}>+</button></span></div><p class="mut" style="margin:4px 0 0">Il brano suona in loop solo le battute che usi: puoi tenerne una sola o arrivare a ${c.max}.</p></div>`;
+ {const BC=['#ffd166','#4fc3ff','#ff8a5c','#8fd14f','#b98cff','#ff6b9a','#5cd6c0','#f0a35c'];window._BC=BC;
+  if(c.bars>1){h+=`<div class="barstrip" id="bstrip">${Array.from({length:c.bars},(_,i)=>{const act=Array.from({length:16},(_,st)=>c.tracks.some(kk=>isOn(kk,S.song[kk][i][st])));const nt=(S.notes&&S.notes[i]||[]).filter(Boolean).join(' ');return `<button class="bb ${i===S.bar?'on':''}" data-bar="${i}" style="--bc:${BC[i%8]}"><b>${i+1}</b><span class="mini">${act.map(x=>`<i class="${x?'y':''}"></i>`).join('')}</span><small>${esc(nt).slice(0,14)}</small></button>`}).join('')}</div>`}
+  h+=`<div class="bhead" style="--bc:${BC[S.bar%8]}">${c.bars>1?`<button class="btn sm ghost" data-bar="${(S.bar+c.bars-1)%c.bars}">◀</button>`:''}<b>Battuta ${S.bar+1}${c.bars>1?' di '+c.bars:''}</b>${c.bars>1?`<button class="btn sm ghost" data-bar="${(S.bar+1)%c.bars}">▶</button>`:''}</div>`;}
+ const NARROW=false,cols=NARROW?(S.half?[8,9,10,11,12,13,14,15]:[0,1,2,3,4,5,6,7]):[...Array(16).keys()],data=S.song[S.trk][S.bar],k=S.trk;
+ if(NARROW)h+=`<div class="row" style="margin:2px 0 6px"><span class="mut">Passi:</span><button class="btn sm ${S.half?'ghost':''}" data-act="half" data-h="0">1–8</button><button class="btn sm ${S.half?'':'ghost'}" data-act="half" data-h="1">9–16</button><span class="mut">· sul telefono vedi mezza battuta alla volta</span></div>`;
+ if(T.poly){h+=`<div class="card" style="padding:10px;border-color:${_BC[S.bar%8]}">${notesRow()}<div class="grid" id="sg" style="grid-template-columns:${window.innerWidth<600?46:58}px repeat(${cols.length},1fr)">`;
+  for(let r=3;r>=0;r--){h+=`<div class="lab">${T.rows[r]}</div>`;for(const s of cols){const on=data[s]>>r&1;h+=`<div class="c ${s%4===0?'beat':''}" data-s="${s}" data-r="${r}" style="${on?'background:'+T.col:''}"></div>`}}}
+ else if(T.chord){h+=`<p class="mut">Tocca un passo per scegliere l'accordo: dura fino al prossimo. ${c.allch?'Hai tutti gli accordi: 12 fondamentali e '+QORDER.length+' tipi.':'Per ora accordi maggiori, minori, settime e sospesi sulle note sbloccate; al livello 8 li sblocchi tutti.'}</p><div class="card" style="padding:10px;border-color:${_BC[S.bar%8]}">${notesRow()}<div class="grid" id="sg" style="grid-template-columns:${window.innerWidth<600?46:58}px repeat(${cols.length},1fr)"><div class="lab" style="grid-row:1">Accordi</div>`;
+  const segs=[];let cur=null;{let prev=null;for(let j=cols[0]-1;j>=0;j--)if(data[j]){prev=data[j];break}if(prev&&!data[cols[0]]){cur={s:cols[0],len:0,v:prev,cont:1};segs.push(cur)}}for(const s of cols){const v=data[s];if(v){cur={s,len:1,v};segs.push(cur)}else if(cur)cur.len++}
+  h+=segs.map(g=>`<div style="grid-column:${2+g.s-cols[0]} / span ${g.len};grid-row:1;background:${T.col};color:#1a1030;border-radius:8px;font-weight:700;font-size:13px;display:flex;align-items:center;padding-left:6px;height:26px;white-space:nowrap;overflow:hidden">${g.cont?'… ':''}${chName(g.v)}</div>`).join('');
+  h+=`<div class="lab" style="grid-row:2">tocca</div>`;for(const s of cols){const v=data[s];h+=`<div class="c ${s%4===0?'beat':''}" data-s="${s}" data-ch="1" style="grid-row:2;height:34px;${v?'background:'+T.col+';color:#1a1030':''}">${v?'●':'+'}</div>`}}
+ else{const lo=clamp(S.oct[k]??T.def,T.lo,T.hi-12);const rows=[];for(let m=lo+12;m>=lo;m--)if(c.pcs.has(m%12))rows.push(m);if(!c.chrom)h+=`<p class="mut">${c.pcs.size===7?'Per ora solo i tasti bianchi: Do maggiore o La minore. I tasti neri compaiono dal livello 5.':'Alterazioni sbloccate: '+[...c.pcs].filter(p=>!WHITE.includes(p)).map(p=>NN[p]).join(', ')+'. Il totale cromatico arriva al livello 7.'}</p>`;if(T.multi)h+=`<p class="mut">Puoi mettere più note nello stesso passo: così costruisci i tuoi accordi, nota per nota. ${(()=>{const v=data[S.step||0];return ''})()}</p>`;
+  h+=`<div class="row" style="margin:4px 0"><button class="btn sm" data-act="oct" data-d="12" ${lo+12>=T.hi-12+12?'disabled':''}>Ottava ↑</button><button class="btn sm" data-act="oct" data-d="-12" ${lo<=T.lo?'disabled':''}>Ottava ↓</button><span class="mut">da ${noteName(lo)} a ${noteName(lo+12)}</span></div>`;
+  h+=`<div class="card" style="padding:10px;border-color:${_BC[S.bar%8]}">${notesRow()}<div class="grid" id="sg" style="grid-template-columns:${window.innerWidth<600?46:58}px repeat(${cols.length},1fr)">`;
+  if(T.multi){h+=`<div class="lab">accordo</div>`;for(const s of cols){const v=data[s];const g=Array.isArray(v)&&v.length>=2?guess([...new Set(v.map(m=>m%12))]):null;h+=`<div style="font-size:9px;font-weight:700;color:${T.col};text-align:center;overflow:hidden;white-space:nowrap">${g?chName(g):Array.isArray(v)&&v.length>=2?'?':''}</div>`}}
+  const held=[];{let cur=null;for(const s of cols){const v=data[s];if(isOn(k,v))cur=T.multi?v:[v];else if(!isHold(k,v))cur=null;held[s]=isHold(k,v)?cur:null}}
+  rows.forEach((m,ri)=>{const blk=!WHITE.includes(m%12),lock=!c.pcs.has(m%12);h+=`<div class="lab" style="${blk?'color:#6f7fb8':''}">${lock?'🔒 ':''}${noteName(m)}</div>`;for(const s of cols){const v=data[s],on=T.multi?!!(Array.isArray(v)&&v.includes(m)):v===m;const up=T.multi?!!(Array.isArray(v)&&v.some(x=>x>lo+12)):v>lo+12,dn=T.multi?!!(Array.isArray(v)&&v.some(x=>x>=0&&x<lo)):v>=0&&v<lo;const mark=ri===0&&up?'↑':ri===rows.length-1&&dn?'↓':'';const tie=!!(held[s]&&held[s].includes(m)),nt=!!(held[s+1]&&held[s+1].includes(m))&&(on||tie);h+=`<div class="c ${s%4===0?'beat':''} ${tie?'tie':''} ${nt?'tn':''}" data-s="${s}" data-m="${m}" ${lock?'data-lock="1"':''} style="${on||tie?'background:'+T.col:lock?'background:#070b22;opacity:.35;cursor:default':blk?'background:#0b1235':''}">${tie?'':mark}</div>`}})}
+ h+=`</div></div><div class="row"><button class="btn" data-act="play" id="playBtn">${PL?'■ Ferma':'▶ Ascolta'}</button><button class="btn ghost" data-act="clearTrk">Svuota ${T.n} (battuta ${S.bar+1})</button><button class="btn gold" data-act="publish">${S.pub?'Pubblica nuova versione':'Pubblica il brano'}</button></div>${c.max>1?`<div class="row" style="margin-top:8px"><span class="mut">Battuta ${S.bar+1}, tutti gli strumenti:</span><button class="btn sm ghost" data-act="copyBar">📋 Copia</button><button class="btn sm ghost" data-act="pasteBar" ${CLIP?'':'disabled'}>📥 Incolla</button><button class="btn sm ghost" data-act="dupNext" ${S.bar+1<c.max?'':'disabled'}>⏭ Duplica nella prossima</button></div>`:''}`;
+ const sc=analyze(S.song,c);h+=`<div class="card"><h3>Anteprima: come lo sentiranno gli Igorlets</h3><div class="bars3">${['R','M','A'].map(k=>`<div class="b3"><span class="t">${KI[k]} ${KN[k]}</span><span class="tr"><i style="width:${sc[k]/5*100}%;background:${KC[k]}"></i></span><span class="v">${f1(sc[k])}</span></div>`).join('')}</div><p class="mut">${tip(sc,c)}</p></div>`;
+ return h}
+function tip(sc,c){const low=['R','M','A'].sort((a,b)=>sc[a]-sc[b])[0];if(low==='A'&&!c.tracks.includes('pn'))return 'Gli accordi arrivano col Piano (livello 3): potrai mettere più note insieme. Intanto più strumenti insieme aiutano un po\'.';return {R:'Consiglio: usa più suoni della batteria e qualche colpo fuori dal battito.',M:'Consiglio: fai muovere la melodia della marimba su e giù, con passi e qualche salto.',A:'Consiglio: sul piano metti 3 note insieme, cambia accordo più spesso e prova Sol → Do alla fine.'}[low]}
+function wireGrid(){const g=$('#sg');if(!g)return;const T=TRK[S.trk];
+ const lockMsg=()=>say('Questa nota si sblocca salendo di livello: per ora '+(ec().pcs.size===7?'solo tasti bianchi.':'non ancora tutte le alterazioni.'));
+ const redraw=()=>{save();const y=window.scrollY;render(true);window.scrollTo(0,y)};
+ if(T.poly||T.chord){g.onclick=e=>{const el=e.target.closest('.c');if(!el)return;const s=+el.dataset.s,d=S.song[S.trk][S.bar];audio();if(T.chord){openCh(s);return}const r=+el.dataset.r;d[s]^=(1<<r);if(d[s]>>r&1)DRUM[r](ac.currentTime+.01);redraw()};return}
+ const k=S.trk,d=S.song[k][S.bar],H=HOLD(k),E=EMPTY(k);
+ const has=(s,m)=>T.multi?Array.isArray(d[s])&&d[s].includes(m):d[s]===m;
+ const heldNote=(s)=>{let j=s;while(j>=0&&isHold(k,d[j]))j--;return j>=0&&isOn(k,d[j])?{j,v:d[j]}:null};
+ let drag=null;
+ g.onpointerdown=e=>{const el=e.target.closest('.c');if(!el)return;if(el.dataset.lock){lockMsg();return}const s=+el.dataset.s,m=+el.dataset.m;const hs=has(s,m),tied=isHold(k,d[s])&&(()=>{const h=heldNote(s);return h&&(T.multi?h.v.includes(m):h.v===m)})();drag={s,m,x:e.clientX,moved:false,t:s,canTie:true,create:!hs&&!tied};audio()};
+ g.onpointermove=e=>{if(!drag||!drag.canTie)return;if(!drag.moved&&Math.abs(e.clientX-drag.x)<10)return;if(!drag.moved){drag.moved=true;try{g.setPointerCapture(e.pointerId)}catch(_){}}
+  const el=document.elementFromPoint(e.clientX,e.clientY);const c=el&&el.closest&&el.closest('#sg .c');if(!c||c.dataset.s==null)return;const t=Math.max(drag.s,+c.dataset.s);drag.t=t;
+  g.querySelectorAll('.c.tp').forEach(x=>x.classList.remove('tp'));for(let j=drag.s+1;j<=t;j++){const x=g.querySelector(`.c[data-s="${j}"][data-m="${drag.m}"]`);if(x)x.classList.add('tp')}e.preventDefault()};
+ const end=e=>{if(!drag)return;const dr=drag;drag=null;
+  if(dr.moved){if(dr.create){if(T.multi){let v=Array.isArray(d[dr.s])?d[dr.s].slice():[];v.push(dr.m);v.sort((a,b)=>a-b);d[dr.s]=v}else d[dr.s]=dr.m}let st=dr.s;while(st>0&&isHold(k,d[st]))st--;/* clear old tie of this note, then lay the new one */let j=st+1;while(j<16&&isHold(k,d[j])){d[j]=E;j++}for(let j=st+1;j<=dr.t;j++)d[j]=H;/* notes that were under the new tie are overwritten; their leftover tails go too */let q=dr.t+1;while(q<16&&isHold(k,d[q])){d[q]=E;q++}
+   const h=heldNote(dr.t)||{v:d[st]};if(h.v!=null&&isOn(k,h.v))VOICE[k](h.v,ac.currentTime+.01,(dr.t-st+1)*SD);redraw();return}
+  const s=dr.s,m=dr.m;
+  if(isHold(k,d[s])){/* tap on a tied step: cut the note here */let j=s;while(j<16&&isHold(k,d[j])){d[j]=E;j++}redraw();return}
+  if(T.multi){let v=Array.isArray(d[s])?d[s].slice():[];if(v.includes(m))v=v.filter(x=>x!==m);else{v.push(m);v.sort((a,b)=>a-b)}d[s]=v.length?v:E;if(v.includes(m))VOICE[k](v,ac.currentTime+.01,.6);if(!v.length){let j=s+1;while(j<16&&isHold(k,d[j])){d[j]=E;j++}}}
+  else{if(d[s]===m){d[s]=E;let j=s+1;while(j<16&&isHold(k,d[j])){d[j]=E;j++}}else{d[s]=m;VOICE[k](m,ac.currentTime+.01,.3)}}
+  redraw()};
+ g.onpointerup=end;g.onpointercancel=()=>{drag=null;g.querySelectorAll('.c.tp').forEach(x=>x.classList.remove('tp'))};g.onclick=null}
+let CH=null,CLIP=null;
+const esc=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[ch]);
+function notesRow(){const n=(S.notes&&S.notes[S.bar])||['','','',''];return `<div class="notes" style="grid-template-columns:${window.innerWidth<600?46:58}px repeat(4,1fr)"><span class="lab">appunti</span>${[0,1,2,3].map(q=>`<input data-note="${q}" maxlength="12" value="${esc(n[q]||'')}" placeholder="${q===0?'es. Do':'…'}">`).join('')}</div>`}
+function openCh(s){const d=S.song[S.trk][S.bar];const cur=d[s];CH={s,r:cur?cur.r:0,q:cur?cur.q:'',had:!!cur};drawCh()}
+function drawCh(){let el=$('#chs');if(!el){el=document.createElement('div');el.id='chs';el.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:60;background:#121a44;border-top:2px solid #b98cff;padding:12px 12px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px #0008';document.body.appendChild(el)}
+ if(!CH){el.remove();return}const c=ec(),T=TRK[S.trk];const qs=c.allch?QORDER:['','m','7','m7','sus4'],okc=x=>chPcs(x).every(p=>c.pcs.has(p));if(!okc(CH)){if(okc({r:CH.r,q:'m'}))CH.q='m';else{CH.r=0;CH.q=''}}
+ let h=`<div style="max-width:600px;margin:0 auto"><div class="row" style="justify-content:space-between"><b>Accordo al passo ${CH.s+1}: <span style="color:${T.col};font-size:20px">${chName(CH)}</span></b><button class="btn sm ghost" data-chx="close">✕</button></div>`;
+ h+=`<div class="mut" style="margin-top:6px">Fondamentale</div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:4px 0">${NN.map((n,i)=>`<button class="btn sm ${CH.r===i?'':'ghost'}" data-chr="${i}" ${qs.some(q=>okc({r:i,q}))?'':'disabled'}>${n}</button>`).join('')}</div><div class="mut">Tipo</div><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:4px 0">${qs.map(q=>`<button class="btn sm ${CH.q===q?'':'ghost'}" data-chq="${q}" ${okc({r:CH.r,q})?'':'disabled'}>${q===''?'magg.':q}</button>`).join('')}</div>`;
+ h+=`<div class="row" style="margin-top:8px"><button class="btn gold" data-chx="put">Metti ${chName(CH)}</button>${CH.had?'<button class="btn ghost" data-chx="del">Togli</button>':''}</div></div>`;el.innerHTML=h;
+ el.onclick=e=>{const t=e.target.closest('button');if(!t)return;audio();const pv=()=>VOICE[S.trk]({r:CH.r,q:CH.q},ac.currentTime+.01,.8);
+  if(t.dataset.chd){Object.assign(CH,DIA[+t.dataset.chd]);pv();drawCh()}else if(t.dataset.chr){CH.r=+t.dataset.chr;const P=ec().pcs,fits=q=>chPcs({r:CH.r,q}).every(p=>P.has(p));if(!fits(CH.q))CH.q=['','m','7','m7','sus4'].find(fits)??'';pv();drawCh()}else if(t.dataset.chq!=null){CH.q=t.dataset.chq;pv();drawCh()}
+  else if(t.dataset.chx==='close'){CH=null;drawCh()}else if(t.dataset.chx==='put'||t.dataset.chx==='del'){S.song[S.trk][S.bar][CH.s]=t.dataset.chx==='put'?{r:CH.r,q:CH.q}:null;CH=null;drawCh();save();const y=window.scrollY;render(true);window.scrollTo(0,y)}}}
+/* ---------- visit ---------- */
+function residentSong(seed,style){const r=rng(seed),c={tracks:['dr','bs','pn','vl','gt','mr'],steps:16,bars:2},s={};for(const k of ORDER)s[k]=[0,1,2,3].map(()=>Array(16).fill(EMPTY(k)));
+ const prog=pick(r,[[0,5,3,4],[0,3,4,0],[5,3,0,4],[0,4,5,3],[0,5,1,4]]);
+ for(let b=0;b<2;b++)for(let i=0;i<16;i++){
+  if(style!=='A'||i%8===0){if(i%8===0)s.dr[b][i]|=1;if(i%8===4)s.dr[b][i]|=2;if(style==='R'){if(i%2===0)s.dr[b][i]|=4;if(r()<.25&&i%4!==0)s.dr[b][i]|=r()<.5?1:2}else if(i%4===2)s.dr[b][i]|=4}
+  const di=prog[b*2+Math.floor(i/8)],ch={...DIA[di]};if(style==='A'&&r()<.5)ch.q=ch.q==='m'?'m7':ch.r===7?'7':'maj7';
+  const toN=x=>QUAL[x.q].map(y=>60+((x.r+y)%12)+(x.r+y>=12?0:0));if(i%8===0){if(style==='A'||r()<.5)s.pn[b][i]=toN(ch);else s.gt[b][i]=ch;if(style==='A'&&r()<.5){const d2=DIA[(di+3)%6];s.pn[b][i+4]=toN(d2)}}
+  if(i%4===0||style==='R'&&i%4===3&&r()<.5)s.bs[b][i]=36+ch.r;
+  if(style==='M'&&(i%2===0&&r()<.7)){s.vl[b][i]=deg(clamp(Math.round(4+Math.sin((b*16+i)/3)*3+r()*2),0,9),72)}else if(style!=='M'&&i%4===2&&r()<.35)s.mr[b][i]=deg(Math.floor(r()*8),72)}
+ return{song:s,c}}
+function todayStages(){const r=rng(S.day*7717+3);const names=[...BANDS].sort(()=>r()-.5);const fake=['R','M','A'].map((st,i)=>({name:names[i],style:st,seed:S.day*100+i,band:[0,1,2].map(j=>({n:IGN[(S.day*3+i*5+j)%IGN.length],cap:(i*3+j)%8}))}));const real=(S.vday===S.day&&S.vreal||[]).map((x,i)=>({name:x.nick,real:1,uid:x.uid,ver:x.ver,song:x.song,c:x.c,band:[0,1,2].map(j=>({n:x.nick,cap:(i+j)%8}))}));return real.concat(fake).slice(0,3)}
+let V=null;
+function vVisit(){if(V)return vListen();if(S.vday!==S.day&&window.PalcoCloud&&!S._picking){S._picking=1;PalcoCloud.pick(3,S.visitedUids||[]).then(l=>{S._picking=0;S.vday=S.day;S.vreal=l;S.visited=[];save();if(S.tab==='visit'&&!V)render()}).catch(()=>{S._picking=0})}const st=todayStages();let h=`<h2>Visita i palchi</h2><p class="mut">Ogni giorno Igorbaudo ti propone tre palchi. Ascolta il brano fino in fondo con la tua band, poi lascia il tuo voto: per ogni ascolto ricevi 2 semi, e i tuoi Igorlets imparano.</p>`;
+ st.forEach((p,i)=>{const done=S.visited.includes(i);h+=`<div class="card"><div class="row" style="justify-content:space-between"><div class="row">${p.band.map(b=>face(b.cap,38)).join('')}</div><div style="flex:1;min-width:120px"><b>${esc(p.name)}</b>${p.real?'':'<span class="ghost">band di Igorbaudo</span>'}<div class="mut">${p.real?'Il palco di un giocatore':'Brano '+(p.style==='R'?'ritmico':p.style==='M'?'melodico':'armonico')}</div></div><button class="btn ${done?'ghost':'gold'}" data-act="visit" data-i="${i}" ${done?'disabled':''}>${done?'Ascoltato ✓':'Ascolta'}</button></div></div>`});
+ return h+`<p class="mut">Domani altri tre palchi.</p>`}
+function vListen(){const p=V.p;const beams=[['#ffd166',15,-18],['#4fc3ff',50,0],['#b98cff',85,18]];
+ return `<h2>${p.name}</h2><div class="lstage">${beams.map(([c,x,r],i)=>`<div class="beam" id="beam${i}" style="left:calc(${x}% - 80px);transform:rotate(${r}deg);background:linear-gradient(${c}88,transparent)"></div>`).join('')}<div class="floor"></div>
+ ${p.band.map((b,i)=>`<div class="stagemus" style="left:calc(${25+i*25}% - 28px)">${face(b.cap,52)}</div>`).join('')}<div class="crowd"></div>
+ ${S.band.map((b,i)=>`<div class="aud ${b.k}" id="aud${b.k}" style="left:calc(${20+i*30}% - 39px)"><div class="bub">${b.k==='R'?'🎵':b.k==='M'?'🎶':'✨'}</div>${face(b.cap,62)}<div style="color:${KC[b.k]}">${b.n}</div></div>`).join('')}</div>
+ <div class="prog"><i id="lprog" style="width:0%"></i></div><div id="lafter"><p class="mut" style="text-align:center">I tuoi Igorlets reagiscono a quello che amano: ${S.band.map(b=>`<span style="color:${KC[b.k]}">${b.n} ${b.k==='R'?'balla sulla batteria':b.k==='M'?'ondeggia sulla melodia':'si illumina sugli accordi'}</span>`).join(', ')}.</p></div>`}
+function startListen(){const p=V.p;const {song,c}=p.real?{song:migrate(JSON.parse(p.song)),c:Object.assign({steps:16},p.c)}:residentSong(p.seed,p.style);V.sc=analyze(song,c);const tot=c.bars*16,loops=2;
+ playSong(song,c,{loops,onEv:k=>{const e=$('#aud'+k);if(e){e.classList.add('hit');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('hit'),140)}const bi={R:0,M:1,A:2}[k];const bm=$('#beam'+bi);if(bm){bm.style.opacity=.85;clearTimeout(bm._t);bm._t=setTimeout(()=>bm.style.opacity=.35,160)}},
+  onStep:(st,n,lp)=>{const e=$('#lprog');if(e)e.style.width=((lp*n+st+1)/(n*loops)*100)+'%'},onEnd:afterListen})}
+function afterListen(){const sc=V.sc;V.vote=0;V.flower=false;const e=$('#lafter');if(!e)return;setTimeout(()=>e.scrollIntoView({behavior:'smooth',block:'start'}),50);
+ e.innerHTML=`<h3>I tuoi Igorlets votano</h3>${S.band.map(b=>`<div class="judge"><div class="face">${face(b.cap,46)}</div><div class="sp"><b style="color:${KC[b.k]}">${b.n} · ${KN[b.k]} · ${'👏'.repeat(Math.max(1,Math.round(sc[b.k])))}</b>${phrase(b.k,sc[b.k])}</div></div>`).join('')}
+ <div class="card"><h3>E tu? Quanti applausi?</h3><div class="vote">${[1,2,3,4,5].map(i=>`<button data-vote="${i}">👏</button>`).join('')}</div><label class="row" style="justify-content:center"><input type="checkbox" id="flw"> Lascia anche un fiore 🌸</label><p class="mut" style="text-align:center">Il voto finale è metà tuo e metà dei tuoi Igorlets.</p><button class="btn big gold" data-act="sendVote" disabled id="sendV">Invia</button></div>`}
+/* ---------- classifica ---------- */
+let RANK=null;
+function vRank(){const me=ACCT();let h=`<h2>Classifica</h2><p class="mut">Gli applausi che ricevi quando gli altri ascoltano il tuo brano. La classifica della settimana riparte ogni lunedì; quella di sempre guarda la media, per i brani con almeno 10 ascolti.</p>`;
+ if(!RANK)return h+`<div class="card"><p class="mut">Carico la classifica…</p></div>`;
+ const row=(x,i,val)=>`<div class="rank ${me&&x.uid===me.uid?'me':''}"><span class="n">${i+1}</span><b style="flex:1">${esc(x.nick)}</b>${x.fake?'<span class="ghost">band di Igorbaudo</span>':''}<span>${val}</span></div>`;
+ h+=`<div class="card"><h3>Questa settimana</h3>${RANK.week.length?RANK.week.map((x,i)=>row(x,i,'👏 '+f1(x.wkAppl))).join(''):'<p class="mut">Ancora nessun applauso questa settimana: pubblica il tuo brano!</p>'}</div>`;
+ h+=`<div class="card"><h3>Di sempre</h3>${RANK.all.length?RANK.all.map((x,i)=>row(x,i,f1(x.avg)+' 👏 · '+x.listens+' ascolti')).join(''):'<p class="mut">Servono almeno 10 ascolti per entrare.</p>'}</div>`;
+ return h}
+function loadRank(){const done=r=>{RANK=r;if(S.tab==='rank')$('#view').innerHTML=vRank()};
+ const fakes=()=>{const r=rng(Math.floor(Date.now()/6048e5));const wk=BANDS.slice(0,6).map((n,i)=>({nick:n,fake:1,wkAppl:Math.round((40-i*6)*(.7+r()*.6)*10)/10,avg:3.4+r()*1.3,listens:10+Math.floor(r()*40)}));return wk};
+ const mine=()=>{const a=ACCT(),st=stats();return{uid:a&&a.uid,nick:a?a.name:'Tu',wkAppl:S.wk===weekKey()?Math.round((S.wkAppl||0)*10)/10:0,avg:st.avg,listens:st.n}};
+ if(window.PalcoCloud)PalcoCloud.rank(weekKey()).then(r=>{const f=fakeRate()>0?fakes():[];const week=r.week.concat(f.filter(()=>fakeRate()>.5)).sort((a,b)=>b.wkAppl-a.wkAppl).slice(0,10);const all=r.all.concat(f.filter(()=>fakeRate()>.5)).filter(x=>x.listens>=10).sort((a,b)=>b.avg-a.avg).slice(0,10);done({week,all})}).catch(()=>done({week:[],all:[]}));
+ else{const f=fakes(),m=mine();done({week:f.concat(m.wkAppl?[m]:[]).sort((a,b)=>b.wkAppl-a.wkAppl),all:f.concat(m.listens>=10?[m]:[]).sort((a,b)=>b.avg-a.avg)})}}
+/* ---------- test ---------- */
+function vTest(){return `<h2>🧪 Prove dell'anteprima</h2><p class="mut">Solo per provare: nel gioco vero non ci sono.</p>
+ <div class="card test"><h3>Tempo</h3><div class="row"><span>Velocità del tempo:</span><select data-act="speed">${[[1,'tempo vero'],[60,'1 secondo = 1 minuto'],[600,'1 secondo = 10 minuti']].map(([v,t])=>`<option value="${v}" ${S.speed===v?'selected':''}>${t}</option>`).join('')}</select></div><div class="row" style="margin-top:8px"><button class="btn sm" data-act="adv" data-m="180">+3 ore</button><button class="btn sm" data-act="adv" data-m="600">+10 ore</button><button class="btn sm" data-act="day">Nuovo giorno</button></div><p class="mut">Nel gioco il tempo è quello vero: mentre non ci sei arrivano ascolti (circa uno ogni 2 ore, al massimo 8). Qui puoi far passare il tempo per provare.</p></div>
+ <div class="card test"><h3>Livello</h3><p class="mut">Scegli un livello per vedere com'è il gioco a quel punto (le note già scritte restano). Sul sito questa scheda appare solo con ?test nell'indirizzo; senza, il livello è quello della tua isola.</p><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px">${Array.from({length:LVMAX},(_,i)=>`<button class="btn sm ${S.lv===i+1?'gold':'ghost'}" data-act="setLv" data-l="${i+1}">${i+1}</button>`).join('')}</div><p class="mut" style="margin-top:8px">Livello ${S.lv}: ${UNL[S.lv].txt}</p><div class="row"><button class="btn sm" data-act="lvUp">+1 livello (con festa)</button></div></div>
+ <div class="card test"><button class="btn ghost" data-act="reset">Ricomincia da zero</button></div>`}
+/* ================= EVENTS ================= */
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tab],[data-act],[data-trk],[data-bar],[data-vote]');if(!t)return;audio();
+ if(t.dataset.tab){if(V&&t.dataset.tab==='visit'&&S.tab==='visit')return;if(V&&t.dataset.tab!=='visit')V=null;S.tab=t.dataset.tab;save();render();window.scrollTo(0,0);if(S.tab==='palco')greet();return}
+ if(t.dataset.trk){if(!caps(S.lv).tracks.includes(t.dataset.trk)){const lv=UNL.findIndex(u=>u&&u.t===t.dataset.trk);say(TRK[t.dataset.trk].n+': si sblocca al livello '+lv+'.');return}S.trk=t.dataset.trk;save();render();return}
+ if(t.dataset.bar){S.bar=+t.dataset.bar;render(true);return}
+ if(t.dataset.vote){V.vote=+t.dataset.vote;document.querySelectorAll('[data-vote]').forEach(b=>b.classList.toggle('on',+b.dataset.vote<=V.vote));$('#sendV').disabled=false;return}
+ if(t.tagName==='SELECT'||t.tagName==='INPUT')return;const a=t.dataset.act;
+ const A={
+  play(){if(PL){stopSong();document.querySelectorAll('#bstrip .bb').forEach(x=>x.classList.remove('pl'));t.textContent='▶ Ascolta';return}const c=ec();t.textContent='■ Ferma';const cells=()=>document.querySelectorAll('#sg .c');let last=[];playSong(S.song,c,{onStep:(st)=>{const b=Math.floor(st/16),s=st%16;document.querySelectorAll('#bstrip .bb').forEach((x,i)=>x.classList.toggle('pl',i===b));last.forEach(x=>x.classList.remove('ph'));last=[];if(b===S.bar)cells().forEach(x=>{if(+x.dataset.s===s){x.classList.add('ph');last.push(x)}})}})},
+  oct(){const T=TRK[S.trk],cur=S.oct[S.trk]??T.def;S.oct[S.trk]=clamp(cur+(+t.dataset.d),T.lo,T.hi-12);save();render(true)},
+  half(){S.half=+t.dataset.h;render(true)},
+  copyBar(){CLIP=ORDER.map(k=>JSON.parse(JSON.stringify(S.song[k][S.bar])));CLIP.notes=((S.notes||{})[S.bar]||['','','','']).slice();toast('Battuta '+(S.bar+1)+' copiata');render(true)},
+  pasteBar(){if(!CLIP)return;ORDER.forEach((k,i)=>S.song[k][S.bar]=JSON.parse(JSON.stringify(CLIP[i])));S.notes=S.notes||{};S.notes[S.bar]=CLIP.notes.slice();save();toast('Incollata nella battuta '+(S.bar+1));render(true)},
+  dupNext(){const c=ec(),n=S.bar+1;if(n>=c.max)return;ORDER.forEach(k=>S.song[k][n]=JSON.parse(JSON.stringify(S.song[k][S.bar])));S.notes=S.notes||{};S.notes[n]=((S.notes[S.bar])||['','','','']).slice();if(n>=(S.useBars||1))S.useBars=n+1;S.bar=n;save();toast('Copiata nella battuta '+(n+1)+': ora puoi variarla');const was=!!PL;stopSong();render(true);if(was){const b=$('#playBtn');if(b)b.click()}},
+  ubar(){const c=ec(),was=!!PL;S.useBars=clamp(c.bars+(+t.dataset.d),1,c.max);if(S.bar>=S.useBars)S.bar=S.useBars-1;save();stopSong();render(true);if(was){const b=$('#playBtn');if(b)b.click()}},
+  clearTrk(){const k=S.trk;S.song[k][S.bar]=Array(16).fill(EMPTY(k));save();render()},
+  publish(){const c=ec();const snap=JSON.stringify(c.tracks.map(k=>S.song[k].slice(0,c.bars)));if(S.pub&&S.pub.snap===snap){say('È uguale alla versione pubblicata: cambia qualcosa prima di ripubblicare!');return}const def=emptySong();if(snap===JSON.stringify(c.tracks.map(k=>def[k].slice(0,c.bars)))){say('Questo è il brano di partenza: aggiungi qualcosa di tuo prima di pubblicarlo!');return}const any=c.tracks.some(k=>S.song[k].slice(0,c.bars).some(bar=>bar.some(v=>isOn(k,v))));if(!any){say('Il brano è vuoto! Metti almeno qualche colpo di batteria.');return}
+   if(SITE&&!ACCT()){say('Per pubblicare il brano entra con il tuo account: torna sull\'isola e tocca l\'icona in alto.');return}S.ver++;S.pub={song:JSON.parse(JSON.stringify(S.song)),c,score:analyze(S.song,c),snap};if(window.PalcoCloud){const songs={};c.tracks.forEach(k=>songs[k]=S.song[k].slice(0,c.bars));PalcoCloud.publish({ver:S.ver,song:JSON.stringify(Object.assign(songs,{_v:3})),c:{tracks:c.tracks,bars:c.bars},score:{R:+S.pub.score.R.toFixed(2),M:+S.pub.score.M.toFixed(2),A:+S.pub.score.A.toFixed(2)}}).catch(e=>{console.warn(e);toast('Pubblicazione online non riuscita: riprova')})}S.nextL=Math.min(S.nextL,12);save();toast('Brano pubblicato! Versione '+S.ver);say(S.ver===1?'Il tuo brano è sul palco! Tra poco arriveranno le prime band ad ascoltarlo.':'Nuova versione sul palco! I voti ripartono da zero per questa versione.');render()},
+  playPub(){if(!S.pub)return;if(PL){stopSong();t.textContent='▶ Ascolta il tuo brano';return}t.textContent='■ Ferma';playSong(S.pub.song,S.pub.c,{loops:2,onEnd:()=>{t.textContent='▶ Ascolta il tuo brano'}})},
+  clearPending(){S.pending=[];save();render()},
+  visit(){const p=todayStages()[+t.dataset.i];V={p,i:+t.dataset.i};render();setTimeout(startListen,400)},
+  sendVote(){const sc=V.sc,ig=S.band.reduce((a,b)=>a+sc[b.k],0)/3,fin=.5*V.vote+.5*ig,fl=$('#flw').checked;if(fl)S.given=(S.given||0)+1;S.visited.push(V.i);addSeeds(2);if(V.p.real&&window.PalcoCloud){S.visitedUids=(S.visitedUids||[]).concat(V.p.uid).slice(-40);PalcoCloud.vote(V.p.uid,V.p.ver,{pv:V.vote,ig:S.band.map(b=>({n:b.n,k:b.k,v:+sc[b.k].toFixed(2),ph:phrase(b.k,sc[b.k])})),fin:+fin.toFixed(2),fl}).catch(e=>toast('Voto non inviato: riprova più tardi'))}let learn=[];S.band.forEach(b=>{const g=Math.round(sc[b.k]);b.xp+=g;learn.push(b.n+' +'+g)});gainXP(1);
+   say('Grazie! Hai dato '+f1(fin)+' 👏'+(fl?' e un fiore':'')+' a '+V.p.name+'. +2 semi'+(SITE?' (li trovi sull\'isola)':'')+'. I tuoi Igorlets hanno imparato: '+learn.join(', ')+'.',6000);V=null;save();render()},
+  adv(){const m=+t.dataset.m;if(S.pub)offline(m);S.clock+=m;save();toast('+'+(m/60)+' ore'+(S.pub?'':' (pubblica il brano per ricevere ascolti)'));render()},day(){S.dayShift=(S.dayShift||0)+1;S.day=dayNow();S.visited=[];if(S.pub)offline(600);save();toast('Nuovo giorno: tre palchi nuovi');render()},
+  setLv(){S.testLv=+t.dataset.l;syncLv();const c=caps(S.lv);S.useBars=clamp(S.useBars||1,1,c.bars);if(!c.tracks.includes(S.trk))S.trk='dr';S.bar=0;save();render();toast('Ora sei al livello '+S.lv)},
+  lvUp(){if(S.lv<LVMAX){S.xp=LVXP[S.lv+1];gainXP(0)}save();render()},lvMax(){while(S.lv<LVMAX){S.xp=LVXP[S.lv+1];gainXP(0)}save();render()},
+  reset(){if(t.dataset.sure){stopSong();V=null;S=fresh();save();render();greet(true);return}t.dataset.sure=1;t.textContent='Tocca ancora per confermare'}};
+ if(A[a])A[a]()});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset&&t.dataset.note!=null){S.notes=S.notes||{};const n=S.notes[S.bar]=S.notes[S.bar]||['','','',''];n[+t.dataset.note]=t.value;save()}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset.act==='speed'){S.speed=+t.value;save()}});
+function greet(force){if(!S.met||force){S.met=true;save();say('Benvenuto sul tuo palco! Io sono Igorbaudo. Qui costruisci il tuo brano, pian piano, e le band dell\'isola vengono ad ascoltarlo. Comincia da Componi!',7000);return}
+ if(S.pending.length)say('Bentornato! Mentre non c\'eri '+S.pending.length+' band hanno ascoltato il tuo brano!')}
+function realVotes(list){/* votes from real players since the last visit */let n=0;for(const v of list){if(S.seenVotes&&S.seenVotes[v.id]===v.at)continue;S.seenVotes=S.seenVotes||{};S.seenVotes[v.id]=v.at;const L={who:v.nick,ver:v.ver,pv:v.pv,igs:v.ig||[],fin:v.fin,fl:!!v.fl,real:1};S.listens.unshift(L);S.pending.push(L);if(L.fl)S.flowers++;gainXP(L.fin);n++}if(n){save();if(S.tab==='palco'&&!PL)render()}}
+window.addEventListener('palcocloud',()=>{PalcoCloud.ready().then(async()=>{const d=await PalcoCloud.loadDraft().catch(()=>null);if(d&&d.at>(S.at||0)&&d.song){S.song=migrate(d.song);for(const k of ORDER){S.song[k]=S.song[k]||[];while(S.song[k].length<16)S.song[k].push(Array(16).fill(EMPTY(k)))}S.useBars=d.useBars||S.useBars;S.notes=d.notes||S.notes;S.at=d.at;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(!PL)render()}
+ PalcoCloud.myVotes().then(realVotes).catch(()=>{});PalcoCloud.count().then(n=>{S.realStages=n;save()}).catch(()=>{})})});
+render();greet();
+</script>
+<script type="module">
+/* Online part: published stages, visits, votes and the leaderboard on Firebase (only on igortime.com) */
+if(/igortime\.com$|igortime\.pages\.dev$/.test(location.hostname)){
+const V='10.12.2',B='https://www.gstatic.com/firebasejs/'+V;
+const {initializeApp}=await import(B+'/firebase-app.js');const {getAuth,onAuthStateChanged}=await import(B+'/firebase-auth.js');
+const F=await import(B+'/firebase-firestore.js');const {getFirestore,doc,getDoc,setDoc,updateDoc,collection,query,orderBy,limit,getDocs,writeBatch,serverTimestamp,increment,getCountFromServer}=F;
+const app=initializeApp({apiKey:"AIzaSyBcUoKJT0s_kHpydzjr5qIsxh5AXTurw-0",authDomain:"igortime-f69b3.firebaseapp.com",projectId:"igortime-f69b3",storageBucket:"igortime-f69b3.firebasestorage.app",messagingSenderId:"191774217559",appId:"1:191774217559:web:1604f911cbb70652321a12"});
+const auth=getAuth(app),db=getFirestore(app);let user=null,nick='';let ok;const ready=new Promise(r=>ok=r);
+onAuthStateChanged(auth,async u=>{user=u;if(u){try{const s=await getDoc(doc(db,'users',u.uid));nick=s.exists()&&s.data().nick||''}catch(e){}if(!nick){try{nick=(JSON.parse(localStorage.getItem('igortime_acct'))||{}).name||''}catch(e){}}}ok()});
+const need=()=>{if(!user)throw new Error('guest')};
+window.PalcoCloud={ready:()=>ready,
+ async loadDraft(){await ready;if(!user)return null;const s=await getDoc(doc(db,'palco',user.uid));if(!s.exists())return null;const d=s.data();return{song:JSON.parse(d.song),useBars:d.useBars,notes:d.notes?JSON.parse(d.notes):{},at:d.at||0}},
+ async saveDraft(d){await ready;if(!user)return;await setDoc(doc(db,'palco',user.uid),{song:JSON.stringify(d.song),useBars:d.useBars|0,notes:JSON.stringify(d.notes||{}),at:d.at|0})},
+ async publish(p){await ready;need();const ref=doc(db,'stages',user.uid),cur=await getDoc(ref);const base={nick:String(nick||'Igor').slice(0,16),ver:p.ver|0,song:p.song,c:p.c,score:p.score,at:serverTimestamp()};
+  /* the counters belong to the listeners: a republish only touches the song */
+  if(cur.exists())await updateDoc(ref,base);else await setDoc(ref,{...base,listens:0,appl:0,flowers:0,wk:'',wkAppl:0,last:serverTimestamp()})},
+ async pick(n,skip){await ready;const q=await getDocs(query(collection(db,'stages'),orderBy('last','asc'),limit(15)));const l=q.docs.filter(d=>(!user||d.id!==user.uid)&&!(skip||[]).includes(d.id)).map(d=>({uid:d.id,...d.data()}));for(let i=l.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[l[i],l[j]]=[l[j],l[i]]}return l.slice(0,n).map(x=>({uid:x.uid,nick:x.nick,ver:x.ver,song:x.song,c:x.c}))},
+ async vote(uid,ver,v){await ready;need();const wk=window.weekKeyPub();const sref=doc(db,'stages',uid),s=await getDoc(sref);if(!s.exists())return;const o=s.data(),appl=Math.round(v.fin*100)/100;const b=writeBatch(db);
+  b.set(doc(db,'stages',uid,'votes',user.uid),{nick:String(nick||'Igor').slice(0,16),ver:ver|0,pv:v.pv|0,ig:v.ig,fin:appl,fl:!!v.fl,at:Date.now()});
+  b.update(sref,{listens:increment(1),appl:increment(appl),flowers:increment(v.fl?1:0),wk,wkAppl:o.wk===wk?increment(appl):appl,last:serverTimestamp()});await b.commit()},
+ async myVotes(){await ready;if(!user)return[];const q=await getDocs(query(collection(db,'stages',user.uid,'votes'),orderBy('at','desc'),limit(30)));return q.docs.map(d=>({id:d.id,...d.data()}))},
+ async count(){await ready;const r=await getCountFromServer(collection(db,'stages'));return r.data().count},
+ async rank(wk){await ready;const a=await getDocs(query(collection(db,'stages'),orderBy('wkAppl','desc'),limit(30)));const week=a.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.wk===wk).slice(0,10);
+  const b=await getDocs(query(collection(db,'stages'),orderBy('appl','desc'),limit(40)));const all=b.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.listens>=10).map(x=>({...x,avg:x.appl/x.listens})).sort((p,q)=>q.avg-p.avg).slice(0,10);return{week,all}}};
+dispatchEvent(new Event('palcocloud'));}
+</script>
+</body>
+</html>
