@@ -86,6 +86,7 @@ nav button .i{font-size:20px}nav button.on{color:var(--gold)}nav button .dot{pos
 .topbar{display:flex;align-items:center;gap:10px;padding:6px 0 2px}.topbar b{font-size:17px}.igback{color:#ffe08a;text-decoration:none;font-weight:600;border:1px solid #3a4b98;border-radius:999px;padding:4px 10px;font-size:14px}
 .rank{display:flex;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}.rank .n{width:26px;text-align:center;font-weight:700;color:var(--gold)}.rank.me{background:#ffd16614;border-radius:10px}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.how{display:flex;gap:10px;align-items:flex-start;margin:8px 0}.how .hi{font-size:22px;line-height:1.2;width:28px;text-align:center;flex:none}
 </style>
 </head>
 <body>
@@ -290,7 +291,12 @@ function islandSVG(){const aud=Math.min(14,stats(S.ver).n);let crowd='';for(let 
  <circle cx="80" cy="262" r="3" fill="#ffd166"/><circle cx="130" cy="262" r="3" fill="#4fc3ff"/><circle cx="105" cy="262" r="3" fill="#b98cff"/>
  <image href="${IGOR}" x="92" y="276" width="24" height="24"/>${crowd}
  <text x="105" y="356" font-size="13" text-anchor="middle" fill="#fff" font-family="Fredoka" font-weight="600">Il tuo palco</text><text x="105" y="370" font-size="10" text-anchor="middle" fill="#cfd8ff" font-family="Fredoka">isolotto sud-ovest · c'è da subito</text></svg>`}
-function vPalco(){const c=caps(S.lv),st=stats(S.ver);let h=`<h2>Il mio palco</h2><div class="map">${islandSVG()}</div>`;
+const HOW=[['🎼','Componi','Nella pagina <b>Componi</b> scrivi il tuo brano su una griglia: ogni riga è un suono, ogni colonna un passo. Si comincia con batteria e marimba; più cresce la tua isola, più strumenti, note e battute avrai.'],
+ ['📣','Pubblica','Quando ti piace, premi <b>Pubblica</b>: il brano va sul tuo palco e tutti possono ascoltarlo. Puoi cambiarlo e ripubblicarlo quando vuoi.'],
+ ['🎧','Visita','Ogni giorno Igorbaudo ti propone tre palchi di altri giocatori. Ci vai con la tua band di Igorlets, ascolti il brano fino in fondo e lasci da 1 a 5 applausi, e se vuoi un fiore. Per ogni ascolto ricevi 2 semi.'],
+ ['👏','Il voto','Metà del voto la dai tu, l’altra metà gli Igorlets: uno ascolta il ritmo, uno la melodia, uno l’armonia. Niente sfide: solo applausi gentili.'],
+ ['🏆','La classifica','Gli applausi che ricevi ti portano in <b>Classifica</b>: quella della settimana riparte ogni lunedì, quella di sempre conta la media (da 10 ascolti in su).']];
+function vPalco(){const c=caps(S.lv),st=stats(S.ver);let h=`<h2>Il mio palco</h2><div class="card"><h3>Come funziona</h3>${HOW.map(([i,t,d])=>`<div class="how"><span class="hi">${i}</span><div><b>${t}</b><div class="mut">${d}</div></div></div>`).join('')}${SITE&&!ACCT()?'<p class="mut" style="margin-top:8px">Per pubblicare e votare serve un account: accedi dall’isola.</p>':''}</div>`;
  if(S.pending.length){const p=S.pending,fl=p.filter(x=>x.fl).length,avg=p.reduce((a,b)=>a+b.fin,0)/p.length;h+=`<div class="card"><h3>Mentre non c'eri</h3><p><b>${p.length}</b> ${p.length===1?'band ha':'band hanno'} ascoltato il tuo brano: media <b>${f1(avg)} 👏</b>${fl?` e <b>${fl} 🌸</b>`:''}.</p>${p.slice(0,4).map(L=>listenRow(L)).join('')}<button class="btn sm" data-act="clearPending" style="margin-top:6px">Grazie a tutti!</button></div>`}
  h+=`<div class="card"><h3>Il tuo brano pubblico</h3>`;
  if(!S.pub)h+=`<p>Non l'hai ancora pubblicato. Componi qualcosa (anche solo la batteria) e premi <b>Pubblica</b>: le band dell'isola verranno ad ascoltarlo.</p><button class="btn gold" data-tab="comp">Vai a comporre</button>`;
@@ -299,9 +305,8 @@ function vPalco(){const c=caps(S.lv),st=stats(S.ver);let h=`<h2>Il mio palco</h2
  h+=`</div>`;
  if(S.listens.length&&!S.pending.length)h+=`<div class="card"><h3>Ultimi ascolti</h3>${S.listens.slice(0,5).map(L=>listenRow(L)).join('')}</div>`;
  h+=`<div class="card"><h3>La tua band di ascoltatori</h3><p class="mut">Ti accompagnano quando visiti i palchi degli altri, e imparano da quello che ascoltano.</p><div class="row" style="justify-content:space-around">${S.band.map(b=>`<div style="text-align:center">${face(b.cap,54)}<div><b>${b.n}</b></div><div style="color:${KC[b.k]};font-size:13px">${KI[b.k]} ${KN[b.k]} · liv ${1+Math.floor(b.xp/10)}</div></div>`).join('')}</div></div>`;
- h+=`<div class="card"><h3>Cosa sblocchi salendo di livello sull'isola</h3>${UNL.slice(1).map((u,i)=>`<div class="locked ${S.lv>=i+1?'ok':''}"><span>Livello ${i+1}: ${u.txt}</span><span>${S.lv>=i+1?'✓':'🔒'}</span></div>`).join('')}<p class="mut">Il palco cresce con l'isola: i livelli si guadagnano raccogliendo formiche di tofu. Gli applausi che ricevi servono per la classifica.</p></div>`;
  return h}
-function listenRow(L){return `<div class="listen-row"><div><b>${L.who}</b>${L.fake?'<span class="ghost">finta</span>':''}<div class="mut">${L.igs.map(i=>`<span style="color:${KC[i.k]}">${i.n} ${KI[i.k]} ${'👏'.repeat(Math.max(1,Math.round(i.v)))}</span>`).join(' · ')}</div><div class="mut">«${L.igs[0].ph}»</div></div><div style="text-align:right;white-space:nowrap"><b>${f1(L.fin)} 👏</b>${L.fl?'<div>🌸</div>':''}</div></div>`}
+function listenRow(L){return `<div class="listen-row"><div><b>${L.who}</b>${L.fake?'<span class="ghost">band di Igorbaudo</span>':''}<div class="mut">${L.igs.map(i=>`<span style="color:${KC[i.k]}">${i.n} ${KI[i.k]} ${'👏'.repeat(Math.max(1,Math.round(i.v)))}</span>`).join(' · ')}</div><div class="mut">«${L.igs[0].ph}»</div></div><div style="text-align:right;white-space:nowrap"><b>${f1(L.fin)} 👏</b>${L.fl?'<div>🌸</div>':''}</div></div>`}
 /* ---------- composer ---------- */
 function vComp(){const c=ec();if(!c.tracks.includes(S.trk))S.trk='dr';if(S.bar>=c.bars)S.bar=0;const T=TRK[S.trk];
  let h=`<h2>Componi il tuo brano</h2><p class="mut">Ogni strumento ha la sua griglia. Tocca le caselle per mettere i suoni. Crescendo sblocchi strumenti, passi e battute.</p><div class="chips">${ORDER.map(k=>{const on=c.tracks.includes(k);return `<button class="chip ${on?'':'off'} ${S.trk===k?'on':''}" data-trk="${k}" style="background:${TRK[k].col}">${on?'':'🔒 '}${TRK[k].n}</button>`}).join('')}</div>`;
