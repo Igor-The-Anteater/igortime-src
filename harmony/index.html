@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en"><head><script src="/lang.js?v=3"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Harmony · Igor time</title>
+<meta name="description" content="Learn harmony from zero in Igor's music school: Arnold Schönbigor teaches intervals, keys, chords, four-part writing and cadences, all the way to the Cadences game.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+:root{--night:#120f14;--ink:#f1e9dc;--dim:#ad9f90;--warm:#f1b46e;--bone:#efe4cf;--glow:#ffd38a;--chalk:#eef2e6;
+ --display:'Instrument Serif',Georgia,serif;--toon:'Fredoka','Trebuchet MS',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow:hidden;font-family:var(--mono);-webkit-user-select:none;user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+header{position:fixed;z-index:2;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none;background:linear-gradient(rgba(18,15,20,.88) 30%,rgba(18,15,20,0));
+ padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px))}
+.igback{pointer-events:auto;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none;border:1px solid rgba(241,233,220,.35);border-radius:999px;padding:9px 13px;white-space:nowrap;background:rgba(18,15,20,.6)}.igback:hover{border-color:var(--glow);color:var(--glow)}
+h1{margin:0;font:400 clamp(20px,3.2vw,32px)/1 var(--display);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}h1 em{color:var(--warm)}h1 a{color:inherit;text-decoration:none;pointer-events:auto}
+#stat{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right;white-space:nowrap;pointer-events:auto;cursor:pointer}#stat b{color:var(--bone);font-weight:500}
+#dots{display:flex;gap:4px;justify-content:flex-end;margin-top:5px}#dots i{width:8px;height:8px;border-radius:50%;background:rgba(241,233,220,.18)}#dots i.ok{background:#7fe08a}#dots i.no{background:#f1b46e}#dots i.now{box-shadow:0 0 0 2px var(--bone)}
+#bar{position:fixed;z-index:2;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 12px calc(14px + env(safe-area-inset-bottom,0px))}
+#bar .row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;max-width:980px}
+#bar .pr{font:600 17px/1.3 var(--toon);color:#2b2018;background:#f7ecd4;border:3px solid #2b2018;border-radius:14px;padding:8px 14px;max-width:min(940px,100%);box-sizing:border-box;text-align:center}
+#bar .pr b{color:#a5481c}
+button{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:13px 18px;border-radius:999px;cursor:pointer;background:rgba(18,15,20,.62);color:var(--ink);border:1px solid rgba(241,233,220,.4);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button.main{background:var(--warm);color:#2b1a0e;border-color:var(--warm)}
+button:disabled{opacity:.35;cursor:default}button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
+button.ex{font:600 15px/1.1 var(--toon);letter-spacing:0;text-transform:none;background:#f7ecd4;color:#2b2018;border:3px solid #2b2018;box-shadow:0 3px 0 #2b2018;padding:10px 16px}
+.ans{display:grid;gap:9px;width:100%;max-width:980px;grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}
+.ans button{font:600 17px/1.15 var(--toon);letter-spacing:0;text-transform:none;border-radius:18px;padding:10px 8px 11px;background:#f7ecd4;color:#2b2018;border:3px solid #2b2018;box-shadow:0 4px 0 #2b2018;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:58px;justify-content:center}
+.ans button small{font:500 11px var(--mono);color:#8a7360}
+.ans button:active{transform:translateY(2px);box-shadow:0 2px 0 #2b2018}
+.ans button.right{background:#bff2b0}.ans button.wrong{background:#ffd6a6}
+.ans button:disabled{opacity:1}.ans.done button:not(.right):not(.wrong){opacity:.45}
+@media (max-width:620px){.ans{gap:7px}.ans button{font-size:15px;min-height:50px;padding:7px 5px 8px;border-radius:15px}#bar .pr{font-size:14.5px;padding:7px 10px}
+ .igback{padding:8px 10px;font-size:10px}h1 .gm{display:none}button{padding:12px 13px;font-size:10.5px;letter-spacing:.08em}button.ex{font-size:14px;padding:9px 12px}}
+#bubble{position:fixed;left:0;top:0;z-index:3;box-sizing:border-box;pointer-events:none;font:500 17px/1.3 var(--toon);color:#2b2018;background:#f7ecd4;border:3px solid #2b2018;
+ padding:9px 15px 10px;border-radius:16px;box-shadow:0 4px 0 #2b2018;max-width:min(430px,62vw);opacity:0;transition:opacity .25s}
+#bubble b{color:#a5481c}
+#bubble::after{content:'';position:absolute;left:calc(var(--tx,40px) - 8px);bottom:-11px;width:14px;height:14px;background:#f7ecd4;border:3px solid #2b2018;border-top:0;border-left:0;transform:rotate(45deg);border-radius:0 0 4px 0}
+@media (max-width:620px){#bubble{font-size:14.5px;max-width:calc(100vw - 28px)}}
+.ov{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 55%,rgba(18,15,20,.8),rgba(18,15,20,.97) 75%);padding:16px;box-sizing:border-box;overflow:auto}
+.ov[hidden]{display:none}.card{max-width:40rem;width:100%}
+.card h2{margin:0;font:400 clamp(34px,7vw,60px)/.95 var(--display);letter-spacing:-.02em}.card h2 em{color:var(--warm)}
+.card h3{margin:14px 0 4px;font:600 18px var(--toon)}
+.card p{font-size:12px;line-height:1.7;color:var(--dim);margin:1em 0}.card p b{color:var(--ink);font-weight:500}
+.card .row{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 10px}
+.card .big{font:400 clamp(56px,12vw,96px)/1 var(--display);color:var(--bone)}
+.card .small{font-size:10.5px;letter-spacing:.08em;color:var(--dim)}.card a{color:var(--warm)}
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:14px 0}
+.map button{font:600 13.5px/1.2 var(--toon);letter-spacing:0;text-transform:none;border-radius:14px;padding:9px 8px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;background:rgba(241,233,220,.07);text-align:left}
+.map button small{font:500 10px var(--mono);letter-spacing:.06em;color:var(--dim);text-transform:uppercase}
+.map button.done{border-color:#7fe08a}.map button.done small{color:#7fe08a}.map button.cur{border-color:var(--warm);background:rgba(241,180,110,.16)}.map button.cur small{color:var(--warm)}
+.map button.test{border-style:dashed}
+.map button:disabled{opacity:.33}
+#endnew{font:600 18px/1.3 var(--toon);color:var(--glow)}
+.kb{position:relative;width:min(100%,600px);height:clamp(110px,20vh,170px);touch-action:none}
+.kb button{position:absolute;top:0;padding:0;letter-spacing:0;text-transform:none;font:600 14px var(--toon);border-radius:0 0 10px 10px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;padding-bottom:8px;touch-action:none}
+.kb .wk{left:calc(var(--i)*100%/7);width:calc(100%/7 - 4px);margin-left:2px;height:100%;background:#fbf7ee;color:#2b2018;border:2px solid #2b2018;box-shadow:0 4px 0 #2b2018}
+.kb .bk{left:calc((var(--i) + 1)*100%/7 - 100%/7*.3);width:calc(100%/7*.6);height:60%;background:#2b2018;color:#f1e9dc;border:2px solid #000;z-index:2;font-size:11px}
+.kb .wk.on{background:#ffe08a}.kb .bk.on{background:#c98a1e}
+.kb .wk.fix{background:#cfe6ff}.kb .bk.fix{background:#3e6fa8}
+.kb button.right{background:#bff2b0}.kb .bk.right{background:#3c8a3a}.kb button.wrong{background:#ffd6a6}.kb .bk.wrong{background:#a5481c}
+</style>
+</head><body>
+<canvas id="c" aria-label="Igor's music school, the harmony room: Arnold Schönbigor, bald with dark hair at the back and a bow tie, stands next to a blackboard with a grand staff; a piano waits on the right"></canvas>
+<header><a class="igback" href="/">← Island</a><h1><a href="/"><em>Igor</em> time</a><span class="gm" id="gm"></span></h1><div id="stat"><span id="st1"></span><div id="dots"></div></div></header>
+<div id="bubble"></div>
+<div id="bar"></div>
+<div class="ov" id="start"><div class="card" id="startCard"></div></div>
+<div class="ov" id="end" hidden><div class="card" id="endCard"></div></div>
+<script src="/house/kit.js?v=4"></script>
+<script src="/notes/nadia.js?v=1"></script>
+<script src="/harmony/schoen.js?v=1"></script>
+<script src="/harmony/theory.js?v=1"></script>
+<script src="/harmony/lessons.js?v=1"></script>
+<script>
+(()=>{
+const H=IgorHouse,{TAU,clamp,lerp,rr,drawAnt,paintAvatar,ME,AVN}=H,PAD=H.PAD||.24;
+let IT=false;try{IT=(localStorage.getItem('igortime_lang')||window.HM_LANG||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en'))==='it'}catch(e){IT=window.HM_LANG==='it'}
+const LG=IT?'it':'en';
+const tt=(en,it)=>IT?it:en,T2=a=>a?(IT?a[1]:a[0]):'';
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const TEACHER='Arnold Schönbigor';
+try{const h=localStorage.getItem('igortime_home');if(h)document.querySelectorAll('a[href="/"]').forEach(a=>a.href=h)}catch(e){}
+if(IT)document.documentElement.lang='it';
+$('gm').textContent=' · '+tt('Harmony','Armonia');
+const touch=matchMedia('(pointer:coarse)').matches;
+const HT=window.HT,HM=window.HM;const{P,parse,midi,pc,dia,nm,ival,up,down,ivName,scale,triadOn,seventhOn,triad,quality,QN,symbol,roman,FUNC,transposeTo,voice,mod}=HT;
+const N=p=>nm(p,LG);
+
+/* ================= lessons ================= */
+const LS=HM.L,US=HM.U,NL=LS.length;
+const isTest=k=>!!LS[k].test;
+/* the exercises of a check: all the exercises of the lessons of its unit */
+for(const[k,l]of LS.entries())if(l.test&&!l.ex){l.ex=[];for(const m of LS)if(m.u===l.u&&!m.test&&m.ex)l.ex.push(...m.ex)}
+const NQ=k=>LS[k].q||(isTest(k)?10:6),PASS=k=>Math.ceil(NQ(k)*(isTest(k)?.8:.67));
+
+/* ================= progress ================= */
+const KEY='igortime_harmony';
+let PR={done:0,test:0,best:{},plays:{},met:0};
+try{Object.assign(PR,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
+try{const S=JSON.parse(localStorage.getItem('igortime_v1'))||{},Pn=JSON.parse(localStorage.getItem('igortime_pending'))||{};
+ for(const o of[S.scores,Pn.scores]){const v=o&&o.harmony&&+o.harmony.all;if(v>PR.done)PR.done=Math.min(NL,v)}}catch(e){}
+const saveP=()=>{try{localStorage.setItem(KEY,JSON.stringify(PR))}catch(e){}};
+let readDone=0;try{readDone=(JSON.parse(localStorage.getItem('igortime_notes'))||{}).done|0}catch(e){}
+const OPEN=/[?&]open\b/.test(location.search);
+
+/* ================= sound ================= */
+let AC=null,OUT=null;
+function audio(){if(AC)return AC;AC=new(window.AudioContext||window.webkitAudioContext)();OUT=AC.createGain();OUT.gain.value=.45;OUT.connect(AC.destination);return AC}
+function tone(m,t=0,dur=1.3,vol=.2){if(!AC)return;const t0=AC.currentTime+t,f=440*Math.pow(2,(m-69)/12),g=AC.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.01);g.gain.exponentialRampToValueAtTime(vol*.35,t0+.3);g.gain.exponentialRampToValueAtTime(.001,t0+dur);g.connect(OUT);
+ for(const[k,a]of[[1,1],[2,.32],[3,.1],[4,.05]]){const o=AC.createOscillator(),ga=AC.createGain();o.type='sine';o.frequency.value=f*k;ga.gain.value=a;o.connect(ga);ga.connect(g);o.start(t0);o.stop(t0+dur+.05)}}
+function playCols(cols,melodic){if(!AC)return;let t=0;for(const c of cols){if(!c.n||!c.n.length){t+=.4;continue}const v=.22/Math.sqrt(c.n.length);if(melodic||c.mel)c.n.forEach((p,i)=>tone(midi(p),t+i*.35,1.1,v*1.6));else c.n.forEach(p=>tone(midi(p),t,1.4,v));t+=melodic||c.mel?c.n.length*.35+.2:.9}}
+function ding(ok){if(!AC)return;(ok?[76,84]:[64]).forEach((m,i)=>tone(m,i*.07,.35,.1))}
+
+/* ================= names and options ================= */
+const KN=(f,minor)=>N(HT.tonicOf(f,minor))+' '+(minor?tt('minor','minore'):tt('major','maggiore'));
+const DEGN=IT?['tonica','sopratonica','mediante','sottodominante','dominante','sopradominante','sensibile']:['tonic','supertonic','mediant','subdominant','dominant','submediant','leading note'];
+const DEGO=IT?['I','II','III','IV','V','VI','VII']:['I','II','III','IV','V','VI','VII'];
+const ordN=n=>IT?n+'°':n+(n===1?'st':n===2?'nd':n===3?'rd':'th');
+const fs=(lo,hi)=>ri(lo,hi);
+const kf=p=>{const m=p&&p.maxf!=null?p.maxf:1,mi=p&&p.minf!=null?p.minf:-m;return ri(mi,m)};
+function uniq(list,key=x=>x){const s=new Set(),o=[];for(const x of list){const k=key(x);if(s.has(k))continue;s.add(k);o.push(x)}return o}
+/* q = {p: prompt, show, opts, a, play, why} — opts is built with the right answer first, then shuffled */
+const DBL=/♯♯|♭♭|𝄪|𝄫/;function mk(p,right,wrong,o){o=o||{};const all=uniq([right,...wrong.filter(w=>w!==right&&(DBL.test(right)||!DBL.test(w)))]).slice(0,o.n||4);const opts=o.keep?all.slice().sort((x,y)=>x.localeCompare(y,undefined,{numeric:true})):shuffle(all);return{p,opts,a:opts.indexOf(right),...o}}
+function noteWrong(p){const out=[];out.push(N({...p,a:p.a+1}),N({...p,a:p.a-1}),N({...p,l:mod(p.l+1,7),a:0}),N({...p,l:mod(p.l-1,7),a:0}),N({...p,l:mod(p.l+2,7),a:p.a}));return out.filter(x=>!/𝄪|𝄫|♯♯|♭♭/.test(x))}
+const randNote=(acc)=>{const p=P(ri(0,6),0,4);if(acc){const r=Math.random();p.a=r<.35?1:r<.7?-1:0}return p};
+const col=(n,lab,o)=>({n,lab,...(o||{})});
+const close=(ch,inv)=>{/* closed position from the inverted bass, around octave 4 */const k=inv||0,m=ch.map(p=>({l:p.l,a:p.a}));const out=[];let prev=null;for(let i=0;i<m.length;i++){const t=m[(k+i)%m.length];let p={...t,o:prev?prev.o:4};if(prev&&midi(p)<=midi(prev))p.o++;if(!prev){while(midi(p)>67)p.o--;while(midi(p)<57)p.o++}out.push(p);prev=p}return out};
+const st4=v=>v.map((p,i)=>({...p,st:i<2?'b':'t'}));
+/* the best close voicing of a chord after another: the upper-voice spacing that moves least */
+function lead(prev,ch,inv,want){let best=null,bs=1e9;for(let pos=0;pos<ch.length;pos++){const v=voice(ch,inv,pos);if(want&&!want(v))continue;let s=0;for(let i=1;i<4;i++)s+=Math.abs(midi(v[i])-midi(prev[i]));s+=Math.abs(midi(v[3])-67)*.2;if(s<bs){bs=s;best=v}}return best||voice(ch,inv,0)}
+function parallels(a,b){const r={p5:0,p8:0};for(let i=0;i<4;i++)for(let j=i+1;j<4;j++){const i1=midi(a[j])-midi(a[i]),i2=midi(b[j])-midi(b[i]),m1=midi(b[i])-midi(a[i]),m2=midi(b[j])-midi(a[j]);
+  if(m1===0&&m2===0)continue;if(Math.sign(m1)!==Math.sign(m2)||m1===0)continue;if(mod(i1,12)===7&&mod(i2,12)===7)r.p5++;if(mod(i1,12)===0&&mod(i2,12)===0)r.p8++}return r}
+const VOICE=IT?['basso','tenore','contralto','soprano']:['bass','tenor','alto','soprano'];
+
+/* ================= the exercise generators ================= */
+const G={
+ mcq:p=>mk(T2(p.q),T2(p.o[0]),p.o.slice(1).map(T2),{show:p.show?demo(p.show):null,keep:p.keep}),
+ read:p=>{const d=ri(p.lo!=null?p.lo:-12,p.hi!=null?p.hi:12),q=P(mod(d,7),0,4+Math.floor(d/7));return{p:tt('Which note is it?','Che nota è?'),opts:HT.NM[LG].slice(),a:q.l,show:{clef:'g',cols:[col([q])]},play:[col([q])]}},
+ semi:p=>{const a=randNote(false);let b,isS;if(Math.random()<.5){b=up(a,2,Math.random()<.5?'m':'M')}else{b={...a,a:a.a+(Math.random()<.5?1:0)};if(b.a===a.a)b=up(a,2,'M')}isS=midi(b)-midi(a)===1;
+  return mk(tt(`From <b>${N(a)}</b> to <b>${N(b)}</b>: a semitone or a tone?`,`Da <b>${N(a)}</b> a <b>${N(b)}</b>: un semitono o un tono?`),isS?tt('semitone','semitono'):tt('tone','tono'),[isS?tt('tone','tono'):tt('semitone','semitono')],{keep:true,show:{clef:'t',cols:[col([a]),col([b])]},play:[col([a]),col([b])]})},
+ accName:p=>{const q=randNote(true);if(!q.a)q.a=pick([1,-1]);return mk(tt('Which note is it?','Che nota è?'),N(q),noteWrong(q),{show:{clef:'t',cols:[col([q])]},play:[col([q])]})},
+ enh:p=>{const pairs=[['C#','Db'],['D#','Eb'],['F#','Gb'],['G#','Ab'],['A#','Bb'],['E#','F'],['B#','C'],['Fb','E'],['Cb','B']];const[x,y]=pick(pairs.slice(0,p.all?9:5));const[a,b]=Math.random()<.5?[x,y]:[y,x];const A=parse(a+'4'),B=parse(b+'4');
+  return mk(tt(`Which note is the same key as <b>${N(A)}</b>?`,`Quale nota è lo stesso tasto di <b>${N(A)}</b>?`),N(B),[N({...A,a:0}),N({...B,a:B.a?0:1}),N({...A,l:mod(A.l+2,7)})],{show:{clef:'t',cols:[col([A]),col([B],'?',{hide:1})]}})},
+ steps:p=>{const i=ri(0,6),half=i===2||i===6;return mk(tt(`In a major scale, between the ${ordN(i+1)} and the ${ordN(i===6?8:i+2)} degree there is…`,`Nella scala maggiore, tra il ${i+1}° e il ${i===6?8:i+2}° grado c’è…`),half?tt('a semitone','un semitono'):tt('a tone','un tono'),[half?tt('a tone','un tono'):tt('a semitone','un semitono')],{keep:true,show:{clef:'t',cols:scale(0,false).concat([P(0,0,5)]).map((q,k)=>col([q],k===i||k===i+1?'●':''))}})},
+ scaleBuild:p=>{const f=kf(p),minor=!!p.minor,sc=scale(f,minor,p.form);return{p:tt(`Build the <b>${KN(f,minor)}</b> scale${p.form==='harm'?' (harmonic)':''}: tap its 7 notes.`,`Costruisci la scala di <b>${KN(f,minor)}</b>${p.form==='harm'?' (armonica)':''}: tocca le sue 7 note.`),kb:{want:new Set(sc.map(pc)),fix:new Set([pc(sc[0])])},play:[col(sc.concat([{...sc[0],o:sc[0].o+1}]),'',{mel:1})]}},
+ scaleMiss:p=>{const f=kf(p),minor=!!p.minor,sc=scale(f,minor,p.form||(minor?'harm':'')),i=ri(1,6),q=sc[i];return mk(tt(`Which note is missing in the <b>${KN(f,minor)}</b> scale${minor?(p.form==='nat'?' (natural)':' (harmonic)'):''}?`,`Quale nota manca nella scala di <b>${KN(f,minor)}</b>${minor?(p.form==='nat'?' (naturale)':' (armonica)'):''}?`),N(q),noteWrong(q),{show:{clef:'t',cols:sc.map((x,k)=>k===i?col([],'?'):col([x]))},play:[col(sc,'',{mel:1})]})},
+ ivNum:p=>{const a=randNote(false),n=ri(2,8),b=up(a,n,[1,4,5,8].includes(n)?'P':pick(['M','m']));const right=HT.IVN[LG][n];return mk(tt('How far apart are the two notes? (count them)','Che intervallo c’è tra le due note? (contale)'),right,[2,3,4,5,6,7,8].filter(x=>x!==n).sort(()=>Math.random()-.5).map(x=>HT.IVN[LG][x]),{show:{clef:'t',cols:[col([a]),col([b])]},play:[col([a,b],'',{mel:1})]})},
+ ivQual:p=>{const nums=p.nums||[2,3,4,5,6,7,8];let a,b,iv;for(let k=0;k<40;k++){a=randNote(p.acc);const n=pick(nums),qs=[1,4,5,8].includes(n)?(p.aug?['P','A','d']:['P']):(p.aug?['M','m','A','d']:['M','m']);b=up(a,n,pick(qs));if(Math.abs(b.a)<=1)break}iv=ival(a,b);
+  const R=ivName(iv,LG),W=[];for(const q of[1,4,5,8].includes(iv.n)?['P','A','d']:['M','m','A','d'])W.push(ivName({n:iv.n,q},LG));W.push(ivName({n:iv.n+1>8?iv.n-1:iv.n+1,q:[1,4,5,8].includes(iv.n+1)?'P':iv.q==='P'?'M':iv.q},LG));
+  return mk(tt('What is this interval?','Che intervallo è?'),R,W,{show:{clef:'t',cols:[col([a]),col([b]),col([a,b])]},play:[col([a,b],'',{mel:1})]})},
+ ivUp:p=>{const nums=p.nums||[2,3,4,5,6,7];let a,b,n,q;for(let k=0;k<40;k++){a=randNote(p.acc);n=pick(nums);q=[1,4,5,8].includes(n)?'P':pick(['M','m']);if(p.aug&&Math.random()<.3)q=[1,4,5,8].includes(n)?pick(['A','d']):pick(['A','d']);b=up(a,n,q);if(Math.abs(b.a)<=1)break}
+  return mk(tt(`A <b>${ivName({n,q},LG)}</b> above <b>${N(a)}</b> is…`,`Una <b>${ivName({n,q},LG)}</b> sopra <b>${N(a)}</b> è…`),N(b),noteWrong(b),{show:{clef:'t',cols:[col([a]),col([],'?')]},play:[col([a,b],'',{mel:1})]})},
+ ivInv:p=>{const n=ri(2,7),q=[4,5].includes(n)?pick(['P','P','A','d']):pick(['M','m','M','m','A','d']);const n2=9-n,q2={P:'P',M:'m',m:'M',A:'d',d:'A'}[q];const R=ivName({n:n2,q:q2},LG);
+  return mk(tt(`Turn a <b>${ivName({n,q},LG)}</b> upside down: it becomes…`,`Il rivolto di una <b>${ivName({n,q},LG)}</b> è…`),R,[ivName({n:n2,q:[4,5].includes(n2)?(q2==='P'?'A':'P'):(q2==='M'?'m':'M')},LG),ivName({n,q:q2},LG),ivName({n:n2+(n2<7?1:-1),q:[4,5].includes(n2+(n2<7?1:-1))?'P':(q2==='P'?'M':q2==='A'||q2==='d'?'M':q2)},LG)])},
+ cons:p=>{const L=[[1,'P',1],[3,'M',1],[3,'m',1],[5,'P',1],[6,'M',1],[6,'m',1],[8,'P',1],[2,'M',0],[2,'m',0],[7,'M',0],[7,'m',0],[4,'A',0],[5,'d',0]];const[n,q,c]=pick(L);
+  return mk(tt(`Is the <b>${ivName({n,q},LG)}</b> a consonance or a dissonance?`,`La <b>${ivName({n,q},LG)}</b> è consonante o dissonante?`),c?tt('consonance','consonante'):tt('dissonance','dissonante'),[c?tt('dissonance','dissonante'):tt('consonance','consonante')],{keep:true,play:[col([P(0,0,4),up(P(0,0,4),n,q)])]})},
+ keyMaj:p=>{const f=kf(p);return mk(tt('Which major key has this key signature?','Quale tonalità maggiore ha questa armatura?'),KN(f,false),[-4,-3,-2,-1,0,1,2,3,4].filter(x=>x!==f).sort(()=>Math.random()-.5).map(x=>KN(x,false)),{show:{clef:'t',key:f,cols:[]}})},
+ keyMin:p=>{const f=kf(p);return mk(tt('Which minor key has this key signature?','Quale tonalità minore ha questa armatura?'),KN(f,true),[KN(f,false),...[-4,-3,-2,-1,0,1,2,3,4].filter(x=>x!==f).sort(()=>Math.random()-.5).map(x=>KN(x,true))],{show:{clef:'t',key:f,cols:[]}})},
+ keyCount:p=>{const f=kf(p),minor=!!p.minor&&Math.random()<.5;const lab=x=>x===0?tt('none','nessuna'):x>0?`${x} ${tt(x>1?'sharps':'sharp','diesis')}`:`${-x} ${tt(-x>1?'flats':'flat',-x>1?'bemolli':'bemolle')}`;
+  return mk(tt(`How many sharps or flats does <b>${KN(f,minor)}</b> have?`,`Quante alterazioni ha in chiave <b>${KN(f,minor)}</b>?`),lab(f),[lab(-f),lab(f+1),lab(f-1),lab(f+2)])},
+ degName:p=>{const f=kf(p),minor=!!p.minor,sc=scale(f,minor,minor?'harm':''),i=ri(p.only5?0:0,6),dn=minor&&i===6?DEGN[6]:DEGN[i];return mk(tt(`In <b>${KN(f,minor)}</b>, the <b>${dn}</b> is…`,`In <b>${KN(f,minor)}</b>, la <b>${dn}</b> è…`),N(sc[i]),[...sc.filter((x,k)=>k!==i).map(N),...noteWrong(sc[i])].sort(()=>Math.random()-.5))},
+ degOf:p=>{const f=kf(p),sc=scale(f,false),i=ri(0,6);return mk(tt(`In <b>${KN(f,false)}</b>, <b>${N(sc[i])}</b> is the…`,`In <b>${KN(f,false)}</b>, <b>${N(sc[i])}</b> è la…`),DEGN[i],DEGN.filter((x,k)=>k!==i).sort(()=>Math.random()-.5))},
+ relMin:p=>{const f=kf(p);if(Math.random()<.5)return mk(tt(`The relative minor of <b>${KN(f,false)}</b> is…`,`La relativa minore di <b>${KN(f,false)}</b> è…`),KN(f,true),[KN(f,false),KN(f+1,true),KN(f-1,true),KN(f+3,true)]);
+  return mk(tt(`The relative major of <b>${KN(f,true)}</b> is…`,`La relativa maggiore di <b>${KN(f,true)}</b> è…`),KN(f,false),[KN(f,true),KN(f+1,false),KN(f-1,false),KN(f-3,false)])},
+ harmMin:p=>{const f=kf(p),nat=scale(f,true),h=scale(f,true,'harm');return mk(tt(`In <b>${KN(f,true)}</b> harmonic, which note is raised?`,`In <b>${KN(f,true)}</b> armonica, quale nota si alza?`),`${N(nat[6])} → ${N(h[6])}`,[`${N(nat[5])} → ${N({...nat[5],a:nat[5].a+1})}`,`${N(nat[2])} → ${N({...nat[2],a:nat[2].a+1})}`,`${N(nat[3])} → ${N({...nat[3],a:nat[3].a+1})}`],{show:{clef:'t',key:f,cols:h.map(x=>col([x]))},play:[col(h.concat([{...h[0],o:h[0].o+1}]),'',{mel:1})]})},
+ triadQ:p=>{const quals=p.quals||['M','m','d','A'];let r,q,ch;for(let k=0;k<40;k++){r=randNote(p.acc);q=pick(quals);ch=triad(r,q);if(ch.every(x=>Math.abs(x.a)<=1))break}
+  return mk(tt('What kind of triad is this?','Che triade è?'),QN[LG][q],['M','m','d','A'].filter(x=>x!==q&&quals.includes(x)).concat(['M','m','d','A'].filter(x=>x!==q&&!quals.includes(x))).map(x=>QN[LG][x]),{show:{clef:'t',cols:[col(close(ch))]},play:[col(close(ch))]})},
+ triadBuild:p=>{const quals=p.quals||['M','m'];let r,q,ch;for(let k=0;k<40;k++){r=randNote(p.acc);q=pick(quals);ch=triad(r,q);if(ch.every(x=>Math.abs(x.a)<=1))break}
+  return{p:tt(`Build the triad of <b>${N(r)} ${QN.en[q]}</b>: tap its three notes.`,`Costruisci la triade di <b>${N(r)} ${QN.it[q]}</b>: tocca le sue tre note.`),kb:{want:new Set(ch.map(pc)),fix:new Set([pc(r)])},play:[col(close(ch))]}},
+ triadPart:p=>{const r=randNote(p.acc),q=pick(['M','m']),ch=triad(r,q),i=ri(0,2),nmz=IT?['la fondamentale','la terza','la quinta']:['the root','the third','the fifth'];
+  return mk(tt(`In this chord, which note is <b>${nmz[i]}</b>?`,`In questo accordo, qual è <b>${nmz[i]}</b>?`),N(ch[i]),[...ch.filter((x,k)=>k!==i).map(N),...noteWrong(ch[i])],{show:{clef:'t',cols:[col(close(ch))]}})},
+ diaQ:p=>{const f=kf(p),minor=!!p.minor,deg=ri(0,6),ch=triadOn(f,minor,deg),q=quality(ch);return mk(tt(`In <b>${KN(f,minor)}</b>, the triad on the <b>${DEGO[deg]}</b> degree is…`,`In <b>${KN(f,minor)}</b>, la triade sul <b>${DEGO[deg]}</b> grado è…`),QN[LG][q],['M','m','d','A'].filter(x=>x!==q).map(x=>QN[LG][x]),{show:{clef:'t',key:f,cols:[col(close(ch))]},play:[col(close(ch))]})},
+ roman:p=>{const f=kf(p),minor=!!p.minor,deg=ri(0,6),ch=triadOn(f,minor,deg),R=roman(deg,quality(ch));const W=[0,1,2,3,4,5,6].filter(x=>x!==deg).map(x=>roman(x,quality(triadOn(f,minor,x))));W.push(roman(deg,quality(ch)==='M'?'m':'M'));
+  return mk(tt(`In <b>${KN(f,minor)}</b>, which chord is this?`,`In <b>${KN(f,minor)}</b>, che accordo è questo?`),R,shuffle(W),{show:{clef:'t',key:f,cols:[col(close(ch))]},play:[col(close(ch))]})},
+ symbol:p=>{let r,q,ch;for(let k=0;k<40;k++){r=randNote(p.acc);q=pick(p.quals||['M','m']);ch=triad(r,q);if(ch.every(x=>Math.abs(x.a)<=1))break}const inv=p.inv?ri(0,2):0,v=close(ch,inv);const R=symbol(r,q,inv?ch[inv]:null,LG);
+  const W=[symbol(r,q==='M'?'m':'M',inv?ch[inv]:null,LG),symbol(ch[inv],q,null,LG),symbol(r,q,inv?ch[(inv%2)+1]:ch[1],LG),symbol(ch[1],q,null,LG)];return mk(tt('Which chord symbol fits?','Quale sigla corrisponde?'),R,W,{show:{clef:'t',cols:[col(v)]},play:[col(v)]})},
+ inv:p=>{const r=randNote(false),q=pick(['M','m']),ch=triad(r,q),inv=ri(0,2),v=close(ch,inv);const L=IT?['stato fondamentale','primo rivolto','secondo rivolto']:['root position','first inversion','second inversion'];
+  return mk(tt('Which position is this chord in?','In che posizione è questo accordo?'),L[inv],L.filter((x,k)=>k!==inv),{keep:true,show:{clef:'t',cols:[col(v)]},play:[col(v)]})},
+ figs:p=>{if(p.sev){const f=kf(p),ch=seventhOn(f,false,4),inv=ri(0,3),v=close(ch,inv),F=['7','6/5','4/3','4/2'];return mk(tt(`In <b>${KN(f,false)}</b>: which figures go under this dominant seventh?`,`In <b>${KN(f,false)}</b>: che numerica ha questa settima di dominante?`),F[inv],F.filter((x,k)=>k!==inv),{keep:true,show:{clef:'t',key:f,cols:[col(v)]},play:[col(v)]})}
+  const r=randNote(false),q=pick(['M','m']),ch=triad(r,q),inv=ri(0,2),v=close(ch,inv),F=['5/3','6','6/4'];return mk(tt('Which figures go under this chord?','Che numerica ha questo accordo?'),F[inv],F.filter((x,k)=>k!==inv),{keep:true,show:{clef:'t',cols:[col(v)]},play:[col(v)]})},
+ rootOf:p=>{const r=randNote(p.acc),q=pick(['M','m']),ch=triad(r,q),inv=ri(1,2),v=close(ch,inv);return mk(tt('This chord is inverted: what is its root?','Questo accordo è rivoltato: qual è la sua fondamentale?'),N(r),[N(ch[inv]),N(ch[(inv%2)+1]),...noteWrong(r)],{show:{clef:'t',cols:[col(v)]},play:[col(v)]})},
+ range:p=>{const L=IT?['tutto giusto','voce fuori estensione','troppa distanza tra due voci','voci incrociate']:['all correct','a voice out of range','two voices too far apart','crossed voices'];
+  const RG=[[40,60],[48,67],[55,74],[60,81]],flags=v=>{const m=v.map(midi);return{rng:m.some((x,i)=>x<RG[i][0]||x>RG[i][1]),gap:m[3]-m[2]>12||m[2]-m[1]>12,cross:m[0]>m[1]||m[1]>m[2]||m[2]>m[3]}};
+  const k=ri(0,3);let v,f;for(let t=0;t<200;t++){f=kf({maxf:2});const deg=pick([0,3,4,5]);v=voice(triadOn(f,false,deg),0,ri(0,2));const F0=flags(v);if(F0.rng||F0.gap||F0.cross)continue;
+   if(k===1)v[0]={...v[0],o:v[0].o-1};if(k===2)v[3]={...v[3],o:v[3].o+1};if(k===3){const x=v[1];v[1]=v[2];v[2]=x}
+   const F=flags(v),want=[!F.rng&&!F.gap&&!F.cross,F.rng&&!F.gap&&!F.cross,F.gap&&!F.rng&&!F.cross,F.cross&&!F.rng&&!F.gap][k];if(want)break}
+  return mk(tt('Look at the four voices: is everything all right?','Guarda le quattro voci: va tutto bene?'),L[k],L.filter((x,j)=>j!==k),{keep:true,show:{clef:'g',key:f,cols:[col(st4(v),'',{satb:1})]},play:[col(v)]})},
+ par:p=>{const L=IT?['nessun errore','quinte parallele','ottave parallele']:['no mistake','parallel fifths','parallel octaves'];const want=ri(0,2);let a,b,f,r;for(let k=0;k<300;k++){f=kf({maxf:2});const d1=pick([0,3,4,5,1]),d2=pick([0,1,3,4,5].filter(x=>x!==d1));a=voice(triadOn(f,false,d1),0,ri(0,2));
+   b=want===0?lead(a,triadOn(f,false,d2),0):voice(triadOn(f,false,d2),0,ri(0,2));r=parallels(a,b);const cat=r.p5&&r.p8?-1:r.p5?1:r.p8?2:0;if(cat===want)break}
+  return mk(tt('Between these two chords: any parallel fifths or octaves?','Tra questi due accordi: ci sono quinte o ottave parallele?'),L[want],L.filter((x,j)=>j!==want),{keep:true,show:{clef:'g',key:f,cols:[col(st4(a),'',{satb:1}),col(st4(b),'',{satb:1})]},play:[col(a),col(b)]})},
+ compl:p=>{const f=kf({maxf:2}),pairs=[[0,3],[0,4],[3,4],[4,0],[3,0],[1,4],[5,1]],[d1,d2]=pick(pairs),a=voice(triadOn(f,false,d1),0,ri(0,2)),b=lead(a,triadOn(f,false,d2),0),vi=ri(1,3);
+  const right=b[vi],cands=[];for(const t of triadOn(f,false,d2))for(const o of[3,4,5]){const c={l:t.l,a:t.a,o};if(Math.abs(midi(c)-midi(a[vi]))<=9&&!(c.l===right.l&&c.o===right.o))cands.push(c)}
+  const W=uniq([...cands.map(N),...noteWrong(right)]).filter(x=>x!==N(right));
+  const b2=b.map((x,j)=>j===vi?null:x);return mk(tt(`Which note should the <b>${VOICE[vi]}</b> sing in the second chord? (move as little as you can)`,`Quale nota deve cantare il <b>${VOICE[vi]}</b> nel secondo accordo? (muoviti il meno possibile)`),N(right),W,{show:{clef:'g',key:f,cols:[col(st4(a),'',{satb:1}),col(st4(b2).map((x,j)=>x&&x.l!=null?x:null),'?',{satb:1,miss:vi})]},play:[col(a),col(b)],octs:1})},
+ func:p=>{const f=kf(p),deg=ri(0,6),ch=triadOn(f,false,deg),R=roman(deg,quality(ch)),FN=IT?{T:'tonica',S:'sottodominante',D:'dominante'}:{T:'tonic',S:'subdominant',D:'dominant'};
+  return mk(tt(`In <b>${KN(f,false)}</b>, the chord <b>${R}</b> belongs to the family of the…`,`In <b>${KN(f,false)}</b>, l’accordo <b>${R}</b> fa parte della famiglia della…`),FN[FUNC[deg]],Object.values(FN).filter(x=>x!==FN[FUNC[deg]]),{keep:true,show:{clef:'t',key:f,cols:[col(close(ch),R)]}})},
+ fifths:p=>{const good=[['vi','ii','V','I'],['iii','vi','ii','V'],['ii','V','I'],['I','IV','vii°','iii']];const bad=[['I','ii','iii','IV'],['V','IV','I','vi'],['I','iii','V','vii°'],['IV','V','vi','I'],['ii','IV','vi','I']];
+  return mk(tt('Which progression moves by falling fifths?','Quale progressione va per quinte discendenti?'),pick(good).join(' – '),shuffle(bad).slice(0,3).map(x=>x.join(' – ')))},
+ cad:p=>{const types=p.types||['perf','plag','half'],t=pick(types),minor=!!p.minor,f=kf({maxf:p.maxf!=null?p.maxf:1});const CN=IT?{perf:'perfetta',imp:'imperfetta',plag:'plagale',half:'sospesa',dec:'d’inganno'}:{perf:'perfect',imp:'imperfect',plag:'plagal',half:'half',dec:'deceptive'};
+  const tri=d=>triadOn(f,minor,d);const tonic=HT.tonicOf(f,minor);let a,b,R1,R2;const pre=pick([3,1,5]);
+  if(t==='perf'||t==='imp'){a=voice(tri(4),0,ri(0,2));b=lead(a,tri(0),t==='imp'&&Math.random()<.4?1:0,v=>t==='perf'?v[3].l===tonic.l:v[3].l!==tonic.l)}
+  else if(t==='plag'){a=voice(tri(3),0,ri(0,2));b=lead(a,tri(0),0)}
+  else if(t==='half'){const d=pick([0,3,1]);a=voice(tri(d),d===1?1:0,ri(0,2));b=lead(a,tri(4),0)}
+  else{a=voice(tri(4),0,ri(0,2));b=lead(a,tri(5),0)}
+  return mk(tt(`In <b>${KN(f,minor)}</b>: which cadence closes this phrase?`,`In <b>${KN(f,minor)}</b>: che cadenza chiude questa frase?`),CN[t],(p.all||['perf','imp','plag','half','dec']).filter(x=>x!==t).map(x=>CN[x]),{show:{clef:'g',key:f,cols:[col(st4(a),'',{satb:1}),col(st4(b),'',{satb:1})]},play:[col(a),col(b)]})},
+ cadName:p=>{const L=[['V','I','perf'],['IV','I','plag'],['I','V','half'],['ii6','V','half'],['V','vi','dec'],['IV','V','half']].filter(x=>(p.types||['perf','plag','half','dec']).includes(x[2]));const[a,b,t]=pick(L);const CN=IT?{perf:'perfetta',plag:'plagale',half:'sospesa',dec:'d’inganno'}:{perf:'perfect',plag:'plagal',half:'half',dec:'deceptive'};
+  return mk(tt(`<b>${a} → ${b}</b> at the end of a phrase is a … cadence`,`<b>${a} → ${b}</b> alla fine di una frase è una cadenza…`),CN[t],Object.values(CN).filter(x=>x!==CN[t]))},
+ cadLast:p=>{const t=pick(p.types||['perf','plag','dec']),f=kf({maxf:1}),CN=IT?{perf:'perfetta',plag:'plagale',dec:'d’inganno'}:{perf:'perfect',plag:'plagal',dec:'deceptive'};const first=t==='plag'?3:4,last=t==='dec'?5:0;
+  const a=voice(triadOn(f,false,first),0,ri(0,2)),b=lead(a,triadOn(f,false,last),0);const RN=d=>roman(d,quality(triadOn(f,false,d)));
+  return mk(tt(`After this chord, which one makes a <b>${CN[t]}</b> cadence?`,`Dopo questo accordo, quale fa una cadenza <b>${CN[t]}</b>?`),RN(last),[0,3,4,5,1].filter(d=>d!==last&&d!==first).map(RN),{show:{clef:'g',key:f,cols:[col(st4(a),RN(first),{satb:1}),col([],'?')]},play:[col(a),col(b)]})},
+ v7:p=>{const f=kf(p),minor=!!p.minor,ch=seventhOn(f,minor,4),R=ch.map(N).join(' '),W=[triadOn(f,minor,4).concat([up(ch[0],7,'M')]).map(N).join(' '),seventhOn(f,minor,1).map(N).join(' '),seventhOn(f,minor,0).map(N).join(' ')];
+  return mk(tt(`Which notes make the dominant seventh (V7) of <b>${KN(f,minor)}</b>?`,`Quali note formano la settima di dominante (V7) di <b>${KN(f,minor)}</b>?`),R,W,{play:[col(close(ch))]})},
+ v7res:p=>{const f=kf(p),minor=!!p.minor,ch=seventhOn(f,minor,4),sc=scale(f,minor,minor?'harm':''),which=pick(['7','3']);
+  if(which==='7')return mk(tt(`In <b>${KN(f,minor)}</b>, the seventh of V7 (<b>${N(ch[3])}</b>) goes to…`,`In <b>${KN(f,minor)}</b>, la settima del V7 (<b>${N(ch[3])}</b>) va su…`),N(sc[2]),[N(sc[4]),N(sc[0]),N(sc[3])],{show:{clef:'t',key:f,cols:[col(close(ch))]},play:[col(close(ch)),col(close(triadOn(f,minor,0)))]});
+  return mk(tt(`In <b>${KN(f,minor)}</b>, the leading note of V7 (<b>${N(ch[1])}</b>) goes to…`,`In <b>${KN(f,minor)}</b>, la sensibile del V7 (<b>${N(ch[1])}</b>) va su…`),N(sc[0]),[N(sc[5]),N(sc[4]),N(sc[2])],{show:{clef:'t',key:f,cols:[col(close(ch))]},play:[col(close(ch)),col(close(triadOn(f,minor,0)))]})},
+ sevQ:p=>{const K=[['Mm',['M','m'],tt('dominant seventh','settima di dominante')],['hd',['d','m'],tt('half-diminished seventh','settima semidiminuita')],['dd',['d','d'],tt('diminished seventh','settima diminuita')],['MM',['M','M'],tt('major seventh','settima maggiore')],['mm',['m','m'],tt('minor seventh','settima minore')]].slice(0,p.n||5);
+  const[k,qq,R]=pick(K);let r,ch;for(let i=0;i<30;i++){r=randNote(false);const t=triad(r,qq[0]),s=up(r,7,k==='dd'?'d':k==='MM'?'M':'m');ch=[...t,s];if(ch.every(x=>Math.abs(x.a)<=1))break}
+  return mk(tt('What kind of seventh chord is this?','Che accordo di settima è?'),R,K.map(x=>x[2]).filter(x=>x!==R),{show:{clef:'t',cols:[col(close(ch))]},play:[col(close(ch))]})},
+ decRaise:p=>mk(tt('In the deceptive cadence V → vi (four voices), which note is usually doubled in vi?','Nella cadenza d’inganno V → vi a quattro voci, quale nota si raddoppia di solito nel vi?'),tt('the third','la terza'),[tt('the root','la fondamentale'),tt('the fifth','la quinta')],{keep:true}),
+ secdom:p=>{const f=kf(p),sc=scale(f,false),tgt=pick([4,1,3,5].slice(0,p.all?4:1)),t=sc[tgt],dom=up(t,5,'P'),ch=[dom,up(dom,3,'M'),up(dom,5,'P'),up(dom,7,'m')];const lab=['','ii','','IV','V','vi'][tgt];
+  const R=symbol(dom,'M',null,LG,'7'),W=[symbol(dom,'m',null,LG,'7'),symbol(sc[4],'M',null,LG,'7'),symbol(up(t,4,'P'),'M',null,LG,'7')];
+  return mk(tt(`In <b>${KN(f,false)}</b>, the dominant of <b>${lab}</b> (V7/${lab}) is…`,`In <b>${KN(f,false)}</b>, la dominante del <b>${lab}</b> (V7/${lab}) è…`),R,W,{show:{clef:'t',key:f,cols:[col(close(ch),'V7/'+lab),col(close(triadOn(f,false,tgt)),lab)]},play:[col(close(ch)),col(close(triadOn(f,false,tgt)))]})},
+ secWhich:p=>{const f=kf(p),sc=scale(f,false),tgt=pick([1,3,4,5]),t=sc[tgt],dom=up(t,5,'P');const L={1:'V7/ii',3:'V7/IV',4:'V7/V',5:'V7/vi'};const sym=symbol(dom,'M',null,LG,'7');
+  return mk(tt(`In <b>${KN(f,false)}</b>, the chord <b>${sym}</b> is…`,`In <b>${KN(f,false)}</b>, l’accordo <b>${sym}</b> è…`),L[tgt],Object.values(L).filter(x=>x!==L[tgt]),{keep:true,play:[col(close([dom,up(dom,3,'M'),up(dom,5,'P'),up(dom,7,'m')]))]})},
+ dim7:p=>{const f=kf(p),sc=scale(f,true,'harm'),l=sc[6],ch=[l,up(l,3,'m'),up(l,5,'d'),up(l,7,'d')];const R=ch.map(N).join(' ');const W=[[l,up(l,3,'m'),up(l,5,'d'),up(l,7,'m')].map(N).join(' '),[sc[4],up(sc[4],3,'M'),up(sc[4],5,'P'),up(sc[4],7,'m')].map(N).join(' '),[l,up(l,3,'M'),up(l,5,'P'),up(l,7,'m')].map(N).join(' ')];
+  return mk(tt(`The diminished seventh (vii°7) of <b>${KN(f,true)}</b> is…`,`La settima diminuita (vii°7) di <b>${KN(f,true)}</b> è…`),R,W,{play:[col(close(ch))]})},
+ dim7res:p=>{const f=kf(p),sc=scale(f,true,'harm');return mk(tt(`In <b>${KN(f,true)}</b>, the diminished seventh resolves on…`,`In <b>${KN(f,true)}</b>, la settima diminuita risolve su…`),tt(`the tonic chord, ${N(sc[0])} minor`,`l’accordo di tonica, ${N(sc[0])} minore`),[tt(`the dominant, ${N(sc[4])}`,`la dominante, ${N(sc[4])}`),tt(`the subdominant, ${N(sc[3])} minor`,`la sottodominante, ${N(sc[3])} minore`)])},
+ v9:p=>{const f=kf(p),minor=!!p.minor,ch=seventhOn(f,minor,4),ninth=up(ch[0],9>8?2:2,minor?'m':'M');const nn={...ninth,o:ninth.o+1};const R=[...ch,nn].map(N).join(' ');
+  return mk(tt(`The dominant ninth of <b>${KN(f,minor)}</b> is…`,`La nona di dominante di <b>${KN(f,minor)}</b> è…`),R,[[...ch,{...nn,a:nn.a+(minor?1:-1)}].map(N).join(' '),[...triadOn(f,minor,1),up(triadOn(f,minor,1)[0],7,'m')].map(N).join(' '),[...ch].map(N).join(' ')],{play:[col([...close(ch),nn])]})},
+ n6:p=>{const f=kf(p),minor=p.minor!==false,sc=scale(f,minor,'harm'),r={...sc[1],a:sc[1].a-(minor?1:1)};if(minor&&sc[1].a===0)r.a=-1;const R0=up(sc[1],1,'P');const root={...sc[1],a:sc[1].a-1};const ch=triad(root,'M');const R=symbol(root,'M',ch[1],LG);
+  return mk(tt(`In <b>${KN(f,minor)}</b>, the Neapolitan sixth is the chord…`,`In <b>${KN(f,minor)}</b>, la sesta napoletana è l’accordo…`),R,[symbol(sc[1],'m',null,LG),symbol(root,'M',null,LG),symbol(sc[5],'M',null,LG)],{show:{clef:'t',key:f,cols:[col(close(ch,1),'N6')]},play:[col(close(ch,1))]})},
+ aug6:p=>{const f=kf(p),sc=scale(f,true,'harm'),b6=sc[5],t=sc[0],s4={...sc[3],a:sc[3].a+1},b3=sc[2],two=sc[1];const K=pick(['it','fr','ger']);const ch=K==='it'?[b6,t,s4]:K==='fr'?[b6,t,two,s4]:[b6,t,b3,s4];
+  const v=[{...b6,o:3},...ch.slice(1).map((x,i)=>({...x,o:4}))].sort((a,b)=>midi(a)-midi(b));v[0]={...b6,o:3};const L=IT?{it:'sesta italiana',fr:'sesta francese',ger:'sesta tedesca'}:{it:'Italian sixth',fr:'French sixth',ger:'German sixth'};
+  return mk(tt(`In <b>${KN(f,true)}</b>: <b>${ch.map(N).join(' – ')}</b>. Which augmented sixth?`,`In <b>${KN(f,true)}</b>: <b>${ch.map(N).join(' – ')}</b>. Che sesta eccedente è?`),L[K],Object.values(L).filter(x=>x!==L[K]),{keep:true,show:{clef:'g',key:f,cols:[col(v)]},play:[col(v)]})},
+ cad64:p=>{const f=kf(p),minor=!!p.minor,sc=scale(f,minor,minor?'harm':'');const q=pick(['bass','notes']);
+  if(q==='bass')return mk(tt(`In the cadential six-four of <b>${KN(f,minor)}</b>, the bass note is…`,`Nella quarta e sesta cadenzale di <b>${KN(f,minor)}</b>, al basso c’è…`),N(sc[4]),[N(sc[0]),N(sc[3]),N(sc[1])]);
+  return mk(tt(`The cadential six-four of <b>${KN(f,minor)}</b> has above its bass the notes…`,`La quarta e sesta cadenzale di <b>${KN(f,minor)}</b> ha sopra il basso le note…`),`${N(sc[0])} ${tt('and','e')} ${N(sc[2])}`,[`${N(sc[6])} ${tt('and','e')} ${N(sc[1])}`,`${N(sc[3])} ${tt('and','e')} ${N(sc[5])}`,`${N(sc[1])} ${tt('and','e')} ${N(sc[3])}`])},
+ ii7:p=>{const f=kf(p),minor=!!p.minor,ch=seventhOn(f,minor,1,minor?'':''),R=ch.map(N).join(' ');return mk(tt(`The supertonic seventh (ii7) of <b>${KN(f,minor)}</b> is…`,`La settima di sopratonica (II7) di <b>${KN(f,minor)}</b> è…`),R,[seventhOn(f,minor,4).map(N).join(' '),seventhOn(f,minor,3).map(N).join(' '),triadOn(f,minor,1).map(N).join(' ')],{play:[col(close(ch))]})},
+ pivot:p=>{const f=kf({maxf:2}),D=f+1,R=x=>symbol(x[0],quality(x),null,LG);const common=[0,2,4,5].map(d=>triadOn(f,false,d)),nope=[triadOn(f,false,3),triadOn(D,false,4),triadOn(f,false,6),triadOn(D,false,6)];
+  return mk(tt(`Which chord belongs to both <b>${KN(f,false)}</b> and <b>${KN(D,false)}</b>?`,`Quale accordo appartiene sia a <b>${KN(f,false)}</b> sia a <b>${KN(D,false)}</b>?`),R(pick(common)),shuffle(nope).slice(0,3).map(R))},
+ modNote:p=>{const f=kf({maxf:2}),sc=scale(f,false),r={...sc[3],a:sc[3].a+1};return mk(tt(`Moving from <b>${KN(f,false)}</b> to its dominant, <b>${KN(f+1,false)}</b>, which new note appears?`,`Passando da <b>${KN(f,false)}</b> alla sua dominante, <b>${KN(f+1,false)}</b>, quale nota nuova compare?`),N(r),[N({...sc[6],a:sc[6].a-1}),N({...sc[0],a:sc[0].a+1}),N({...sc[4],a:sc[4].a+1})])},
+ minorChord:p=>{const f=kf(p),deg=pick([0,3,4,5,1,6]),ch=triadOn(f,true,deg,'harm'),R=roman(deg,quality(ch));return mk(tt(`In <b>${KN(f,true)}</b> (harmonic), the triad on degree <b>${DEGO[deg]}</b> is…`,`In <b>${KN(f,true)}</b> (armonica), la triade sul grado <b>${DEGO[deg]}</b> è…`),QN[LG][quality(ch)],['M','m','d','A'].filter(x=>x!==quality(ch)).map(x=>QN[LG][x]),{show:{clef:'t',key:f,cols:[col(close(ch),R)]},play:[col(close(ch))]})},
+ aug2:p=>{const f=kf(p),sc=scale(f,true,'harm');return mk(tt(`In <b>${KN(f,true)}</b> harmonic, which step is an augmented second (to avoid in a melody)?`,`In <b>${KN(f,true)}</b> armonica, quale passo è una seconda eccedente (da evitare nella melodia)?`),`${N(sc[5])} → ${N(sc[6])}`,[`${N(sc[6])} → ${N(sc[0])}`,`${N(sc[4])} → ${N(sc[5])}`,`${N(sc[1])} → ${N(sc[2])}`],{show:{clef:'t',key:f,cols:[col([sc[5]]),col([sc[6]])]},play:[col([sc[5],sc[6]],'',{mel:1})]})},
+ picardy:p=>{const f=kf(p),sc=scale(f,true);const maj={...sc[2],a:sc[2].a+1};return mk(tt(`A piece in <b>${KN(f,true)}</b> ends with a Picardy third: the last chord is…`,`Un brano in <b>${KN(f,true)}</b> finisce con la terza piccarda: l’ultimo accordo è…`),symbol(sc[0],'M',null,LG),[symbol(sc[0],'m',null,LG),symbol(sc[4],'M',null,LG),symbol(sc[2],'M',null,LG)],{play:[col(close(triad(sc[0],'M')))]})},
+ chromId:p=>{const f=kf(p),minor=true,sc=scale(f,true,'harm');const K=pick(p.kinds||['N6','It6','vii°7','V7/V']);let v,lab=K;
+  if(K==='N6'){const root={...sc[1],a:sc[1].a-1};v=close(triad(root,'M'),1)}else if(K==='It6'){v=[{...sc[5],o:3},{...sc[0],o:4},{...sc[3],a:sc[3].a+1,o:4}]}else if(K==='vii°7'){const l=sc[6];v=close([l,up(l,3,'m'),up(l,5,'d'),up(l,7,'d')])}else{const dom=up(sc[4],5,'P');v=close([dom,up(dom,3,'M'),up(dom,5,'P'),up(dom,7,'m')])}
+  v.sort((a,b)=>midi(a)-midi(b));const names={N6:tt('Neapolitan sixth','sesta napoletana'),It6:tt('augmented sixth','sesta eccedente'),'vii°7':tt('diminished seventh','settima diminuita'),'V7/V':tt('dominant of the dominant','dominante della dominante')};
+  return mk(tt(`In <b>${KN(f,true)}</b>, which chromatic chord is this?`,`In <b>${KN(f,true)}</b>, che accordo cromatico è?`),names[K],Object.values(names).filter(x=>x!==names[K]),{show:{clef:'g',key:f,cols:[col(v)]},play:[col(v)]})}
+};
+
+/* ================= the scene ================= */
+const cv=$('c'),g=cv.getContext('2d');let W=0,Hh=0,DPR=1,T=0;
+const SW=420,SH=462,tspr=document.createElement('canvas'),tx=tspr.getContext('2d');tspr.width=SW;tspr.height=Math.round(SH*(1+PAD));
+let igOK=false;H.loadIgor(()=>{igOK=true});
+const BL={next:1.5,start:-9};function blinkK(t){if(t>BL.next){BL.start=t;BL.next=t+(Math.random()<.2?.45:2.4+Math.random()*3.8)}const u=t-BL.start;return u<0||u>.26?0:u<.07?u/.07:u<.12?1:1-(u-.12)/.14}
+function paintT(t){const k=blinkK(t);paintAvatar(tx,IgorSchoen.LOOK,k,k,SW,tspr.height);const sc=Math.min(SW/663,tspr.height/(730*(1+PAD)));tx.setTransform(sc,0,0,sc,(SW-663*sc)/2,PAD*730*sc);IgorSchoen.head(tx);IgorSchoen.suit(tx);IgorSchoen.chalk(tx,Math.sin(t*1.3)*.08);tx.setTransform(1,0,0,1,0,0)}
+let L={};
+function layout(){const top=58,barH=$('bar').offsetHeight||150,sh=Math.max(120,Hh-top-barH),land=W>Hh*1.05;
+ if(land){const mh=Math.min(sh*.8,W*.22);L={land,top,sh,m:{x:W*.13,y:top+sh*.55,h:mh},b:{x:W*.26,y:top+sh*.04,w:W*.68,h:sh*.86}}}
+ else{const bh=Math.min(sh*.62,W*.78);L={land,top,sh,b:{x:8,y:top+4,w:W-16,h:bh},m:{x:W*.2,y:top+bh+(sh-bh)*.5,h:Math.min((sh-bh)*.95,W*.4)}}}}
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;Hh=innerHeight;cv.width=W*DPR;cv.height=Hh*DPR;layout()}
+addEventListener('resize',()=>{resize();placeBubble()});
+/* the harmony room: dark green wainscot, a framed portrait of a twelve-tone row, the piano of the Cadences game on the right */
+function room(){const gr=g.createLinearGradient(0,0,0,Hh);gr.addColorStop(0,'#232a33');gr.addColorStop(.25,'#c9cdbf');gr.addColorStop(.7,'#bfc3b2');g.fillStyle=gr;g.fillRect(0,0,W,Hh);
+ const wy=Hh*.72;g.fillStyle='#2f4a40';g.fillRect(0,wy,W,Hh*.1);g.fillStyle='#7b6a5a';g.fillRect(0,wy+Hh*.1,W,Hh);g.fillStyle='#1f2a28';g.fillRect(0,wy-4,W,6);
+ const s=clamp(Math.min(W,Hh)/700,.5,1.3);
+ /* the piano of the Cadences game */
+ const pw=150*s,ph=110*s,px=W-pw-14,py=wy+Hh*.09,B=L.b;if(px>(L.land?B.x+B.w-40:L.m.x+L.m.h*.45)){g.fillStyle='#1d1612';rr(g,px,py-ph,pw,ph,6);g.fill();g.fillStyle='#2b2018';g.fillRect(px-5,py-ph,pw+10,9);
+  g.fillStyle='#f7f2e6';g.fillRect(px+8,py-ph*.48,pw-16,ph*.14);g.fillStyle='#151515';for(let k=0;k<14;k++){if(k%7===2||k%7===6)continue;g.fillRect(px+12+k*(pw-24)/14,py-ph*.48,4*s,ph*.08)}
+  g.fillStyle='#f4efe2';g.fillRect(px+pw*.28,py-ph*.9,pw*.44,ph*.3);g.fillStyle='#2b2018';g.font=`600 ${Math.round(11*s)}px Fredoka,sans-serif`;g.textAlign='center';g.fillText(tt('Cadences','Cadenze'),px+pw*.5,py-ph*.72)}
+ /* a tone-row on the wall */
+ if(L.land){const fx=W*.03,fy=Hh*.12,fw=W*.17,fh=fw*.5;g.fillStyle='#6b4a2e';rr(g,fx-5,fy-5,fw+10,fh+10,4);g.fill();g.fillStyle='#f3ead6';g.fillRect(fx,fy,fw,fh);g.strokeStyle='#2b2018';g.lineWidth=1;for(let i=0;i<5;i++){g.beginPath();g.moveTo(fx+6,fy+fh*.3+i*fh*.1);g.lineTo(fx+fw-6,fy+fh*.3+i*fh*.1);g.stroke()}
+  g.fillStyle='#2b2018';for(let k=0;k<12;k++){g.beginPath();g.ellipse(fx+12+k*(fw-24)/11,fy+fh*.7-((k*5)%9)*fh*.05,3,2.2,-.35,0,TAU);g.fill()}}}
+const CH='rgba(238,242,230,.92)',HL='#ffe08a',OKC='#7fe08a',NOC='#ffc06a';
+const chalk=(sz,w=500)=>{g.font=`${w} ${sz}px Fredoka, sans-serif`;g.fillStyle=CH;g.textAlign='center';g.textBaseline='middle'};
+function board(){const B=L.b;g.fillStyle='#6b4a2e';rr(g,B.x-9,B.y-9,B.w+18,B.h+18,10);g.fill();g.fillStyle='#2f4a3a';rr(g,B.x,B.y,B.w,B.h,4);g.fill();
+ g.fillStyle='#7a5232';g.fillRect(B.x+B.w*.1,B.y+B.h+6,B.w*.8,7);g.save();g.beginPath();g.rect(B.x,B.y,B.w,B.h);g.clip();boardContent(B);g.restore()}
+/* ---- staves, key signatures, chords ---- */
+const SH_T=[10,7,11,8,5,9,6],FL_T=[6,9,5,8,4,7,3];
+function staves(B,clef,cols){const top=B.y+B.h*.14,bot=B.y+B.h*.9,avail=bot-top;let s,yOf,lines;
+ if(clef==='g'){s=Math.min(avail/23,B.w/26,22);const yC=top+avail*.52;yOf=d=>yC-d*s/2;lines=[2,4,6,8,10,-2,-4,-6,-8,-10]}
+ else{s=Math.min(avail/12,B.w/22,26);const y0=top+avail*.62;yOf=clef==='b'?(d=>y0-(d+10)*s/2):(d=>y0-(d-2)*s/2);lines=clef==='b'?[-2,-4,-6,-8,-10]:[2,4,6,8,10]}
+ const x0=B.x+B.w*.04,x1=B.x+B.w*.96;g.strokeStyle=CH;g.lineWidth=Math.max(1.4,s*.08);for(const d of lines){g.beginPath();g.moveTo(x0,yOf(d));g.lineTo(x1,yOf(d));g.stroke()}
+ if(clef==='g'){g.lineWidth=Math.max(2,s*.14);g.beginPath();g.moveTo(x0,yOf(10));g.lineTo(x0,yOf(-10));g.stroke();g.lineWidth=Math.max(2,s*.2);g.beginPath();g.moveTo(x0-s*.35,yOf(10));g.quadraticCurveTo(x0-s*1.2,yOf(5),x0-s*.5,yOf(1));g.lineTo(x0-s,yOf(0));g.lineTo(x0-s*.5,yOf(-1));g.quadraticCurveTo(x0-s*1.2,yOf(-5),x0-s*.35,yOf(-10));g.stroke()}
+ if(clef==='t'||clef==='g')IgorNadia.treble(g,x0+s*.1,yOf(2),s,CH);if(clef==='b'||clef==='g')IgorNadia.bass(g,x0+s*.2,yOf(-10),s,CH);
+ return{s,x0,x1,yOf,clef}}
+function accSym(a){return a===1?'♯':a===-1?'♭':a===2?'𝄪':a===-2?'♭♭':a===0?'♮':''}
+function drawAcc(S,a,x,y,colr){g.fillStyle=colr;g.font=`${Math.round(S.s*(a===2?1.6:2))}px "Apple Symbols","Segoe UI Symbol","DejaVu Sans",serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(accSym(a),x,y-(a<0?S.s*.45:0))}
+function keySig(S,f){if(!f)return S.x0+S.s*4;const n=Math.abs(f),L=f>0?SH_T:FL_T,staffs=S.clef==='g'?['t','b']:[S.clef];let x=S.x0+S.s*3.6;
+ for(const st of staffs)for(let i=0;i<n;i++){const d=st==='b'?L[i]-14:L[i];drawAcc(S,f>0?1:-1,x+i*S.s*1.05,S.yOf(d),CH)}return S.x0+S.s*(4.2+n*1.05)}
+function ledger(S,d,x,st){const s=S.s,ln=(dd)=>{const y=S.yOf(dd);g.beginPath();g.moveTo(x-s*1.05,y);g.lineTo(x+s*1.05,y);g.stroke()};g.strokeStyle=CH;g.lineWidth=Math.max(1.4,s*.08);
+ if(S.clef==='g'){if(d===0)ln(0);if(st==='t'){for(let dd=0;dd>=d;dd-=2)if(dd<2&&dd!==0)ln(dd);for(let dd=12;dd<=d;dd+=2)ln(dd)}else{for(let dd=0;dd<=d;dd+=2)if(dd>-2&&dd!==0)ln(dd);for(let dd=-12;dd>=d;dd-=2)ln(dd)}return}
+ const lo=S.clef==='b'?-10:2,hi=S.clef==='b'?-2:10;for(let dd=lo-2;dd>=d;dd-=2)ln(dd);for(let dd=hi+2;dd<=d;dd+=2)ln(dd)}
+function chordAt(S,c,x,colr,f){const ns=c.n.filter(Boolean).map((p,i)=>({p,d:dia(p),st:p.st||(S.clef==='g'?(dia(p)>=0?'t':'b'):S.clef)})).sort((a,b)=>a.d-b.d);const s=S.s;
+ /* noteheads: seconds sit to the right */
+ let prevD=null,side=0;const acc=[];for(const n of ns){ledger(S,n.d,x,n.st);let ox=0;if(prevD!=null&&n.d-prevD===1&&side===0){ox=s*1.25;side=1}else side=0;prevD=n.d;
+  const y=S.yOf(n.d);g.save();g.translate(x+ox,y);g.strokeStyle=colr;g.fillStyle=colr;g.lineWidth=Math.max(1.6,s*.17);g.rotate(-.3);g.beginPath();g.ellipse(0,0,s*.72,s*.48,0,0,TAU);g.stroke();g.restore();
+  const sa=f!=null?HT.sigAcc(f,n.p.l):0;if(n.p.a!==sa)acc.push({a:n.p.a,y})}
+ acc.reverse().forEach((a,i)=>drawAcc(S,a.a,x-s*(1.7+(i%3)*1.15),a.y,colr))}
+function boardContent(B){const cx=B.x+B.w/2,s0=Math.min(B.w/14,B.h/7);
+ const v=VIEW;if(!v){chalk(s0*.85,600);g.fillText(tt('Harmony','Armonia'),cx,B.y+B.h*.22);const sp={clef:'t',cols:[col(HT.triad(P(0,0,4),'M'),'I'),col(close(HT.triad(P(3,0,4),'M'),2),'IV'),col(close(HT.seventhOn(0,false,4),1),'V7'),col(HT.triad(P(0,0,4),'M'),'I')]};drawSpec(B,{...sp},.15);return}
+ if(v.title){chalk(Math.max(12,s0*.36));g.globalAlpha=.7;g.textAlign='right';g.fillText(v.title,B.x+B.w-14,B.y+B.h*.07);g.textAlign='center';g.globalAlpha=1}
+ if(v.spec)drawSpec(B,v.spec,0);else if(v.big){chalk(s0*.9,600);g.fillText(v.big,cx,B.y+B.h*.52)}}
+function drawSpec(B,sp,dy){const S=staves({...B,y:B.y+B.h*dy,h:B.h*(1-dy)},sp.clef||'t',sp.cols);const xs=keySig(S,sp.key||0),cols=sp.cols||[];const n=Math.max(1,cols.length),step=Math.min(S.s*6,(S.x1-xs-S.s)/n);
+ cols.forEach((c,i)=>{const x=xs+S.s*1.6+step*(i+.5);const colr=c.colr||(sp.res!=null?(sp.res?OKC:NOC):CH);if(c.n&&c.n.some(Boolean))chordAt(S,c,x,c.hl?HL:colr,sp.key||0);
+  if(c.miss!=null){const y=S.clef==='g'?S.yOf(c.miss>=2?8:-6):S.yOf(6);chalk(S.s*1.4,700);g.fillStyle=HL;g.fillText('?',x+S.s*1.8,y)}
+  if(c.lab){chalk(Math.max(12,S.s*.95),600);g.fillStyle=c.lab==='?'?HL:CH;const yy=S.clef==='g'?S.yOf(-14):S.yOf(c.n&&c.n.length?Math.min(-2,dia(c.n.reduce((a,b)=>dia(a)<dia(b)?a:b))-3):-1);g.fillText(c.lab,x,Math.min(yy,B.y+B.h*.95))}
+  if(c.hide){chalk(S.s*1.6,700);g.fillStyle=HL;g.fillText('?',x,S.yOf(6))}})}
+function drawT(){const F=L.m,w=F.h*SW/SH,hop=bubTxt?Math.abs(Math.sin(T*4))*F.h*.015:0,by=F.y-hop+Math.sin(T*1.6)*F.h*.01;g.save();g.translate(F.x,by);g.fillStyle='rgba(30,20,10,.25)';g.beginPath();g.ellipse(0,F.h*.5,w*.34,F.h*.05,0,0,TAU);g.fill();
+ if(igOK)g.drawImage(tspr,-w/2,-F.h/2-F.h*PAD,w,F.h*(1+PAD));g.restore()}
+let ANT=null,VIEW=null;
+function frame(ts){const t=ts/1000,dt=Math.min(.05,t-(frame.l||t));frame.l=t;T+=dt;g.setTransform(DPR,0,0,DPR,0,0);room();board();if(igOK)paintT(T);drawT();
+ if(ANT){ANT.t+=dt;const F=L.m,u=clamp(ANT.t/.6,0,1),x=lerp(ANT.x,F.x+F.h*.32,u),y=lerp(ANT.y,F.y+F.h*.42,u)-Math.sin(u*Math.PI)*80;if(u<1)drawAnt(g,x,y,Math.max(.5,F.h/260),-.5+u,T,{});if(ANT.t>1)ANT=null}
+ requestAnimationFrame(frame)}
+
+/* ================= the teacher talks ================= */
+const bub=$('bubble');let bubTxt='';
+function say(html){bubTxt=html;bub.innerHTML=html?`<small style="display:block;font-size:.68em;opacity:.65">${TEACHER}</small>`+html:'';bub.style.opacity=html?1:0;placeBubble()}
+function placeBubble(){if(!bubTxt)return;const M=L.m;if(!M)return;const bw=bub.offsetWidth,bh=bub.offsetHeight,headY=M.y-M.h*.5-M.h*PAD*.55;
+ let x=L.land?M.x-bw*.25:M.x-M.h*.25,y=headY-bh-14;x=clamp(x,10,W-bw-10);
+ if(!L.land){y=clamp(y,L.b.y+L.b.h+8,Hh);if(y+bh>M.y-M.h*.15)y=Math.max(64,L.b.y+L.b.h-bh*.6)}else y=Math.max(64,y);
+ bub.style.transform=`translate(${x}px,${y}px)`;bub.style.setProperty('--tx',clamp(M.x-x,24,bw-24)+'px')}
+
+/* ================= demos (the boards of the lessons) =================
+   a demo is {clef, key, cols:["C4 E4 G4=label", "-", "D4|F4|A4"]}: notes together form a chord, "|" plays them one after another */
+function demo(d){if(!d)return null;if(d.cols&&d.cols.length&&typeof d.cols[0]!=='string')return d;const cols=(d.cols||[]).map(s=>{const[a,lab]=s.split('=');if(a.trim()==='-'||!a.trim())return col([],lab||'');const mel=a.includes('|');const n=a.split(/[ |]+/).filter(Boolean).map(x=>{const st=x.endsWith('_b')?'b':x.endsWith('_t')?'t':null;const p=parse(x.replace(/_[bt]$/,''));if(st)p.st=st;return p});return col(n,lab||'',{mel})});
+ return{clef:d.clef||'t',key:d.key||0,cols}}
+
+/* ================= answers ================= */
+const bar=$('bar');
+function setBar(html){bar.innerHTML=html;layout();placeBubble()}
+const WK='asdfghj',BKK={1:'w',3:'e',6:'t',8:'y',10:'u'};
+function keyboardHtml(fix){const whites=[0,2,4,5,7,9,11],blacks=[[1,0],[3,1],[6,3],[8,4],[10,5]],NMs=HT.NM[LG];
+ return`<div class="kb">${whites.map((s,i)=>`<button class="wk${fix.has(s)?' fix on':''}" data-s="${s}" style="--i:${i}"><span>${NMs[i]}</span></button>`).join('')}${blacks.map(([s,i])=>`<button class="bk${fix.has(s)?' fix on':''}" data-s="${s}" style="--i:${i}"></button>`).join('')}</div>
+ <div class="row"><button class="main" id="kbok">✓ ${tt('Done','Fatto')}</button><button id="kbclr">↺ ${tt('Clear','Cancella')}</button></div>`}
+function ansHtml(q){if(q.kb)return`<div class="pr">${q.p}</div>`+keyboardHtml(q.kb.fix||new Set());const o=q.opts,long=o.some(x=>x.length>16),cols=long?(W<620?1:2):o.length<=4?(W<620&&o.length>2?2:o.length):(W<620?4:7);
+ return`<div class="pr">${q.p}</div><div class="ans" style="--n:${cols}">${o.map((x,j)=>`<button data-o="${j}"><span>${x}</span>${touch?'':`<small>${j+1}</small>`}</button>`).join('')}</div>`}
+function bindAns(q){bar.querySelectorAll('[data-o]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();answer({o:+b.dataset.o},b)}));
+ if(q.kb){const sel=new Set(q.kb.fix||[]);bar.querySelectorAll('[data-s]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventDefault();if(q.done)return;const s=+b.dataset.s;if(q.kb.fix&&q.kb.fix.has(s))return;if(sel.has(s))sel.delete(s);else sel.add(s);b.classList.toggle('on',sel.has(s));audio();tone(60+s,0,.6,.15)}));
+  $('kbok').onclick=()=>answer({set:sel});$('kbclr').onclick=()=>{for(const s of[...sel])if(!(q.kb.fix&&q.kb.fix.has(s)))sel.delete(s);bar.querySelectorAll('[data-s]').forEach(b=>b.classList.toggle('on',sel.has(+b.dataset.s)))}}}
+addEventListener('keydown',e=>{if(!SES||e.repeat)return;if(SES.phase==='q'&&SES.q&&!SES.q.done&&SES.q.opts){const n=+e.key;if(n>=1&&n<=SES.q.opts.length){answer({o:n-1},bar.querySelector(`[data-o="${n-1}"]`))}return}
+ if(e.key==='Enter'){const b=$('next');if(b){e.preventDefault();b.click()}}});
+
+/* ================= flow ================= */
+let SES=null;
+function hdr(){if(!SES){$('st1').innerHTML=`${tt('lessons','lezioni')} <b>${PR.done}/${NL}</b>`;$('dots').innerHTML='';return}
+ const n=SES.n;$('st1').innerHTML=SES.k<0?tt('entry test','test d’ingresso'):`${tt('lesson','lezione')} <b>${SES.k+1}</b>`+(SES.phase==='lesson'?'':` · <b>${Math.min(SES.i+1,n)}/${n}</b>`);
+ $('dots').innerHTML=SES.phase==='lesson'||(n>10&&W<620)?'':Array.from({length:n},(_,k)=>`<i class="${SES.res[k]===1?'ok':SES.res[k]===0?'no':k===SES.i?'now':''}"></i>`).join('')}
+$('stat').onclick=()=>{if(SES&&SES.phase!=='end')openMap()};
+let mapU=null;
+function curLesson(){return Math.min(PR.done,NL-1)}
+function openMap(u){SES=null;VIEW=null;say('');setBar('');hdr();const cur=curLesson(),fin=PR.done>=NL;if(u==null)u=mapU!=null?mapU:LS[cur].u;mapU=u;
+ const units=US.map((x,k)=>{const ls=LS.map((l,i)=>[l,i]).filter(([l])=>l.u===k),first=ls[0][1],last=ls[ls.length-1][1],dn=ls.filter(([,i])=>i<PR.done).length,lock=first>PR.done&&!OPEN;
+  return`<button data-u="${k}" class="${dn===ls.length?'done':k===LS[cur].u&&!fin?'cur':''}" ${lock?'disabled':''}>${lock?'🔒 ':''}${k+1}. ${T2(x.n)}<small>${dn}/${ls.length} · ${tt('lessons','lezioni')} ${first+1}–${last+1}</small></button>`}).join('');
+ const ls=LS.map((l,i)=>[l,i]).filter(([l])=>l.u===u).map(([l,i])=>`<button data-l="${i}" class="${i<PR.done?'done':i===cur&&!fin?'cur':''}${l.test?' test':''}" ${i>PR.done&&!OPEN?'disabled':''}>${i+1}. ${T2(l.n)}<small>${i<PR.done?'✓ '+tt('done','fatta')+(PR.best[i]!=null?' · '+PR.best[i]+'/'+NQ(i):''):i===cur&&!fin?tt('next','prossima'):l.test?tt('check','verifica'):tt('lesson','lezione')}</small></button>`).join('');
+ const readTip=!readDone&&!PR.test?`<p>${tt('First, a piece of advice: to follow this course you must <b>read music</b>, in the treble and in the bass clef. If you are not sure, start from <a href="/notes/">Nadia Boulangigor</a>, or take my short entry test.','Prima un consiglio: per seguire questo corso bisogna <b>saper leggere le note</b>, in chiave di violino e di basso. Se non ne sei sicuro, comincia da <a href="/notes/">Nadia Boulangigor</a>, oppure fai il mio breve test d’ingresso.')}</p>`:'';
+ $('startCard').innerHTML=`<h2>${tt('<em>Harmony</em>','<em>Armonia</em>')}</h2>
+ <p>${tt(`<b>${TEACHER}</b> teaches you harmony from zero: notes and intervals, keys, chords, four-part writing, cadences and chromatic chords. ${NL} short lessons in ${US.length} units; each unit ends with a check. At the end you are ready for every level of the <a href="/cadences/">Cadences</a> game at the piano.`,`<b>${TEACHER}</b> ti insegna l’armonia da zero: note e intervalli, tonalità, accordi, scrittura a quattro voci, cadenze e accordi cromatici. ${NL} lezioni brevi in ${US.length} unità; ogni unità finisce con una verifica. Alla fine sei pronto per tutti i livelli del gioco delle <a href="/cadences/">Cadenze</a> al pianoforte.`)}</p>${readTip}
+ <div class="map">${units}</div><h3>${u+1}. ${T2(US[u].n)}</h3><div class="map">${ls}</div>
+ <div class="row"><button class="main" id="go">${fin?tt('Review the final exam','Ripassa l’esame finale'):PR.done?tt('Continue · lesson ','Continua · lezione ')+(cur+1):tt('Start the first lesson','Inizia la prima lezione')}</button><button id="test">${PR.test>0?'✓ ':''}${tt('Entry test','Test d’ingresso')}</button><button id="piano">🎹 ${tt('To the piano: Cadences','Al pianoforte: Cadenze')}</button></div>
+ <p class="small">${tt('Lessons: 6 exercises, 4 right to pass · checks: 10 exercises, 8 right to pass','Lezioni: 6 esercizi, 4 giusti per passare · verifiche: 10 esercizi, 8 giusti per passare')}</p>
+ <p class="small"><a href="${document.querySelector('a.igback').href}">${tt('← back to the island','← torna all’isola')}</a></p>`;
+ $('start').hidden=false;$('end').hidden=true;
+ $('go').onclick=()=>{if(!PR.test&&!readDone&&PR.done===0)return entry(true);begin(fin?NL-1:cur)};$('test').onclick=()=>entry(false);$('piano').onclick=()=>{location.href='/cadences/'};
+ document.querySelectorAll('.map button[data-u]').forEach(b=>b.onclick=()=>openMap(+b.dataset.u));document.querySelectorAll('.map button[data-l]').forEach(b=>b.onclick=()=>begin(+b.dataset.l))}
+function begin(k){audio();if(AC.state==='suspended')AC.resume();if(!PR.met){PR.met=1;saveP()}$('start').hidden=true;$('end').hidden=true;
+ SES={k,i:0,right:0,res:[],q:null,phase:'lesson',step:0,n:NQ(k)};mapU=LS[k].u;lesson(0)}
+function lesson(j){const l=LS[SES.k],cs=l.c,c=cs[j];SES.phase='lesson';SES.step=j;const sp=demo(c[2]||null);VIEW={title:`${tt('Lesson','Lezione')} ${SES.k+1} · ${T2(l.n)}`,spec:sp};hdr();say(T2(c));const last=j===cs.length-1;
+ setBar(`<div class="row">${sp&&sp.cols.length?`<button class="ex" id="hear">▶ ${tt('Hear it','Ascolta')}</button>`:''}${j?`<button id="back">‹</button>`:''}<button class="main" id="next">${last?(l.test?tt('Start the check ▸','Inizia la verifica ▸'):tt('Exercises ▸','Esercizi ▸')):tt('Next ▸','Avanti ▸')}</button></div>`);
+ const h=$('hear');if(h)h.onclick=()=>playCols(sp.cols);$('next').onclick=()=>last?question():lesson(j+1);const bk=$('back');if(bk)bk.onclick=()=>lesson(j-1)}
+const PRAISE=[['Correct.','Esatto.'],['Very good.','Molto bene.'],['Precisely.','Precisamente.'],['Well reasoned.','Ben ragionato.'],['Yes. Exactly so.','Sì. Proprio così.']];
+const SOFT=[['Not quite.','Non proprio.'],['Almost.','Quasi.'],['Look again calmly.','Guarda di nuovo, con calma.']];
+function makeQ(k){const ex=LS[k].ex;for(let t=0;t<12;t++){const[gname,par]=pick(ex);try{const q=G[gname](par||{});if(q&&(q.kb||(q.opts&&q.a>=0&&q.opts.length>=2)))return q}catch(e){console.warn(gname,e)}}return G.semi({})}
+function question(){const q=window.__hmForce?G[window.__hmForce[0]](window.__hmForce[1]||{}):SES.k<0?G.read({}):makeQ(SES.k);SES.q=q;SES.phase='q';q.done=false;VIEW={title:SES.k<0?tt('Entry test · read the notes','Test d’ingresso · leggi le note'):`${tt('Lesson','Lezione')} ${SES.k+1} · ${T2(LS[SES.k].n)}`,spec:q.show?{...q.show}:null,big:q.show?null:'?'};hdr();
+ if(SES.i===0)say(SES.k<0?tt('Read each note: treble clef on top, bass clef below.','Leggi ogni nota: sopra la chiave di violino, sotto quella di basso.'):tt('Now you. Think, then answer.','Ora tocca a te. Pensa, poi rispondi.'));else say('');
+ setBar(ansHtml(q));bindAns(q)}
+function answer(a,btn){const q=SES.q;if(!q||q.done)return;let ok;
+ if(q.kb){const want=q.kb.want,sel=a.set;ok=sel.size===want.size&&[...want].every(s=>sel.has(s));bar.querySelectorAll('[data-s]').forEach(b=>{const s=+b.dataset.s;if(want.has(s)&&sel.has(s))b.classList.add('right');else if(want.has(s)||sel.has(s))b.classList.add(want.has(s)?'right':'wrong')})}
+ else{ok=a.o===q.a;if(btn)btn.classList.add(ok?'right':'wrong');if(!ok){const rb=bar.querySelector(`[data-o="${q.a}"]`);if(rb)rb.classList.add('right')}const an=bar.querySelector('.ans');if(an)an.classList.add('done')}
+ q.done=true;SES.res[SES.i]=ok?1:0;if(ok)SES.right++;hdr();ding(ok);
+ if(q.show&&q.show.cols){VIEW.spec={...q.show,res:ok,cols:q.show.cols.map(c=>({...c,hide:0}))};if(q.full)VIEW.spec.cols=q.full}
+ else if(q.play&&q.play.length&&q.play[0].n&&q.play[0].n.length){VIEW.spec={clef:'t',res:ok,cols:q.play.map(c=>({...c,mel:0}))}}
+ setTimeout(()=>{if(q.play)playCols(q.play)},250);
+ if(ok){if(SES.right%3===0){const B=L.b;ANT={x:B.x+B.w*.5,y:B.y+B.h*.5,t:0}}say(T2(pick(PRAISE)))}else say(T2(pick(SOFT))+(q.opts?' '+tt('The answer is','La risposta è')+` <b>${q.opts[q.a]}</b>.`:''));
+ const nb=document.createElement('div');nb.className='row';nb.innerHTML=`<button class="main" id="next">${SES.i+1>=SES.n?tt('Finish ▸','Fine ▸'):tt('Next ▸','Avanti ▸')}</button>`;bar.appendChild(nb);layout();placeBubble();
+ $('next').onclick=()=>{SES.i++;if(SES.i>=SES.n)finish();else question()}}
+function finish(){SES.phase='end';hdr();say('');setBar('');VIEW=null;const k=SES.k,r=SES.right,n=SES.n;
+ if(k<0){const pass=r>=Math.ceil(n*.9);PR.test=pass?1:Math.max(PR.test,-1);saveP();
+  $('endCard').innerHTML=`<p class="small">${tt('Entry test','Test d’ingresso')}</p><div class="big">${r}/${n}</div><p>${pass?tt('You read music well. We can begin harmony.','Leggi bene le note. Possiamo cominciare l’armonia.'):tt(`You need ${Math.ceil(n*.9)} right notes. My advice: a few lessons with <a href="/notes/">Nadia Boulangigor</a>, then come back. But if you want, you can start anyway.`,`Servono ${Math.ceil(n*.9)} note giuste. Il mio consiglio: qualche lezione con <a href="/notes/">Nadia Boulangigor</a>, poi torna. Ma se vuoi, puoi cominciare lo stesso.`)}</p>
+  <div class="row"><button class="main" id="nx">${pass||PR.done?tt('To the lessons ▸','Alle lezioni ▸'):tt('Start anyway ▸','Comincio lo stesso ▸')}</button>${pass?'':`<button id="again">${tt('Take the test again','Rifai il test')}</button><button id="nadia">${tt('Go to Nadia','Vai da Nadia')}</button>`}</div>`;
+  $('end').hidden=false;$('nx').onclick=()=>{if(!pass&&!PR.test){PR.test=-1;saveP()}if(SES&&SES.after){begin(0)}else openMap()};if($('again'))$('again').onclick=()=>entry(SES&&SES.after);if($('nadia'))$('nadia').onclick=()=>{location.href='/notes/'};return}
+ const pass=r>=PASS(k),isNew=pass&&k===PR.done&&PR.done<NL;PR.plays[k]=(PR.plays[k]|0)+1;if(!(PR.best[k]>=r))PR.best[k]=r;if(isNew)PR.done++;saveP();
+ const test=isTest(k),seeds=pass?Math.min(10,(test?4:1)+(isNew?(test?4:1):0)):0;let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
+ p.seeds=(p.seeds|0)+seeds;p.scores=p.scores||{};p.scores.harmony=p.scores.harmony||{};if(!(p.scores.harmony.all>=PR.done))p.scores.harmony.all=PR.done;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}
+ const nm=AVN[ME.avatar]||'Igor',l=LS[k],ready=pass&&l.ready?T2(l.ready):'';
+ const msg=pass?(test?tt('Check passed. The unit is yours.','Verifica superata. L’unità è tua.'):tt('Lesson passed.','Lezione superata.')):tt(`You need ${PASS(k)} right answers. Read the lesson again and try once more.`,`Servono ${PASS(k)} risposte giuste. Rileggi la lezione e riprova.`);
+ $('endCard').innerHTML=`<p class="small">${tt('Lesson','Lezione')} ${k+1} · ${T2(l.n)}</p><div class="big">${r}/${n}</div><p>${msg}</p>${ready?`<p id="endnew">${ready}</p>`:''}
+ ${isNew&&PR.done<NL?`<p class="small">${tt('Next:','Prossima:')} ${PR.done+1}. ${T2(LS[PR.done].n)}</p>`:''}
+ <p style="color:var(--warm)">${seeds?tt(`+${seeds} tofu seed${seeds>1?'s':''} for ${nm}’s field. Collect them back on the island.`,`+${seeds} sem${seeds>1?'i':'e'} di tofu per il campo di ${nm}. Li ritrovi sull’isola.`):''}</p>
+ <div class="row">${isNew&&PR.done<NL?`<button class="main" id="nx">${tt('Next lesson ▸','Prossima lezione ▸')}</button>`:''}<button ${isNew&&PR.done<NL?'':'class="main"'} id="again">${tt('Do it again','Rifalla')}</button>${ready?`<button id="piano">🎹 ${tt('To the piano','Al pianoforte')}</button>`:''}<button id="map">${tt('All the lessons','Tutte le lezioni')}</button></div>
+ <p class="small"><a href="${document.querySelector('a.igback').href}">${tt('← back to the island','← torna all’isola')}</a></p>`;
+ $('end').hidden=false;if($('nx'))$('nx').onclick=()=>begin(PR.done);$('again').onclick=()=>begin(k);$('map').onclick=()=>openMap();if($('piano'))$('piano').onclick=()=>{location.href='/cadences/'};
+ if(PR.done>0)import('/board.js?v=5').then(B=>B.show($('endCard'),'harmony','all',PR.done,ME.avatar,tt('How far everyone got · lessons','Fin dove siete arrivati · lezioni'))).catch(()=>{})}
+function entry(after){audio();if(AC.state==='suspended')AC.resume();$('start').hidden=true;$('end').hidden=true;SES={k:-1,i:0,right:0,res:[],q:null,phase:'lesson',n:20,after};VIEW={title:tt('Entry test','Test d’ingresso'),spec:{clef:'g',cols:[col([P(0,0,4)],'C'),col([P(4,0,4)]),col([P(3,0,3)])]}};hdr();
+ say(tt('Before harmony, a little test: 20 notes on the grand staff, treble and bass clef. You need 18 right.','Prima dell’armonia, un piccolo test: 20 note sull’endecalineo, chiave di violino e di basso. Ne servono 18 giuste.'));
+ setBar(`<div class="row"><button id="skip">${tt('Skip','Salta')}</button><button class="main" id="next">${tt('Start the test ▸','Inizia il test ▸')}</button></div>`);$('next').onclick=question;$('skip').onclick=()=>{if(!PR.test){PR.test=-1;saveP()}if(after)begin(0);else openMap()}}
+window.__hm={G,LS,US,HT,makeQ,begin,openMap,entry,PR};
+resize();requestAnimationFrame(frame);openMap();
+})();
+</script>
+</body></html>
