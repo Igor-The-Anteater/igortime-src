@@ -440,7 +440,7 @@ const R0=19,R=22.8; /* 11 Nov 2026: the island is 20% wider (was 19); R0 keeps t
 const gg=new THREE.PlaneGeometry(116,116,203,203);gg.rotateX(-Math.PI/2);
 {const pos=gg.attributes.position,cols=[];const a=new THREE.Color('#2f5238'),b=new THREE.Color('#2b4b35'),c=new THREE.Color('#36593c'),sand=new THREE.Color('#9b9277'),sea=new THREE.Color('#1d3a52'),path=new THREE.Color('#58584f'),t=new THREE.Color();
  for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i),r=Math.hypot(x,z*1.12);let y=0;
-  if(r>R+2.6){y=-.6;t.copy(sea)}else if(r>R){y=-.2*(r-R)/2.6;t.copy(sand)}
+  if(r>R+2.6){y=-1.1;t.copy(sea)}/* 14 Nov 2026: the ground's own water now lies under the real sea, so the sea has one colour everywhere (its square edge at ±58 looked like the sea ended before the buoys) */else if(r>R){y=-.2*(r-R)/2.6;t.copy(sand)}
   else{const n=Math.sin(x*.37)*Math.cos(z*.31)+Math.sin((x-z)*.13);t.copy(n>.5?c:n>-.25?a:b);y=Math.max(0,Math.sin(x*.21+1)*Math.cos(z*.19)*.25-.05);
    // footpaths: house ↔ field, house ↔ school, house ↔ shore
    const dpath=Math.min(segD(x,z,0,-4.2,8,-0.5),segD(x,z,0,-4.2,-9,-7.5),segD(x,z,0,-4.2,0,8),segD(x,z,0,3,-10.5,5));if(dpath<.75){t.lerp(path,.6*(1-dpath/.75));y*=.3}}
@@ -3360,6 +3360,59 @@ function mkPeng(emp){const g=new THREE.Group(),blk=lam('#1f2328'),wh=lam('#f7f7f
   const wg=new THREE.Mesh(new THREE.SphereGeometry(.1,8,6),blk);wg.scale.set(.35,1.3*h,.8);wg.position.set(s*.22,.32*h,0);g.add(wg)}
  if(emp){for(const s of[-1,1]){const y=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),lam('#f2c230'));y.position.set(s*.11,.62*h,.07);g.add(y)}}
  g.userData.sp=emp?'emperor':'penguin';return g}
+/* 14 Nov 2026 (Fabio: "the stage islet is ugly: lights, billboards, a concert and party mood"):
+   speakers, a lit sign on top, moving spotlights, festoons of bulbs, bunting, two billboards, balloons and slow confetti */
+function stageTex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t}
+function stageFest(I,S0,G){const dark=lam('#2a2030'),grey=lam('#55505e'),wood=lam('#8a5532'),FONT='Fredoka, system-ui, sans-serif';
+ const COLS=['#ffd166','#ff5d8f','#4fc3ff','#9be38a','#b98cff','#ff8a5c'];
+ /* speaker stacks */
+ for(const s of[-1,1])for(let k=0;k<2;k++){const b=new THREE.Mesh(new THREE.BoxGeometry(.8,.7,.6),dark);b.position.set(s*2.85,.35+k*.72,.55);S0.add(b);
+  for(const y of[.15,-.12]){const cn=new THREE.Mesh(new THREE.CylinderGeometry(y>0?.13:.22,y>0?.13:.22,.04,14),grey);cn.rotation.x=Math.PI/2;cn.position.set(s*2.85,.35+k*.72+y,.86);S0.add(cn)}}
+ /* the lit sign on top of the stage, with chasing bulbs around it */
+ const sT=stageTex(512,128,(g,w,h)=>{const gr=g.createLinearGradient(0,0,w,0);gr.addColorStop(0,'#3a1550');gr.addColorStop(1,'#14233f');g.fillStyle=gr;g.fillRect(0,0,w,h);
+  g.font='700 66px '+FONT;g.textAlign='center';g.textBaseline='middle';g.shadowColor='#ffcf5a';g.shadowBlur=18;g.fillStyle='#ffe28a';g.fillText(tt('IGOR’S STAGE','IL PALCO DI IGOR'),w/2,h/2+4)});
+ const sign=new THREE.Mesh(new THREE.PlaneGeometry(4.2,1.05),curve(new THREE.MeshBasicMaterial({map:sT,toneMapped:false})));sign.position.set(0,3.95,-1.18);S0.add(sign);
+ const sb=new THREE.Mesh(new THREE.BoxGeometry(4.4,1.25,.1),dark);sb.position.set(0,3.95,-1.25);S0.add(sb);
+ const chase=[];for(let k=0;k<26;k++){const u=k/26,per=2*(4.3+1.15);let d=u*per,x,y;
+  if(d<4.3){x=-2.15+d;y=.575}else if((d-=4.3)<1.15){x=2.15;y=.575-d}else if((d-=1.15)<4.3){x=2.15-d;y=-.575}else{d-=4.3;x=-2.15;y=-.575+d}
+  const m=new THREE.Mesh(new THREE.SphereGeometry(.05,6,5),glowM('#ffe9a0',1.2));m.position.set(x,3.95+y,-1.15);S0.add(m);chase.push(m)}
+ /* moving spotlights on the truss: a head and a soft beam each */
+ const beams=[];[-1.8,-.6,.6,1.8].forEach((x,k)=>{const c=COLS[k];const hd=new THREE.Mesh(new THREE.CylinderGeometry(.12,.17,.3,10),dark);hd.position.set(x,3.2,-1.05);S0.add(hd);
+  const pv=new THREE.Group();pv.position.set(x,3.15,-1.0);S0.add(pv);
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(.9,3.2,20,1,true).translate(0,-1.6,0),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.16,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,fog:false}));
+  pv.add(cone);const pool=halo(c,1.6,.35,true);pool.position.set(0,-3.0,0);pv.add(pool);beams.push({pv,cone,pool,ph:k*1.3,dir:k%2?1:-1})});
+ /* festoons of bulbs from the stage to two poles behind the benches, and bunting along the truss */
+ const bulbs=[];const pole=(x,z,h)=>{const p=new THREE.Mesh(new THREE.CylinderGeometry(.06,.07,h,6),wood);p.position.set(x,h/2,z);S0.add(p);const tp=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),glowM('#ffd166',1));tp.position.set(x,h+.05,z);S0.add(tp);return new V3(x,h,z)};
+ const BL=[pole(-3.3,5.3,2.9),pole(3.3,5.3,2.9)],TOPS=[new V3(-2.35,3.3,-1.25),new V3(2.35,3.3,-1.25)];
+ const string=(a,b,sag,n,flags)=>{for(let k=1;k<n;k++){const u=k/n,p=a.clone().lerp(b,u);p.y-=Math.sin(u*Math.PI)*sag;
+   if(flags){const f=new THREE.Mesh(new THREE.ConeGeometry(.14,.32,3),lam(COLS[k%COLS.length],{side:THREE.DoubleSide}));f.rotation.x=Math.PI;f.position.copy(p);f.position.y-=.16;S0.add(f)}
+   else{const c=COLS[k%COLS.length],m=new THREE.Mesh(new THREE.SphereGeometry(.07,8,6),glowM(c,1));m.position.copy(p);S0.add(m);bulbs.push({m,ph:k*.9+a.x})}}};
+ string(TOPS[0],BL[0],.55,12);string(TOPS[1],BL[1],.55,12);string(BL[0],BL[1],.8,18);
+ string(new V3(-2.4,3.25,-1.0),new V3(2.4,3.25,-1.0),.3,14,true);
+ /* two billboards facing the audience */
+ const poster=(title,sub,bg,fg)=>stageTex(256,320,(g,w,h)=>{g.fillStyle=bg;g.fillRect(0,0,w,h);g.fillStyle='rgba(255,255,255,.12)';for(let i=0;i<9;i++){g.beginPath();g.arc(Math.random()*w,Math.random()*h,8+Math.random()*26,0,7);g.fill()}
+  g.strokeStyle=fg;g.lineWidth=8;g.strokeRect(10,10,w-20,h-20);g.fillStyle=fg;g.textAlign='center';g.font='700 40px '+FONT;
+  title.forEach((l,i)=>g.fillText(l,w/2,92+i*46));g.font='600 26px '+FONT;sub.forEach((l,i)=>g.fillText(l,w/2,230+i*32));g.font='54px serif';g.fillText('♪ ♫',w/2,62)});
+ const board=(x,z,ry,tex)=>{const B=new THREE.Group();B.position.set(x,0,z);B.rotation.y=ry;S0.add(B);
+  for(const s of[-1,1]){const p=new THREE.Mesh(new THREE.BoxGeometry(.1,1.9,.1),wood);p.position.set(s*.62,.95,0);B.add(p)}
+  const fr=new THREE.Mesh(new THREE.BoxGeometry(1.5,1.85,.08),wood);fr.position.set(0,2.0,-.03);B.add(fr);
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.36,1.7),curve(new THREE.MeshBasicMaterial({map:tex,toneMapped:false})));pl.position.set(0,2.0,.02);B.add(pl);
+  const lp=halo('#ffe9a0',1.3,.3);lp.position.set(0,3.0,.25);B.add(lp);return B};
+ board(-3.9,2.6,.55,poster(tt(['TONIGHT','LIVE!'],['STASERA','DAL VIVO!']),tt(['your song','on the stage'],['il tuo brano','sul palco']),'#e0463c','#fff3c4'));
+ board(3.9,2.6,-.55,poster(tt(['APPLAUSE','👏 1–5'],['APPLAUSI','👏 da 1 a 5']),tt(['leaderboard','every week'],['classifica','ogni settimana']),'#2f6fd6','#ffe28a'));
+ /* balloons */
+ const balls=[];[[-4.4,3.4],[4.4,3.4],[-2.9,-.9],[2.9,-.9]].forEach(([x,z],k)=>{for(let j=0;j<3;j++){const c=COLS[(k*3+j)%COLS.length],h=2.6+j*.35+(k%2)*.2;
+  const st=new THREE.Mesh(new THREE.CylinderGeometry(.008,.008,h,3),grey);st.position.set(x+(j-1)*.18,h/2,z);S0.add(st);
+  const b=new THREE.Mesh(new THREE.SphereGeometry(.24,12,10),lam(c,{emissive:c,emissiveIntensity:.25}));b.scale.y=1.2;b.position.set(x+(j-1)*.22,h+.2,z+(j-1)*.05);S0.add(b);balls.push({b,y:h+.2,ph:k+j})}});
+ /* slow confetti over the stage */
+ const conf=[];for(let k=0;k<36;k++){const m=new THREE.Mesh(new THREE.PlaneGeometry(.08,.05),new THREE.MeshBasicMaterial({color:COLS[k%COLS.length],side:THREE.DoubleSide}));
+  m.position.set((Math.random()-.5)*5,.6+Math.random()*3,(Math.random()-.3)*3);S0.add(m);conf.push({m,v:.25+Math.random()*.35,sp:2+Math.random()*4})}
+ updaters.push((t,dt)=>{if(!G.visible||where!=='out')return;const nk=SKY.nk||0;
+  chase.forEach((m,k)=>{m.material.emissiveIntensity=((k+Math.floor(t*6))%3===0)?1.6:.25});
+  bulbs.forEach(o=>{o.m.material.emissiveIntensity=.6+.5*Math.sin(t*2.6+o.ph)});
+  beams.forEach(o=>{o.pv.rotation.z=Math.sin(t*.7+o.ph)*.45*o.dir;o.pv.rotation.x=.35+Math.sin(t*.5+o.ph*2)*.25;const a=.07+.17*nk;o.cone.material.opacity=a;o.pool.material.opacity=.15+.3*nk});
+  balls.forEach(o=>{o.b.position.y=o.y+Math.sin(t*1.3+o.ph)*.06});
+  const d=Math.min(dt||.016,.05);conf.forEach(o=>{const p=o.m.position;p.y-=o.v*d;p.x+=Math.sin(t+o.sp)*.15*d;o.m.rotation.x+=o.sp*d;o.m.rotation.y+=o.sp*.7*d;if(p.y<.5){p.y=3.6+Math.random()*.6;p.x=(Math.random()-.5)*5}})})}
 /* the stage islet: a wooden stage with a red curtain, coloured lights and a microphone; walking up to it opens /palco/ */
 function isleStage(I,G){const S0=new THREE.Group(),dx=I.A.x-I.cx,dz=I.A.z-I.cz;S0.position.set(I.cx+.6,.04,I.cz-.4);S0.rotation.y=Math.atan2(dx,dz);G.add(S0);
  const wood=lam('#8a5532'),plank=lam('#b8743f'),dark=lam('#2a2030'),red=lam('#a3243a',{emissive:'#3a0610',emissiveIntensity:.5});
@@ -3372,9 +3425,9 @@ function isleStage(I,G){const S0=new THREE.Group(),dx=I.A.x-I.cx,dz=I.A.z-I.cz;S
  I.lamps=[];['#ffd166','#4fc3ff','#b98cff','#ff8a5c'].forEach((c,k)=>{const b=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),lam(c,{emissive:c,emissiveIntensity:1}));b.position.set(-1.8+k*1.2,3.18,-1.1);S0.add(b);I.lamps.push(b)});
  const mic=new THREE.Group(),st=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.2,6),dark);st.position.y=1.08;mic.add(st);const hd=new THREE.Mesh(new THREE.SphereGeometry(.09,10,8),lam('#c9c9d2'));hd.position.y=1.72;mic.add(hd);const bs=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.04,10),dark);bs.position.y=.5;mic.add(bs);mic.position.set(0,0,.5);S0.add(mic);
  for(let k=0;k<6;k++){const bn=new THREE.Mesh(new THREE.BoxGeometry(1.2,.12,.3),plank);bn.position.set((k%3-1)*1.5,.28,3.1+Math.floor(k/3)*.9);S0.add(bn);for(const s of[-1,1]){const lg=new THREE.Mesh(new THREE.BoxGeometry(.08,.26,.26),wood);lg.position.set((k%3-1)*1.5+s*.5,.13,3.1+Math.floor(k/3)*.9);S0.add(lg)}}
- S0.updateMatrixWorld(true);const stand=new V3(0,0,2.25).applyMatrix4(S0.matrixWorld);stand.y=0;const ctr=new V3(0,0,0).applyMatrix4(S0.matrixWorld);
+ stageFest(I,S0,G);S0.updateMatrixWorld(true);const stand=new V3(0,0,2.25).applyMatrix4(S0.matrixWorld);stand.y=0;const ctr=new V3(0,0,0).applyMatrix4(S0.matrixWorld);
  const act=()=>launch('/palco/',tt('Up on the stage!','Sul palco!'),['out',stand.x,stand.z]);const go=()=>walkIn(stand,act);
- hit(S0,2.4,go,tt('The stage','Il palco'),1);label(tt('The stage','Il palco'),tt('your song, the visits, the leaderboard','il tuo brano, le visite, la classifica'),new V3(ctr.x,4.5,ctr.z),go);zone('out',stand.x,stand.z,1.1,act,tt('The stage','Il palco'));
+ hit(S0,2.4,go,tt('The stage','Il palco'),1);label(tt('The stage','Il palco'),tt('your song, the visits, the leaderboard','il tuo brano, le visite, la classifica'),new V3(ctr.x,6.6,ctr.z),go);zone('out',stand.x,stand.z,1.1,act,tt('The stage','Il palco'));
  updaters.push(t=>{if(!G.visible)return;I.lamps.forEach((b,k)=>{b.material.emissiveIntensity=.55+.45*Math.sin(t*2.2+k*1.7)})})}
 function isleIce(I,G){for(const[x,z,s]of[[36.82,27.86,1],[25.82,28.16,.85],[38.12,21.16,.9]])snowPine(G,x,z,s);
  const ig=new THREE.Group(),dome=new THREE.Mesh(new THREE.SphereGeometry(1.3,20,12,0,TAU,0,Math.PI/2),lam('#f4f9fd'));ig.add(dome);const tn=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,1,14,1,false,0,Math.PI),lam('#eaf2f8'));tn.rotation.z=Math.PI/2;tn.rotation.y=Math.PI/2;tn.position.set(0,.02,1.15);ig.add(tn);
@@ -8075,7 +8128,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261114-1445';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261114-1515';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();/* 14 Nov 2026: reload only for a NEWER version, and only once per version per tab: an old or half-published build can never make the island reload in a loop */if(v&&v>IGVER){let k='igv_rl_'+v;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}verNew=true}}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
