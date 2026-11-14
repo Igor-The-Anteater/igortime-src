@@ -148,7 +148,7 @@ const G={
  semi:p=>{const a=randNote(false);let b,isS;if(Math.random()<.5){b=up(a,2,Math.random()<.5?'m':'M')}else{b={...a,a:a.a+(Math.random()<.5?1:0)};if(b.a===a.a)b=up(a,2,'M')}isS=midi(b)-midi(a)===1;
   return mk(tt(`From <b>${N(a)}</b> to <b>${N(b)}</b>: a semitone or a tone?`,`Da <b>${N(a)}</b> a <b>${N(b)}</b>: un semitono o un tono?`),isS?tt('semitone','semitono'):tt('tone','tono'),[isS?tt('tone','tono'):tt('semitone','semitono')],{keep:true,show:{clef:'t',cols:[col([a]),col([b])]},play:[col([a]),col([b])]})},
  /* ---- keyboard exercises for beginners (14 Nov 2026) ---- */
- kbName:p=>{const W=[0,2,4,5,7,9,11],k=ri(0,6),m=60+W[k];return mk(tt('Which note is the yellow key? (tip: C is just left of the two black keys)','Che nota è il tasto giallo? (trucco: il Do è subito a sinistra dei due tasti neri)'),HT.NM[LG][k],HT.NM[LG].filter((x,i)=>i!==k),{show:{kbd:{lo:'C4',hi:'B4',on:{[m]:'y'}}},play:[col([m2p(m)])]})},
+ kbName:p=>{const W=[0,2,4,5,7,9,11],k=ri(0,6),m=60+W[k];return mk(tt('Which note is the yellow key? (tip: C is just left of the two black keys)','Che nota è il tasto giallo? (trucco: il Do è subito a sinistra dei due tasti neri)'),HT.NM[LG][k],HT.NM[LG].filter((x,i)=>i!==k),{show:{kbd:{lo:'C4',hi:'B4',on:{[m]:'y'}}},kbAfter:{names:1},play:[col([m2p(m)])]})},
  kbSemi:p=>{const pairs=p.white?[[64,65],[71,72],[60,62],[62,64],[65,67],[67,69],[69,71]]:[[64,65],[71,72],[60,61],[61,62],[60,62],[65,67],[66,68],[63,65],[67,69],[70,72],[69,70],[62,64]],[a,b]=pick(pairs),isS=b-a===1;
   return mk(tt('Look at the two coloured keys: is there a key in between? Semitone or tone?','Guarda i due tasti colorati: c’è un tasto in mezzo? Semitono o tono?'),isS?tt('semitone','semitono'):tt('tone','tono'),[isS?tt('tone','tono'):tt('semitone','semitono')],{keep:true,show:{kbd:{lo:'C4',hi:'C5',on:{[a]:'y',[b]:'y'},names:1}},play:[col([m2p(a)]),col([m2p(b)])]})},
  kbCount:p=>{const a=ri(60,66),n=ri(1,p.max||5),b=a+n;return mk(tt('How many semitones from one yellow key to the other? Count every step, black keys too.','Quanti semitoni ci sono da un tasto giallo all’altro? Conta ogni passo, anche i tasti neri.'),String(n),[1,2,3,4,5,6,7].filter(x=>x!==n).map(String),{keep:true,show:{kbd:{lo:'C4',hi:'C5',on:{[a]:'y',[b]:'y'},names:1}},play:[col([m2p(a)]),col([m2p(b)])]})},
@@ -156,7 +156,7 @@ const G={
   return mk(tt('The black key in yellow has two names. Which?','Il tasto nero in giallo ha due nomi. Quali?'),right,other,{show:{kbd:{lo:'C4',hi:'B4',on:{[m]:'y'},names:1}},play:[col([m2p(m)])]})},
  kbUp:p=>{const W=[0,2,4,5,7,9],k=ri(0,5),a=60+W[k],half=p.semi?1:2,b=a+half,R=kbNameOf(b,p.semi?'up':'up').split('\n')[0];const right=mod(b,12)===[0,2,4,5,7,9,11].find(x=>x===mod(b,12))?kbNameOf(b):kbNameOf(b,'up');
   const opts=[60,61,62,63,64,65,66,67,68,69,70,71,72].filter(x=>x!==b&&Math.abs(x-a)<=3&&x!==a).map(x=>[0,2,4,5,7,9,11].includes(mod(x,12))?kbNameOf(x):kbNameOf(x,'up'));
-  return mk(p.semi?tt(`A semitone above <b>${kbNameOf(a)}</b> is…`,`Un semitono sopra <b>${kbNameOf(a)}</b> è…`):tt(`A tone above <b>${kbNameOf(a)}</b> is…`,`Un tono sopra <b>${kbNameOf(a)}</b> è…`),right,opts,{show:{kbd:{lo:'C4',hi:'C5',on:{[a]:'y'},names:1,top:{[b]:'?'}}},play:[col([m2p(a)]),col([m2p(b)])]})},
+  return mk(p.semi?tt(`A semitone above <b>${kbNameOf(a)}</b> is…`,`Un semitono sopra <b>${kbNameOf(a)}</b> è…`):tt(`A tone above <b>${kbNameOf(a)}</b> is…`,`Un tono sopra <b>${kbNameOf(a)}</b> è…`),right,opts,{show:{kbd:{lo:'C4',hi:'C5',on:{[a]:'y'},names:1,top:{[b]:'?'}}},kbAfter:{on:{[a]:'y',[b]:'g'},top:{[b]:'✓'}},play:[col([m2p(a)]),col([m2p(b)])]})},
  accName:p=>{const q=randNote(true);if(!q.a)q.a=pick([1,-1]);return mk(tt('Which note is it?','Che nota è?'),N(q),noteWrong(q),{show:{clef:'t',cols:[col([q])]},play:[col([q])]})},
  enh:p=>{const pairs=[['C#','Db'],['D#','Eb'],['F#','Gb'],['G#','Ab'],['A#','Bb'],['E#','F'],['B#','C'],['Fb','E'],['Cb','B']];const[x,y]=pick(pairs.slice(0,p.all?9:5));const[a,b]=Math.random()<.5?[x,y]:[y,x];const A=parse(a+'4'),B=parse(b+'4');
   return mk(tt(`Which note is the same key as <b>${N(A)}</b>?`,`Quale nota è lo stesso tasto di <b>${N(A)}</b>?`),N(B),[N({...A,a:0}),N({...B,a:B.a?0:1}),N({...A,l:mod(A.l+2,7)})],{show:{clef:'t',cols:[col([A]),col([B],'?',{hide:1})]}})},
@@ -293,7 +293,7 @@ function room(){const gr=g.createLinearGradient(0,0,0,Hh);gr.addColorStop(0,'#23
 const CH='rgba(238,242,230,.92)',HL='#ffe08a',OKC='#7fe08a',NOC='#ffc06a';
 const chalk=(sz,w=500)=>{g.font=`${w} ${sz}px Fredoka, sans-serif`;g.fillStyle=CH;g.textAlign='center';g.textBaseline='middle'};
 function board(){const B=L.b;g.fillStyle='#6b4a2e';rr(g,B.x-9,B.y-9,B.w+18,B.h+18,10);g.fill();g.fillStyle='#2f4a3a';rr(g,B.x,B.y,B.w,B.h,4);g.fill();
- g.fillStyle='#7a5232';g.fillRect(B.x+B.w*.1,B.y+B.h+6,B.w*.8,7);g.save();g.beginPath();g.rect(B.x,B.y,B.w,B.h);g.clip();boardContent(B);g.restore()}
+ g.fillStyle='#7a5232';g.fillRect(B.x+B.w*.1,B.y+B.h+6,B.w*.8,7);g.save();g.beginPath();g.rect(B.x,B.y,B.w,B.h);g.clip();try{boardContent(B)}catch(e){(window.__hmErr=window.__hmErr||[]).push(String(e));if(!window.__hmErrShown){window.__hmErrShown=1;console.error('board',e)}}g.restore()}
 /* ---- staves, key signatures, chords ---- */
 const SH_T=[10,7,11,8,5,9,6],FL_T=[6,9,5,8,4,7,3];
 function staves(B,clef,cols){const top=B.y+B.h*.14,bot=B.y+B.h*.9,avail=bot-top;let s,yOf,lines;
@@ -319,7 +319,7 @@ function chordAt(S,c,x,colr,f){const ns=c.n.filter(Boolean).map((p,i)=>({p,d:dia
 /* 14 Nov 2026 (Fabio: the course must be for non-musicians): a piano keyboard drawn in chalk on the board.
    kb = {lo:'C4', hi:'C5', on:{E4:'y',F4:'p'} (y yellow, p pink, g green), arcs:[['E4','F4',[en,it],up?]], names:1 (white keys) | 2 (also black), top:{E4:'?'}} */
 const KBC={y:'#ffe08a',p:'#ffb3c7',g:'#9be38a',b:'#8fd3ff'};
-const kbM=s=>typeof s==='number'?s:midi(parse(s));
+const kbM=s=>typeof s==='number'?s:/^\d+$/.test(s)?+s:midi(parse(s)); /* object keys come back as strings: '61' is a MIDI number, not a note name */
 function kbNameOf(m,pref){const pcs=mod(m,12),W={0:0,2:1,4:2,5:3,7:4,9:5,11:6};if(W[pcs]!=null)return HT.NM[LG][W[pcs]];const up_=HT.NM[LG][W[pcs-1]]+'♯',dn=HT.NM[LG][W[pcs+1]]+'♭';return pref==='up'?up_:pref==='down'?dn:up_+'\n'+dn}
 function drawKbd(B,kb){const lo=kbM(kb.lo||'C4'),hi=kbM(kb.hi||'C5'),isW=m=>[0,2,4,5,7,9,11].includes(mod(m,12));
  const whites=[];for(let m=lo;m<=hi;m++)if(isW(m))whites.push(m);const nW=whites.length;
@@ -419,7 +419,8 @@ function answer(a,btn){const q=SES.q;if(!q||q.done)return;let ok;
  if(q.kb){const want=q.kb.want,sel=a.set;ok=sel.size===want.size&&[...want].every(s=>sel.has(s));bar.querySelectorAll('[data-s]').forEach(b=>{const s=+b.dataset.s;if(want.has(s)&&sel.has(s))b.classList.add('right');else if(want.has(s)||sel.has(s))b.classList.add(want.has(s)?'right':'wrong')})}
  else{ok=a.o===q.a;if(btn)btn.classList.add(ok?'right':'wrong');if(!ok){const rb=bar.querySelector(`[data-o="${q.a}"]`);if(rb)rb.classList.add('right')}const an=bar.querySelector('.ans');if(an)an.classList.add('done')}
  q.done=true;SES.res[SES.i]=ok?1:0;if(ok)SES.right++;hdr();ding(ok);
- if(q.show&&q.show.cols){VIEW.spec={...q.show,res:ok,cols:q.show.cols.map(c=>({...c,hide:0}))};if(q.full)VIEW.spec.cols=q.full}
+ if(q.show&&q.show.kbd){VIEW.spec={...q.show,kbd:{...q.show.kbd,...(q.kbAfter||{})}}}
+ else if(q.show&&q.show.cols){VIEW.spec={...q.show,res:ok,cols:q.show.cols.map(c=>({...c,hide:0}))};if(q.full)VIEW.spec.cols=q.full}
  else if(q.play&&q.play.length&&q.play[0].n&&q.play[0].n.length){VIEW.spec={clef:'t',res:ok,cols:q.play.map(c=>({...c,mel:0}))}}
  setTimeout(()=>{if(q.play)playCols(q.play)},250);
  if(ok){if(SES.right%3===0){const B=L.b;ANT={x:B.x+B.w*.5,y:B.y+B.h*.5,t:0}}say(T2(pick(PRAISE)))}else say(T2(pick(SOFT))+(q.opts?' '+tt('The answer is','La risposta è')+` <b>${q.opts[q.a]}</b>.`:''));
@@ -445,7 +446,7 @@ function finish(){SES.phase='end';hdr();say('');setBar('');VIEW=null;const k=SES
 function entry(after){audio();if(AC.state==='suspended')AC.resume();$('start').hidden=true;$('end').hidden=true;SES={k:-1,i:0,right:0,res:[],q:null,phase:'lesson',n:20,after};VIEW={title:tt('Entry test','Test d’ingresso'),spec:{clef:'g',cols:[col([P(0,0,4)],'C'),col([P(4,0,4)]),col([P(3,0,3)])]}};hdr();
  say(tt('Before harmony, a little test: 20 notes on the grand staff, treble and bass clef. You need 18 right.','Prima dell’armonia, un piccolo test: 20 note sull’endecalineo, chiave di violino e di basso. Ne servono 18 giuste.'));
  setBar(`<div class="row"><button id="skip">${tt('Skip','Salta')}</button><button class="main" id="next">${tt('Start the test ▸','Inizia il test ▸')}</button></div>`);$('next').onclick=question;$('skip').onclick=()=>{if(!PR.test){PR.test=-1;saveP()}if(after)begin(0);else openMap()}}
-window.__hm={G,LS,US,HT,makeQ,begin,openMap,entry,PR};
+window.__hm={G,LS,US,HT,makeQ,begin,openMap,entry,PR,demo,board,lesson,T2,get SES(){return SES},setView:v=>{VIEW=v},get VIEW(){return VIEW},get L(){return L}};
 resize();requestAnimationFrame(frame);openMap();
 })();
 </script>
