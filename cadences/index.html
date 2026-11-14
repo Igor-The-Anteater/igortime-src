@@ -76,6 +76,7 @@ button.acc{font:400 20px/1 'Noto Music',var(--display);padding:4px 12px 10px;let
 .card .small{font-size:10.5px;letter-spacing:.08em;color:var(--dim)}
 .card a{color:var(--glow)}
 @media (max-width:520px){#ig{width:120px;height:100px}.top{min-height:100px}#bubble{font-size:16px;padding:10px 13px}}
+.prep{border:1px solid rgba(241,180,110,.55);border-radius:12px;padding:10px 12px;background:rgba(241,180,110,.08)}.prep a{color:#f1b46e}
 </style>
 </head><body>
 <header><a class="igback" href="/">← Island</a><h1><a href="/"><em>Igor</em> time</a> · Cadences</h1><div id="stat">round <b id="rd">1/5</b><br>score <b id="sc">0</b></div></header>
@@ -111,6 +112,14 @@ button.acc{font:400 20px/1 'Noto Music',var(--display);padding:4px 12px 10px;let
  <h2>Four-part <em>Cadences</em></h2>
  <p>Three chords are already written. <b>Write the last two</b> in four voices (soprano, alto, tenor, bass) to finish the phrase with the cadence <span class="nm">Igor</span> asks for.</p>
  <p><span class="nm">Igor</span> recognises your cadence and checks the voice leading: parallel fifths and octaves, hidden fifths, doublings, the leading tone, the seventh, ranges and spacing.</p>
+ <p id="prep" class="prep" hidden></p>
+ <script>/* 14 Nov 2026: this is the hardest game of the school: it wants music reading and harmony. Advice, never a lock. */
+ (()=>{const el=document.getElementById('prep');let IT=false,nt=0,hm=0;try{IT=(localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en'))==='it';nt=(JSON.parse(localStorage.getItem('igortime_notes'))||{}).done|0;hm=(JSON.parse(localStorage.getItem('igortime_harmony'))||{}).done|0}catch(e){}
+  const tt=(en,it)=>IT?it:en,out=[];
+  if(!nt)out.push(tt('To play you must <b>read music</b> in the treble and bass clef: if you can’t yet, start with <a href="/notes/">Nadia Boulangigor</a>.','Per giocare bisogna <b>saper leggere le note</b> in chiave di violino e di basso: se non sai ancora farlo, comincia da <a href="/notes/">Nadia Boulangigor</a>.'));
+  if(hm<144)out.push(hm?tt(`You are at lesson ${hm+1} of the <a href="/harmony/">harmony course</a>: Easy after lesson 80, Medium after 108, Extreme after 144.`,`Sei alla lezione ${hm+1} del <a href="/harmony/">corso di armonia</a>: Easy dopo la lezione 80, Medium dopo la 108, Extreme dopo la 144.`):
+   tt('This is the hardest game of the school: you need to have <b>studied harmony</b>. If you haven’t, <a href="/harmony/">Arnold Schönbigor’s course</a> takes you here from zero.','È il gioco più difficile della scuola: bisogna aver <b>studiato armonia</b>. Se non l’hai studiata, <a href="/harmony/">il corso di Arnold Schönbigor</a> ti porta fin qui da zero.'));
+  if(out.length){el.innerHTML=out.join(' ');el.hidden=false}})();</script>
  <div class="row av" role="group" aria-label="Choose your anteater">
   <button type="button" data-av="igor" aria-pressed="true"><canvas width="128" height="128"></canvas>Igor</button>
   <button type="button" data-av="she" aria-pressed="false"><canvas width="128" height="128"></canvas>Shigor</button>
