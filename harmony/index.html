@@ -73,6 +73,7 @@ button.ex{font:600 15px/1.1 var(--toon);letter-spacing:0;text-transform:none;bac
 <script src="/harmony/schoen.js?v=1"></script>
 <script src="/harmony/theory.js?v=1"></script>
 <script src="/harmony/lessons.js?v=1"></script>
+<script src="/harmony/cards.js?v=1"></script>
 <script>
 (()=>{
 const H=IgorHouse,{TAU,clamp,lerp,rr,drawAnt,paintAvatar,ME,AVN}=H,PAD=H.PAD||.24;
@@ -91,6 +92,9 @@ const HT=window.HT,HM=window.HM;const{P,parse,midi,pc,dia,nm,ival,up,down,ivName
 const N=p=>nm(p,LG);
 
 /* ================= lessons ================= */
+/* 14 Nov 2026: the lessons rewritten for beginners (cards.js) */
+if(window.HM_CARDS)for(const k in HM_CARDS){const l=HM.L[k-1];if(l&&!l.test)l.c=HM_CARDS[k]}
+if(window.HM_EX)for(const k in HM_EX){const l=HM.L[k-1];if(l&&!l.test)l.ex=HM_EX[k]}
 const LS=HM.L,US=HM.U,NL=LS.length;
 const isTest=k=>!!LS[k].test;
 /* the exercises of a check: all the exercises of the lessons of its unit */
@@ -128,6 +132,7 @@ const DBL=/♯♯|♭♭|𝄪|𝄫/;function mk(p,right,wrong,o){o=o||{};const a
 function noteWrong(p){const out=[];out.push(N({...p,a:p.a+1}),N({...p,a:p.a-1}),N({...p,l:mod(p.l+1,7),a:0}),N({...p,l:mod(p.l-1,7),a:0}),N({...p,l:mod(p.l+2,7),a:p.a}));return out.filter(x=>!/𝄪|𝄫|♯♯|♭♭/.test(x))}
 const randNote=(acc)=>{const p=P(ri(0,6),0,4);if(acc){const r=Math.random();p.a=r<.35?1:r<.7?-1:0}return p};
 const col=(n,lab,o)=>({n,lab,...(o||{})});
+const m2p=(m,pref)=>{const o=Math.floor(m/12)-1,c=mod(m,12),W={0:0,2:1,4:2,5:3,7:4,9:5,11:6};if(W[c]!=null)return{l:W[c],a:0,o};return pref==='down'?{l:W[c+1],a:-1,o}:{l:W[c-1],a:1,o}};
 const close=(ch,inv)=>{/* closed position from the inverted bass, around octave 4 */const k=inv||0,m=ch.map(p=>({l:p.l,a:p.a}));const out=[];let prev=null;for(let i=0;i<m.length;i++){const t=m[(k+i)%m.length];let p={...t,o:prev?prev.o:4};if(prev&&midi(p)<=midi(prev))p.o++;if(!prev){while(midi(p)>67)p.o--;while(midi(p)<57)p.o++}out.push(p);prev=p}return out};
 const st4=v=>v.map((p,i)=>({...p,st:i<2?'b':'t'}));
 /* the best close voicing of a chord after another: the upper-voice spacing that moves least */
@@ -142,6 +147,16 @@ const G={
  read:p=>{const d=ri(p.lo!=null?p.lo:-12,p.hi!=null?p.hi:12),q=P(mod(d,7),0,4+Math.floor(d/7));return{p:tt('Which note is it?','Che nota è?'),opts:HT.NM[LG].slice(),a:q.l,show:{clef:'g',cols:[col([q])]},play:[col([q])]}},
  semi:p=>{const a=randNote(false);let b,isS;if(Math.random()<.5){b=up(a,2,Math.random()<.5?'m':'M')}else{b={...a,a:a.a+(Math.random()<.5?1:0)};if(b.a===a.a)b=up(a,2,'M')}isS=midi(b)-midi(a)===1;
   return mk(tt(`From <b>${N(a)}</b> to <b>${N(b)}</b>: a semitone or a tone?`,`Da <b>${N(a)}</b> a <b>${N(b)}</b>: un semitono o un tono?`),isS?tt('semitone','semitono'):tt('tone','tono'),[isS?tt('tone','tono'):tt('semitone','semitono')],{keep:true,show:{clef:'t',cols:[col([a]),col([b])]},play:[col([a]),col([b])]})},
+ /* ---- keyboard exercises for beginners (14 Nov 2026) ---- */
+ kbName:p=>{const W=[0,2,4,5,7,9,11],k=ri(0,6),m=60+W[k];return mk(tt('Which note is the yellow key? (tip: C is just left of the two black keys)','Che nota è il tasto giallo? (trucco: il Do è subito a sinistra dei due tasti neri)'),HT.NM[LG][k],HT.NM[LG].filter((x,i)=>i!==k),{show:{kbd:{lo:'C4',hi:'B4',on:{[m]:'y'}}},play:[col([m2p(m)])]})},
+ kbSemi:p=>{const pairs=p.white?[[64,65],[71,72],[60,62],[62,64],[65,67],[67,69],[69,71]]:[[64,65],[71,72],[60,61],[61,62],[60,62],[65,67],[66,68],[63,65],[67,69],[70,72],[69,70],[62,64]],[a,b]=pick(pairs),isS=b-a===1;
+  return mk(tt('Look at the two coloured keys: is there a key in between? Semitone or tone?','Guarda i due tasti colorati: c’è un tasto in mezzo? Semitono o tono?'),isS?tt('semitone','semitono'):tt('tone','tono'),[isS?tt('tone','tono'):tt('semitone','semitono')],{keep:true,show:{kbd:{lo:'C4',hi:'C5',on:{[a]:'y',[b]:'y'},names:1}},play:[col([m2p(a)]),col([m2p(b)])]})},
+ kbCount:p=>{const a=ri(60,66),n=ri(1,p.max||5),b=a+n;return mk(tt('How many semitones from one yellow key to the other? Count every step, black keys too.','Quanti semitoni ci sono da un tasto giallo all’altro? Conta ogni passo, anche i tasti neri.'),String(n),[1,2,3,4,5,6,7].filter(x=>x!==n).map(String),{keep:true,show:{kbd:{lo:'C4',hi:'C5',on:{[a]:'y',[b]:'y'},names:1}},play:[col([m2p(a)]),col([m2p(b)])]})},
+ kbBlack:p=>{const B=[61,63,66,68,70],m=pick(B),up_=kbNameOf(m,'up'),dn=kbNameOf(m,'down');const right=`${up_} = ${dn}`;const other=B.filter(x=>x!==m).map(x=>`${kbNameOf(x,'up')} = ${kbNameOf(x,'down')}`);
+  return mk(tt('The black key in yellow has two names. Which?','Il tasto nero in giallo ha due nomi. Quali?'),right,other,{show:{kbd:{lo:'C4',hi:'B4',on:{[m]:'y'},names:1}},play:[col([m2p(m)])]})},
+ kbUp:p=>{const W=[0,2,4,5,7,9],k=ri(0,5),a=60+W[k],half=p.semi?1:2,b=a+half,R=kbNameOf(b,p.semi?'up':'up').split('\n')[0];const right=mod(b,12)===[0,2,4,5,7,9,11].find(x=>x===mod(b,12))?kbNameOf(b):kbNameOf(b,'up');
+  const opts=[60,61,62,63,64,65,66,67,68,69,70,71,72].filter(x=>x!==b&&Math.abs(x-a)<=3&&x!==a).map(x=>[0,2,4,5,7,9,11].includes(mod(x,12))?kbNameOf(x):kbNameOf(x,'up'));
+  return mk(p.semi?tt(`A semitone above <b>${kbNameOf(a)}</b> is…`,`Un semitono sopra <b>${kbNameOf(a)}</b> è…`):tt(`A tone above <b>${kbNameOf(a)}</b> is…`,`Un tono sopra <b>${kbNameOf(a)}</b> è…`),right,opts,{show:{kbd:{lo:'C4',hi:'C5',on:{[a]:'y'},names:1,top:{[b]:'?'}}},play:[col([m2p(a)]),col([m2p(b)])]})},
  accName:p=>{const q=randNote(true);if(!q.a)q.a=pick([1,-1]);return mk(tt('Which note is it?','Che nota è?'),N(q),noteWrong(q),{show:{clef:'t',cols:[col([q])]},play:[col([q])]})},
  enh:p=>{const pairs=[['C#','Db'],['D#','Eb'],['F#','Gb'],['G#','Ab'],['A#','Bb'],['E#','F'],['B#','C'],['Fb','E'],['Cb','B']];const[x,y]=pick(pairs.slice(0,p.all?9:5));const[a,b]=Math.random()<.5?[x,y]:[y,x];const A=parse(a+'4'),B=parse(b+'4');
   return mk(tt(`Which note is the same key as <b>${N(A)}</b>?`,`Quale nota è lo stesso tasto di <b>${N(A)}</b>?`),N(B),[N({...A,a:0}),N({...B,a:B.a?0:1}),N({...A,l:mod(A.l+2,7)})],{show:{clef:'t',cols:[col([A]),col([B],'?',{hide:1})]}})},
@@ -301,10 +316,32 @@ function chordAt(S,c,x,colr,f){const ns=c.n.filter(Boolean).map((p,i)=>({p,d:dia
   const y=S.yOf(n.d);g.save();g.translate(x+ox,y);g.strokeStyle=colr;g.fillStyle=colr;g.lineWidth=Math.max(1.6,s*.17);g.rotate(-.3);g.beginPath();g.ellipse(0,0,s*.72,s*.48,0,0,TAU);g.stroke();g.restore();
   const sa=f!=null?HT.sigAcc(f,n.p.l):0;if(n.p.a!==sa)acc.push({a:n.p.a,y})}
  acc.reverse().forEach((a,i)=>drawAcc(S,a.a,x-s*(1.7+(i%3)*1.15),a.y,colr))}
+/* 14 Nov 2026 (Fabio: the course must be for non-musicians): a piano keyboard drawn in chalk on the board.
+   kb = {lo:'C4', hi:'C5', on:{E4:'y',F4:'p'} (y yellow, p pink, g green), arcs:[['E4','F4',[en,it],up?]], names:1 (white keys) | 2 (also black), top:{E4:'?'}} */
+const KBC={y:'#ffe08a',p:'#ffb3c7',g:'#9be38a',b:'#8fd3ff'};
+const kbM=s=>typeof s==='number'?s:midi(parse(s));
+function kbNameOf(m,pref){const pcs=mod(m,12),W={0:0,2:1,4:2,5:3,7:4,9:5,11:6};if(W[pcs]!=null)return HT.NM[LG][W[pcs]];const up_=HT.NM[LG][W[pcs-1]]+'♯',dn=HT.NM[LG][W[pcs+1]]+'♭';return pref==='up'?up_:pref==='down'?dn:up_+'\n'+dn}
+function drawKbd(B,kb){const lo=kbM(kb.lo||'C4'),hi=kbM(kb.hi||'C5'),isW=m=>[0,2,4,5,7,9,11].includes(mod(m,12));
+ const whites=[];for(let m=lo;m<=hi;m++)if(isW(m))whites.push(m);const nW=whites.length;
+ const top=B.y+B.h*(kb.arcs&&kb.arcs.some(a=>a[3])?.36:.3),avW=B.w*.9,ww=Math.min(avW/nW,B.h*.2),x0=B.x+(B.w-ww*nW)/2,wh=Math.min(B.h*.52,ww*3.6),bh=wh*.6,bw=ww*.58;
+ const X={};whites.forEach((m,i)=>X[m]=x0+i*ww+ww/2);for(let m=lo;m<=hi;m++)if(!isW(m)){const l=whites.find(w=>w===m-1);if(l!=null)X[m]=X[l]+ww/2}
+ g.lineWidth=Math.max(1.5,ww*.04);
+ whites.forEach((m,i)=>{const c=kb.on&&(kb.on[m]||kb.on[nmKey(m)]);g.fillStyle=c?KBC[c]||c:'rgba(246,244,236,.92)';g.fillRect(x0+i*ww,top,ww,wh);g.strokeStyle='#22332a';g.strokeRect(x0+i*ww,top,ww,wh);
+  if(kb.names){g.font=`600 ${Math.round(Math.min(ww*.36,24))}px Fredoka, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillStyle='#2b2018';g.fillText(kbNameOf(m),x0+i*ww+ww/2,top+wh-ww*.38)}});
+ for(let m=lo;m<=hi;m++){if(isW(m)||X[m]==null)continue;const c=kb.on&&(kb.on[m]||kb.on[nmKey(m)]);g.fillStyle=c?KBC[c]||c:'#141a16';g.fillRect(X[m]-bw/2,top,bw,bh);g.strokeStyle='#22332a';g.strokeRect(X[m]-bw/2,top,bw,bh);
+  if(kb.names===2||(c&&kb.names)){const ls=kbNameOf(m).split('\n');g.font=`600 ${Math.round(Math.min(ww*.22,16))}px Fredoka, sans-serif`;g.fillStyle=c?'#2b2018':'#f4f0e4';g.textAlign='center';ls.forEach((t,i)=>g.fillText(t,X[m],top+bh*.62+i*ww*.24))}}
+ (kb.arcs||[]).forEach(([a,b,lab,upA])=>{const xa=X[kbM(a)],xb=X[kbM(b)];if(xa==null||xb==null)return;const y=upA?top-6:top+wh+8,h=Math.max(18,Math.abs(xb-xa)*.35)*(upA?-1:1);
+  g.strokeStyle=upA?KBC.p:HL;g.lineWidth=Math.max(2.5,ww*.06);g.beginPath();g.moveTo(xa,y);g.quadraticCurveTo((xa+xb)/2,y+h,xb,y);g.stroke();
+  if(lab){g.font=`600 ${Math.round(Math.min(ww*.3,22))}px Fredoka, sans-serif`;g.fillStyle=upA?KBC.p:HL;g.textAlign='center';g.textBaseline='middle';g.fillText(T2(lab),(xa+xb)/2,y+h+(upA?-12:14))}});
+ for(const k in (kb.top||{})){const x=X[kbM(k)];if(x==null)continue;g.font=`700 ${Math.round(Math.min(ww*.5,32))}px Fredoka, sans-serif`;g.fillStyle=HL;g.textAlign='center';g.textBaseline='middle';g.fillText(kb.top[k],x,top-ww*.35)}
+ if(kb.cap){g.font=`500 ${Math.round(Math.min(ww*.3,20))}px Fredoka, sans-serif`;g.fillStyle=CH;g.textAlign='center';g.textBaseline='middle';g.fillText(T2(kb.cap),B.x+B.w/2,Math.min(B.y+B.h*.95,top+wh+(kb.arcs&&kb.arcs.some(a=>!a[3])?ww*.95:ww*.5)))}}
+function nmKey(m){return m}
+/* turn a note string list into the on-map */
+const kbOn=(o)=>{const r={};for(const k in o)r[kbM(k)]=o[k];return r};
 function boardContent(B){const cx=B.x+B.w/2,s0=Math.min(B.w/14,B.h/7);
  const v=VIEW;if(!v){chalk(s0*.85,600);g.fillText(tt('Harmony','Armonia'),cx,B.y+B.h*.22);const sp={clef:'t',cols:[col(HT.triad(P(0,0,4),'M'),'I'),col(close(HT.triad(P(3,0,4),'M'),2),'IV'),col(close(HT.seventhOn(0,false,4),1),'V7'),col(HT.triad(P(0,0,4),'M'),'I')]};drawSpec(B,{...sp},.15);return}
  if(v.title){chalk(Math.max(12,s0*.36));g.globalAlpha=.7;g.textAlign='right';g.fillText(v.title,B.x+B.w-14,B.y+B.h*.07);g.textAlign='center';g.globalAlpha=1}
- if(v.spec)drawSpec(B,v.spec,0);else if(v.big){chalk(s0*.9,600);g.fillText(v.big,cx,B.y+B.h*.52)}}
+ if(v.spec&&v.spec.kbd)drawKbd(B,v.spec.kbd);else if(v.spec)drawSpec(B,v.spec,0);else if(v.big){chalk(s0*.9,600);g.fillText(v.big,cx,B.y+B.h*.52)}}
 function drawSpec(B,sp,dy){const S=staves({...B,y:B.y+B.h*dy,h:B.h*(1-dy)},sp.clef||'t',sp.cols);const xs=keySig(S,sp.key||0),cols=sp.cols||[];const n=Math.max(1,cols.length),step=Math.min(S.s*6,(S.x1-xs-S.s)/n);
  cols.forEach((c,i)=>{const x=xs+S.s*1.6+step*(i+.5);const colr=c.colr||(sp.res!=null?(sp.res?OKC:NOC):CH);if(c.n&&c.n.some(Boolean))chordAt(S,c,x,c.hl?HL:colr,sp.key||0);
   if(c.miss!=null){const y=S.clef==='g'?S.yOf(c.miss>=2?8:-6):S.yOf(6);chalk(S.s*1.4,700);g.fillStyle=HL;g.fillText('?',x+S.s*1.8,y)}
@@ -327,7 +364,7 @@ function placeBubble(){if(!bubTxt)return;const M=L.m;if(!M)return;const bw=bub.o
 
 /* ================= demos (the boards of the lessons) =================
    a demo is {clef, key, cols:["C4 E4 G4=label", "-", "D4|F4|A4"]}: notes together form a chord, "|" plays them one after another */
-function demo(d){if(!d)return null;if(d.cols&&d.cols.length&&typeof d.cols[0]!=='string')return d;const cols=(d.cols||[]).map(s=>{const[a,lab]=s.split('=');if(a.trim()==='-'||!a.trim())return col([],lab||'');const mel=a.includes('|');const n=a.split(/[ |]+/).filter(Boolean).map(x=>{const st=x.endsWith('_b')?'b':x.endsWith('_t')?'t':null;const p=parse(x.replace(/_[bt]$/,''));if(st)p.st=st;return p});return col(n,lab||'',{mel})});
+function demo(d){if(!d)return null;if(d.kbd){const k={...d.kbd,on:d.kbd.on?kbOn(d.kbd.on):null};const c=d.cols?demo({cols:d.cols}).cols:[];return{kbd:k,cols:c,clef:'t',key:0}}if(d.cols&&d.cols.length&&typeof d.cols[0]!=='string')return d;const cols=(d.cols||[]).map(s=>{const[a,lab]=s.split('=');if(a.trim()==='-'||!a.trim())return col([],lab||'');const mel=a.includes('|');const n=a.split(/[ |]+/).filter(Boolean).map(x=>{const st=x.endsWith('_b')?'b':x.endsWith('_t')?'t':null;const p=parse(x.replace(/_[bt]$/,''));if(st)p.st=st;return p});return col(n,lab||'',{mel})});
  return{clef:d.clef||'t',key:d.key||0,cols}}
 
 /* ================= answers ================= */
