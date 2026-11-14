@@ -3222,6 +3222,22 @@ function mkPeng(emp){const g=new THREE.Group(),blk=lam('#1f2328'),wh=lam('#f7f7f
   const wg=new THREE.Mesh(new THREE.SphereGeometry(.1,8,6),blk);wg.scale.set(.35,1.3*h,.8);wg.position.set(s*.22,.32*h,0);g.add(wg)}
  if(emp){for(const s of[-1,1]){const y=new THREE.Mesh(new THREE.SphereGeometry(.06,8,6),lam('#f2c230'));y.position.set(s*.11,.62*h,.07);g.add(y)}}
  g.userData.sp=emp?'emperor':'penguin';return g}
+/* the stage islet: a wooden stage with a red curtain, coloured lights and a microphone; walking up to it opens /palco/ */
+function isleStage(I,G){const S0=new THREE.Group(),dx=I.A.x-I.cx,dz=I.A.z-I.cz;S0.position.set(I.cx+.6,.04,I.cz-.4);S0.rotation.y=Math.atan2(dx,dz);G.add(S0);
+ const wood=lam('#8a5532'),plank=lam('#b8743f'),dark=lam('#2a2030'),red=lam('#a3243a',{emissive:'#3a0610',emissiveIntensity:.5});
+ const deck=new THREE.Mesh(new THREE.BoxGeometry(4.6,.45,2.8),wood);deck.position.y=.22;S0.add(deck);const top=new THREE.Mesh(new THREE.BoxGeometry(4.7,.06,2.9),plank);top.position.y=.47;S0.add(top);
+ const step=new THREE.Mesh(new THREE.BoxGeometry(1.4,.22,.5),plank);step.position.set(0,.11,1.6);S0.add(step);
+ const back=new THREE.Mesh(new THREE.BoxGeometry(4.6,2.6,.12),red);back.position.set(0,1.75,-1.35);S0.add(back);
+ for(let k=0;k<7;k++){const f=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,2.55,6),red);f.position.set(-1.95+k*.65,1.75,-1.27);S0.add(f)}
+ for(const s of[-1,1]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,3.4,6),dark);p.position.set(s*2.35,1.7,-1.25);S0.add(p)}
+ const truss=new THREE.Mesh(new THREE.BoxGeometry(4.9,.14,.14),dark);truss.position.set(0,3.35,-1.25);S0.add(truss);
+ I.lamps=[];['#ffd166','#4fc3ff','#b98cff','#ff8a5c'].forEach((c,k)=>{const b=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),lam(c,{emissive:c,emissiveIntensity:1}));b.position.set(-1.8+k*1.2,3.18,-1.1);S0.add(b);I.lamps.push(b)});
+ const mic=new THREE.Group(),st=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.2,6),dark);st.position.y=1.08;mic.add(st);const hd=new THREE.Mesh(new THREE.SphereGeometry(.09,10,8),lam('#c9c9d2'));hd.position.y=1.72;mic.add(hd);const bs=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.04,10),dark);bs.position.y=.5;mic.add(bs);mic.position.set(0,0,.5);S0.add(mic);
+ for(let k=0;k<6;k++){const bn=new THREE.Mesh(new THREE.BoxGeometry(1.2,.12,.3),plank);bn.position.set((k%3-1)*1.5,.28,3.1+Math.floor(k/3)*.9);S0.add(bn);for(const s of[-1,1]){const lg=new THREE.Mesh(new THREE.BoxGeometry(.08,.26,.26),wood);lg.position.set((k%3-1)*1.5+s*.5,.13,3.1+Math.floor(k/3)*.9);S0.add(lg)}}
+ S0.updateMatrixWorld(true);const stand=new V3(0,0,2.25).applyMatrix4(S0.matrixWorld);stand.y=0;const ctr=new V3(0,0,0).applyMatrix4(S0.matrixWorld);
+ const act=()=>launch('/palco/',tt('Up on the stage!','Sul palco!'),['out',stand.x,stand.z]);const go=()=>walkIn(stand,act);
+ hit(S0,2.4,go,tt('The stage','Il palco'),1);label(tt('The stage','Il palco'),tt('your song, the visits, the leaderboard','il tuo brano, le visite, la classifica'),new V3(ctr.x,4.5,ctr.z),go);zone('out',stand.x,stand.z,1.1,act,tt('The stage','Il palco'));
+ updaters.push(t=>{if(!G.visible)return;I.lamps.forEach((b,k)=>{b.material.emissiveIntensity=.55+.45*Math.sin(t*2.2+k*1.7)})})}
 function isleIce(I,G){for(const[x,z,s]of[[36.82,27.86,1],[25.82,28.16,.85],[38.12,21.16,.9]])snowPine(G,x,z,s);
  const ig=new THREE.Group(),dome=new THREE.Mesh(new THREE.SphereGeometry(1.3,20,12,0,TAU,0,Math.PI/2),lam('#f4f9fd'));ig.add(dome);const tn=new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,1,14,1,false,0,Math.PI),lam('#eaf2f8'));tn.rotation.z=Math.PI/2;tn.rotation.y=Math.PI/2;tn.position.set(0,.02,1.15);ig.add(tn);
  const dr=new THREE.Mesh(new THREE.CircleGeometry(.42,14,0,Math.PI),lam('#2b3a46'));dr.position.set(0,.02,1.66);ig.add(dr);for(let k=0;k<3;k++){const rg=new THREE.Mesh(new THREE.TorusGeometry(1.3*Math.cos(k*.45+.2),.02,4,30),lam('#cfdde8'));rg.rotation.x=Math.PI/2;rg.position.y=1.3*Math.sin(k*.45+.2);ig.add(rg)}
@@ -3247,7 +3263,9 @@ const ISLES=[
  {lv:3,sk:4,kind:'sand',cx:31.32,cz:-23.2,rx:8.5,rz:7.2,A:new V3(14.4,0,-12.72),B:new V3(26.82,0,-20.7),k:0,on:false,shown:false,risingT:-1},
  {lv:6,sk:8,kind:'lake',cx:-31.32,cz:-23.2,rx:8.5,rz:7.2,A:new V3(-14.4,0,-12.72),B:new V3(-26.82,0,-20.7),k:0,on:false,shown:false,risingT:-1},
  {lv:9,sk:12,kind:'forest',cx:0,cz:-36.54,rx:8,rz:6.5,A:new V3(0,0,-18.6),B:new V3(0,0,-31.54),k:0,on:false,shown:false,risingT:-1},
- {lv:12,sk:16,kind:'ice',cx:31.32,cz:24.36,rx:8.5,rz:7.2,A:new V3(14.4,0,12.6),B:new V3(26.82,0,20.86),k:0,on:false,shown:false,risingT:-1}];
+ {lv:12,sk:16,kind:'ice',cx:31.32,cz:24.36,rx:8.5,rz:7.2,A:new V3(14.4,0,12.6),B:new V3(26.82,0,20.86),k:0,on:false,shown:false,risingT:-1},
+ /* 14 Nov 2026: the stage islet (south-west, mirror of the ice one), there from the start: Igor's public song, the visits and the leaderboard live at /palco/ */
+ {lv:1,sk:20,kind:'stage',cx:-31.32,cz:24.36,rx:8.5,rz:7.2,A:new V3(-14.4,0,12.6),B:new V3(-26.82,0,20.86),k:0,on:false,shown:false,risingT:-1}];
 const ISL2=ISLES[0];
 /* 11 Nov 2026: the admins can give an island (and the sand island's Igorlet) to a player, and take them back. S.farm.ig = {4|8|12|16: time} */
 function isleGift(I){const F=S.farm;return!!(F&&F.ig&&F.ig[I.sk||I.lv])}
@@ -3260,7 +3278,7 @@ function isleLand(x,z,m=0){for(const I of ISLES)if(I.on&&(isleE1(I,x,z)<.86-m/8|
    instead of sinking into them */
 function isleY(x,z){let y=0;for(const I of ISLES){if(!I.on)continue;const e=isleE1(I,x,z),dn=isleN1(I,x,z);let h=-9;
   if(e<1){if(I.kind==='sand')h=Math.max(.02,(1-e)*.3+Math.sin(x*.9)*Math.cos(z*.7)*.08);else if(I.kind==='forest')h=Math.max(.02,(1-e)*.25+Math.sin(x*.8)*Math.cos(z*.9)*.05);
-   else if(I.kind==='ice')h=Math.max(.02,(1-e)*.35+Math.sin(x*.7)*Math.cos(z*.6)*.07);else h=e<.8?0:.04+(e-.8)*.6}
+   else if(I.kind==='ice')h=Math.max(.02,(1-e)*.35+Math.sin(x*.7)*Math.cos(z*.6)*.07);else if(I.kind==='stage')h=Math.max(.04,(1-e)*.22+Math.sin(x*.6)*Math.cos(z*.5)*.04);else h=e<.8?0:.04+(e-.8)*.6}
   if(dn<1.25)h=Math.max(h,.03);if(Math.hypot(x,z*1.12)<R+.2)h=Math.min(h,0);if(h>y)y=h}return y}
 const groundAt=(x,z)=>Math.max(-.2,shoreY(x,z))+isleY(x,z),IGL_RIDE=.16;
 function isleIn(x,z,m=0){for(const I of ISLES)if(I.on&&isleE1(I,x,z)<.86-m/8)return true;return false}
@@ -3282,6 +3300,8 @@ function isleMesh(I){const x0=Math.min(I.cx-I.rx,I.A.x,I.B.x)-3,x1=Math.max(I.cx
    if(dn<1.25){const yy=.03;if(yy>y){y=yy;t.copy(moss).lerp(path,.5*(1-dn/1.25))}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.copy(wet)}}}
   else if(I.kind==='ice'){const sn=new THREE.Color(n>.2?'#f4f8fb':'#e3edf4');if(e<1){y=Math.max(.02,(1-e)*.35+Math.sin(x*.7)*Math.cos(z*.6)*.07);t.copy(sn)}else if(e<1.28){y=-.3*(e-1)/.28;t.set('#cfdde6')}
    if(dn<1.25){const yy=.03;if(yy>y){y=yy;t.copy(sn)}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.set('#cfdde6')}}}
+  else if(I.kind==='stage'){if(e<1){y=Math.max(.04,(1-e)*.22+Math.sin(x*.6)*Math.cos(z*.5)*.04);grass()}else if(e<1.28){y=-.3*(e-1)/.28;t.copy(wet)}
+   if(dn<1.25){const yy=.03;if(yy>y){y=yy;grass();t.lerp(path,.55*(1-dn/1.25))}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.copy(wet)}}}
   else{if(e<.8){y=.0;t.copy(mud)}else if(e<1){y=.04+(e-.8)*.6;grass()}else if(e<1.28){y=-.3*(e-1)/.28;t.copy(wet)}
    if(dn<1.25){const yy=.03;if(yy>y){y=yy;grass();t.lerp(path,.55*(1-dn/1.25))}}else if(dn<1.9){const yy=-.3*(dn-1.25)/.65;if(yy>y){y=yy;t.copy(wet)}}}
   if(r<R+.2){const yMain=r<R?Math.max(0,Math.sin(x*.21+1)*Math.cos(z*.19)*.25-.05):-.05;y=Math.min(y,yMain-.06)}
@@ -3401,7 +3421,7 @@ for(const I of ISLES){const G=new THREE.Group();G.visible=false;scene.add(G);I.G
   for(let k=0;k<26;k++){const a=k/26*TAU+rnd()*.15,r=.8+rnd()*.12,x=I.cx+Math.cos(a)*r*I.rx,z=I.cz+Math.sin(a)*r*I.rz;if(isleN1(I,x,z)<1.6)continue;for(let j=0;j<3;j++){const h=.5+rnd()*.5,rd=new THREE.Mesh(new THREE.CylinderGeometry(.015,.02,h,4),lam(j?'#6f8f3a':'#7da046'));rd.position.set(x+(rnd()-.5)*.3,h/2,z+(rnd()-.5)*.3);rd.rotation.z=(rnd()-.5)*.3;G.add(rd);if(j===0&&rnd()<.5){const tp=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.18,6),lam('#6b4a2e'));tp.position.set(rd.position.x,h+.02,rd.position.z);G.add(tp)}}}
   for(const[x,z,s]of[[-37.82,-27,.9],[-25.12,-26.8,.85]]){pine(x,z,s);const T0=trees[trees.length-1].t;scene.remove(T0);G.add(T0)}
   I.frogs=[];for(let k=0;k<4;k++){const sp=k===2?'toad':k===3&&Math.random()<.25?'gfrog':'frog',f=mkFrog(sp),pd=I.pads[k*2];f.userData.sp=sp;f.position.set(pd.position.x,.08,pd.position.z);f.rotation.y=rnd()*TAU;G.add(f);I.frogs.push({g:f,pad:k*2,hop:null,next:2+rnd()*6,croak:3+rnd()*8})}}
- if(I.kind==='forest')isleForest(I,G);if(I.kind==='ice')isleIce(I,G);
+ if(I.kind==='forest')isleForest(I,G);if(I.kind==='ice')isleIce(I,G);if(I.kind==='stage')isleStage(I,G);
  seed=s0}
 // the orphan Igorlet, with a tiny bundle on a stick
 const ORPH={x:27.4,z:-19.4};
@@ -3446,7 +3466,7 @@ function frogTick(I,dt){for(const f of I.frogs){const g=f.g;
 updaters.push((t,dt)=>{if(!S.farm)return;const F=FM(),lv=lvlOf();F.isles=F.isles||{};if(F.isle2&&!F.isles[4])F.isles[4]=F.isle2;
  ISLES.forEach((I,i)=>{if(lv<I.lv&&!isleGift(I)){I.G.visible=false;I.on=false;I.k=0;I.shown=false;return}
   if(!I.shown){I.shown=true;I.G.visible=true;const fresh=!F.isles[I.sk||I.lv];if(fresh&&!VISIT){F.isles[I.sk||I.lv]=Date.now();if(i===0)F.isle2=F.isles[4];fmDirty=true}
-   if(fresh&&!VISIT&&started){I.risingT=T;setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(i===2?tt('Look! A forest of giant mushrooms is rising from the sea… full of fireflies!','Guarda! Dal mare emerge un bosco di funghi giganti… pieno di lucciole!'):i===3?tt('Brrr! An island of ice is coming up, with an igloo and penguins!','Brrr! Sta emergendo un’isola di ghiaccio, con un igloo e i pinguini!'):i===0?tt('Look over there! A sandy island is rising from the sea… and someone is waiting on it!','Guarda laggiù! Dal mare sta emergendo un’isola di sabbia… e qualcuno ci aspetta!'):tt('Look! Another island is coming up, with a little lake you can walk across… and frogs!','Guarda! Sta emergendo un’altra isola, con un laghetto basso basso da attraversare a piedi… e le ranocchie!'),5);snd('wish')},600)}
+   if(fresh&&!VISIT&&started){I.risingT=T;setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(i===4?tt('Look! A stage is rising from the sea: that’s where you’ll build your song… Igorbaudo is waiting!','Guarda! Dal mare sta emergendo un palco: lì costruirai il tuo brano… Igorbaudo ti aspetta!'):i===2?tt('Look! A forest of giant mushrooms is rising from the sea… full of fireflies!','Guarda! Dal mare emerge un bosco di funghi giganti… pieno di lucciole!'):i===3?tt('Brrr! An island of ice is coming up, with an igloo and penguins!','Brrr! Sta emergendo un’isola di ghiaccio, con un igloo e i pinguini!'):i===0?tt('Look over there! A sandy island is rising from the sea… and someone is waiting on it!','Guarda laggiù! Dal mare sta emergendo un’isola di sabbia… e qualcuno ci aspetta!'):tt('Look! Another island is coming up, with a little lake you can walk across… and frogs!','Guarda! Sta emergendo un’altra isola, con un laghetto basso basso da attraversare a piedi… e le ranocchie!'),5);snd('wish')},600)}
    else I.k=1}
   if(I.risingT>=0){const u=Math.min(1,(T-I.risingT)/7);I.k=u<1?1-Math.pow(1-u,3):1;if(u>=1)I.risingT=-1;if(Math.random()<.03&&u<1)snd('water')}
   I.G.position.y=-1.7*(1-I.k);I.on=I.k>.97;
@@ -7815,7 +7835,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261113-1300';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261114-1400';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();if(v&&v!==IGVER)verNew=true}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
