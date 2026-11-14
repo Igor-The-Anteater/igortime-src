@@ -145,6 +145,8 @@ const SITE=/igortime\.com$|igortime\.pages\.dev$/.test(location.hostname);
 const TESTMODE=!SITE||/[?&]test\b/.test(location.search);
 const ISLAND_LVX=[0,20,60,150,300,500,800,1200,1700,2300,3000,3800,4700,5700,6800,8000];
 function islandLv(){try{const h=JSON.parse(localStorage.getItem('igortime_v1'))||{};const t=(h.farm&&h.farm.total)||0;return Math.max(1,ISLAND_LVX.filter(x=>t>=x).length)}catch(e){return 1}}
+/* 14 Nov 2026 (Fabio: "where do I put my band's name?"): the band name goes into the stage's public name (nick, max 16) */
+window.setBandName=v=>{S.bandName=String(v||'').replace(/\s+/g,' ').trim().slice(0,16);save()};window.PalcoBand=()=>S.bandName||'';
 function ACCT(){try{const a=JSON.parse(localStorage.getItem('igortime_acct'));return a&&a.uid?a:null}catch(e){return null}}
 function addSeeds(n){if(!SITE){S.seeds+=n;return}try{const p=JSON.parse(localStorage.getItem('igortime_pending'))||{};p.seeds=(p.seeds|0)+n;localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}}
 window.weekKeyPub=()=>weekKey();function weekKey(t=Date.now()){const d=new Date(t);d.setHours(0,0,0,0);d.setDate(d.getDate()+3-((d.getDay()+6)%7));const w1=new Date(d.getFullYear(),0,4);return d.getFullYear()+'-'+String(1+Math.round(((d-w1)/864e5-3+((w1.getDay()+6)%7))/7)).padStart(2,'0')}
@@ -307,6 +309,7 @@ function vPalco(){const c=caps(S.lv),st=stats(S.ver);let h=`<h2>Il mio palco</h2
   <h3 style="margin-top:12px">Come lo sentono gli Igorlets</h3><div class="bars3">${['R','M','A'].map(k=>`<div class="b3"><span class="t">${KI[k]} ${KN[k]}</span><span class="tr"><i style="width:${sc[k]/5*100}%;background:${KC[k]}"></i></span><span class="v">${f1(sc[k])}</span></div>`).join('')}</div><p class="mut">Gli Igorlets ritmici guardano batteria e basso, i melodici la melodia, gli armonici gli accordi. Il voto finale è metà loro e metà del giocatore.</p>`}
  h+=`</div>`;
  if(S.listens.length&&!S.pending.length)h+=`<div class="card"><h3>Ultimi ascolti</h3>${S.listens.slice(0,5).map(L=>listenRow(L)).join('')}</div>`;
+ h+=`<div class="card"><h3>Il nome della tua band</h3><p class="mut">È il nome che vedono gli altri giocatori sul tuo palco e nelle classifiche. Se lo lasci vuoto si usa il tuo nome di giocatore. Vale dalla prossima volta che premi <b>Pubblica</b>.</p><input id="bandName" maxlength="16" placeholder="${esc((ACCT()&&ACCT().name)||'Es. I Formichieri')}" value="${esc(S.bandName||'')}" oninput="setBandName(this.value)" style="width:100%;font-size:17px;padding:8px 10px;border-radius:10px;border:1px solid #9a8a6a;box-sizing:border-box"></div>`;
  h+=`<div class="card"><h3>La tua band di ascoltatori</h3><p class="mut">Ti accompagnano quando visiti i palchi degli altri, e imparano da quello che ascoltano.</p><div class="row" style="justify-content:space-around">${S.band.map(b=>`<div style="text-align:center">${face(b.cap,54)}<div><b>${b.n}</b></div><div style="color:${KC[b.k]};font-size:13px">${KI[b.k]} ${KN[b.k]} · liv ${1+Math.floor(b.xp/10)}</div></div>`).join('')}</div></div>`;
  return h}
 function listenRow(L){return `<div class="listen-row"><div><b>${L.who}</b>${L.fake?'<span class="ghost">band di Igorbaudo</span>':''}<div class="mut">${L.igs.map(i=>`<span style="color:${KC[i.k]}">${i.n} ${KI[i.k]} ${'👏'.repeat(Math.max(1,Math.round(i.v)))}</span>`).join(' · ')}</div><div class="mut">«${L.igs[0].ph}»</div></div><div style="text-align:right;white-space:nowrap"><b>${f1(L.fin)} 👏</b>${L.fl?'<div>🌸</div>':''}</div></div>`}
@@ -404,7 +407,7 @@ function vRank(){const me=ACCT();let h=`<h2>Classifica</h2><p class="mut">Gli ap
  return h}
 function loadRank(){const done=r=>{RANK=r;if(S.tab==='rank')$('#view').innerHTML=vRank()};
  const fakes=()=>{const r=rng(Math.floor(Date.now()/6048e5));const wk=BANDS.slice(0,6).map((n,i)=>({nick:n,fake:1,wkAppl:Math.round((40-i*6)*(.7+r()*.6)*10)/10,avg:3.4+r()*1.3,listens:10+Math.floor(r()*40)}));return wk};
- const mine=()=>{const a=ACCT(),st=stats();return{uid:a&&a.uid,nick:a?a.name:'Tu',wkAppl:S.wk===weekKey()?Math.round((S.wkAppl||0)*10)/10:0,avg:st.avg,listens:st.n}};
+ const mine=()=>{const a=ACCT(),st=stats();return{uid:a&&a.uid,nick:S.bandName||(a?a.name:'Tu'),wkAppl:S.wk===weekKey()?Math.round((S.wkAppl||0)*10)/10:0,avg:st.avg,listens:st.n}};
  if(window.PalcoCloud)PalcoCloud.rank(weekKey()).then(r=>{const f=fakeRate()>0?fakes():[];const week=r.week.concat(f.filter(()=>fakeRate()>.5)).sort((a,b)=>b.wkAppl-a.wkAppl).slice(0,10);const all=r.all.concat(f.filter(()=>fakeRate()>.5)).filter(x=>x.listens>=10).sort((a,b)=>b.avg-a.avg).slice(0,10);done({week,all})}).catch(()=>done({week:[],all:[]}));
  else{const f=fakes(),m=mine();done({week:f.concat(m.wkAppl?[m]:[]).sort((a,b)=>b.wkAppl-a.wkAppl),all:f.concat(m.listens>=10?[m]:[]).sort((a,b)=>b.avg-a.avg)})}}
 /* ---------- test ---------- */
@@ -462,12 +465,12 @@ const need=()=>{if(!user)throw new Error('guest')};
 window.PalcoCloud={ready:()=>ready,
  async loadDraft(){await ready;if(!user)return null;const s=await getDoc(doc(db,'palco',user.uid));if(!s.exists())return null;const d=s.data();return{song:JSON.parse(d.song),useBars:d.useBars,notes:d.notes?JSON.parse(d.notes):{},at:d.at||0}},
  async saveDraft(d){await ready;if(!user)return;await setDoc(doc(db,'palco',user.uid),{song:JSON.stringify(d.song),useBars:d.useBars|0,notes:JSON.stringify(d.notes||{}),at:d.at|0})},
- async publish(p){await ready;need();const ref=doc(db,'stages',user.uid),cur=await getDoc(ref);const base={nick:String(nick||'Igor').slice(0,16),ver:p.ver|0,song:p.song,c:p.c,score:p.score,at:serverTimestamp()};
+ async publish(p){await ready;need();const ref=doc(db,'stages',user.uid),cur=await getDoc(ref);const base={nick:String((window.PalcoBand&&PalcoBand())||nick||'Igor').slice(0,16),ver:p.ver|0,song:p.song,c:p.c,score:p.score,at:serverTimestamp()};
   /* the counters belong to the listeners: a republish only touches the song */
   if(cur.exists())await updateDoc(ref,base);else await setDoc(ref,{...base,listens:0,appl:0,flowers:0,wk:'',wkAppl:0,last:serverTimestamp()})},
  async pick(n,skip){await ready;const q=await getDocs(query(collection(db,'stages'),orderBy('last','asc'),limit(15)));const l=q.docs.filter(d=>(!user||d.id!==user.uid)&&!(skip||[]).includes(d.id)).map(d=>({uid:d.id,...d.data()}));for(let i=l.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[l[i],l[j]]=[l[j],l[i]]}return l.slice(0,n).map(x=>({uid:x.uid,nick:x.nick,ver:x.ver,song:x.song,c:x.c}))},
  async vote(uid,ver,v){await ready;need();const wk=window.weekKeyPub();const sref=doc(db,'stages',uid),s=await getDoc(sref);if(!s.exists())return;const o=s.data(),appl=Math.round(v.fin*100)/100;const b=writeBatch(db);
-  b.set(doc(db,'stages',uid,'votes',user.uid),{nick:String(nick||'Igor').slice(0,16),ver:ver|0,pv:v.pv|0,ig:v.ig,fin:appl,fl:!!v.fl,at:Date.now()});
+  b.set(doc(db,'stages',uid,'votes',user.uid),{nick:String((window.PalcoBand&&PalcoBand())||nick||'Igor').slice(0,16),ver:ver|0,pv:v.pv|0,ig:v.ig,fin:appl,fl:!!v.fl,at:Date.now()});
   b.update(sref,{listens:increment(1),appl:increment(appl),flowers:increment(v.fl?1:0),wk,wkAppl:o.wk===wk?increment(appl):appl,last:serverTimestamp()});await b.commit()},
  async myVotes(){await ready;if(!user)return[];const q=await getDocs(query(collection(db,'stages',user.uid,'votes'),orderBy('at','desc'),limit(30)));return q.docs.map(d=>({id:d.id,...d.data()}))},
  async count(){await ready;const r=await getCountFromServer(collection(db,'stages'));return r.data().count},
