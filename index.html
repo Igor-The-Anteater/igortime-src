@@ -1119,9 +1119,9 @@ function idleDirector(list){const F=FM();idleT=8+Math.random()*6;ballO.a=ballO.c
   if(freeV.length&&Math.random()<(tr==='sporty'||tr==='explorer'?.55:.2)){const[v,j]=freeV.splice(Math.floor(Math.random()*freeV.length),1)[0];o.act={k:'ride',v,j,goal:parkOf(v,j),dir:Math.random()<.5?1:-1};continue}
   if(ISLES[0].on&&Math.random()<(tr==='explorer'||tr==='sporty'?.25:.12)){o.act={k:'beach',goal:islePt(0)};continue}
   if(ISLES[1].on&&Math.random()<(tr==='explorer'||tr==='music'?.2:.1)){o.act={k:'lake',goal:islePt(1)};continue}
-  if(tr==='explorer')r=r<.5?.35:r;if(tr==='shy')r=.9;if(tr==='sleepy'&&r<.5){if(TR.length){const p=pick(TR).t.position;o.act={k:'think',goal:new V3(p.x+.9,0,p.z+.9),ic:'z'};continue}}
+  if(tr==='explorer')r=r<.5?.35:r;if(tr==='shy')r=.9;if(tr==='sleepy'&&r<.5){if(TR.length){const p=pick(TR).t.position;o.act={k:'think',goal:new V3(p.x+.7+Math.random()*.5,0,p.z+.7+Math.random()*.5),ic:'z'};continue}}
   if(tr==='music'&&r<.45){o.act={k:'think',goal:new V3(-8.4+Math.random(),0,-6.2+Math.random()),ic:'note'};continue}
-  if(r<.3&&TR.length){const p=pick(TR).t.position;o.act={k:'think',goal:new V3(p.x+.9,0,p.z+.9),ic:tr==='foodie'?'ant':TRAITS[tr]?TRAITS[tr].ic:pick(['note','q','ant','heart'])}}
+  if(r<.3&&TR.length){const p=pick(TR).t.position;o.act={k:'think',goal:new V3(p.x+.7+Math.random()*.5,0,p.z+.7+Math.random()*.5),ic:tr==='foodie'?'ant':TRAITS[tr]?TRAITS[tr].ic:pick(['note','q','ant','heart'])}}
   else if(r<.45)o.act={k:'sea',goal:new V3(-9.4+Math.random()*.8,0,4.8+Math.random()*.6)}
   else if(r<.58&&where==='out'&&igor.position.distanceTo(spotOf('pen'))<8)o.act={k:'wave'}
   else{const base=tr==='shy'&&o.hi!=null?houseObjs[o.hi%HOUSEP.length].door():P;let x,z,ok=false;for(let k=0;k<10&&!ok;k++){const a=Math.random()*TAU,rr=(tr==='shy'?.6:1.5)+Math.random()*(tr==='shy'?1.2:tr==='sporty'?7:4);x=base.x+Math.cos(a)*rr;z=base.z+Math.sin(a)*rr;ok=walkable(x,z)}o.act={k:'wander',goal:new V3(x,0,z)}}}}
@@ -1134,10 +1134,12 @@ function igUmb(o){const C=HOUSEC[(o.hi||0)%HOUSEC.length],g=new THREE.Group();
  const st=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.5,6),curve(new THREE.MeshLambertMaterial({color:'#3a2e25'})));st.position.y=-.17;g.add(st);
  const tip=new THREE.Mesh(new THREE.SphereGeometry(.025,6,4),curve(new THREE.MeshLambertMaterial({color:C[1]})));tip.position.y=.18;g.add(tip);
  g.position.set(.05,IGH+.12,0);o.grp.add(g);return g}
-function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>.3||SKY.W.hail>.3,night=igSleep(),snow=SKY.cover>.5;snowman.visible=snow;if(snow)snowman.position.copy(spotOf('pen')).add(new V3(2.6,0,1.6));
- const idle=[];const seen=new Set();
+const _igCB=new V3();function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>.3||SKY.W.hail>.3,night=igSleep(),snow=SKY.cover>.5;snowman.visible=snow;if(snow)snowman.position.copy(spotOf('pen')).add(new V3(2.6,0,1.6));
+ const idle=[];const seen=new Set(),_wSlot={};
  F.igs.forEach((g,i)=>{const o=igObj(g);seen.add(g.id);const q=g.task&&F.tasks.find(x=>x.id===g.task);let hat='',mode='idle';o.ic.visible=false;const wOut=window._wishOut&&window._wishOut.id===g.id&&T<window._wishOut.until;
-  if(q){const S0=siteOf(q),k=q.w.indexOf(g.id);o.goal.copy(S0).add(q.k==='build'?new V3(k?-.9:.9,0,1.1):q.k==='scare'?new V3(-1.5,0,2.2):new V3(.62,0,1.22));hat=wet?'rain':hatOf(q.k);mode='work';o.act=null}
+  if(q){const S0=siteOf(q),k=q.w.indexOf(g.id),sk=Math.round(S0.x*4)+','+Math.round(S0.z*4),k2=_wSlot[sk]=(_wSlot[sk]??-1)+1;/* 15 Nov 2026 (Fabio's video: an Igorlet trembling and flipping left-right while working a field): two Igorlets on the same field stood on the
+     very same spot, two sprites in one place, and the screen showed one or the other from frame to frame. Now each worker has its own spot. */
+  o.goal.copy(S0).add(q.k==='build'?new V3(k?-.9:.9,0,1.1):q.k==='scare'?new V3(-1.5+k2*.9,0,2.2):new V3([.62,-.62,0,1.25][k2]??.62,0,[1.22,1.22,1.75,.55][k2]??1.22));hat=wet?'rain':hatOf(q.k);mode='work';o.act=null}
   else if(wOut&&window._wishOut.jump){const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0);cr.y=0;cr.normalize();o.goal.copy(igor.position).addScaledVector(cr,1.05);o.act=null}
   else if(wOut){idle.push(o)}
   else if(night){o.goal.copy(penIn(i));hat='night';mode='sleep';o.act=null}
@@ -1160,10 +1162,12 @@ function igVis(t,dt){const F=FM(),tn=Date.now(),wet=SKY.W.rain>.35||SKY.W.storm>
  if(ballO.a&&ballO.c&&ballO.a.act&&ballO.a.act.k==='ball'&&ballO.c.act&&ballO.c.act.k==='ball'&&ballO.a.grp.position.distanceTo(ballO.a.goal)<.3&&ballO.c.grp.position.distanceTo(ballO.c.goal)<.3){ballO.u+=dt*.7;const u=ballO.u%2,k=u<1?u:2-u,A=ballO.a.grp.position,B=ballO.c.grp.position;
   ballO.b.visible=true;ballO.b.position.set(A.x+(B.x-A.x)*k,.5+Math.sin(k*Math.PI)*1.1,A.z+(B.z-A.z)*k);toyObj.ball.visible=false;if(Math.abs(k-1)<.04&&ballO.c.jump<=0)ballO.c.jump=.35;if(k<.04&&ballO.a.jump<=0)ballO.a.jump=.35}
  else{ballO.b.visible=false;toyObj.ball.visible=!!F.toys.ball}
+ camera.getWorldDirection(_igCB).negate();_igCB.y=0;if(_igCB.lengthSq()>1e-6)_igCB.normalize();
  for(const[oid,o]of igObjs){const p=o.grp.position,v=(o.ride?o.goal:isleVia(igDry(o),p)).clone().sub(p);v.y=0;const L=v.length();let moving=false;
   if(L>.08){const sp=Math.min(L,(o.mode==='work'?2.8:1.9)*dt);v.divideScalar(L);p.x+=v.x*sp;p.z+=v.z*sp;moving=true;o.walk+=dt*12;const cr=new V3().setFromMatrixColumn(camera.matrixWorld,0),d=v.dot(cr);if(Math.abs(d)>.2)o.face=d>0?1:-1}
   igSnd(oid,o,moving,dt);o.jump-=dt;const jy=o.jump>0?Math.sin(o.jump/.5*Math.PI)*.35:0;
   const working=o.mode==='work'&&!moving&&!o.doze,sleeping=(o.mode==='sleep'||o.mode==='work'&&o.doze)&&!moving;
+  {const kk=((+oid||0)%9)*.006;o.pl.position.x=_igCB.x*kk;o.pl.position.z=_igCB.z*kk}
   o.pl.position.y=(moving?Math.abs(Math.sin(o.walk))*.08:working?Math.abs(Math.sin(t*9+o.ph))*.1:Math.sin(t*2+o.ph)*.015)+jy;
   o.pl.quaternion.copy(camera.quaternion);if(moving)o.pl.rotateZ(Math.sin(o.walk)*.06);if(working)o.pl.rotateZ(Math.sin(t*9+o.ph)*.12);if(sleeping)o.pl.rotateZ(.25*o.face);
   o.pl.scale.set(o.face,1,1);if(sleeping||o.mode==='rest'){o.ic.visible=true;o.ic.material.map=iconTex.z;o.ic.position.y=IGH+.2+((t*.5+o.ph)%1)*.3}
@@ -8415,7 +8419,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261115-1030';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261115-1100';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();/* 14 Nov 2026: reload only for a NEWER version, and only once per version per tab: an old or half-published build can never make the island reload in a loop */if(v&&v>IGVER){let k='igv_rl_'+v;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}verNew=true}}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
