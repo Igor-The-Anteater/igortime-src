@@ -3617,12 +3617,21 @@ function isleY(x,z){let y=0;for(const I of ISLES){if(!I.on)continue;const e=isle
   if(dn<1.25&&e<1)h=Math.max(h,.03);if(Math.hypot(x,z*1.12)<R+.2)h=Math.min(h,0);if(h>y)y=h}return Math.max(y,brgY(x,z))}
 const groundAt=(x,z)=>Math.max(-.2,shoreY(x,z))+isleY(x,z),IGL_RIDE=.16;
 function isleIn(x,z,m=0){for(const I of ISLES)if(I.on&&isleE1(I,x,z)<.86-m/8)return true;return false}
-function isleSide(x,z){for(let i=0;i<ISLES.length;i++){const I=ISLES[i];if(I.on&&isleE1(I,x,z)<.86)return'i'+i}if(Math.hypot(x,z*1.12)<R-1.5)return'main';for(let i=0;i<ISLES.length;i++){const I=ISLES[i];if(I.on&&isleN1(I,x,z)<1.05)return'n'+i}return'main'}
 // the way across: along the strip of land (from one new island to another, through the first)
-function isleVia(tg,from){if(!tg||!ISLES.some(I=>I.on))return tg;if(!from&&where==='out'&&RIDE&&VEH[RIDE].kind==='water')return tg; /* 14 Nov 2026: by boat, under the bridges, not along them */const p=from||igor.position,si=isleSide(p.x,p.z),st=isleSide(tg.x,tg.z);if(si===st)return tg;
- const ii=si==='main'?-1:+si.slice(1),it=st==='main'?-1:+st.slice(1);if(ii===it)return tg; // on the strip of the same island
- if(ii>=0){const I=ISLES[ii],near=isleN1(I,p.x,p.z)<1.1;return near?I.A:I.B} // first back to the first island
- const I=ISLES[it],near=isleN1(I,p.x,p.z)<1.1;return near?I.B:I.A}
+/* 15 Nov 2026 (Fabio's video: an Igorlet trembling left-right on the spot): with the bridges, "near a bridge" was still the old wide strip
+   (isleN1 < 1.05 counted as being on it, out to R-1.5 on the big island). A goal on the beach beside the foot of a bridge made the way flip every
+   frame: one step into the old strip → "go back to the bridge start" → one step out → "go straight to the goal" → … (5% of such trips in a test).
+   Now only the deck itself counts as the bridge, and every choice has room to settle: on the deck you keep going to its end. */
+function isleSd(x,z){for(let i=0;i<ISLES.length;i++){const I=ISLES[i];if(I.on&&isleE1(I,x,z)<.86)return['i',i]}
+ for(let i=0;i<ISLES.length;i++){const I=ISLES[i];if(!I.on)continue;const b=brg(I),[s,d]=brgSL(I,x,z);if(d<1.25&&s>b.sA-.2&&s<b.sB+.2)return['n',i]}
+ for(let i=0;i<ISLES.length;i++){const I=ISLES[i];if(I.on&&isleE1(I,x,z)<1.05)return['i',i]}return['m',-1]}
+function isleSide(x,z){const[k,i]=isleSd(x,z);return k==='m'?'main':k+i}
+function isleVia(tg,from){if(!tg||!ISLES.some(I=>I.on))return tg;if(!from&&where==='out'&&RIDE&&VEH[RIDE].kind==='water')return tg; /* 14 Nov 2026: by boat, under the bridges, not along them */
+ const p=from||igor.position,[ka,ia]=isleSd(p.x,p.z),[kc,ic]=isleSd(tg.x,tg.z);if(ia===ic)return(ka==='n'&&kc==='i')?ISLES[ia].B:tg;
+ if(ka==='n'){const I=ISLES[ia];if(kc==='m'&&(brgSL(I,p.x,p.z)[0]<brg(I).sA+.8||brgSL(I,tg.x,tg.z)[0]>brg(I).sA-.2))return tg;return I.A} // on a deck, not going to its islet: back to the big island (at its foot, or for a goal beside the bridge: straight on)
+ if(ka==='i'){const I=ISLES[ia],b=brg(I),[s,d]=brgSL(I,p.x,p.z);return(d<1.25&&s>b.sB-.5&&s<b.L+.6)?I.A:I.B} // to the bridge foot, then onto it
+ // on the big island, going to an islet or onto its deck
+ const I=ISLES[ic],b=brg(I),[s,d]=brgSL(I,p.x,p.z);return(d<1.25&&s>-1.5&&s<b.sA+.5)?I.B:I.A}
 function islePt(i){const I=ISLES[i];for(let k=0;k<20;k++){const a=Math.random()*TAU,r=Math.sqrt(Math.random())*.7,x=I.cx+Math.cos(a)*r*I.rx,z=I.cz+Math.sin(a)*r*I.rz;if(walkable(x,z))return new V3(x,0,z)}return new V3(I.cx,0,I.cz)}
 /* 14 Nov 2026: the bridge of an islet (see brg): stone abutments on the beach, a wooden arched deck of planks on two beams,
    two stone ribs under the arch, railings, and four little lanterns where the arch leaves the abutments. Built of many short pieces,
@@ -8419,7 +8428,7 @@ comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261115-1100';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261115-1130';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();/* 14 Nov 2026: reload only for a NEWER version, and only once per version per tab: an old or half-published build can never make the island reload in a loop */if(v&&v>IGVER){let k='igv_rl_'+v;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}verNew=true}}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
