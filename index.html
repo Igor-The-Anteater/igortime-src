@@ -815,6 +815,7 @@ function evPlan(d){const L=evPlans(d);return L[L.length-1]||null}
 function eventTick(t){const F=FM();let E=F.ev;
  if(!E){const d=dayIdx(t);ev0:for(const dd of[d-1,d])for(const c of evPlans(dd))if(!F.evDone[c.id]&&t>=c.warn&&t<c.end){F.ev=E=c;fmDirty=true;break ev0}}
  if(!E)return;
+ if(EVK[E.k].mus&&!window.__evOK)return; // 16 Nov 2026: a musical event missed while away is replayed only once the instruments exist (it crashed at boot)
  if(!E.seen){E.seen=1;E.seenT=t;onWarn(E,t)}if(fmLive&&t>=E.warn&&t<=E.at)E.here=1;if(!E.rem&&EVK[E.k].lead&&t>=E.at-30*MIN&&t<E.at){E.rem=1;if(E.at-(E.seenT||E.warn)>40*MIN)remind(E,t)}
  if(!E.started&&t>=E.at){E.started=1;strike(E,t)}
  if(t>=E.end){endEv(E,t);F.evDone[E.id]=1;const ks=Object.keys(F.evDone);if(ks.length>40)for(const k of ks.slice(0,ks.length-40))delete F.evDone[k];F.ev=null;fmDirty=true}}
@@ -7721,13 +7722,13 @@ addEventListener('keydown',e=>{if(e.key==='Escape'&&!hp.hidden)houseClose()});
  Note-stealing wind: 2 notes of every instrument fly away and land on the island; you find them by their sound. A case (4 ants) protects one instrument.
  Unprotected fields lose the harvest that is growing (it starts again from the seed) and show what happened for a while. */
 const TUNERC={t:10,s:1},CASEC={t:4},BAGC={t:4};
-const evActIns=()=>INS.filter(I=>insOn(I));
+function evActIns(){return INS.filter(I=>insOn(I))}
 const EVI2={tune:'🌧',wind:'🌪',surge:'🌊'};Object.assign(EVI,EVI2);
 function evFieldsOpen(E){const F=FM(),sown=sownFields();
  if(['storm','hail','frost'].includes(E.k)){const need=TK[E.k];return sown.filter(([f,i])=>!f.gh&&!(f.tarp&&(!need||f.tarp.k===need))&&!F.tasks.some(q=>q.f===i&&q.k==='tarp')).length}
  if(E.k==='heat')return sown.filter(([f,i])=>!f.gh&&f.heatOK!==E.id&&!F.tasks.some(q=>q.f===i&&q.heat===E.id)).length;
  if(E.k==='birds')return E.scared||F.tasks.some(q=>q.k==='scare')?0:sown.filter(([f])=>!f.gh&&!f.crow).length;return 0}
-function evInsOpen(E){return evActIns().filter(I=>{const M=insS(I.k);return E.k==='tune'?M.tuner!==E.id:E.k==='surge'?M.bag!==E.id:M.case!==E.id}).length}
+function evInsOpen(E){if(!window.__evOK)return 0;return evActIns().filter(I=>{const M=insS(I.k);return E.k==='tune'?M.tuner!==E.id:E.k==='surge'?M.bag!==E.id:M.case!==E.id}).length}
 function evOpen(E){if(EVK[E.k].mus){const n=evInsOpen(E);return n?(E.k==='tune'?tt(`${n} instrument${n>1?'s':''} without a tuner.`,`${n} strument${n>1?'i':'o'} senza accordatore.`):E.k==='surge'?tt(`${n} instrument${n>1?'s':''} without sandbags.`,`${n} strument${n>1?'i':'o'} senza sacchi di sabbia.`):tt(`${n} instrument${n>1?'s':''} without a case.`,`${n} strument${n>1?'i':'o'} senza custodia.`)):''}
  const n=evFieldsOpen(E);return n?tt(`${n} field${n>1?'s':''} still unprotected.`,`${n} camp${n>1?'i':'o'} ancora senza protezione.`):''}
 function remind(E,t){const D=EVK[E.k],w=evOpen(E);if(fmLive)snd('warn');note(w?tt(`${N(D.N)} in 30 minutes! ${w} ${N(D.ask)}`,`${N(D.N)} tra 30 minuti! ${w} ${N(D.ask)}`):tt(`${N(D.N)} in 30 minutes: we’re ready!`,`${N(D.N)} tra 30 minuti: siamo pronti!`))}
@@ -8426,9 +8427,10 @@ function comeBack(){let r=null;try{r=JSON.parse(localStorage.getItem('igortime_r
  igor.position.set(r.x,0,r.z);IG.target=null;IG.arrive=null;camSnap=true;syncZones();cameBack=true;setTimeout(()=>say(pick(tt(['Welcome back!','How did it go?','Back home. Gnam.'],['Bentornato!','Com’è andata?','Di nuovo a casa. Gnam.']))),700);return true}
 comeBack();
 addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.position.y=0;comeBack()}});
+window.__evOK=1;try{simTo(Date.now(),false);saveLocal()}catch(e){console.error(e)}
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261115-1130';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261116-1100';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();/* 14 Nov 2026: reload only for a NEWER version, and only once per version per tab: an old or half-published build can never make the island reload in a loop */if(v&&v>IGVER){let k='igv_rl_'+v;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}verNew=true}}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
