@@ -12,7 +12,8 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const ms=t=>t&&t.toMillis?t.toMillis():(typeof t==='number'?t:0);
 const $=id=>document.getElementById(id);
 const sfx=n=>{if(window.IgorSound)try{window.IgorSound.sfx(n)}catch(e){}};
-const EVOPT=[['storm','⛈',['Storm','Temporale']],['hail','🧊',['Hail','Grandine']],['frost','❄',['Frost','Gelata']],['heat','☀',['Heatwave','Ondata di caldo']],['birds','🐦',['Sparrows','Passeri']],['tune','🌧',['Out-of-tune rain','Pioggia scordatrice']],['wind','🌪',['Piece-snatching tempest','Tempesta ruba-pezzi']],['surge','🌊',['Storm surge','Mareggiata']],['drizzle','🌦',['Drizzle','Pioggerella']],['stray','👋',['Stray Igorlet','Igorlet randagio']],['ufo:m','🛸',['Aliengor UFO · melody','UFO dell’Aliengor · melodia']],['ufo:d','🛸',['Aliengor UFO · drums','UFO dell’Aliengor · batteria']]];
+/* 21 Nov 2026: no fields any more, so no field events (storm, hail, frost, heat, sparrows, drizzle) */
+const EVOPT=[['tune','🌧',['Out-of-tune rain','Pioggia scordatrice']],['wind','🌪',['Piece-snatching tempest','Tempesta ruba-pezzi']],['surge','🌊',['Storm surge','Mareggiata']],['stray','👋',['Stray Igorlet','Igorlet randagio']],['ufo:m','🛸',['Aliengor UFO · melody','UFO dell’Aliengor · melodia']],['ufo:d','🛸',['Aliengor UFO · drums','UFO dell’Aliengor · batteria']]];
 const LEADS=[[0,['now','subito']],[5,['in 5 min','tra 5 min']],[30,['in 30 min','tra 30 min']],[120,['in 2 h','tra 2 h']]];
 const evNm=k=>{const o=EVOPT.find(x=>x[0]===k);return o?o[1]+' '+tt(o[2][0],o[2][1]):String(k)};
 const leadNm=m=>{const o=LEADS.find(x=>x[0]===m);return o?tt(o[1][0],o[1][1]):tt(`in ${m} min`,`tra ${m} min`)};
