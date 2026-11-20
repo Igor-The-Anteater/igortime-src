@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en"><head><script src="/lang.js?v=3"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Melody of the day · Igor time</title>
+<meta name="description" content="Every day Igor has a little melody in his head: listen and play it back in six tries. The same melody for everyone, a bit harder every day from Monday to Sunday.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+:root{--night:#0d1420;--ink:#f3e7d3;--dim:#a9b3bf;--warm:#f1b46e;--bone:#efe4cf;--glow:#ffd38a;--ok:#6cc46f;--near:#e9c24a;--no:#4a5361;
+ --display:'Instrument Serif',Georgia,serif;--toon:'Fredoka','Trebuchet MS',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:radial-gradient(120% 80% at 50% 0%,#1d2a40 0%,var(--night) 60%);color:var(--ink);font-family:var(--toon);-webkit-user-select:none;user-select:none}
+header{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 6px}
+.igback{font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none;border:1px solid rgba(243,231,211,.35);border-radius:999px;padding:9px 13px;white-space:nowrap;background:rgba(13,20,32,.6)}.igback:hover{border-color:var(--glow);color:var(--glow)}
+h1{margin:0;font:400 clamp(22px,5vw,32px)/1 var(--display);flex:1}h1 em{color:var(--warm)}
+#streak{font:600 14px var(--toon);color:var(--glow);white-space:nowrap}
+main{max-width:520px;margin:0 auto;padding:4px 14px 24px;display:flex;flex-direction:column;align-items:center;gap:10px}
+#top{display:flex;align-items:center;gap:12px;width:100%}
+#igor{width:84px;height:84px;object-fit:contain;flex:none;transition:transform .2s}
+#igor.sing{animation:sing .5s ease-in-out infinite alternate}@keyframes sing{from{transform:rotate(-4deg) translateY(0)}to{transform:rotate(4deg) translateY(-4px)}}
+#bub{flex:1;background:#fff7e0;color:#2b2018;border:3px solid #2b2018;border-radius:16px;padding:9px 12px;font:500 16px/1.25 var(--toon);box-shadow:0 4px 0 #2b2018;min-height:48px}
+#day{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);text-align:center}
+#day b{color:var(--bone);font-weight:500}
+#play{font:700 18px var(--toon);color:#2b2018;background:var(--glow);border:3px solid #2b2018;border-radius:14px;padding:10px 22px;box-shadow:0 4px 0 #2b2018;cursor:pointer}
+#play:active{transform:translateY(3px);box-shadow:0 1px 0 #2b2018}
+#grid{display:flex;flex-direction:column;gap:6px;margin:4px 0}
+.row{display:flex;gap:6px;justify-content:center}
+.cell{width:clamp(40px,12vw,54px);height:clamp(40px,12vw,54px);border:2px solid rgba(243,231,211,.25);border-radius:10px;display:flex;align-items:center;justify-content:center;font:700 clamp(14px,4vw,18px) var(--toon);color:var(--ink);background:rgba(255,255,255,.03);transition:background .25s,border-color .25s,transform .25s}
+.cell.f{border-color:rgba(243,231,211,.7);transform:scale(1.04)}
+.cell.cur{border-color:var(--glow)}
+.cell.ok{background:var(--ok);border-color:var(--ok);color:#10200f}.cell.near{background:var(--near);border-color:var(--near);color:#2b2018}.cell.no{background:var(--no);border-color:var(--no);color:#cfd5dc}
+.cell.hint{background:var(--ok);border-color:var(--ok);color:#10200f;opacity:.85}
+#kb{position:relative;width:100%;max-width:480px;height:150px;margin-top:4px;touch-action:manipulation}
+.k{position:absolute;bottom:0;border:2px solid #2b2018;border-radius:0 0 10px 10px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font:600 12px var(--toon)}
+.k.w{background:#f7f2e6;color:#2b2018;height:150px;z-index:1}.k.b{background:#2b2018;color:#f3e7d3;height:92px;z-index:2;top:0;bottom:auto;border-radius:0 0 7px 7px;align-items:flex-end}
+.k.off{opacity:.28;pointer-events:none}.k.dn.w{background:#ffe2a0}.k.dn.b{background:#6b5440}
+.k.used{filter:grayscale(1) brightness(.75)}
+#ctl{display:flex;gap:10px;margin-top:6px}
+#ctl button{font:600 15px var(--toon);color:var(--ink);background:rgba(255,255,255,.06);border:2px solid rgba(243,231,211,.35);border-radius:12px;padding:9px 16px;cursor:pointer}
+#ctl button.main{background:var(--ok);color:#10200f;border-color:#2b2018}
+#ctl button:disabled{opacity:.35;cursor:default}
+#end{display:none;flex-direction:column;align-items:center;gap:8px;text-align:center}
+#end.on{display:flex}
+#end .big{font:700 22px var(--toon)}
+#end .gain{font:600 17px var(--toon);color:var(--glow)}
+#end .next{font:500 12px var(--mono);letter-spacing:.06em;color:var(--dim)}
+#end button,#end a.btn{font:700 16px var(--toon);color:#2b2018;background:var(--bone);border:3px solid #2b2018;border-radius:12px;padding:9px 18px;box-shadow:0 3px 0 #2b2018;cursor:pointer;text-decoration:none}
+#legend{font:500 12px var(--toon);color:var(--dim);text-align:center;line-height:1.5}
+#legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+</style></head><body>
+<header><a class="igback" href="/">← Island</a><h1>Melody <em>of the day</em></h1><span id="streak"></span></header>
+<main>
+ <div id="top"><img id="igor" src="/igor.webp" alt=""><div id="bub"></div></div>
+ <div id="day"></div>
+ <button id="play" type="button">▶</button>
+ <div id="grid"></div>
+ <div id="kb" aria-label="keyboard"></div>
+ <div id="ctl"><button id="del" type="button">⌫</button><button id="go" type="button" class="main"></button></div>
+ <div id="legend"></div>
+ <div id="end"><div class="big"></div><div class="gain"></div><div class="row" id="ends"></div><button id="share" type="button"></button><a class="btn" id="back" href="/"></a><div class="next"></div></div>
+</main>
+<script>
+(()=>{
+/* the language chosen on the island */
+let LANG='en';try{LANG=localStorage.getItem('igortime_lang')||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en')}catch(e){}
+const IT=LANG==='it',tt=(en,it)=>IT?it:en,$=id=>document.getElementById(id);
+document.documentElement.lang=IT?'it':'en';
+/* --- today, the same melody for everyone (built from the date) --- */
+const now=new Date(),y=now.getFullYear(),m=now.getMonth()+1,d=now.getDate(),KEYD=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+const wd=(now.getDay()+6)%7; // 0 = Monday … 6 = Sunday
+let seed=0;for(const ch of 'igor'+KEYD)seed=(seed*31+ch.charCodeAt(0))>>>0;
+const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+/* the days: how many notes, which keys, how far it may jump */
+const PENTA=[0,2,4,7,9,12],WHITE=[0,2,4,5,7,9,11,12],CHROM=[0,1,2,3,4,5,6,7,8,9,10,11,12];
+const DAYS=[{n:4,keys:PENTA,leap:2,name:['Monday','Lunedì'],lv:['very easy','facilissima']},{n:4,keys:WHITE,leap:2,name:['Tuesday','Martedì'],lv:['easy','facile']},
+ {n:5,keys:WHITE,leap:2,name:['Wednesday','Mercoledì'],lv:['easy','facile']},{n:5,keys:WHITE,leap:4,name:['Thursday','Giovedì'],lv:['medium','media']},
+ {n:6,keys:WHITE,leap:4,name:['Friday','Venerdì'],lv:['medium','media']},{n:5,keys:CHROM,leap:4,name:['Saturday','Sabato'],lv:['hard','difficile']},
+ {n:6,keys:CHROM,leap:5,name:['Sunday','Domenica'],lv:['very hard','difficilissima']}];
+const D=DAYS[wd],K=D.keys;
+function makeMelody(){/* a little tune: it starts on Do, Mi or Sol, moves mostly by small steps, never repeats a note twice in a row; the chromatic days get at least one black key */
+ for(let tries=0;tries<200;tries++){const st=[0,4,7].filter(v=>K.includes(v));let cur=K.indexOf(st[Math.floor(rnd()*st.length)]);const out=[K[cur]];
+  while(out.length<D.n){const span=1+Math.floor(rnd()*D.leap),dir=rnd()<.5?-1:1;let nx=cur+dir*span;if(nx<0||nx>=K.length)nx=cur-dir*span;if(nx<0||nx>=K.length||nx===cur)continue;cur=nx;out.push(K[cur])}
+  if(K===CHROM&&!out.some(v=>[1,3,6,8,10].includes(v)))continue;if(new Set(out).size<Math.min(3,D.n-1))continue;return out}
+ return K.slice(0,D.n)}
+const MEL=makeMelody(),BASE=60; // Do4
+const NN=IT?['Do','Do♯','Re','Re♯','Mi','Fa','Fa♯','Sol','Sol♯','La','La♯','Si','Do']:['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B','C'];
+const nm=v=>NN[v]+(v===12?'′':'');
+/* --- sound: a soft marimba --- */
+let AC=null;function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+function note(v,t0,dur=.9){const a=ac();if(!a)return;const t=t0||a.currentTime,f=440*Math.pow(2,(BASE+v-69)/12);
+ for(const[mul,g0,dk]of[[1,.32,dur],[4,.06,.18],[10,.02,.06]]){const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f*mul;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(g0,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dk);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dk+.05)}}
+let singT=0;
+function playMel(){const a=ac();if(!a)return;const t=a.currentTime+.1,step=.48;MEL.forEach((v,i)=>note(v,t+i*step));const ig=$('igor');ig.classList.add('sing');clearTimeout(singT);singT=setTimeout(()=>ig.classList.remove('sing'),MEL.length*step*1000+300);heard=true;draw()}
+/* --- what is saved: igortime_daily = {d: today's date, g: guesses, done, won, streak, best, last: the last day played} --- */
+const SK='igortime_daily';let ST={};try{ST=JSON.parse(localStorage.getItem(SK))||{}}catch(e){}
+const yday=(()=>{const t=new Date(y,m-1,d-1);return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`})();
+if(ST.d!==KEYD){ST={...ST,d:KEYD,g:[],done:false,won:false};if(ST.last&&ST.last!==yday&&ST.last!==KEYD)ST.streak=0}
+const saveST=()=>{try{localStorage.setItem(SK,JSON.stringify(ST))}catch(e){}};saveST();
+/* new players (first 3 days on the island): the first note is already there */
+let HINT=false;try{const S=JSON.parse(localStorage.getItem('igortime_v1'))||{},c=S.farm&&S.farm.created;HINT=!c||Date.now()-c<3*864e5}catch(e){HINT=true}
+const ROWS=6;let cur=HINT?[MEL[0]]:[],heard=false;
+/* --- the colours, Wordle style: green = right note in the right place; yellow = the note is in the melody, elsewhere --- */
+function score(g){const r=Array(g.length).fill('no'),left={};MEL.forEach((v,i)=>{if(g[i]===v)r[i]='ok';else left[v]=(left[v]|0)+1});g.forEach((v,i)=>{if(r[i]!=='ok'&&left[v]>0){r[i]='near';left[v]--}});return r}
+/* --- the keyboard: one octave, Do to Do; the keys not used today are dimmed --- */
+const isB=v=>[1,3,6,8,10].includes(v);
+function buildKb(){const kb=$('kb'),W=[0,2,4,5,7,9,11,12],ww=100/W.length;kb.innerHTML='';
+ W.forEach((v,i)=>{const b=document.createElement('button');b.type='button';b.className='k w';b.style.left=(i*ww)+'%';b.style.width=`calc(${ww}% - 2px)`;b.dataset.v=v;b.textContent=nm(v);kb.appendChild(b)});
+ const BX={1:1,3:2,6:4,8:5,10:6};for(const[v,i]of Object.entries(BX)){const b=document.createElement('button');b.type='button';b.className='k b';b.style.left=`calc(${i*ww}% - ${ww*.32}%)`;b.style.width=(ww*.64)+'%';b.dataset.v=v;b.textContent=IT?'':'';kb.appendChild(b)}
+ for(const b of kb.children){if(!K.includes(+b.dataset.v))b.classList.add('off')}
+ kb.addEventListener('pointerdown',e=>{const b=e.target.closest('.k');if(!b||ST.done)return;e.preventDefault();const v=+b.dataset.v;note(v);b.classList.add('dn');setTimeout(()=>b.classList.remove('dn'),160);if(cur.length<MEL.length){cur.push(v);draw()}})}
+function draw(){const g=$('grid');let h='';for(let r=0;r<ROWS;r++){h+='<div class="row">';const done=ST.g[r],live=r===ST.g.length&&!ST.done;const sc=done?score(done):null;
+  for(let i=0;i<MEL.length;i++){let cls='cell',tx='';if(done){cls+=' '+sc[i];tx=nm(done[i])}else if(live){if(i<cur.length){cls+=' f'+(HINT&&i===0?' hint':'');tx=nm(cur[i])}if(i===cur.length)cls+=' cur'}h+=`<div class="${cls}">${tx}</div>`}h+='</div>'}g.innerHTML=h;
+ $('go').disabled=ST.done||cur.length<MEL.length;$('del').disabled=ST.done||cur.length<=(HINT?1:0);
+ $('play').textContent=heard?'↻ '+tt('Listen again','Riascolta'):'▶ '+tt('Listen to Igor','Ascolta Igor');
+ $('streak').textContent=(ST.streak|0)>0?`🔥 ${ST.streak}`:''}
+function say(t){$('bub').textContent=t}
+/* --- a guess --- */
+function guess(){if(ST.done||cur.length<MEL.length)return;const g=cur.slice();ST.g.push(g);const sc=score(g),win=sc.every(x=>x==='ok');
+ g.forEach((v,i)=>setTimeout(()=>note(v),i*140));
+ if(win){ST.done=true;ST.won=true;finish()}else if(ST.g.length>=ROWS){ST.done=true;ST.won=false;finish()}
+ else{const ok=sc.filter(x=>x==='ok').length,near=sc.filter(x=>x==='near').length;say(ok?tt(`${ok} right in the right place! Listen again and try.`,`${ok} giuste al posto giusto! Riascolta e riprova.`):near?tt('The notes are there, but in another order. Again!','Le note ci sono, ma in un altro ordine. Ancora!'):tt('Hmm, different notes. Listen to where it goes up and down.','Mmh, note diverse. Ascolta dove sale e dove scende.'))}
+ cur=HINT?[MEL[0]]:[];saveST();draw()}
+/* --- the end: tofu ants (as seeds: the island turns each seed into 6 ants), the streak, the share --- */
+const SEEDR=6;
+function reward(){if(!ST.won)return 1;const k=ST.g.length;return[8,7,6,5,4,3][k-1]+Math.floor(wd/2)}
+function finish(){const n=reward();if(!ST.paid){ST.paid=1;if(ST.won){ST.streak=(ST.last===yday?(ST.streak|0):0)+1;ST.best=Math.max(ST.best|0,ST.streak)}else ST.streak=0;ST.last=KEYD;
+  let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};p.scores.daily=p.scores.daily||{};if(!(p.scores.daily.streak>=ST.streak))p.scores.daily.streak=ST.streak|0;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}}
+ saveST();showEnd(n)}
+function grid(){return ST.g.map(g=>score(g).map(x=>x==='ok'?'🟩':x==='near'?'🟨':'⬜').join('')).join('\n')}
+function showEnd(n){const E=$('end');E.classList.add('on');$('kb').style.display='none';$('ctl').style.display='none';$('legend').style.display='none';
+ E.querySelector('.big').textContent=ST.won?(ST.g.length===1?tt('First try! Incredible ears!','Al primo colpo! Che orecchio!'):tt(`Found it in ${ST.g.length}!`,`Trovata in ${ST.g.length}!`)):tt('So close! Here it is:','Ci sei andato vicino! Eccola:');
+ E.querySelector('.gain').textContent=tt(`+${n*SEEDR} tofu ants for the island`,`+${n*SEEDR} formiche di tofu per l’isola`)+((ST.streak|0)>1?' · 🔥 '+tt(`${ST.streak} days in a row`,`${ST.streak} giorni di fila`):'');
+ $('ends').innerHTML=MEL.map(v=>`<div class="cell ok">${nm(v)}</div>`).join('');
+ say(ST.won?tt('That’s my tune! Come back tomorrow: I’ll have another one in my head.','È proprio la mia melodia! Torna domani: ne avrò in testa un’altra.'):tt('Listen to it once more… tomorrow there’s a new one!','Riascoltala ancora… domani ce n’è una nuova!'));
+ $('share').textContent='📤 '+tt('Share','Condividi');$('back').textContent=tt('← Back to the island','← Torna all’isola');$('back').href=document.querySelector('a.igback').getAttribute('href')||'/';
+ const tick=()=>{const t=new Date(),nx=new Date(t.getFullYear(),t.getMonth(),t.getDate()+1),s=Math.max(0,Math.floor((nx-t)/1000));E.querySelector('.next').textContent=tt('Next melody in ','Prossima melodia tra ')+`${Math.floor(s/3600)}h ${String(Math.floor(s/60)%60).padStart(2,'0')}m`};tick();setInterval(tick,30000);draw()}
+$('share').onclick=async()=>{const txt=`Igor Time · ${tt('Melody of the day','Melodia del giorno')} ${d}/${m} · ${ST.won?ST.g.length:'X'}/6\n${grid()}\nigortime.com/daily/`;
+ try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){}try{await navigator.clipboard.writeText(txt);$('share').textContent='✓ '+tt('Copied!','Copiato!')}catch(e){prompt(tt('Copy:','Copia:'),txt)}};
+/* --- start --- */
+document.querySelector('h1').innerHTML=tt('Melody <em>of the day</em>','Melodia <em>del giorno</em>');document.title=tt('Melody of the day','Melodia del giorno')+' · Igor time';
+$('day').innerHTML=`<b>${tt(D.name[0],D.name[1])}</b> · ${MEL.length} ${tt('notes','note')} · ${tt(D.lv[0],D.lv[1])}`;
+$('go').textContent='✓ '+tt('Try','Prova');$('legend').innerHTML=`<i style="background:var(--ok)"></i>${tt('right note, right place','nota giusta, al posto giusto')} · <i style="background:var(--near)"></i>${tt('in the melody, elsewhere','c’è, ma altrove')}`;
+$('play').onclick=playMel;$('del').onclick=()=>{if(cur.length>(HINT?1:0)){cur.pop();draw()}};$('go').onclick=guess;
+addEventListener('keydown',e=>{if(e.key==='Enter')guess();else if(e.key==='Backspace')$('del').onclick();else if(e.key===' '){e.preventDefault();playMel()}});
+buildKb();draw();
+if(ST.done)showEnd(reward());
+else say(ST.g.length?tt('Shall we go on? Listen again if you like.','Continuiamo? Riascolta quando vuoi.'):HINT?tt('I have a little tune in my head… listen, then play it on the keys! The first note is already there.','Ho in testa una melodia… ascoltala, poi rifalla sui tasti! La prima nota te la do io.'):tt('I have a little tune in my head… listen, then play it on the keys!','Ho in testa una melodia… ascoltala, poi rifalla sui tasti!'));
+})();
+</script>
+</body></html>
