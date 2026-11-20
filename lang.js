@@ -221,3 +221,19 @@ if(document.readyState!=='loading')go();else document.addEventListener('DOMConte
 })();
 /* who is online (admins' panel) */
 (()=>{if(window.IgorPres||document.querySelector('script[src^="/pres.js"]'))return;const s=document.createElement('script');s.src='/pres.js?v=1';s.defer=true;document.head.appendChild(s)})();
+/* 21 Nov 2026 (la svolta): the island has one currency now, the tofu ants. The games still count in seeds, and the island turns
+   every seed into 6 tofu ants: so here every "N seeds" the player reads becomes "6×N tofu ants" (page text only, not the canvas). */
+(()=>{const R=6,SEEDW=/\b(seeds?|sem[ei])\b/i;
+ const fix=t=>{if(!t||!SEEDW.test(t))return t;let o=t;
+  o=o.replace(/(up to|fino a)\s+(\d+)/gi,(m,w,n)=>`${w} ${n*R}`);
+  o=o.replace(/(\d+)\s+(?:tofu\s+)?seeds?\b/gi,(m,n)=>`${n*R} tofu ${n*R==1?'ant':'ants'}`);
+  o=o.replace(/(\d+)\s+sem[ei](?:\s+di\s+tofu)?\b/gi,(m,n)=>`${n*R} formiche di tofu`);
+  o=o.replace(/\bTofu seeds\b/g,'Tofu ants').replace(/\btofu seeds?\b/g,'tofu ants').replace(/\bSemi di tofu\b/g,'Formiche di tofu').replace(/\bsem[ei] di tofu\b/g,'formiche di tofu');
+  o=o.replace(/\bseeds\b/g,'tofu ants').replace(/\bseed\b/g,'tofu ant').replace(/\bSeeds\b/g,'Tofu ants').replace(/\bsemi\b/g,'formiche di tofu').replace(/\bseme\b/g,'formica di tofu');
+  o=o.replace(/ for ([^.:,]+?)’s field/g,' for $1').replace(/ per il campo di ([^.:,]+)/g,' per $1').replace(/ for the field/g,'').replace(/ per il campo/g,'');
+  o=o.replace(/Formiche di tofu vinti/g,'Formiche di tofu vinte').replace(/Raccoglili/g,'Raccoglile').replace(/raccoglili/g,'raccoglile');
+  return o};
+ const tn=n=>{const v=n.nodeValue,w=fix(v);if(w!==v)n.nodeValue=w};
+ const walk=n=>{if(!n)return;if(n.nodeType===3){tn(n);return}if(n.nodeType!==1||n.tagName==='SCRIPT'||n.tagName==='STYLE')return;const it=document.createTreeWalker(n,NodeFilter.SHOW_TEXT);let x;while((x=it.nextNode()))tn(x)};
+ const go=()=>{walk(document.body);new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')tn(m.target);else for(const a of m.addedNodes)walk(a)}}).observe(document.body,{childList:true,subtree:true,characterData:true})};
+ if(document.readyState!=='loading')go();else document.addEventListener('DOMContentLoaded',go)})();
