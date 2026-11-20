@@ -239,6 +239,12 @@ const IGOR_SRC='/igor.webp';
 
 /* ================= save ================= */
 const KEY='igortime_v1';
+/* 21 Nov 2026 (Fabio e Alessandro, "la svolta"): ONE currency, the tofu ants, earned only by playing (games, lessons, the melody of the day,
+   the little music activities of the island). Whatever still pays out seeds is turned into ants (SEEDR ants per seed); prices in seeds are paid in ants.
+   The fields, the tarps, the field events, the tool shed, the greenhouse, the store and the tree nursery are gone (kept in the save, never shown). */
+const SEEDR=6;
+/* the same game played many times in one day pays less (1–3: full, 4–6: half, then a quarter); the first time each day a little bonus */
+function dimin(game,g0){const td=new Date().toDateString();if(!S.dp||S.dp.d!==td)S.dp={d:td,g:{}};if(!game)return g0;const n=S.dp.g[game]=(S.dp.g[game]|0)+1;const k=n<=3?1:n<=6?.5:.25;return Math.round(g0*k)+(n===1?1:0)}
 const CROP={cost:1,min:2,gain:3};
 const MAXPLOTS=8,UNLOCK=[15,35,60,90,130];const plotsFor=a=>3+UNLOCK.filter(u=>a>=u).length;
 function fresh(){return{v:2,ants:0,seeds:1,plots:[{c:null},{c:null},{c:null}],scores:{},avatar:'igor',rim:null,ball:null,glasses:null,gcol:'#141414',seen:0}}
@@ -271,7 +277,7 @@ const setView=v=>{try{localStorage.setItem('igortime_view',v)}catch(e){}};
 let ONB=(()=>{try{return JSON.parse(sessionStorage.getItem('igortime_onb'))}catch(e){return null}})(),DRESS_ONB=false;
 const setOnb=o=>{ONB=o;try{if(o)sessionStorage.setItem('igortime_onb',JSON.stringify(o));else sessionStorage.removeItem('igortime_onb')}catch(e){}};
 function applyPending(){let p=null;try{p=JSON.parse(localStorage.getItem(PEND))}catch(e){}if(!p)return 0;
- const g0=Math.max(0,(p.seeds|0)+(p.ants|0));S.seeds=(S.seeds|0)+g0;S.scores=S.scores||{};for(const[g,o]of Object.entries(p.scores||{})){S.scores[g]=S.scores[g]||{};for(const[l,v]of Object.entries(o))if(!(S.scores[g][l]>=v))S.scores[g][l]=v}
+ const g0=dimin(Object.keys(p.scores||{})[0]||'',Math.max(0,(p.seeds|0)+(p.ants|0)));S.seeds=(S.seeds|0)+g0;S.scores=S.scores||{};for(const[g,o]of Object.entries(p.scores||{})){S.scores[g]=S.scores[g]||{};for(const[l,v]of Object.entries(o))if(!(S.scores[g][l]>=v))S.scores[g][l]=v}
  window._fromGame=Object.keys(p.scores||{})[0]||'';window._pendLast={g:g0,scores:p.scores||{}};try{localStorage.removeItem(PEND)}catch(e){}return g0}
 const gotAnts=VISIT?0:applyPending();if(gotAnts){S.at=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 /* never lose an island: farm.total (everything ever collected) only grows, so between two versions of an island the one with more is the
@@ -282,14 +288,14 @@ function igBack(o,why){if(!o)return;try{localStorage.setItem('igortime_v1_lost',
  try{if(window.IgorCloud&&IgorCloud.backup)IgorCloud.backup(o,why)}catch(e){}}
 window.IgorSave={get:()=>VISIT&&_HOME?_HOME:S,back:igBack,touch:()=>save(),visiting:!!VISIT,set:v=>{S=v;save();refresh()},
  load:(d,uid)=>{if(VISIT){visitHomeIn(d,uid);return}const L0=S,P0=window._pendLast;window._pendLast=null;
-  if(uid&&L0.uid===uid&&(L0.at||0)>(d.at||0)&&L0.base===d.at){ensureFarm();const g=applyPending();save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g} seeds from your games`,`+${g} semi dai giochi`));return}
+  if(uid&&L0.uid===uid&&(L0.at||0)>(d.at||0)&&L0.base===d.at){ensureFarm();const g=applyPending();save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g*SEEDR} tofu ants from your games`,`+${g*SEEDR} formiche di tofu dai giochi`));return}
   const mine0=L0&&(!L0.uid||L0.uid===uid)&&!window._wiped,rst=d.rst&&d.rst!==L0.rst;
   /* this device is ahead of the cloud: keep it (it goes online on top of the cloud version), the cloud one becomes a backup */
-  if(mine0&&!rst&&igProg(L0)>0&&igProg(L0)>igProg(d)){igBack(igCopy(d),'cloud-replaced');ensureFarm();if(uid)S.uid=uid;S.base=d.at||0;S.at=Date.now();const g=applyPending();save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g} seeds from your games`,`+${g} semi dai giochi`));return}
+  if(mine0&&!rst&&igProg(L0)>0&&igProg(L0)>igProg(d)){igBack(igCopy(d),'cloud-replaced');ensureFarm();if(uid)S.uid=uid;S.base=d.at||0;S.at=Date.now();const g=applyPending();save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g*SEEDR} tofu ants from your games`,`+${g*SEEDR} formiche di tofu dai giochi`));return}
   if(mine0&&igProg(L0)>0&&(rst||(L0.at&&L0.at!==d.at&&L0.at!==L0.base)))igBack(igCopy(L0),rst?'restored-over':'unsynced');
   const seen=S.seen;S={...fresh(),...d,seen:Math.max(seen||0,d.seen||0)};if(uid)S.uid=uid;if(d.at)S.base=d.at;if(d.seeds===undefined)S.seeds=Math.max(1,S.seeds|0);if(!Array.isArray(S.plots)||!S.plots.length)S.plots=fresh().plots;ensureFarm();let g=applyPending();
   if(P0&&P0.g>0){S.seeds=(S.seeds|0)+P0.g;g+=P0.g;S.scores=S.scores||{};for(const[gm,o]of Object.entries(P0.scores)){S.scores[gm]=S.scores[gm]||{};for(const[l,v]of Object.entries(o))if(!(S.scores[gm][l]>=v))S.scores[gm][l]=v}}
-  save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g} seeds from your games`,`+${g} semi dai giochi`))},
+  save();if(window.IgorUI)IgorUI.refresh();if(g&&window.IgorUI)IgorUI.toast(tt(`+${g*SEEDR} tofu ants from your games`,`+${g*SEEDR} formiche di tofu dai giochi`))},
  /* another device (or tab) saved a newer island: take it as it is, without saving (no ping-pong) */
  adopt:(d,uid,force)=>{if(VISIT){visitHomeIn(d,uid);return}const rst=d.rst&&d.rst!==S.rst;
   /* the other device is behind this one: keep this island and put it online on top of theirs */
@@ -636,7 +642,7 @@ const FAST=clamp(Math.round(+FQ.get('fast')||fastLS||1),1,3600),MIN=6e4/FAST,HOU
 const SPC={t:{N:['Tofu','Tofu'],seeds:1,germ:30,ready:120,yield:6,win:480,care:null,lv:1},
  p:{N:['Tomato','Pomodoro'],seeds:3,germ:60,ready:360,yield:20,win:720,care:'water',lv:3},
  c:{N:['Carrot','Carota'],seeds:5,germ:120,ready:720,yield:45,win:1440,care:'weed',lv:5}};
-const LVX=[0,20,60,150,300,500,800,1200];
+const LVX=[0,100,400,800,1300,2000,2800,3800]; // 21 Nov 2026: was 0,20,60,150,300,500,800,1200 (ants from the fields)
 const LVNEW=[0,0,['Field 2 and the ant store!','Il campo 2 e il magazzino!'],['Tomatoes, the tool shed and the Caribbean island with its bar!','Pomodori, capanno degli attrezzi e l’isola caraibica con il bar!'],['Field 4!','Il campo 4!'],['Carrots and the greenhouse!','Carote e serra!'],['Field 6, bigger buildings and the lake island!','Il campo 6, edifici più grandi e l’isola del lago!'],['Field 7!','Il campo 7!'],['Field 8!','Il campo 8!']];
 const FCOST=[null,{t:15},{t:35},{t:90},{t:160},{t:260},{t:400},{t:600}];
 const MAXF=8,CAPS=[30,80,200,500,2000,6000],PENCAP=[0,2,4,6],WATERCAP=[0,3,8],IGMAX=12;
@@ -692,7 +698,7 @@ const VKEYS=Object.keys(VEH),VCOL=['#e0463c','#ff8ab6','#f1b46e','#f6d34a','#9be
 /* --- the state, kept in S.farm (the old S.plots and S.ants are left untouched) --- */
 const FM=()=>S.farm;
 let fmNew=false;
-function freshFarm(){const t=Date.now();return{v:2,created:t,t,seen:t,total:0,ants:{t:0},fields:[{sp:'t',st:'wild',x:4.9,z:-4.4}],igs:[newIg(0)],pos:{pen:{x:-7,z:9}},cut:{t:[],r:[]},
+function freshFarm(){const t=Date.now();return{v:2,created:t,t,seen:t,total:0,ants:{t:0},fields:[],igs:[newIg(0)],pos:{pen:{x:-7,z:9}},cut:{t:[],r:[]},
  b:{pen:1,store:0,shop:0,green:0},tools:{plow:0,can:0,basket:0,cart:0},items:{tarp:0,tarp2:0,tarp3:0,comp:0},toys:{ball:0,swing:0,hammock:0,slide:0},
  tasks:[],nid:1,water:0,ev:null,evDone:{},log:[],first:true,lvlSeen:1,veh:{},gifts:{}}}
 function newIg(i){return{id:i+1,name:IGN[i%IGN.length],en:5,rest:false,task:null,hue:[0,-8,10,-4,6,-12,4,12][i%8],look:igLook(i),trait:TKEYS[i%TKEYS.length]}}
@@ -709,21 +715,42 @@ function geoMig(f){if(!f||f.geo2)return f;const seen=new Set();
  try{const keep=f.fun&&f.fun.beach;if(f.fun)f.fun.beach=[];if(f.vpos)for(const k of Object.keys(f.vpos)){const q=f.vpos[k];if(q&&Math.hypot(q.x,q.z*1.12)>20.5&&!GEO_OLD.some(([cx,cz,rx,rz])=>Math.hypot((q.x-cx)/rx,(q.z-cz)/rz)<1.35))delete f.vpos[k]}
   const sm=f.fun&&f.fun.sm;if(f.fun)delete f.fun.sm;mv(f);if(f.fun&&sm)f.fun.sm=sm;void keep}catch(e){console.warn('geo',e)}
  f.geo2=1;return f}
+/* 21 Nov 2026: once per save. The fields (and their jobs, tarps, field events) go to f.arch; the store, the tool shed, the greenhouse and
+   the tree nursery are no longer built (f.arch.b keeps their levels). The firefly forest moved from the north to the middle of the south:
+   whatever the player put there moves with it (z → −z). The ice island and the stage islet are archived: what was put there comes home. */
+const FEVK=new Set(['storm','hail','frost','heat','birds','drizzle']),OFFB=['store','shop','green','nurs'];
+function svoltaMig(f){if(!f||f.nof)return f;const A=f.arch=f.arch||{};
+ /* the level reached with the old steps stays */const OLDLVX=[0,20,60,150,300,500,800,1200,1700,2300,3000,3800,4700,5700,6800,8000];if(f.created&&(f.total|0)>0&&!f.first0)f.lvl0=OLDLVX.filter(x=>(f.total|0)>=x).length;
+ A.fields=f.fields;f.fields=[];A.tasks=(f.tasks||[]).filter(q=>q.f!=null||q.k==='tarp'||q.k==='scare'||(q.k==='build'&&OFFB.includes(q.b)));
+ f.tasks=(f.tasks||[]).filter(q=>!A.tasks.includes(q));A.b={};A.pos={};for(const k of OFFB){if(f.b&&f.b[k]){A.b[k]=f.b[k];f.b[k]=0}if(f.pos&&f.pos[k]){A.pos[k]=f.pos[k];delete f.pos[k]}}
+ A.items=f.items;A.tools=f.tools;if(f.ev&&FEVK.has(f.ev.k))f.ev=null;(f.igs||[]).forEach(g=>{g.task=null});
+ const inE=(x,z,cx,cz,rx,rz)=>Math.hypot((x-cx)/rx,(z-cz)/rz)<1.35,onB=(x,z,ax,az,bx,bz)=>{const ux=bx-ax,uz=bz-az,L2=ux*ux+uz*uz,t=Math.max(0,Math.min(1,((x-ax)*ux+(z-az)*uz)/L2));return Math.hypot(x-ax-ux*t,z-az-uz*t)<1.6&&Math.hypot(x,z*1.12)>18};
+ const seen=new Set(),gone=[];
+ const mv=(o,par,key)=>{if(!o||typeof o!=='object'||seen.has(o))return;seen.add(o);if(Array.isArray(o)){o.forEach((x,i)=>mv(x,o,i));return}
+  if(typeof o.x==='number'&&typeof o.z==='number'){const x=o.x,z=o.z;
+   if(inE(x,z,0,-36.54,8,6.5)||onB(x,z,0,-18.6,0,-31.54)){o.z=+(-z).toFixed(2);return}
+   if(inE(x,z,31.32,24.36,8.5,7.2)||onB(x,z,14.4,12.6,26.82,20.86)||inE(x,z,-31.32,24.36,8.5,7.2)||onB(x,z,-14.4,12.6,-26.82,20.86)){gone.push([par,key,o]);return}}
+  for(const k in o)if(o[k]&&typeof o[k]==='object')mv(o[k],o,k)};
+ try{mv(f,null,null);for(const[par,key,o]of gone){if(!par)continue;if(par===f.deco||(f.deco&&Object.values(f.deco).includes(o))){o.x=null;o.z=null;continue}
+   if(Array.isArray(par))continue;delete par[key]}}catch(e){console.warn('svolta',e)}
+ f.nof=1;return f}
 function fixFarm(f){const d=freshFarm();for(const k of Object.keys(d))if(f[k]===undefined||f[k]===null&&k!=='ev')f[k]=d[k];for(const k of['ants','b','tools','items','toys'])f[k]={...d[k],...f[k]};if(f.ev&&!EVK[f.ev.k])f.ev=null;
  if(f.ants.p||f.ants.c){f.ants.t+=(f.ants.p||0)+(f.ants.c||0);delete f.ants.p;delete f.ants.c}
- if(!f.fields.length)f.fields=d.fields;if(!f.igs.length)f.igs=d.igs;f.fields.forEach((x,i)=>{if(x.x==null){const P=plotPos(i);x.x=P.x;x.z=P.z}});if(!f.pos.pen||f.pos.pen.x===-4.9&&f.pos.pen.z===-1.5)f.pos.pen={x:-7,z:9};if(!f.cut.t)f.cut={t:[],r:[]};
- f.igs.forEach((g,i)=>{if(g.en>enMaxG(g))g.en=enMaxG(g);if(Math.abs(g.hue||0)>14)g.hue=[0,-8,10,-4,6,-12,4,12][i%8];if(g.rest===undefined)g.rest=false;if(!g.look)g.look=igLook(i);if(!g.trait)g.trait=TKEYS[i%TKEYS.length]});if(!f.veh)f.veh={};geoMig(f);return f}
+ if(!f.igs.length)f.igs=d.igs;f.fields.forEach((x,i)=>{if(x.x==null){const P=plotPos(i);x.x=P.x;x.z=P.z}});if(!f.pos.pen||f.pos.pen.x===-4.9&&f.pos.pen.z===-1.5)f.pos.pen={x:-7,z:9};if(!f.cut.t)f.cut={t:[],r:[]};
+ f.igs.forEach((g,i)=>{if(g.en>enMaxG(g))g.en=enMaxG(g);if(Math.abs(g.hue||0)>14)g.hue=[0,-8,10,-4,6,-12,4,12][i%8];if(g.rest===undefined)g.rest=false;if(!g.look)g.look=igLook(i);if(!g.trait)g.trait=TKEYS[i%TKEYS.length]});if(!f.veh)f.veh={};geoMig(f);svoltaMig(f);return f}
 function ensureFarm(){if(S.farm&&Array.isArray(S.farm.fields)){fixFarm(S.farm);return}
  try{if(!localStorage.getItem('igortime_v1_before_farm'))localStorage.setItem('igortime_v1_before_farm',JSON.stringify(S))}catch(e){}
- S.farm=freshFarm();if((S.seeds|0)<3)S.seeds=3;fmNew=true;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+ S.farm=freshFarm();S.farm.nof=1;if((S.seeds|0)<3)S.seeds=3;fmNew=true;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 ensureFarm();
 function saveLocal(){if(window._wiped||VISIT||window.__igFrozen)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-const costTxt=c=>Object.entries(c).filter(([,v])=>v).map(([k,v])=>k==='s'?`${v} ${tt(v>1?'seeds':'seed',v>1?'semi':'seme')}`:`${v} ${tt(v>1?'tofu ants':'tofu ant',v>1?'formiche di tofu':'formica di tofu')}`).join(' + ');
-const canPay=c=>Object.entries(c).every(([k,v])=>k==='s'?(S.seeds|0)>=v:FM().ants.t>=v);
-function pay(c){if(!canPay(c))return false;for(const[k,v]of Object.entries(c)){if(k==='s')S.seeds-=v;else FM().ants.t-=v}return true}
-function refund(c){if(!c)return;for(const[k,v]of Object.entries(c)){if(k==='s')S.seeds+=v;else FM().ants.t+=v}}
-const pocket=()=>FM().ants.t,capOf=()=>CAPS[FM().b.store]||30;
-const lvlOf=()=>LVX.filter(x=>FM().total>=x).length;
+const costTxt=c=>{const v=antsOf(c);return`${v} ${tt(v===1?'tofu ant':'tofu ants',v===1?'formica di tofu':'formiche di tofu')}`};
+const antsOf=c=>Object.entries(c||{}).reduce((a,[k,v])=>a+(k==='s'?(v|0)*SEEDR:(v|0)),0);
+function seedSweep(){let ins=false;try{ins=!!INSPECT}catch(e){}if(VISIT||ins||!S.farm)return;const n=S.seeds|0;if(n>0){const F=FM();F.ants.t+=n*SEEDR;F.total=(F.total|0)+n*SEEDR;S.seeds=0;try{fmDirty=true}catch(e){}}else if(S.seeds<0)S.seeds=0}
+const canPay=c=>{seedSweep();return FM().ants.t>=antsOf(c)};
+function pay(c){if(!canPay(c))return false;FM().ants.t-=antsOf(c);return true}
+function refund(c){if(!c)return;FM().ants.t+=antsOf(c)}
+const pocket=()=>FM().ants.t,capOf=()=>1e9; // no store any more: no limit
+const lvlOf=()=>Math.max(LVX.filter(x=>FM().total>=x).length,FM().lvl0|0);
 function addAnts(sp,n){const room=Math.max(0,capOf()-pocket()),got=Math.min(n,room);FM().ants.t+=got;FM().total+=got;return{got,lost:n-got}}
 const enMax=()=>5;
 const restMult=()=>1/(1-.2*Object.values(FM().toys).filter(Boolean).length);
@@ -2248,7 +2275,7 @@ function renderDress(onb){const can=window.IgorCloud&&window.IgorCloud.user;if(!
 const ICS='<svg viewBox="0 0 24 24" class="ic"><path d="M12 3c4.5 3 6.5 6.6 6.5 10a6.5 6.5 0 0 1-13 0C5.5 9.6 7.5 6 12 3z" fill="#f3ead2" stroke="#2b2018" stroke-width="1.8"/><path d="M12 7c1.6 2.3 2.2 4.6 1.8 7.2" stroke="#5aa64a" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>';
 const ICA='<svg viewBox="0 0 44 24" class="ic a"><g fill="#f8f5ec" stroke="#2b2018" stroke-width="1.6"><rect x="1" y="6" width="16" height="13" rx="3"/><rect x="18" y="9" width="8" height="8" rx="2"/><rect x="27" y="7" width="11" height="11" rx="2.5"/></g></svg>';
 const ICT='<svg viewBox="0 0 24 24" class="ic" style="width:20px;height:20px"><path d="M5 8l7-4 7 4v8l-7 4-7-4z" fill="#f8f5ec" stroke="#2b2018" stroke-width="1.6" stroke-linejoin="round"/><path d="M5 8l7 4 7-4M12 12v8" fill="none" stroke="#2b2018" stroke-width="1.3" stroke-linejoin="round"/><path d="M12 12l7-4v8l-7 4z" fill="#e3dccb"/></svg>';
-const cst=c=>Object.entries(c).filter(([,v])=>v).map(([k,v])=>`<span class="cs">${v}${k==='s'?ICS:ICA}</span>`).join(' ');
+const cst=c=>{const v=antsOf(c);return v?`<span class="cs">${v}${ICA}</span>`:''}; // 21 Nov 2026: every price in tofu ants
 /* pills anchored to a place in the island */
 const chipBox=document.createElement('div');chipBox.id='chips';chipBox.hidden=true;document.body.appendChild(chipBox);
 let CH=null;
@@ -2330,7 +2357,7 @@ const bar=document.createElement('div');bar.id='bar';bar.hidden=true;document.bo
 function closeBar(){bar.hidden=true;barKind=null;document.documentElement.classList.remove('baropen')}
 function openBar(kind){barKind=kind;hideChips();hideHint();renderBar();bar.hidden=false;document.documentElement.classList.add('baropen')}
 function renderBar(){const F=FM(),lv=lvlOf(),n=F.fields.length;let L=[];
- if(barKind==='build'){for(const k of DKEYS){const m=(F.deco||{})[k];if(m&&m.x==null)L.push({t:`📍 ${DECO[k].ic} ${N(DECO[k].N)}`,main:1,fn:()=>{closeBar();startPlace({k:'deco',id:k})}})}L.push({t:'🎨 '+tt('Igor’s house','Casa di Igor'),fn:()=>{closeBar();houseOpen()}});if(n<MAXF)L.push(lv<n+1?{t:`🌱 ${tt('Field','Campo')} 🔒 ${tt('lv.','liv.')} ${n+1}`,why:tt(`Field ${n+1}: level ${n+1} first!`,`Campo ${n+1}: prima il livello ${n+1}!`)}:{t:`🌱 ${tt('Field','Campo')} ${cst(FCOST[n])}`,fn:()=>openBar('field')});
+ if(barKind==='build'){for(const k of DKEYS){const m=(F.deco||{})[k];if(m&&m.x==null)L.push({t:`📍 ${DECO[k].ic} ${N(DECO[k].N)}`,main:1,fn:()=>{closeBar();startPlace({k:'deco',id:k})}})}L.push({t:'🎨 '+tt('Igor’s house','Casa di Igor'),fn:()=>{closeBar();houseOpen()}});
   for(const k of BKEYS){if(k==='pen'||F.b[k]||F.pos[k])continue;const U=BLD[k].up[1];L.push(lv<U.lv?{t:`${N(BLD[k].N)} 🔒 ${tt('lv.','liv.')} ${U.lv}`,why:LVFIRST(U.lv)}:{t:`${N(BLD[k].N)} ${cst(U.cost)}`,fn:()=>{startPlace({k:'build',key:k});say(N(BLD[k].what),2.6)}})}}
  else if(barKind==='field'){for(const[k,s]of Object.entries(SPC))L.push(lv<s.lv?{t:`${N(s.N)} 🔒 ${tt('lv.','liv.')} ${s.lv}`,why:LVFIRST(s.lv)}:{t:`${N(s.N)} <small>${s.seeds}${ICS} → ${s.yield}${ICA}</small>`,fn:()=>{if(fieldOk(k))startPlace({k:'field',sp:k})}});L.push({t:'‹',fn:()=>openBar('build')})}
  else if(barKind==='veh'){for(const k of VKEYS){const V=VEH[k];L.push(F.veh[k]?{t:`${V.ic} ${N(V.N)} ✓`,fn:()=>{mount(k);closeBar()}}:{t:`${V.ic} ${N(V.N)} ${cst(dual({t:V.cost}))}`,fn:()=>{buyVeh(k)}})}L.push({t:'‹',fn:()=>openBar('build')});if(!bar.hidden||1)say(tt('Rewards: save up tofu ants!','Premi: risparmia formiche di tofu!'),2.4)}
@@ -2369,9 +2396,9 @@ const seedShown=()=>Math.max(0,(S.seeds|0)-Math.round(window._seedLag||0));
 let hudFarm=function(){const sn=$('seedN');if(sn&&sn.textContent!==String(seedShown()))sn.textContent=seedShown();const el=$('antN');if(el){const s=`${pocket()}/${capOf()}`;if(el.textContent!==s)el.textContent=s}};
 let fmSeen0=FM().seen;
 function awaySummary(){const F=FM(),L=F.log.filter(e=>e.t>fmSeen0+500&&e.t<Date.now()-4000);fmSeen0=Date.now();
- if(fmNew){fmNew=false;say(tt('We have a farm now!','Adesso abbiamo una fattoria!'),2.6);say(tt(`Meet ${F.igs[0].name}, our Igorlet.`,`Ecco ${F.igs[0].name}, il nostro Igorlet.`),2.6);say(tt('Tap the field to start!','Tocca il campo per cominciare!'),3);return}
+ if(fmNew){fmNew=false;return}
  if(!L.length)return;say(tt('While you were away…','Mentre eri via…'),2);for(const e of L.slice(-2))say(e.x,2.8)}
-$('ants').onclick=()=>{const F=FM(),lv=lvlOf(),nx=LVX[lv];say(nx!=null?tt(`Level ${lv}. Level ${lv+1} at ${nx} ants harvested (${F.total}).`,`Livello ${lv}. Il ${lv+1} a ${nx} formiche raccolte (${F.total}).`):tt('Level 16: the island is complete!','Livello 16: l’isola è completa!'),3.4)};
+$('ants').onclick=()=>{const F=FM(),lv=lvlOf(),nx=LVX[lv];say(nx!=null?tt(`Level ${lv}. Level ${lv+1} at ${nx} tofu ants earned (${F.total}).`,`Livello ${lv}. Il ${lv+1} a ${nx} formiche guadagnate (${F.total}).`):tt('Level 16: the island is complete!','Livello 16: l’isola è completa!'),3.4)};
 $('seeds').onclick=()=>say(tt('Seeds come from the games: in my house and in the music school.','I semi vengono dai giochi: in casa mia e nella scuola di musica.'),3.4);
 let fmAcc=0,fmSaveT=0,fmUiT=0;
 updaters.push((t,dt)=>{try{igVis(t,dt);worldTick(t);placeTick();chipTick()}catch(e){if(!window.__fmVisE){window.__fmVisE=1;window.__igErr&&__igErr(e,'farm view')}}fab.style.display=started&&where==='out'?'flex':'none';if(where!=='out'&&!bar.hidden)closeBar();
@@ -2403,7 +2430,7 @@ function hudIgs(){const F=FM(),n=F.igs.length,h=`${IGICON}<span>${n}</span>`;if(
 /* level badge under the header: level and a little bar to the next one; tap it to hear what comes next */
 const lvB=document.createElement('button');lvB.id='lvB';lvB.type='button';document.body.appendChild(lvB);
 function renderLv(){const F=FM(),l=lvlOf(),a=LVX[l-1]||0,b=LVX[l],tot=F.total|0,p=b?Math.min(1,(tot-a)/(b-a)):1,h=`<b>${tt('Lv','Liv')} ${l}</b><i><u style="width:${Math.round(p*100)}%"></u></i>${b?`<small>${tot}/${b}</small>`:''}`;if(lvB.innerHTML!==h)lvB.innerHTML=h;lvB.style.display=started&&where==='out'?'':'none'}
-lvB.onclick=()=>{const l=lvlOf(),b=LVX[l];say(b?tt(`Level ${l}. At ${b} tofu ants picked: level ${l+1}!`,`Livello ${l}. A ${b} formiche raccolte: livello ${l+1}!`)+(LVNEW[l+1]?' '+N(LVNEW[l+1]):''):tt('Top level: the island is complete!','Livello massimo: l’isola è completa!'),4)};
+lvB.onclick=()=>{const l=lvlOf(),b=LVX[l];say(b?tt(`Level ${l}. At ${b} tofu ants earned: level ${l+1}!`,`Livello ${l}. A ${b} formiche guadagnate: livello ${l+1}!`)+(LVNEW[l+1]?' '+N(LVNEW[l+1]):''):tt('Top level: the island is complete!','Livello massimo: l’isola è completa!'),4)};
 updaters.push(renderLv);
 /* coming back from a game: a little party for the seeds */
 const GNAME={harmony:['from the harmony lesson','dalla lezione di armonia'],kitchen:['from the kitchen','dalla cucina'],window:['from the window','dalla finestra'],bedroom:['from the bedroom','dalla camera'],stairs:['from Pitch Stairs','da Pitch Stairs'],pitch:['from Pitch Stairs','da Pitch Stairs'],cadences:['from Cadences','da Cadenze'],cad:['from Cadences','da Cadenze'],drums:['from the drums','dalla batteria'],intervals:['from the maestro’s lesson','dalla lezione del maestro'],pitchduo:['from Pitch Stairs','da Pitch Stairs'],drumschool:['from Rigor Star’s drum school','dalla scuola di batteria di Rigor Star'],notes:['from Nadia Boulangigor’s lesson','dalla lezione di Nadia Boulangigor'],bath:['from the bathtub','dalla vasca'],abyss:['from the abyss','dall’abisso']};
@@ -2498,7 +2525,7 @@ window.IgorUI={openAccount,renderDress,refresh:()=>refresh(),toast:t=>toast(t),o
 
 /* ================= index ================= */
 const idx=$('index');
-function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igor')}</h2><ul><li><button data-i="house">${tt('Igor’s house','La casa di Igor')}<small>${tt('games','giochi')}</small></button></li><li><button data-i="field">${tt('The fields','I campi')}</button></li><li><button data-i="pen">${tt('Igorlet village','Villaggio degli Igorlets')}</button></li><li><button data-i="prizes">${tt('Prize shop','Negozietto dei premi')}</button></li><li><button data-i="school">${tt('Music school','Scuola di musica')}<small>${tt('composers','compositori')}</small></button></li><li><button data-i="abyss">${tt('The abyss','L’abisso')}<small>${tt('game','gioco')}</small></button></li><li><button data-i="jetty">${tt('Leaderboards','Classifiche')}<small>${tt('everyone','tutti')}</small></button></li></ul>
+function renderIdx(){idx.innerHTML=`<h2>${tt('Igor’s island','L’isola di Igor')}</h2><ul><li><button data-i="house">${tt('Igor’s house','La casa di Igor')}<small>${tt('games','giochi')}</small></button></li><li><button data-i="pen">${tt('Igorlet village','Villaggio degli Igorlets')}</button></li><li><button data-i="prizes">${tt('Prize shop','Negozietto dei premi')}</button></li><li><button data-i="school">${tt('Music school','Scuola di musica')}<small>${tt('composers','compositori')}</small></button></li><li><button data-i="abyss">${tt('The abyss','L’abisso')}<small>${tt('game','gioco')}</small></button></li><li><button data-i="jetty">${tt('Leaderboards','Classifiche')}<small>${tt('everyone','tutti')}</small></button></li></ul>
  <h2>${tt('Games','Giochi')}</h2><ul><li><button data-i="gamesPage">${tt('The games page','La pagina dei giochi')}<small>${tt('all twelve','tutti e dodici')}</small></button></li><li><button data-i="stairs">Pitch Stairs<small>${tt('house','casa')}</small></button></li><li><button data-i="cad">${tt('Cadences','Cadenze')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="drums">${tt('The drums','La batteria')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="iv">${tt('The maestros’ lessons','Le lezioni dei maestri')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="ds">${tt('Drum school','Scuola di batteria')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="nt">${tt('Reading music','Leggere le note')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="hm">${tt('Harmony','Armonia')}<small>${tt('school','scuola')}</small></button></li><li><button data-i="bath">${tt('The bathtub','La vasca')}<small>${tt('house','casa')}</small></button></li><li><button data-i="w">${tt('The window','La finestra')}<small>${tt('house','casa')}</small></button></li><li><button data-i="k">${tt('The kitchen','La cucina')}<small>${tt('house','casa')}</small></button></li><li><button data-i="b">${tt('The bedroom','La camera')}<small>${tt('house','casa')}</small></button></li></ul>
  <h2>Chat</h2><ul><li><button data-i="chat">${tt('Chat with friends','Chatta con gli amici')}<small>14+</small></button></li></ul>
  <h2>${tt('Language','Lingua')}</h2><ul><li><button data-lang="en" aria-pressed="${LANG==='en'}">English</button></li><li><button data-lang="it" aria-pressed="${LANG==='it'}">Italiano</button></li></ul>
@@ -2509,11 +2536,11 @@ function applyLang(){SIGNS.forEach(f=>f());if(typeof renderGmB==='function')rend
 function staticTexts(){$('index').setAttribute('aria-label',tt('Index','Indice'));document.querySelector('#sheet .x').setAttribute('aria-label',tt('Close','Chiudi'));if($('introIg'))$('introIg').setAttribute('aria-label',tt('Igor, a green anteater','Igor, un formichiere verde'));$('indexBtn').setAttribute('aria-label',tt('Index','Indice'));$('hint').textContent=document.documentElement.classList.contains('touch')?tt('Walk with the joystick · double-tap it to jump · tap a place · drag to turn','Cammina col joystick · doppio tocco per saltare · tocca un posto · trascina per girare'):tt('Walk with the arrows · space to jump · click a place · drag to turn','Cammina con le frecce · spazio per saltare · clicca un posto · trascina per girare');
  $('indexBtn').textContent=tt('Index','Indice');$('seeds').title=tt('Seeds: win them in the games','Semi: si vincono nei giochi');$('ants').title=tt('Ants in your pocket / how many you can keep','Formiche in tasca / quante ne puoi tenere');
  const I=$('intro');if(I){$('iH').innerHTML=tt('Hi, I’m <em>Igor</em>.','Ciao, sono <em>Igor</em>.');$('iAsk').textContent=tt('Where shall we go? Straight to my games, or to my island?','Dove andiamo? Direttamente ai miei giochi, o sulla mia isola?');
-  $('pIb').textContent=tt('← My island','← La mia isola');$('pIs').textContent=tt('Walk around and grow tofu ants with the Igorlets. The games are in my house.','Cammina e coltiva formiche di tofu con gli Igorlets. I giochi sono in casa mia.');
-  $('pGb').textContent=tt('All the games →','Tutti i giochi →');$('pGs').textContent=tt('The seven games on one page, ready to play.','I sette giochi in una pagina, pronti da giocare.');
+  $('pIb').textContent=tt('← My island','← La mia isola');$('pIs').textContent=tt('Walk around with the Igorlets. The games are in my house and in the music school.','Cammina con gli Igorlets. I giochi sono in casa mia e nella scuola di musica.');
+  $('pGb').textContent=tt('All the games →','Tutti i giochi →');$('pGs').textContent=tt('All the games on one page, ready to play.','Tutti i giochi in una pagina, pronti da giocare.');
   $('iNote').textContent=tt('All the games are on the island too. You can switch whenever you like: I’ll remember your choice.','Tutti i giochi si trovano anche sull’isola. Puoi cambiare quando vuoi: mi ricordo la tua scelta.');
   const gm=DEST==='games';$('iH2').innerHTML=gm?tt('Off to the <em>games</em>!','Si va ai <em>giochi</em>!'):tt('Welcome to <em>Igor</em>’s island.','Benvenuto sull’isola di <em>Igor</em>.');$('iAsk2').textContent=tt('How do you want to come in?','Come vuoi entrare?');
-  $('iDesc').textContent=gm?tt('Every game gives tofu seeds: you can plant them on my island whenever you like, with my Igorlets.','Ogni gioco dà semi di tofu: puoi piantarli sulla mia isola quando vuoi, insieme ai miei Igorlets.'):tt('My games are in my house: walk into the door. Games give tofu seeds: with the Igorlets we sow them, harvest the ants and build the island. Composers can visit the old music school, and the deep pool leads to the abyss.','I miei giochi sono in casa: entra dalla porta. I giochi danno semi di tofu: insieme agli Igorlets li seminiamo, raccogliamo le formiche e costruiamo l’isola. I compositori possono visitare la vecchia scuola di musica, e il pozzo porta all’abisso.');
+  $('iDesc').textContent=gm?tt('Every game gives tofu ants for my island. Start with the melody of the day!','Ogni gioco dà formiche di tofu per la mia isola. Comincia dalla melodia del giorno!'):tt('My games are in my house and in the music school. Every game gives tofu ants: with them, the Igorlets and I make the island grow. Every day there is a new melody to find!','I miei giochi sono in casa e nella scuola di musica. Ogni gioco dà formiche di tofu: con quelle, io e gli Igorlets facciamo crescere l’isola. Ogni giorno c’è una melodia nuova da ritrovare!');
   $('goGuest').textContent=gm?tt('Play as a guest','Gioca come ospite'):tt('Explore as a guest','Esplora come ospite');$('goSign').textContent=tt('Sign in / register','Accedi / registrati');$('iSmall').textContent=tt('As a guest your farm and scores stay on this device. With an account you dress up your Igor right away and keep everything everywhere.','Come ospite fattoria e punteggi restano su questo dispositivo. Con un account vesti subito il tuo Igor e ritrovi tutto ovunque.');$('introBack').textContent=tt('← Back','← Indietro');
   const L=$('langIntro');if(L)L.innerHTML=`<button type="button" data-l="en" aria-pressed="${LANG==='en'}">English</button><button type="button" data-l="it" aria-pressed="${LANG==='it'}">Italiano</button>`}}
 idx.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.lang){setLang(b.dataset.lang);return}if(b.dataset.sky){skyMode(b.dataset.sky);return}const k=b.dataset.i;idx.hidden=true;$('indexBtn').setAttribute('aria-expanded','false');
@@ -3120,7 +3147,7 @@ let JW=null,LEAD=null;
 function wishChips(id){if(VISIT){return}const g=igById(id),o=igObjs.get(id),w=wishOf(id);if(!g||!o||!w)return;bubbleQ.length=0;bubbleT=0;say(`${g.name}: “${N(WISHES[w.k])}”`,3);
  chips(o.grp.position.clone().add(new V3(0,1.1,0)),()=>{const U=FUN(),w=wishOf(id),L=[];if(!w)return L;const F0=FRUIT[U.fk]||fruitOf();
   if(w.k==='fruit')L.push(U.fruit>0?{t:`🍎 ${cap1(N(F0.N))} <small>×${U.fruit}</small>`,main:1,fn:()=>{U.fruit--;snd('munch');wishDone(id);return false}}:{t:'🍎 '+tt('Fruit','Frutta'),off:1,why:tt('No fruit: find a tree with fruit and shake it!','Niente frutta: cerca un albero con la frutta e scuotilo!')});
-  if(w.k==='ant')L.push(pocket()>0?{t:`${tt('A tofu ant','Una formica di tofu')} <small>−1</small>`,main:1,fn:()=>{FM().ants.t--;snd('munch');wishDone(id);return false}}:{t:tt('A tofu ant','Una formica di tofu'),off:1,why:tt('No tofu ants in your pocket: pick a field!','Niente formiche di tofu in tasca: raccogli un campo!')});
+  if(w.k==='ant')L.push(pocket()>0?{t:`${tt('A tofu ant','Una formica di tofu')} <small>−1</small>`,main:1,fn:()=>{FM().ants.t--;snd('munch');wishDone(id);return false}}:{t:tt('A tofu ant','Una formica di tofu'),off:1,why:tt('No tofu ants in your pocket: play a game!','Niente formiche di tofu in tasca: fai un gioco!')});
   if(w.k==='shell'){const d=Object.entries(U.col).filter(([v,n])=>n>1&&SHELL[v]).sort((a,b)=>SHELL[a[0]].ti-SHELL[b[0]].ti||b[1]-a[1])[0];L.push(d?{t:`🐚 ${N(SHELL[d[0]].N)} <small>×${d[1]}</small>`,main:1,fn:()=>{U.col[d[0]]--;snd('shell');caseDirty=true;wishDone(id);return false}}:{t:'🐚 '+tt('A spare shell','Una conchiglia doppia'),off:1,why:tt('You need a spare shell: look on the beach!','Ti serve una conchiglia doppia: cercala sulla spiaggia!')})}
   if(w.k==='sea')L.push({t:'🌊 '+tt('Let’s go!','Andiamo!'),main:1,fn:()=>{wishSea(id);return false}});
   if(w.k==='jump')L.push({t:'⤴ '+tt('Let’s jump!','Saltiamo!'),main:1,fn:()=>{JW={id,n:0,t:T};window._wishOut={id,until:T+90,jump:1};say(matchMedia('(pointer:coarse)').matches?tt('Double-tap the joystick: three jumps!','Doppio tocco sul joystick: tre salti!'):tt('Press space: three jumps!','Premi spazio: tre salti!'),3);return false}});
@@ -3393,7 +3420,7 @@ const photoN=()=>Object.keys(PH()).filter(k=>SPECIES[k]).length;
 const isShown=o=>{for(let q=o;q;q=q.parent){if(!q.visible)return false;if(q===scene)return true}return false};
 
 /* ---------- levels 9 to 16 ---------- */
-LVX.push(1700,2300,3000,3800,4700,5700,6800,8000); // the step keeps growing: +500, +600, +700…
+LVX.push(5000,6500,8000,10000,12000,14500,17000,20000); // the step keeps growing: +500, +600, +700…
 LVNEW.push(['Level 9: the firefly forest!','Livello 9: il bosco delle lucciole!'],['Level 10!','Livello 10!'],['Level 11!','Livello 11!'],['Level 12: the ice island!','Livello 12: l’isola di ghiaccio!'],['Level 13!','Livello 13!'],['Level 14!','Livello 14!'],['Level 15!','Livello 15!'],['Level 16: well done!','Livello 16: bravissimi!']);
 
 /* ---------- the firefly forest (level 9) ---------- */
@@ -3401,10 +3428,10 @@ function mushroom(G,x,z,s,glow){const m=new THREE.Group(),st=new THREE.Mesh(new 
  const cap=new THREE.Mesh(new THREE.SphereGeometry(.95,18,10,0,TAU,0,Math.PI/2),glow?glowM('#5fb7e6',.35):lam(pick(['#d8443a','#c9542f','#b8383a'])));cap.scale.set(1,.55,1);cap.position.y=1.38;m.add(cap);
  for(let k=0;k<7;k++){const d=new THREE.Mesh(new THREE.SphereGeometry(.09,6,5),lam(glow?'#e9f8ff':'#fff6e6'));const a=k/7*TAU+rnd(),r=.35+rnd()*.45;d.position.set(Math.cos(a)*r,1.38+Math.sqrt(Math.max(0,1-r*r))*.5,Math.sin(a)*r);m.add(d)}
  blob(m,.9);m.scale.setScalar(s);m.position.set(x,0,z);G.add(m);block(x,z,.3*s)}
-function isleForest(I,G){for(const[x,z,s,gl]of[[-4.2,-38.04,1.5],[3.6,-39.24,1.25],[5.5,-34.54,1.05,1],[1.2,-41.04,1.1,1],[-2.2,-35.84,.7],[-6.6,-36.84,.8,1]])mushroom(G,x,z,s,gl);
+function isleForest(I,G){for(const[x,z,s,gl]of[[-4.2,38.04,1.5],[3.6,39.24,1.25],[5.5,34.54,1.05,1],[1.2,41.04,1.1,1],[-2.2,35.84,.7],[-6.6,36.84,.8,1]])mushroom(G,x,z,s,gl);
  for(let k=0;k<14;k++){const sm=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),lam(pick(['#c94a7a','#e9d24a','#7a5ad8'])));const a=rnd()*TAU,r=.2+rnd()*.7;sm.position.set(I.cx+Math.cos(a)*r*I.rx,.08,I.cz+Math.sin(a)*r*I.rz);sm.scale.set(1,.6,1);G.add(sm)}
  // a snail on a mushroom stem
- const sn=new THREE.Group(),shl=new THREE.Mesh(new THREE.TorusGeometry(.09,.05,8,14),lam('#c99a6a'));shl.position.y=.12;sn.add(shl);const bd=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.2,6),lam('#d9c9a0'));bd.rotation.z=Math.PI/2;bd.position.set(.02,.05,0);sn.add(bd);sn.position.set(-1.6,0,-35.44);G.add(sn);animAdd('snail',sn);I.snail=sn;
+ const sn=new THREE.Group(),shl=new THREE.Mesh(new THREE.TorusGeometry(.09,.05,8,14),lam('#c99a6a'));shl.position.y=.12;sn.add(shl);const bd=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.2,6),lam('#d9c9a0'));bd.rotation.z=Math.PI/2;bd.position.set(.02,.05,0);sn.add(bd);sn.position.set(-1.6,0,35.44);G.add(sn);animAdd('snail',sn);I.snail=sn;
  // the fireflies: they glow (more at night) and sing a note when you touch them
  I.flies=[];const PEN=[0,2,4,7,9,12,14,16];for(let k=0;k<10;k++){const fg=new THREE.Group(),core=new THREE.Mesh(new THREE.SphereGeometry(.05,6,5),new THREE.MeshBasicMaterial({color:'#efffa0'})),hl=halo('#d8ff6a',.9,.6);fg.add(core);fg.add(hl);
   const a=rnd()*TAU,r=.15+rnd()*.7,P=new V3(I.cx+Math.cos(a)*r*I.rx,1+rnd()*1.6,I.cz+Math.sin(a)*r*I.rz);fg.position.copy(P);G.add(fg);
@@ -3584,11 +3611,13 @@ function pengTick(I,dt){for(const p of I.pengs){const q=p.g.position,v=p.goal.cl
 const ISLES=[
  {lv:3,sk:4,kind:'sand',cx:31.32,cz:-23.2,rx:8.5,rz:7.2,A:new V3(14.4,0,-12.72),B:new V3(26.82,0,-20.7),k:0,on:false,shown:false,risingT:-1},
  {lv:6,sk:8,kind:'lake',cx:-31.32,cz:-23.2,rx:8.5,rz:7.2,A:new V3(-14.4,0,-12.72),B:new V3(-26.82,0,-20.7),k:0,on:false,shown:false,risingT:-1},
- {lv:9,sk:12,kind:'forest',cx:0,cz:-36.54,rx:8,rz:6.5,A:new V3(0,0,-18.6),B:new V3(0,0,-31.54),k:0,on:false,shown:false,risingT:-1},
+ {lv:9,sk:12,kind:'forest',cx:0,cz:36.54,rx:8,rz:6.5,A:new V3(0,0,18.6),B:new V3(0,0,31.54),k:0,on:false,shown:false,risingT:-1},
  {lv:12,sk:16,kind:'ice',cx:31.32,cz:24.36,rx:8.5,rz:7.2,A:new V3(14.4,0,12.6),B:new V3(26.82,0,20.86),k:0,on:false,shown:false,risingT:-1},
  /* 14 Nov 2026: the stage islet (south-west, mirror of the ice one), there from the start: Igor's public song, the visits and the leaderboard live at /palco/ */
  {lv:1,sk:20,kind:'stage',cx:-31.32,cz:24.36,rx:8.5,rz:7.2,A:new V3(-14.4,0,12.6),B:new V3(-26.82,0,20.86),k:0,on:false,shown:false,risingT:-1}];
 const ISL2=ISLES[0];
+/* 21 Nov 2026: the ice island (Vivaldigor) and the stage islet are archived: never shown (the code and the saved songs stay) */
+const ISL_OFF=new Set(['ice','stage']);
 /* 11 Nov 2026: the admins can give an island (and the sand island's Igorlet) to a player, and take them back. S.farm.ig = {4|8|12|16: time} */
 function isleGift(I){const F=S.farm;return!!(F&&F.ig&&F.ig[I.sk||I.lv])}
 const isleE1=(I,x,z)=>Math.hypot((x-I.cx)/I.rx,(z-I.cz)/I.rz);
@@ -3834,7 +3863,7 @@ function frogTick(I,dt){for(const f of I.frogs){const g=f.g;
   if(f.cT>0){f.cT-=dt;g.userData.throat.visible=true;const s=1+Math.sin(T*28)*.35;g.userData.throat.scale.set(s,s*.7,s)}else g.userData.throat.visible=false}}
 // the islands rise at their level (once, with Igor watching if he is there), then stay
 updaters.push((t,dt)=>{if(!S.farm)return;const F=FM(),lv=lvlOf();F.isles=F.isles||{};if(F.isle2&&!F.isles[4])F.isles[4]=F.isle2;
- ISLES.forEach((I,i)=>{if(lv<I.lv&&!isleGift(I)){I.G.visible=false;I.on=false;I.k=0;I.shown=false;return}
+ ISLES.forEach((I,i)=>{if(ISL_OFF.has(I.kind)||lv<I.lv&&!isleGift(I)){I.G.visible=false;I.on=false;I.k=0;I.shown=false;return}
   if(!I.shown){I.shown=true;I.G.visible=true;const fresh=!F.isles[I.sk||I.lv];if(fresh&&!VISIT){F.isles[I.sk||I.lv]=Date.now();if(i===0)F.isle2=F.isles[4];fmDirty=true}
    if(fresh&&!VISIT&&started){I.risingT=T;setTimeout(()=>{bubbleQ.length=0;bubbleT=0;say(i===4?tt('Look! A stage is rising from the sea: that’s where you’ll build your song… Igorbaudo is waiting!','Guarda! Dal mare sta emergendo un palco: lì costruirai il tuo brano… Igorbaudo ti aspetta!'):i===2?tt('Look! A forest of giant mushrooms is rising from the sea… full of fireflies!','Guarda! Dal mare emerge un bosco di funghi giganti… pieno di lucciole!'):i===3?tt('Brrr! An island of ice is coming up, with an igloo and penguins!','Brrr! Sta emergendo un’isola di ghiaccio, con un igloo e i pinguini!'):i===0?tt('Look over there! A sandy island is rising from the sea… and someone is waiting on it!','Guarda laggiù! Dal mare sta emergendo un’isola di sabbia… e qualcuno ci aspetta!'):tt('Look! Another island is coming up, with a little lake you can walk across… and frogs!','Guarda! Sta emergendo un’altra isola, con un laghetto basso basso da attraversare a piedi… e le ranocchie!'),5);snd('wish')},600)}
    else I.k=1}
@@ -4275,7 +4304,7 @@ sb.addEventListener('click',e=>{if(sheetKind!=='score')return;const b=e.target.c
  const P=scPiece(src);if(!P||scBusy)return;
  try{if(k==='midi'){scSave(scMidi(P),scFile(P)+'.mid');snd('pop');say(tt('Here is the MIDI file!','Ecco il file MIDI!'),2);return}
   if(k==='col'){scSave(scPdf(scColour(P)),scFile(P)+'.pdf');snd('pop');say(tt('Here is the coloured score!','Ecco la partitura colorata!'),2.2);return}
-  if(k==='strav'){if(!P.obj.tr){if(!pay({t:20,s:1})){say(tt('Maestro Stravigor asks 20 tofu ants and 1 seed.','Maestro Stravigor chiede 20 formiche di tofu e 1 seme.'),2.8);return}P.obj.tr=1;fmDirty=true;save();try{hudFarm()}catch(_){}}
+  if(k==='strav'){if(!P.obj.tr){if(!pay({t:20,s:1})){say(tt('Maestro Stravigor asks 26 tofu ants.','Maestro Stravigor chiede 26 formiche di tofu.'),2.8);return}P.obj.tr=1;fmDirty=true;save();try{hudFarm()}catch(_){}}
    scBusy=true;bubbleQ.length=0;bubbleT=0;say(tt('Maestro Stravigor dips his pen in the ink… scratch, scratch…','Maestro Stravigor intinge la penna nel calamaio… scritch, scritch…'),2.4);snd('bell',523);
    setTimeout(()=>{scBusy=false;try{scSave(scPdf(scStrav(P)),scFile(P)+'-stravigor.pdf');say(tt('“Here you are. Bravo!” (Maestro Igor Stravigor)','«Ecco a lei. Bravo!» (Maestro Igor Stravigor)'),3)}catch(err){console.error(err)}if(sheetKind==='score')scoreSheet(src)},1500)}}
  catch(err){console.error(err);say(tt('Oops, the file did not come out. Try again!','Ops, il file non è uscito. Riprova!'),2.4)}});
@@ -4369,7 +4398,7 @@ function rescCall(k,quiet){const I=INSK[k],M=insS(k);if(!I||!insOn(I)||VISIT)ret
 function rescNear(k){const o=insO[k];return!!(o&&where==='out'&&started&&igor.position.distanceTo(o.g.position.clone().setY(0))<9)}
 updaters.push(()=>{if(!S.farm||VISIT||where!=='out'||!started)return;for(const I of INS){const M=insS(I.k);if(M.rq&&!M.resc&&insOn(I)&&rescNear(I.k)){delete M.rq;M.resc=Date.now()+RESC_T;fmDirty=true;save();rescGo(I.k)}}});
 function rescAll(){let n=0,short=false;for(const I of INS){if(!insOn(I)||!insDamaged(I.k)||insS(I.k).resc||insS(I.k).rq)continue;const r=rescCall(I.k,true);if(r===2)n++;if(r<0){short=true;break}}
- bubbleQ.length=0;bubbleT=0;say(n?tt(`Instrument rescue called for ${n} instrument${n>1?'s':''}: the firefighters come when you go near ${n>1?'each one':'it'}!`,`Soccorso strumenti chiamato per ${n} strument${n>1?'i':'o'}: i pompieri arrivano quando ti avvicini ${n>1?'a ciascuno':'allo strumento'}!`)+(short?' '+tt('Not enough for the others.','Per gli altri non basta.'):''):short?tt('Not enough tofu ants or seeds for the firefighters.','Non bastano formiche di tofu o semi per i pompieri.'):tt('Every instrument is fine!','Tutti gli strumenti stanno bene!'),3.2);return n}
+ bubbleQ.length=0;bubbleT=0;say(n?tt(`Instrument rescue called for ${n} instrument${n>1?'s':''}: the firefighters come when you go near ${n>1?'each one':'it'}!`,`Soccorso strumenti chiamato per ${n} strument${n>1?'i':'o'}: i pompieri arrivano quando ti avvicini ${n>1?'a ciascuno':'allo strumento'}!`)+(short?' '+tt('Not enough for the others.','Per gli altri non basta.'):''):short?tt('Not enough tofu ants for the firefighters.','Non bastano formiche di tofu per i pompieri.'):tt('Every instrument is fine!','Tutti gli strumenti stanno bene!'),3.2);return n}
 /* --- the boat and the firefighters --- */
 const RESCO=[];
 function rescBoat(){const g=new THREE.Group(),red=lam('#d8322a'),wh=lam('#f6f1e3');
@@ -4783,12 +4812,12 @@ function todoItems(){const F=FM(),U=FUN(),tn=Date.now(),L=[],add=(k,ic,t,go)=>{i
   add('ft','🍎',ftL.length>1?tt(`${ftL.length} trees with fruit`,`${ftL.length} alberi con la frutta`):tt('A tree with fruit','Un albero con la frutta'),()=>{const i=near();const tr=trees[i];if(tr)walkNear(tr.t.position.clone(),.75*tr.t.scale.x+.9,()=>ftShake(i))})}
  if(U.beach.length){const nb=U.beach.filter(x=>x.k==='bottle').length,ns=U.beach.length-nb,near=()=>U.beach.slice().sort((a,b)=>Math.hypot(a.x-igor.position.x,a.z-igor.position.z)-Math.hypot(b.x-igor.position.x,b.z-igor.position.z))[0];
   add('bc',nb&&!ns?'🍾':'🐚',ns&&nb?tt(`Shells and a bottle on the beach`,`Conchiglie e una bottiglia in spiaggia`):ns?(ns>1?tt(`${ns} shells on the beach`,`${ns} conchiglie in spiaggia`):tt('A shell on the beach','Una conchiglia in spiaggia')):tt('A bottle on the beach','Una bottiglia in spiaggia'),()=>{const it=near();if(it)walkNear(new V3(it.x,0,it.z),.55,()=>{const j=FUN().beach.indexOf(it);if(j>=0)beachTake(j)})})}
- const n=F.fields.length;if(n<MAXF&&lv>=n+1&&canPay(FCOST[n]))add('nf','🌱',tt('A new field','Un campo nuovo'),()=>{openBar('field');say(tt('Which field?','Che campo facciamo?'),2)});
+
  for(const k of BKEYS){if(k==='pen'||F.b[k]||F.pos[k])continue;const U1=BLD[k].up[1];if(lv>=U1.lv&&canPay(U1.cost)){add('bd'+k,'🔨',tt(`Build: ${N(BLD[k].N).toLowerCase()}`,`Costruisci: ${N(BLD[k].N).toLowerCase()}`),()=>{startPlace({k:'build',key:k});say(N(BLD[k].what),2.6)});break}}
  {const v=VKEYS.find(k=>!F.veh[k]&&canPay(dual({t:VEH[k].cost})));if(v)add('v'+v,'🏆',tt(`You can buy: ${N(VEH[v].N).toLowerCase()}`,`Puoi comprare: ${N(VEH[v].N).toLowerCase()}`),()=>goTo('prizes'))}
- {const ni=F.igs.length;if(ni<igCap()&&(S.seeds|0)>=HIRE[ni+1])add('hire','🏠',tt('A new Igorlet','Un nuovo Igorlet'),()=>bldTap('pen'))}
- {const ty=Object.keys(TOYS).find(k=>!F.toys[k]&&(S.seeds|0)>=TOYS[k].s);if(ty)add('toy','🎾',tt(`A ${N(TOYS[ty].N).toLowerCase()} for the Igorlets`,`${N(TOYS[ty].N)} per gli Igorlets`),()=>{bldTap('pen');setTimeout(()=>{if(CH&&CH.key==='bpen'){CH.more='toys';renderChips()}},60)})}
- for(let j=0;L.length<3&&j<3;j++){const D=ORB[(todoGame+j)%ORB.length];add('gm'+D.k,'🎮',tt(`Play: ${N(D.n)} · seeds`,`Gioca: ${N(D.n)} · semi`),()=>D.go())}
+ {const ni=F.igs.length;if(ni<igCap()&&canPay({s:HIRE[ni+1]}))add('hire','🏠',tt('A new Igorlet','Un nuovo Igorlet'),()=>bldTap('pen'))}
+ {const ty=Object.keys(TOYS).find(k=>!F.toys[k]&&canPay({s:TOYS[k].s}));if(ty)add('toy','🎾',tt(`A ${N(TOYS[ty].N).toLowerCase()} for the Igorlets`,`${N(TOYS[ty].N)} per gli Igorlets`),()=>{bldTap('pen');setTimeout(()=>{if(CH&&CH.key==='bpen'){CH.more='toys';renderChips()}},60)})}
+ for(let j=0;L.length<3&&j<3;j++){const D=ORB[(todoGame+j)%ORB.length];add('gm'+D.k,'🎮',tt(`Play: ${N(D.n)} · tofu ants`,`Gioca: ${N(D.n)} · formiche`),()=>D.go())}
  return L}
 function renderTodo(){const L=todoL,h=`<button type="button" class="th" aria-expanded="${todoOpen}">📋 ${tt('To do','Da fare')} <small>${L.length} ${todoOpen?'▾':'▸'}</small></button>`+L.map((it,j)=>`<button type="button" class="it" data-t="${j}"><i>${it.ic}</i><span>${esc(it.t)}</span></button>`).join('');
  if(todo.innerHTML!==h)todo.innerHTML=h;todo.classList.toggle('closed',!todoOpen)}
@@ -5439,7 +5468,7 @@ window.IgorVisit={go:visitGo};
 /* ================= 10 Nov 2026: everything moves (except Igor's house). Trees are never cut:
    build the tree nursery and tap a tree to plant it somewhere else; rocks roll anywhere; the instruments move too ================= */
 function mvLive(o){if(!o||!o.parent)return false;for(let p=o;p;p=p.parent)if(!p.visible)return false;return true}
-function treeWhy(){return S.farm&&FM().b.nurs>=1?tt('A tree is in the way: tap it to move it first.','C’è un albero in mezzo: toccalo per spostarlo prima.'):tt('A tree is in the way. With a tree nursery we can move it!','C’è un albero in mezzo. Con il vivaio lo possiamo trapiantare!')}
+function treeWhy(){return true?tt('A tree is in the way: tap it to move it first.','C’è un albero in mezzo: toccalo per spostarlo prima.'):tt('A tree is in the way. With a tree nursery we can move it!','C’è un albero in mezzo. Con il vivaio lo possiamo trapiantare!')}
 function mvShift(o,x,z){if(!o.userData.o0)o.userData.o0={x:o.position.x,z:o.position.z,par:o.parent};for(const b of blocked)if(b.x===o.position.x&&b.z===o.position.z){b.x=x;b.z=z}
  const home=o.userData.o0,back=home.x===x&&home.z===z,par=back?home.par:world;if(par&&o.parent!==par){o.parent.remove(o);par.add(o)}o.position.x=x;o.position.z=z}
 /* trees follow the soil: on the sand island a tree becomes a palm, on the lake island a weeping willow, in the firefly forest
@@ -5477,7 +5506,7 @@ function applyMoves(){const F=S.farm;if(!F)return;applyThin();const tm=F.tmv||{}
 
 /* tapping a tree (with the nursery) or a rock: Igor walks there and offers to move it */
 function moverPick(cx,cy){if(where!=='out'||PL||VISIT||!S.farm||diving)return false;let best=null,bd=9;
- if(FM().b.nurs>=1)trees.forEach((tr,j)=>{const o=tr.t;if(!mvLive(o))return;const s=o.scale.x,d=scrPick(o.position.clone().add(new V3(0,(o.userData.pine?2.2:2.05)*s,0)),.95*s,cx,cy,26);if(d!=null&&d<bd){bd=d;best={k:'tree',j,o}}});
+ trees.forEach((tr,j)=>{const o=tr.t;if(!mvLive(o))return;const s=o.scale.x,d=scrPick(o.position.clone().add(new V3(0,(o.userData.pine?2.2:2.05)*s,0)),.95*s,cx,cy,26);if(d!=null&&d<bd){bd=d;best={k:'tree',j,o}}});
  rocks.forEach((r,j)=>{if(!mvLive(r))return;const d=scrPick(r.position.clone(),.55*r.scale.x,cx,cy,22);if(d!=null&&d<bd){bd=d;best={k:'rock',j,o:r}}});
  if(!best)return false;const P=best.o.position.clone().setY(0),top=best.k==='tree'?3.2*best.o.scale.x:1.1;
  walkNear(P,best.k==='tree'?.75*best.o.scale.x+.9:1,()=>{if(PL)return;chips(P.clone().setY(top),()=>[best.k==='tree'?{t:'🌳 '+tt('Transplant','Trapianta'),main:1,fn:()=>{startPlace({k:'tree',j:best.j});return false}}:{t:'🪨 '+tt('Move','Sposta'),main:1,fn:()=>{startPlace({k:'rock',j:best.j});return false}}],'mv'+best.k+best.j)});return true}
@@ -5505,7 +5534,7 @@ mkBuilding('nurs',[p=>{const wd=lam('#8a6a48'),wd2=lam('#6a4c34'),pot=lam('#b864
 
 /* ================= 10 Nov 2026: the Toy Store and the island decorations; prices in tofu ants also cost a few seeds ================= */
 /* --- two currencies: whatever costs tofu ants also costs a few seeds (games!). Tarps, snacks, tofuel and scarecrows stay ants only --- */
-const SEEDF=t=>t>0?Math.max(1,Math.round(1+.9*Math.log2(t/10))):0;
+const SEEDF=t=>0; // 21 Nov 2026: one currency, no seeds on top of the ants
 const dual=c=>c&&c.t&&!c.s?{...c,s:SEEDF(c.t)}:c;
 for(const k of Object.keys(BLD))for(const U of BLD[k].up||[])if(U&&U.cost&&U.cost.t&&!U.cost.s)U.cost.s=SEEDF(U.cost.t);
 for(const c of FCOST)if(c&&c.t&&!c.s)c.s=SEEDF(c.t);
@@ -5728,7 +5757,7 @@ const ISAY={
  snowman:[['I gave it a hug… a bit chilly.','Hi snowman! Do you need a scarf?','We have the same nose! Almost.'],['Gli ho dato un abbraccio… è un po’ freddino.','Ciao pupazzo! Ti serve una sciarpa?','Abbiamo lo stesso naso! Quasi.']],
  igloo:[['Knock knock! Anybody home?','It’s warm inside the igloo! Strange, right?'],['Toc toc! C’è nessuno?','Dentro l’igloo fa caldo! Strano, no?']],
  peng:[['I walk like the penguins!','Hey penguins, wait for me!','Left, right, left…'],['Cammino come i pinguini!','Ehi pinguini, aspettatemi!','Sinistra, destra, sinistra…']]};
-const ISLKIND=['sand','lake','forest','ice'],MUSH=[[-4.2,-38.04,1.5,0],[5.5,-34.54,1.05,1],[1.2,-41.04,1.1,1]];
+const ISLKIND=['sand','lake','forest','ice'],MUSH=[[-4.2,38.04,1.5,0],[5.5,34.54,1.05,1],[1.2,41.04,1.1,1]];
 let islSayT=-99;
 const islLine=(s,i)=>{const L=tt(ISAY[s][0],ISAY[s][1]);return i!=null?L[i]:s==='chest'&&Math.random()<.4?L[0]:pick(L)};
 function islSay(o,s,i){const g=igById(o.id);if(!g||where!=='out'||T<islSayT||igor.position.distanceTo(o.grp.position)>11)return;islSayT=T+18;o.showT=T+4;
@@ -6387,7 +6416,7 @@ SPKR[GONDN]=()=>LK.gPl;
 const FOI=ISLES[2],CAGEN='John Cagigor';
 const foE=(a,e)=>new V3(FOI.cx+Math.cos(a)*FOI.rx*e,0,FOI.cz+Math.sin(a)*FOI.rz*e);
 const MUMAX=8,MUBASE=8*3600e3,MURAIN=3*3600e3;
-const CG_PIANO=new V3(-4.75,0,-36.75),CG_P=new V3(-3.7,0,-36.45),CG_B=new V3(-2.7,0,-35.75),RING=new V3(2.2,0,-36.2);
+const CG_PIANO=new V3(-4.75,0,36.75),CG_P=new V3(-3.7,0,36.45),CG_B=new V3(-2.7,0,35.75),RING=new V3(2.2,0,36.2);
 function foF(){const F=FM();if(!F.forest||typeof F.forest!=='object')F.forest={};const L=F.forest;
  if(!Array.isArray(L.mu))L.mu=[];if(!L.bk)L.bk={};if(!L.seen)L.seen={};if(!L.ed)L.ed={};if(!L.best)L.best={};if(L.st==null)L.st=0;return L}
 const foVis=()=>FOI.on&&FOI.G.visible&&where==='out';
@@ -6973,7 +7002,7 @@ function icChickTap(id){if(!icVis())return;const L=icF(),c=L.ch.find(q=>q.id===i
  const o=IC.ch.get(id);if(o)o.hop=T;icCallPlay(c.c,.05);bubbleQ.length=0;bubbleT=0;
  if(VISIT){say(tt('A chick! Listen to its voice.','Un pulcino! Senti che voce.'),2.4);return}
  if(!icFeedable(c,now)){say(tt(`Zzz… it’s full. Hungry again in ${fmtL(c.f[c.f.length-1]+CFEED-now)} (meals: ${c.f.length}/3).`,`Zzz… è sazio. Di nuovo fame tra ${fmtL(c.f[c.f.length-1]+CFEED-now)} (pappe: ${c.f.length}/3).`),3.4);return}
- if(pocket()<1){say(tt('It’s hungry, but a little tofu fish costs 1 tofu ant 🐜 and your pocket is empty. Harvest a ripe field at home, then come back!','Ha fame, ma un pesciolino di tofu costa 1 formica di tofu 🐜 e hai la tasca vuota. Raccogli un campo maturo a casa, poi torna!'),4.6);return}
+ if(pocket()<1){say(tt('It’s hungry, but a little tofu fish costs 1 tofu ant 🐜 and your pocket is empty. Play a game, then come back!','Ha fame, ma un pesciolino di tofu costa 1 formica di tofu 🐜 e hai la tasca vuota. Fai un gioco, poi torna!'),4.6);return}
  icFeed(id)})}
 /* feeding: tap a hungry chick → 1 tofu ant becomes a little tofu fish. 3 meals → it grows up */
 function icFeed(id){const L=icF(),i=L.ch.findIndex(q=>q.id===id);if(i<0)return;const c=L.ch[i],now=Date.now();
@@ -8430,11 +8459,169 @@ addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.posi
 window.__evOK=1;try{simTo(Date.now(),false);saveLocal()}catch(e){console.error(e)}
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261116-1100';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261121-1200';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();/* 14 Nov 2026: reload only for a NEWER version, and only once per version per tab: an old or half-published build can never make the island reload in a loop */if(v&&v>IGVER){let k='igv_rl_'+v;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}verNew=true}}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
 renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();setTimeout(()=>{if(renderer.getContext().isContextLost()&&window.__igErr)__igErr(tt('The 3D graphics stopped (the browser took them away).','La grafica 3D si è fermata (il browser l’ha tolta).'),'webgl')},2500)},false);
+/* ===== 21 Nov 2026: la svolta (see svolta.js in the session tools; inlined here so it sees the island's variables) ===== */
+/* Igor Time — "la svolta" (21 Nov 2026, Fabio e Alessandro).
+   Loaded right after the island's main script, so it can see its globals (S, FM, BKEYS, BOBJ, LVNEW, EVS…).
+   - one currency: the tofu ants, earned only by playing (the seeds that still arrive become ants, see SEEDR in index.html);
+   - no fields and nothing that belonged to them (tarps, field events, store, tool shed, greenhouse, tree nursery);
+   - trees move straight away; everything moves except Igor's house and the music school, and turns in steps of 45°;
+   - a coffee machine in Igor's house for the "buy us a coffee" donations;
+   - the melody of the day (/daily/) is the first thing Igor proposes, and a short welcome tour for new players (one new place a day). */
+(()=>{
+if(typeof S==='undefined'||typeof FM!=='function')return;
+const LNG=()=>typeof LANG!=='undefined'&&LANG==='it';
+const T2=(en,it)=>LNG()?it:en;
+/* the link for the donations (Ko-fi or PayPal): Fabio puts it here. Empty = the machine says it opens soon */
+const DONATE_URL='';
+
+/* ---------- one currency ---------- */
+try{seedSweep()}catch(e){}
+{let acc=0;updaters.push((t,dt)=>{if((acc+=dt)<.25)return;acc=0;try{seedSweep()}catch(e){}})}
+hudFarm=function(){const el=$('antN');if(el){const s=String(pocket());if(el.textContent!==s)el.textContent=s}};
+{const st=document.createElement('style');st.textContent='#seeds{display:none!important}';document.head.appendChild(st)}
+/* coming back from a game: the party is in tofu ants now */
+seedParty=function(n){const a=n*SEEDR;snd('seeds',Math.min(n,8));const g=GNAME[window._fromGame||''],from=g?' '+N(g):'';
+ toast(T2(`+${a} tofu ants${from}!`,`+${a} formiche di tofu${from}!`));bubbleQ.length=0;bubbleT=0;say(T2(`Yum! +${a} tofu ants.`,`Gnam! +${a} formiche di tofu.`),3.4);
+ const tgt=$('ants')||$('antN');if(!tgt)return;const to=tgt.getBoundingClientRect(),k=Math.min(14,n+3);
+ for(let j=0;j<k;j++){const el=document.createElement('div');el.className='seedFly';el.textContent='🧊';const x0=innerWidth/2+(Math.random()-.5)*160,y0=innerHeight*.55+(Math.random()-.5)*80;el.style.transform=`translate(${x0}px,${y0}px) scale(1.4)`;document.body.appendChild(el);
+  setTimeout(()=>{el.style.transform=`translate(${to.left+to.width/2-10}px,${to.top+to.height/2-10}px) scale(.6)`;el.style.opacity='.2'},60+j*70);setTimeout(()=>{el.remove();hudFarm()},1100+j*70)}};
+
+/* ---------- no fields, no farm buildings ---------- */
+for(const k of ['store','shop','green','nurs']){const i=BKEYS.indexOf(k);if(i>=0)BKEYS.splice(i,1);const B=BOBJ[k];if(B){B.g.visible=false;try{B.g.parent&&B.g.parent.remove(B.g)}catch(e){}if(B.lbl)B.lbl.hidden=true;if(B.blk)B.blk.r=0}}
+updaters.push(()=>{for(const k of ['store','shop','green','nurs']){const B=BOBJ[k];if(B&&B.lbl&&!B.lbl.hidden)B.lbl.hidden=true}});
+/* the 6 pm events: only the musical ones (out-of-tune rain, the tempest, the storm surge) */
+for(const k of Object.keys(EVS))EVS[k]=EVS[k].filter(([e])=>!FEVK.has(e));
+{const F=S.farm;if(F&&F.ev&&FEVK.has(F.ev.k))F.ev=null}
+/* what each level brings */
+const LVT={2:['The glockenspiel and the toy store!','Il metallofono e il negozio dei giocattoli!'],3:['The kalimba, and the Caribbean island with its bar!','La kalimba, e l’isola caraibica con il bar!'],4:['The harp!','L’arpa!'],
+ 5:['The tubular bells!','Le campane tubolari!'],6:['The steel pan, and the lake island with Gondoligor!','Lo steel pan, e l’isola del lago con Gondoligor!'],7:['The pan flute!','Il flauto di Pan!'],8:['The musical glasses!','I bicchieri musicali!'],
+ 9:['Level 9: John Cagigor’s firefly forest!','Livello 9: il bosco delle lucciole di John Cagigor!']};
+for(let l=2;l<LVNEW.length;l++)LVNEW[l]=LVT[l]||[`Level ${l}!`,`Livello ${l}!`];
+
+/* ---------- how to play ---------- */
+renderHelp=function(){const H=LNG()?[
+ ['🎵','Ogni giorno c’è la melodia del giorno: ascoltala e rifalla. È uguale per tutti, e dal lunedì alla domenica diventa più difficile.'],
+ ['🏠','Gioca ai giochi in casa mia e nella scuola di musica: vinci formiche di tofu. Lo stesso gioco tante volte nello stesso giorno ne dà un po’ meno: provali tutti!'],
+ [ICT,'Le formiche di tofu sono l’unica moneta: servono per i premi, le decorazioni e gli Igorlets.'],
+ ['🔔','Un Igorlet col “?” vuole cantare: toccalo, ascolta, suona le stesse campanelle.'],
+ ['🐚','Il mare porta 100 tipi di conchiglie e bottiglie sulla spiaggia. Gli alberi a volte hanno la frutta: toccali per scuoterli.'],
+ ['🎵','Gli strumenti dell’isola si scordano: riaccordali. A ogni livello nuovo arriva un altro strumento.'],
+ ['↔','Si sposta tutto, tranne la mia casa e la scuola di musica: tocca una cosa e scegli “Sposta”. Gli strumenti, gli edifici e le decorazioni si girano anche: “↻ Gira”.'],
+ ['☕','Nella mia casa c’è la macchinetta del caffè: se ti piace l’isola, puoi offrirci un caffè.'],
+ ['📺','Ogni giorno alle 18 arriva un evento musicale, anche se non ci sei. Al cinema nel mare, a nord, Meteogor fa il conto alla rovescia.'],
+ ['🏆','Tante formiche di tofu? Entra nel negozietto dei premi: monopattino, bici, barca, aereo…']]:[
+ ['🎵','Every day there is the melody of the day: listen and play it back. It’s the same for everyone, and it gets harder from Monday to Sunday.'],
+ ['🏠','Play the games in my house and in the music school: you win tofu ants. The same game many times in one day gives a bit less: try them all!'],
+ [ICT,'Tofu ants are the only currency: for prizes, decorations and Igorlets.'],
+ ['🔔','An Igorlet with a “?” wants to sing: tap it, listen, ring the same bells.'],
+ ['🐚','The sea brings 100 kinds of shells and bottles to the beach. Trees sometimes have fruit: tap to shake them.'],
+ ['🎵','The island’s instruments go out of tune: tune them back. Every new level brings another instrument.'],
+ ['↔','Everything moves, except my house and the music school: tap something and choose “Move”. Instruments, buildings and decorations also turn: “↻ Turn”.'],
+ ['☕','In my house there is a coffee machine: if you like the island, you can buy us a coffee.'],
+ ['📺','Every day at 6 pm a musical event hits the island, even when you are away. At the cinema in the sea, up north, Meteogor counts down.'],
+ ['🏆','Lots of tofu ants? Walk into the prize shop: scooter, bike, boat, plane…']];
+ const E=LNG()?[['🌧','Pioggia scordatrice','5 note stonate su ogni strumento','Un accordatore per ogni strumento'],['🌪','Tempesta ruba-pezzi','vola via un pezzo di 2 note di ogni strumento: cercali sull’isola seguendo il loro suono','Una custodia su ogni strumento'],['🌊','Mareggiata','le onde portano via un pezzo di 2 note di ogni strumento e li lasciano sulla spiaggia','Sacchi di sabbia intorno a ogni strumento'],['👋','Igorlet randagio','certe mattine arriva al villaggio un nuovo Igorlet','Una merenda: resta, con una casetta nuova']]
+  :[['🌧','Out-of-tune rain','5 notes out of tune on every instrument','A tuner for each instrument'],['🌪','Piece-snatching tempest','the pieces of 2 notes of every instrument fly away: look for them on the island, following their sound','A case on each instrument'],['🌊','Storm surge','the waves carry away the pieces of 2 notes of every instrument and leave them on the beach','Sandbags around each instrument'],['👋','Stray Igorlet','some mornings a new Igorlet comes to the village','A snack: it stays, with a new little house']];
+ helpC.innerHTML=`<div class="hh">${T2('How to play','Come si gioca')}</div>${H.map(([i,t])=>`<p><span>${i}</span>${t}</p>`).join('')}<div class="hh hs">${T2('Every day at 6 pm','Ogni giorno alle 18')}</div><table class="evt"><tr><th></th><th>${T2('What','Cosa')}</th><th>${T2('If you do nothing','Se non fai niente')}</th><th>${T2('If you get ready','Se ti prepari')}</th></tr>${E.map(([i,n,c,d])=>`<tr><td>${i}</td><td><b>${n}</b></td><td>${c}</td><td>${d}</td></tr>`).join('')}</table><p class="nt"><span>🐚</span>${T2('Shells','Conchiglie')}: ${shellN()}/${SHELLS.length}.</p><button type="button" class="x" aria-label="${T2('Close','Chiudi')}">✕</button>`};
+
+/* ---------- turning things (45° at a time) ---------- */
+const STEP=Math.PI/4,NOROT=new Set(['pen']);
+const ROT=()=>{const F=S.farm;if(!F)return{};return F.rot=F.rot||{}};
+const rotOf=k=>{const F=S.farm;return F&&F.rot&&F.rot[k]||0};
+function turn(k){const R0=ROT();R0[k]=+(((R0[k]||0)+STEP)%(2*Math.PI)).toFixed(4);if(R0[k]<.001)delete R0[k];try{snd('pop')}catch(e){}fmDirty=true;save();applyRot();
+ const deg=Math.round((R0[k]||0)*180/Math.PI);say(deg?T2(`Turned: ${deg}°`,`Girato: ${deg}°`):T2('Back as it was.','Di nuovo com’era.'),1.4)}
+function applyRot(){const F=S.farm;if(!F)return;
+ for(const k of Object.keys(BOBJ)){if(NOROT.has(k))continue;const B=BOBJ[k];if(B&&B.g){const r=rotOf('b:'+k);if(B.g.rotation.y!==r)B.g.rotation.y=r}}
+ if(typeof decoO!=='undefined')for(const k of Object.keys(decoO)){const o=decoO[k];if(!o||!o.g)continue;const p=o.g.position,r=Math.atan2(-p.x,-p.z)+rotOf('d:'+k);if(Math.abs(o.g.rotation.y-r)>1e-4)o.g.rotation.y=r}
+ if(typeof insO!=='undefined')for(const k of Object.keys(insO)){const o=insO[k];if(!o||!o.g)continue;const p=o.g.position,r=Math.atan2(-p.x,-p.z)+rotOf('i:'+k);if(Math.abs(o.g.rotation.y-r)>1e-4)o.g.rotation.y=r}}
+{let acc=0;updaters.push((t,dt)=>{if((acc+=dt)<.3)return;acc=0;applyRot()})}
+const MOVE_RX=/↔/;
+const _chips=chips;
+chips=function(pos,build,key,keep){let rk=null;
+ if(typeof key==='string'&&!VISIT){let m;if((m=/^b(\w+)$/.exec(key))&&BLD[m[1]]&&!NOROT.has(m[1]))rk='b:'+m[1];else if((m=/^deco(\w+)$/.exec(key))&&typeof DECO!=='undefined'&&DECO[m[1]])rk='d:'+m[1]}
+ if(!rk)return _chips(pos,build,key,keep);
+ const b2=()=>{const L=build()||[];if(L.some(it=>it&&MOVE_RX.test(it.t||'')))L.push({t:'↻ '+T2('Turn','Gira'),fn:()=>{turn(rk);return true}});return L};
+ return _chips(pos,b2,key,keep)};
+/* the instrument's panel: a "Turn" button next to "Move" */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button[data-insrot]');if(!b)return;e.stopPropagation();e.preventDefault();if(VISIT||typeof INSEL==='undefined'||!INSEL)return;turn('i:'+INSEL)},true);
+new MutationObserver(()=>{const mv=document.querySelector('button[data-insmv]');if(mv&&!mv.parentNode.querySelector('button[data-insrot]')){const b=document.createElement('button');b.type='button';b.dataset.insrot='1';b.textContent='↻ '+T2('Turn','Gira');mv.after(b)}}).observe(document.body,{childList:true,subtree:true});
+
+/* ---------- the coffee machine in Igor's house ---------- */
+try{const Rm=ROOMS.house;const o=new THREE.Group();
+ const tbl=new THREE.Mesh(new THREE.RoundedBoxGeometry(.9,.9,.6,2,.05),lam('#7b5638'));tbl.position.y=.45;o.add(tbl);
+ const body=new THREE.Mesh(new THREE.RoundedBoxGeometry(.5,.62,.42,2,.06),lam('#c43b2f'));body.position.set(0,1.21,-.02);o.add(body);
+ const top=new THREE.Mesh(new THREE.RoundedBoxGeometry(.52,.08,.44,2,.03),lam('#2b2b2e'));top.position.set(0,1.56,-.02);o.add(top);
+ const head=new THREE.Mesh(new THREE.CylinderGeometry(.08,.07,.1,14),lam('#c9ccd0'));head.position.set(0,1.05,.2);o.add(head);
+ const tray=new THREE.Mesh(new THREE.BoxGeometry(.4,.03,.2),lam('#2b2b2e'));tray.position.set(0,.92,.18);o.add(tray);
+ const cup=new THREE.Mesh(new THREE.CylinderGeometry(.065,.05,.09,14),lam('#f7f3ea'));cup.position.set(0,.98,.2);o.add(cup);
+ const cof=new THREE.Mesh(new THREE.CircleGeometry(.055,14).rotateX(-Math.PI/2),lam('#4a2c18'));cof.position.set(0,1.026,.2);o.add(cof);
+ for(const x of[-.14,.14]){const k=new THREE.Mesh(new THREE.SphereGeometry(.035,8,6),lam('#f1d27a'));k.position.set(x,1.38,.2);o.add(k)}
+ const c=document.createElement('canvas');c.width=256;c.height=96;{const g=c.getContext('2d');g.fillStyle='#fff7e0';g.beginPath();g.roundRect(4,4,248,88,18);g.fill();g.lineWidth=6;g.strokeStyle='#7b5638';g.stroke();g.fillStyle='#4a2c18';g.font='700 40px Fredoka, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('☕ CAFFÈ',128,50)}
+ const sg=new THREE.Mesh(new THREE.PlaneGeometry(.62,.23),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c),transparent:true}));sg.position.set(0,1.82,0);o.add(sg);
+ const steam=[];for(let k=0;k<4;k++){const h=halo('#e9eef5',.22,0);h.material.blending=THREE.NormalBlending;o.add(h);steam.push({h,u:k/4})}
+ updaters.push((t,dt)=>{for(const q of steam){q.u=(q.u+dt*.3)%1;q.h.position.set(Math.sin(q.u*6+t)*.04,1.07+q.u*.45,.2);q.h.material.opacity=.3*(1-q.u)}});
+ const COF=window.IG_COFFEE||{pos:new V3(1.25,0,-3.95),stand:new V3(1.25,0,-2.75)};o.rotation.y=COF.ry||0;
+ station(Rm,'house',{name:['The coffee machine','La macchinetta del caffè'],sub:['buy us a coffee','offrici un caffè'],pos:COF.pos,stand:COF.stand,obj:o,act:coffee,r:.8,y:1.3,zr:1.1})}catch(e){console.warn('coffee',e)}
+let cofT=0;
+function coffee(){if(T-cofT<4)return;cofT=T;try{snd('pop')}catch(e){}bubbleQ.length=0;bubbleT=0;
+ say(pick(LNG()?['Un caffè! ☕ Lo prepariamo insieme?','Ah, il profumo del caffè…','Due tazzine: una per me, una per te.']:['A coffee! ☕ Shall we make one?','Ah, the smell of coffee…','Two cups: one for me, one for you.']),2.4);
+ setTimeout(()=>say(T2('If you like the island, you can buy a real coffee for Fabio and Alessandro, who make it. It helps the island grow!','Se ti piace l’isola, puoi offrire un caffè vero a Fabio e Alessandro, che la costruiscono. Aiuta l’isola a crescere!'),4.6),900);
+ chips(igor.position.clone().add(new V3(0,1.7,0)),()=>[{t:'☕ '+T2('Buy us a coffee','Offrici un caffè'),main:1,fn:()=>{if(DONATE_URL){try{window.open(DONATE_URL,'_blank','noopener')}catch(e){}say(T2('Thank you! ❤️','Grazie! ❤️'),2.4)}else say(T2('The coffee counter opens very soon!','Il bancone del caffè apre prestissimo!'),2.6);return false}},{t:T2('Not now','Non ora'),fn:()=>false}],'coffee',1)}
+window.IgorCoffee=coffee;
+/* ---------- words: whatever still says "N seeds" (little island activities) is shown in tofu ants (×SEEDR), like in the games (lang.js) ---------- */
+{const SEEDW=/\b(seeds?|sem[ei])\b/i,R=SEEDR;
+ const fix=t=>{if(!t||!SEEDW.test(t))return t;let o=t;o=o.replace(/(up to|fino a)\s+(\d+)\s+(seeds?|sem[ei])/gi,(m,w,n)=>`${w} ${n*R} ${/sem/i.test(m)?'formiche':'tofu ants'}`);
+  o=o.replace(/(\d+)\s+(?:tofu\s+)?seeds?\b/gi,(m,n)=>`${n*R} tofu ${n*R==1?'ant':'ants'}`).replace(/(\d+)\s+sem[ei](?:\s+di\s+tofu)?\b/gi,(m,n)=>`${n*R} formiche di tofu`);
+  o=o.replace(/\bseeds\b/g,'tofu ants').replace(/\bseed\b/g,'tofu ant').replace(/\bSeeds\b/g,'Tofu ants').replace(/\bsemi\b/g,'formiche').replace(/\bseme\b/g,'formica');return o};
+ const tn=n=>{const v=n.nodeValue,w=fix(v);if(w!==v)n.nodeValue=w};
+ const walk=n=>{if(!n)return;if(n.nodeType===3){tn(n);return}if(n.nodeType!==1||n.tagName==='SCRIPT'||n.tagName==='STYLE')return;const it=document.createTreeWalker(n,NodeFilter.SHOW_TEXT);let x;while((x=it.nextNode()))tn(x)};
+ walk(document.body);new MutationObserver(ms=>{for(const m of ms){if(m.type==='characterData')tn(m.target);else for(const a of m.addedNodes)walk(a)}}).observe(document.body,{childList:true,subtree:true,characterData:true})}
+
+/* ---------- the melody of the day: first in the orb, first in the to-do list, and Igor asks for it ---------- */
+const dkey=()=>{const t=new Date();return`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`};
+const dailyDone=()=>{try{const D=JSON.parse(localStorage.getItem('igortime_daily'))||{};return D.d===dkey()&&!!D.done}catch(e){return false}};
+const goDaily=()=>{if(where!=='out')exitRoom(true);hideChips();launch('/daily/',T2('The melody of the day!','La melodia del giorno!'))};
+try{GNAME.daily=['from the melody of the day','dalla melodia del giorno'];ORB.unshift({k:'daily',ic:'🎼',n:['Melody of the day','Melodia del giorno'],go:goDaily})}catch(e){}
+{const _ti=todoItems;todoItems=function(){const L=_ti();if(!VISIT&&!dailyDone()){L.unshift({k:'daily',ic:'🎼',t:T2('The melody of the day','La melodia del giorno'),go:()=>{bubbleQ.length=0;bubbleT=0;goDaily()}});if(L.length>6)L.length=6}return L}}
+const askDaily=()=>{bubbleQ.length=0;bubbleT=0;say(pick(LNG()?['Ho in testa una melodia… mi aiuti a ritrovarla?','La melodia di oggi mi gira in testa! La rifacciamo insieme?']:['I have a little tune in my head… will you help me find it?','Today’s melody is going round my head! Shall we play it together?']),4);
+ chips(igor.position.clone().add(new V3(0,1.7,0)),()=>[{t:'🎼 '+T2('Melody of the day','Melodia del giorno'),main:1,fn:()=>{goDaily();return false}},{t:T2('Later','Dopo'),fn:()=>false}],'daily',1)};
+
+/* ---------- the welcome tour for new players: day 1 the melody, an easy game and the prize shop; then one new place a day ---------- */
+if(!VISIT&&S.farm){if(!S.tour){const F=FM();S.tour=(Date.now()-(F.created||0)<2*864e5)?{s:0}:{done:1};fmDirty=true}}
+const TOURP=[['iv',['Today I’ll take you to the music school: the maestros teach you the intervals!','Oggi ti porto alla scuola di musica: i maestri ti insegnano gli intervalli!']],
+ ['k',['Today: my kitchen! Cooking is a matter of timing…','Oggi: la mia cucina! Cucinare è questione di tempo…']],['nt',['Today Nadia Boulangigor teaches you to read the notes!','Oggi Nadia Boulangigor ti insegna a leggere le note!']],
+ ['w',['Today: the window. How loud is it out there?','Oggi: la finestra. Quanto è forte il suono là fuori?']],['b',['Today: my bedroom, with the remote for the colours of sound.','Oggi: la mia camera, col telecomando dei colori del suono.']],
+ ['ds',['Today Rigor Star is waiting for you at the drums!','Oggi Rigor Star ti aspetta alla batteria!']],['bath',['Today: bath time! How many bubbles are singing?','Oggi: si va in vasca! Quante bolle cantano?']],
+ ['abyss',['Today we dive into the abyss! Hold your breath…','Oggi ci tuffiamo nell’abisso! Trattieni il fiato…']],['cad',['Today: the piano of the cadences, for the brave.','Oggi: il pianoforte delle cadenze, per i coraggiosi.']]];
+const orbGo=k=>{const D=ORB.find(o=>o.k===k);if(D){hideChips();D.go()}};
+let tourShown=false,dailyAsked=false,tStart=0;
+updaters.push(()=>{if(VISIT||!started||!S.farm)return;if(!tStart)tStart=T;if(T-tStart<3.5||PL||where!=='out'||leaving)return;
+ const U=S.tour||{done:1},from=window._fromGame||'';
+ if(!U.done&&!tourShown){
+  if(U.s===0&&(from==='daily'||dailyDone())){U.s=1;fmDirty=true}
+  else if(U.s===1&&from&&from!=='daily'){U.s=2;fmDirty=true}
+  tourShown=true;dailyAsked=true;bubbleQ.length=0;bubbleT=0;const skip={t:T2('Skip the tour','Salta il giro'),fn:()=>{U.done=1;fmDirty=true;save();say(T2('All right! Explore as you like.','Va bene! Esplora come vuoi.'),2.4);return false}};
+  if(U.s===0){say(T2('Hi! I’m Igor, and this is my island. Every day I have a little tune in my head: help me find it!','Ciao! Sono Igor, e questa è la mia isola. Ogni giorno ho in testa una melodia: aiutami a ritrovarla!'),5);
+   chips(igor.position.clone().add(new V3(0,1.7,0)),()=>[{t:'🎼 '+T2('Let’s go','Andiamo'),main:1,fn:()=>{goDaily();return false}},skip],'tour',1);return}
+  if(U.s===1){say(T2('Well done! Every game gives you tofu ants. Now an easy one: the stairs in my house!','Bravo! Ogni gioco ti dà formiche di tofu. Ora uno facile: le scale di casa mia!'),5);
+   chips(igor.position.clone().add(new V3(0,1.7,0)),()=>[{t:'🎵 Pitch Stairs',main:1,fn:()=>{orbGo('stairs');return false}},skip],'tour',1);return}
+  if(U.s===2){U.s=3;U.day=dkey();fmDirty=true;save();say(T2('Those are your tofu ants! With them you buy prizes, decorations and new Igorlets. Let me show you the prize shop!','Ecco le tue formiche di tofu! Ci compri premi, decorazioni e nuovi Igorlets. Ti faccio vedere il negozietto dei premi!'),5);
+   setTimeout(()=>{try{goTo('prizes')}catch(e){}setTimeout(()=>say(T2('Tomorrow I’ll take you somewhere new. See you tomorrow!','Domani ti porto in un posto nuovo. A domani!'),4),5500)},2500);return}
+  if(U.s>=3&&U.day!==dkey()){const i=U.s-3;if(i>=TOURP.length){U.done=1;fmDirty=true;return}const[k,txt]=TOURP[i];U.s++;U.day=dkey();fmDirty=true;save();
+   if(!dailyDone()){say(T2('First the melody of the day… then I’ll take you somewhere new!','Prima la melodia del giorno… poi ti porto in un posto nuovo!'),4);chips(igor.position.clone().add(new V3(0,1.7,0)),()=>[{t:'🎼 '+T2('Melody of the day','Melodia del giorno'),main:1,fn:()=>{U.s--;U.day='';fmDirty=true;goDaily();return false}},{t:'▶ '+N(txt).split(':')[0],fn:()=>{orbGo(k);return false}}],'tour',1);return}
+   say(N(txt),4.5);chips(igor.position.clone().add(new V3(0,1.7,0)),()=>[{t:'▶ '+T2('Let’s go','Andiamo'),main:1,fn:()=>{orbGo(k);return false}},{t:T2('Later','Dopo'),fn:()=>false},skip],'tour',1);return}
+  tourShown=true}
+ if(!dailyAsked&&!dailyDone()&&from!=='daily'&&T-tStart>6){dailyAsked=true;askDaily()}});
+
+/* for the automatic tests only (?test): look inside the island */
+if(typeof TESTING!=='undefined'&&TESTING)window.__ig=c=>eval(c);
+})();
+
 })();
 </script>
 <script type="module">
