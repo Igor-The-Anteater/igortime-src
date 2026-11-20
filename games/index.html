@@ -71,7 +71,7 @@ header h1 a{text-decoration:none}
 </header>
 <section class="hero">
  <canvas id="ig" width="420" height="573" role="img" aria-label="Igor"></canvas>
- <div class="say"><h2 data-k="h">All my games!</h2><p data-k="p">Pick one and play. Every game gives tofu seeds: you plant them on my island.</p><span id="seedsP" hidden></span></div>
+ <div class="say"><h2 data-k="h">All my games!</h2><p data-k="p">Pick one and play. Every game gives tofu ants for my island. Start with the melody of the day!</p><span id="seedsP" hidden></span></div>
 </section>
 <main class="grid" id="grid"></main>
 <section class="note">
@@ -205,7 +205,7 @@ const SEED='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c4.5 3 6.5
 const ANT='<g stroke="#2b2018" stroke-width="2.2" fill="#f8f5ec"><rect x="0" y="4" width="13" height="11" rx="2.5"/><rect x="14" y="6.5" width="6.5" height="6.5" rx="1.6"/><rect x="21.5" y="5" width="9" height="9" rx="2"/></g><circle cx="27.5" cy="8.5" r="1.3" fill="#2b2018"/>';
 
 /* the eleven games, in Fabio's order: stairs, kitchen, bedroom, window, abyss, cadences, drums, the maestro's lessons; then (11 Nov) the drum school, reading music, the bathtub */
-const ART={
+const ART={daily:`<svg viewBox="0 0 160 120"><rect x="8" y="8" width="144" height="104" rx="16" fill="#1d2a40" stroke="#2b2018" stroke-width="3"/><g stroke="#2b2018" stroke-width="2.5"><rect x="22" y="70" width="22" height="22" rx="4" fill="#6cc46f"/><rect x="50" y="70" width="22" height="22" rx="4" fill="#e9c24a"/><rect x="78" y="70" width="22" height="22" rx="4" fill="#6cc46f"/><rect x="106" y="70" width="22" height="22" rx="4" fill="#4a5361"/></g><path d="M40 52V24l40-8v30" fill="none" stroke="#ffd38a" stroke-width="4"/><circle cx="34" cy="52" r="8" fill="#ffd38a"/><circle cx="74" cy="46" r="8" fill="#ffd38a"/><text x="118" y="48" font-size="26" text-anchor="middle">🎵</text></svg>`,
 stairs:`<svg viewBox="0 0 160 120"><rect width="160" height="120" fill="#f0dcb4"/><rect y="92" width="160" height="28" fill="#c99a62"/><path d="M0 92H160" stroke="#2b2018" stroke-width="3"/>
  <path d="M18 104V86H44V68H70V50H96V32H122V14H150V104Z" fill="#b27a45" stroke="#2b2018" stroke-width="3.5" stroke-linejoin="round"/>
  <path d="M18 86H44M44 68H70M70 50H96M96 32H122" stroke="#e7b77b" stroke-width="3"/>
@@ -302,6 +302,8 @@ bath:`<svg viewBox="0 0 160 120"><rect width="160" height="120" fill="#d8eef0"/>
  <g fill="#2b2018"><circle cx="46" cy="33" r="1.6"/><circle cx="54" cy="33" r="1.6"/><circle cx="77" cy="23" r="1.4"/><circle cx="83" cy="23" r="1.4"/><circle cx="104" cy="35" r="1.7"/><circle cx="112" cy="35" r="1.7"/></g>
  <path d="M126 58q0-6 6-6q6 0 6 6" fill="#f6d34a" stroke="#2b2018" stroke-width="2"/></svg>`};
 const GAMES=[
+ /* 21 Nov 2026: the melody of the day comes first: the same for everyone, harder every day from Monday to Sunday */
+ {k:'daily',url:'/daily/',sc:'daily',n:['Melody of the day','Melodia del giorno'],w:['every day','ogni giorno'],d:['Igor has a little tune in his head: listen and play it back in six tries. The same for everyone, harder every day from Monday to Sunday.','Igor ha in testa una melodia: ascoltala e rifalla in sei tentativi. È uguale per tutti, e dal lunedì alla domenica diventa più difficile.'],at:['a new one every day','una nuova ogni giorno']},
  {k:'stairs',url:'/pitch-stairs/',sc:'pitchStairs',n:['Pitch Stairs','Pitch Stairs'],w:['pitch','altezza'],d:['A tofu ant sings a note: take Igor up the stairs to the same one.','Una formica di tofu canta una nota: porta Igor sulla scala alla stessa nota.'],at:['in the house · the stairs','in casa · le scale']},
  {k:'kitchen',url:'/kitchen/',sc:'kitchen',n:['The kitchen','La cucina'],w:['duration','durata'],d:['Behind the curtain a flame burns: hold the gas just as long.','Dietro la tenda brucia una fiamma: tieni acceso il gas per lo stesso tempo.'],at:['in the house · the stove','in casa · il fornello']},
  {k:'bedroom',url:'/bedroom/',sc:'bedroom',n:['The bedroom','La camera'],w:['timbre','timbro'],d:['With the triangle remote, find the same colour of sound.','Col telecomando a triangolo ritrova lo stesso colore del suono.'],at:['in the house · the bed','in casa · il letto']},
@@ -322,7 +324,7 @@ function bests(){const S=J('igortime_v1')||{},P=J('igortime_pending')||{},out={}
  for(const g of['kitchen','window','bedroom','drums','bath'])for(const l of['easy','medium','extreme']){let v=null;try{v=+localStorage.getItem('igortime_'+g+'_best_'+l)}catch(e){}if(v){const r=out[g]=out[g]||{};if(!(r[l]>=v))r[l]=v}}
  return{out,seeds:(S.seeds|0)+(P.seeds|0)+(P.ants|0)}}
 const LVN={easy:['easy','facile'],medium:['medium','medio'],extreme:['extreme','estremo']};
-function bestTxt(g){const o=bests().out[g.sc]||(g.sc==='intervals'||g.sc==='drumschool'||g.sc==='notes'||g.sc==='harmony'?{}:null);if(!o)return tt('Not played yet','Non ancora giocato');
+function bestTxt(g){if(g.sc==='daily'){const D=J('igortime_daily')||{},t=new Date(),k=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;const st=(D.streak|0)>1?' · 🔥 '+D.streak:'';return D.d===k&&D.done?tt('Done today ✓','Fatta oggi ✓')+st:tt('Today’s melody is waiting!','La melodia di oggi ti aspetta!')+st}const o=bests().out[g.sc]||(g.sc==='intervals'||g.sc==='drumschool'||g.sc==='notes'||g.sc==='harmony'?{}:null);if(!o)return tt('Not played yet','Non ancora giocato');
  if(g.sc==='drumschool'){const n=Math.max(+o.all||0,(J('igortime_drumschool')||{}).done|0);return n?tt('Exercises passed: ','Esercizi superati: ')+n+'/48':tt('Not played yet','Non ancora giocato')}
  if(g.sc==='harmony'){const n=Math.max(+o.all||0,(J('igortime_harmony')||{}).done|0);return n?tt('Lessons passed: ','Lezioni superate: ')+n+'/144':tt('Not played yet','Non ancora giocato')}
  if(g.sc==='notes'){const n=Math.max(+o.all||0,(J('igortime_notes')||{}).done|0);return n?tt('Stages passed: ','Tappe superate: ')+n+'/11':tt('Not played yet','Non ancora giocato')}
@@ -332,7 +334,7 @@ function bestTxt(g){const o=bests().out[g.sc]||(g.sc==='intervals'||g.sc==='drum
  return bl?tt('Best: ','Record: ')+bv+' · '+tt(...LVN[bl]):tt('Not played yet','Non ancora giocato')}
 
 function render(){document.documentElement.lang=LANG;document.title=tt('Igor’s games · Igor time','I giochi di Igor · Igor time');
- const T={toIsland:['Take me to the island','Portami all’isola'],island:['Island','Isola'],h:['All my games!','Tutti i miei giochi!'],p:['Pick one and play. Every game gives tofu seeds: you plant them on my island.','Scegline uno e gioca. Ogni gioco dà semi di tofu: li pianti sulla mia isola.'],
+ const T={toIsland:['Take me to the island','Portami all’isola'],island:['Island','Isola'],h:['All my games!','Tutti i miei giochi!'],p:['Pick one and play. Every game gives tofu ants for my island. Start with the melody of the day!','Scegline uno e gioca. Ogni gioco dà formiche di tofu per la mia isola. Comincia dalla melodia del giorno!'],
   note:['All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom, the window and the bathtub are in my house, Cadences, the drums, the maestros’ lessons, Rigor Star’s drum school and Nadia Boulangigor’s lessons in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.','Tutti questi giochi sono anche <strong>sulla mia isola</strong>: Pitch Stairs, la cucina, la camera, la finestra e la vasca sono in casa mia, le Cadenze, la batteria, le lezioni dei maestri, la scuola di batteria di Rigor Star e le lezioni di Nadia Boulangigor nella scuola di musica e l’abisso giù nel pozzo. Sull’isola i semi diventano campi, formiche di tofu e Igorlets.']};
  document.querySelectorAll('[data-k]').forEach(el=>{const v=T[el.dataset.k];if(!v)return;if('html' in el.dataset)el.innerHTML=tt(...v);else el.textContent=tt(...v)});
  $('langB').innerHTML=FLAG[LANG];$('langB').setAttribute('aria-label',tt('Language: English. Switch to Italian','Lingua: italiano. Passa all’inglese'));$('langB').title=$('langB').getAttribute('aria-label');
