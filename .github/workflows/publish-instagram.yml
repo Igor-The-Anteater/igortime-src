@@ -1,0 +1,71 @@
+name: Publish Instagram Reel
+
+on:
+  workflow_dispatch:
+    inputs:
+      video:
+        description: "Nome del file in reels/ (es. igor_001.mp4). La caption è in reels/igor_001.txt"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      API: https://graph.facebook.com/v25.0
+      IG_USER_ID: ${{ vars.IG_USER_ID }}
+      IG_TOKEN: ${{ secrets.IG_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Controlla file
+        env:
+          VIDEO: ${{ inputs.video }}
+        run: |
+          f="reels/$VIDEO"
+          c="reels/${VIDEO%.*}.txt"
+          test -f "$f" || { echo "Manca $f"; exit 1; }
+          test -f "$c" || { echo "Manca $c"; exit 1; }
+          size=$(stat -c%s "$f")
+          [ "$size" -le 104857600 ] || { echo "Video oltre 100 MB"; exit 1; }
+
+      - name: Crea container, attendi, pubblica
+        env:
+          VIDEO: ${{ inputs.video }}
+        run: |
+          set -euo pipefail
+          name="$VIDEO"
+          video_url="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/reels/${name}"
+          caption="$(cat "reels/${name%.*}.txt")"
+
+          # 1) container
+          resp=$(curl -sS -X POST "$API/$IG_USER_ID/media" \
+            --data-urlencode "media_type=REELS" \
+            --data-urlencode "video_url=$video_url" \
+            --data-urlencode "caption=$caption" \
+            --data-urlencode "share_to_feed=true" \
+            --data-urlencode "access_token=$IG_TOKEN")
+          cid=$(echo "$resp" | jq -r '.id // empty')
+          [ -n "$cid" ] || { echo "Errore container: $(echo "$resp" | jq -c '.error // .')"; exit 1; }
+          echo "Container: $cid"
+
+          # 2) attesa FINISHED (max 5 min, controllo ogni 20 s)
+          for i in $(seq 1 15); do
+            st=$(curl -sS "$API/$cid?fields=status_code&access_token=$IG_TOKEN" | jq -r '.status_code // "?"')
+            echo "Stato: $st"
+            [ "$st" = "FINISHED" ] && break
+            [ "$st" = "ERROR" ] || [ "$st" = "EXPIRED" ] && { echo "Fallito: $st"; exit 1; }
+            sleep 20
+          done
+          [ "$st" = "FINISHED" ] || { echo "Timeout"; exit 1; }
+
+          # 3) pubblica
+          pub=$(curl -sS -X POST "$API/$IG_USER_ID/media_publish" \
+            --data-urlencode "creation_id=$cid" \
+            --data-urlencode "access_token=$IG_TOKEN")
+          mid=$(echo "$pub" | jq -r '.id // empty')
+          [ -n "$mid" ] || { echo "Errore publish: $(echo "$pub" | jq -c '.error // .')"; exit 1; }
+          echo "Pubblicato, media id: $mid"
