@@ -247,7 +247,7 @@ ${cfg.phones?'<p class="warn">🎧 Use headphones, and keep your volume fixed fo
  function nudge(){if(!okB)return;okB.classList.remove('nudge');void okB.offsetWidth;if(K.phase==='guess')okB.classList.add('nudge')}
  K.moved=()=>{if(K.phase!=='guess'||!K.R||K.R.moved)return;K.R.moved=true;nudge();clearInterval(nudgeIv);nudgeIv=setInterval(nudge,6500)};
  K.canListen=()=>K.phase==='guess'&&!K.refOn&&!(K.R&&K.R.played&&K.R.left<=0)&&!(cfg.busy&&cfg.busy(K));
- K.listen=()=>{if(!K.AC||!K.canListen())return;const R=K.R;if(R.played)R.left--;R.played=true;
+ K.listen=()=>{if(!K.AC||!K.canListen())return;const R=K.R;if(R.played)R.left--;R.played=true;R.lis=(R.lis|0)+1;
   const d=cfg.playRef(R,K.LV,K);K.refOn=true;K.refT0=K.now();K.refDur=d;K.update();
   clearTimeout(K._rt);K._rt=setTimeout(()=>{K.refOn=false;cfg.refEnd&&cfg.refEnd(R,K);K.update()},d*1000+60)};
  function newRound(){K.round++;clearInterval(nudgeIv);K.R={left:K.LV.replays,played:false,moved:false};cfg.newRound(K.R,K.LV,K);K.phase='guess';K.revT=0;
@@ -255,11 +255,11 @@ ${cfg.phones?'<p class="warn">🎧 Use headphones, and keep your volume fixed fo
   const L=cfg.lines||{};K.say(cfg.roundLine?cfg.roundLine(K.R,K):K.round===1?(L.first||'Listen…'):K.round===N?(L.last||'Last one. Concentrate.'):(L.again||['Again! Listen…'])[(K.round-2)%(L.again||[1]).length],2.4);
   setTimeout(()=>{if(K.phase==='guess'&&!K.R.played)K.listen()},800)}
  K.confirm=()=>{if(K.phase!=='guess')return;clearInterval(nudgeIv);okB&&okB.classList.remove('nudge');clearTimeout(K._rt);if(K.refOn){K.refOn=false;cfg.stopRef&&cfg.stopRef(K)}
-  const res=cfg.judge(K.R,K.LV,K);K.R.pts=clamp(Math.round(res.pts*MAXR/125),0,MAXR);K.R.good=res.good;K.total+=K.R.pts;K.phase='reveal';K.revT=0;$('sc').textContent=K.total;K.update();
+  const res=cfg.judge(K.R,K.LV,K);K.R.pts=clamp(Math.round(res.pts*MAXR/125),0,MAXR);K.R.good=res.good;K.total+=K.R.pts;(K.rs=K.rs||[]).push(K.R.pts/MAXR);(K.ls=K.ls||[]).push(K.R.lis|0);K.phase='reveal';K.revT=0;$('sc').textContent=K.total;K.update();
   setTimeout(()=>K.say(res.msg,3.4),cfg.msgDelay??900);
   setTimeout(()=>{if(K.round>=N)finish();else newRound()},(cfg.revealMs||4200)+(res.good?600:0))};
  function finish(){K.phase='end';const key='igortime_'+cfg.key+'_best_'+K.lv;let best=0;try{best=+localStorage.getItem(key)||0;if(K.total>best)localStorage.setItem(key,K.total)}catch(e){}
-  const tot=K.total,M=N*MAXR,nm=K.name();$('endlv').textContent=K.LV.name+' · your score';$('endsc').textContent=tot;
+  const tot=K.total,M=N*MAXR,nm=K.name();if(window.IgorStats){const ls=K.ls||[];IgorStats.game(cfg.key,K.lv,{pct:tot/M,score:tot,rounds:K.rs||[],x:ls.length?{lis:ls.reduce((a,b)=>a+b,0)/ls.length}:null})}$('endlv').textContent=K.LV.name+' · your score';$('endsc').textContent=tot;
   $('endmsg').textContent=tot>=M*.9?(cfg.endTop||'Golden ears. '+nm+' is full and very grateful.'):tot>=M*.7?'Great ears! '+nm+' had a lovely meal.':tot>=M*.4?'Nice ears! '+nm+' had a tasty snack.':nm+' loved it! One more round and lunch is yours.';
   $('endbest').textContent=tot>best?'New personal best on '+K.LV.name+'!':'Your best on '+K.LV.name+': '+best;
   const n=Math.min(CAP[K.lv],Math.round(tot/(N*MAXR)*CAP[K.lv]));let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
@@ -283,7 +283,7 @@ ${cfg.phones?'<p class="warn">🎧 Use headphones, and keep your volume fixed fo
  if(ACCT){document.querySelector('.av').style.display='none';document.querySelectorAll('.nm').forEach(n=>n.textContent=AVN[ME.avatar]);al.textContent='Playing as '+(ACCT.name||'you')+' with your '+AVN[ME.avatar]+' · easy up to 4, medium up to 7, extreme up to 10 tofu seeds'}
  else{setAv(ME.avatar);al.textContent='Tofu seeds won: easy up to 4, medium up to 7, extreme up to 10'}
  function begin(){K.audio();if(K.AC.state==='suspended')K.AC.resume();cfg.onAudio&&!K._aud&&(cfg.onAudio(K),K._aud=1);
-  K.round=0;K.total=0;$('sc').textContent=0;$('start').hidden=true;$('end').hidden=true;newRound()}
+  K.round=0;K.total=0;K.rs=[];K.ls=[];$('sc').textContent=0;$('start').hidden=true;$('end').hidden=true;newRound()}
  $('go').onclick=begin;$('again').onclick=begin;$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;K.phase='menu';K.update()};
  /* ---- loop ---- */
  function resize(){K.DPR=Math.min(devicePixelRatio||1,2);K.W=innerWidth;K.H=innerHeight;cv.width=K.W*K.DPR;cv.height=K.H*K.DPR;cfg.resize&&cfg.resize(K)}
