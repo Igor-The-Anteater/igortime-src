@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><script src="/lang.js?v=3"></script>
+<html lang="en"><head><script src="/lang.js?v=3"></script><script src="/stats.js?v=1"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Drum school · Igor time</title>
@@ -370,7 +370,7 @@ function play(){if(!SES)return;SES.res=null;const d=schedule('play');busy(true);
  clearTimeout(stopAll.t);stopAll.t=setTimeout(done,d*1000+350)}
 function busy(on){const a=$('demo'),b=$('play');if(a)a.disabled=on;if(b)b.disabled=on}
 const PRAISE=[['Rock on!','Rock on!'],['Awesome!','Grandioso!'],['Yeah! You’re a natural!','Yeah! Sei nato per questo!'],['Wicked groove!','Che groove!'],['Perfect time!','Tempo perfetto!']];
-function done(){if(!SES||SES.mode!=='play')return;const ex=SES.ex,R_=result();SES.res=R_;SES.mode=null;ding(R_.pass);
+function done(){if(!SES||SES.mode!=='play')return;const ex=SES.ex,R_=result();SES.res=R_;SES.mode=null;ding(R_.pass);if(window.IgorStats)IgorStats.game('drumschool','all',{pct:R_.acc,x:{tm:R_.mean}});
  PR.plays[ex.id]=(PR.plays[ex.id]|0)+1;if(!(PR.best[ex.id]>=R_.acc))PR.best[ex.id]=Math.round(R_.acc*100)/100;
  const isNew=R_.pass&&ex.id===PR.done;let seeds=0;if(isNew){PR.done++;seeds=2+(ex.k===5?3:0)}else if(R_.pass)seeds=1;saveP();
  if(seeds||isNew){let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}p.seeds=(p.seeds|0)+seeds;p.scores=p.scores||{};p.scores.drumschool=p.scores.drumschool||{};if(!(p.scores.drumschool.all>=PR.done))p.scores.drumschool.all=PR.done;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}}
