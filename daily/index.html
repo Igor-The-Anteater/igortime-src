@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><script src="/lang.js?v=3"></script>
+<html lang="en"><head><script src="/lang.js?v=3"></script><script src="/stats.js?v=1"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Melody of the day · Igor time</title>
@@ -124,7 +124,7 @@ function guess(){if(ST.done||cur.length<MEL.length)return;const g=cur.slice();ST
 /* --- the end: tofu ants (as seeds: the island turns each seed into 6 ants), the streak, the share --- */
 const SEEDR=6;
 function reward(){if(!ST.won)return 1;const k=ST.g.length;return[8,7,6,5,4,3][k-1]+Math.floor(wd/2)}
-function finish(){const n=reward();if(!ST.paid){ST.paid=1;if(ST.won){ST.streak=(ST.last===yday?(ST.streak|0):0)+1;ST.best=Math.max(ST.best|0,ST.streak)}else ST.streak=0;ST.last=KEYD;
+function finish(){const n=reward();if(!ST.paid){ST.paid=1;if(ST.won){ST.streak=(ST.last===yday?(ST.streak|0):0)+1;ST.best=Math.max(ST.best|0,ST.streak)}else ST.streak=0;ST.last=KEYD;   if(window.IgorStats)try{IgorStats.daily({day:KEYD,won:ST.won?1:0,n:ST.g.length,wd,len:MEL.length,fg:ST.g[0]?score(ST.g[0]).filter(x=>x==='ok').length:0,st:ST.streak|0,best:ST.best|0})}catch(e){}
   let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};p.scores.daily=p.scores.daily||{};if(!(p.scores.daily.streak>=ST.streak))p.scores.daily.streak=ST.streak|0;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}}
  saveST();showEnd(n)}
 function grid(){return ST.g.map(g=>score(g).map(x=>x==='ok'?'🟩':x==='near'?'🟨':'⬜').join('')).join('\n')}
