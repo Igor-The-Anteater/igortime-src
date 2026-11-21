@@ -179,7 +179,7 @@ function userV(){const b=shell(),a=allAccounts().find(x=>x.uid===sel)||{uid:sel,
  <div class="row" style="cursor:default;margin:0;border:0;background:none;padding:0"><div class="ini${on?' on':''}">${esc((a.nick||'?').slice(0,1).toUpperCase())}</div><div class="nm"><b style="font-size:19px">${esc(a.nick||tt('(no nickname)','(senza nickname)'))}</b><small>${on?tt('online now','online ora')+(where?' · '+esc(where):''):tt('last seen ','visto ')+ago(a.seen)}</small></div>${bl?`<span class="tag bl">${tt('blocked','bloccato')}</span>`:''}</div>
  <dl><dt>Email</dt><dd>${a.email?esc(a.email):`<span class="mute">${tt('not known yet (comes with the next visit)','non ancora nota (arriva con la prossima visita)')}</span>`}</dd>
  <dt>${tt('Sign-in','Accesso')}</dt><dd>${esc(prov)}</dd><dt>${tt('Joined','Iscritto')}</dt><dd>${esc(fmtDate(a.made))}</dd><dt>${tt('Last visit','Ultima visita')}</dt><dd>${esc(fmtTime(a.seen))}</dd><dt>uid</dt><dd style="font-size:12px">${esc(a.uid)}</dd></dl>
- <div class="acts"><button class="go" data-a="inspect">🔍 ${tt('Look at the island','Guarda l’isola')}</button></div><div class="acts">${me?`<span class="mute">${tt('This is you.','Sei tu.')}</span>`:bl?`<button class="go" data-a="unblock">✓ ${tt('Unblock','Sblocca')}</button>`:`<button class="no" data-a="block">🚫 ${tt('Block','Blocca')}</button>`}${a.email?`<button data-a="copy">${tt('Copy email','Copia email')}</button>`:''}</div>
+ <div class="acts"><button class="go" data-a="inspect">🔍 ${tt('Look at the island','Guarda l’isola')}</button><button data-a="stats">📊 ${tt('Stats','Statistiche')}</button></div><div class="acts">${me?`<span class="mute">${tt('This is you.','Sei tu.')}</span>`:bl?`<button class="go" data-a="unblock">✓ ${tt('Unblock','Sblocca')}</button>`:`<button class="no" data-a="block">🚫 ${tt('Block','Blocca')}</button>`}${a.email?`<button data-a="copy">${tt('Copy email','Copia email')}</button>`:''}</div>
  <p class="mute">${tt('Blocking closes the chat for this account, removes them from all the leaderboards and stops new records. They can still play.','Bloccare chiude la chat a questo account, lo toglie da tutte le classifiche e non gli fa registrare nuovi record. Può comunque giocare.')}</p></div>
  <h4>✉️ ${tt('Send a message','Manda un messaggio')}</h4><textarea id="admMsg" maxlength="1000" placeholder="${tt('It appears on the island the next time they open it (or right away if they are there).','Compare sull’isola la prossima volta che la aprono (o subito, se ci sono).')}"></textarea>
  <div style="display:flex;justify-content:flex-end;margin:8px 0 4px"><button class="go" data-a="send">${tt('Send','Manda')}</button></div>
@@ -232,6 +232,7 @@ async function onClick(e){const t=e.target.closest('[data-a],[data-tab],[data-f]
  if(t.classList.contains('row')&&t.dataset.uid&&!t.dataset.a){sel=t.dataset.uid;return render()}
  const a=t.dataset.a;try{
  if(a==='close')return close();
+ if(a==='stats'){const I=await import('/inspect.js');const d=await I.load(sel);if(window.IgorStats)IgorStats.open({s:d,who:d.nick||'?',pend:false});return}
  if(a==='inspect'){const w=window.open('/?inspect='+encodeURIComponent(sel),'_blank');if(!w)location.href='/?inspect='+encodeURIComponent(sel);return}
  if(a==='reload'){t.disabled=true;return reload()}
  if(a==='back'){sel=null;return render()}
