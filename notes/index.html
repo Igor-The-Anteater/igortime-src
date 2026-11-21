@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><script src="/lang.js?v=3"></script>
+<html lang="en"><head><script src="/lang.js?v=3"></script><script src="/stats.js?v=1"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Reading music · Igor time</title>
@@ -319,12 +319,12 @@ function answer(a,btn){const q=SES.q;if(!q||q.done)return;const st=ST[SES.si];le
  if(a.s!=null)ok=a.s===(midiOf(q)%12+12)%12;else{const o=q.opts[a.o];ok=o.pc===pcOf(q.d)&&(o.acc||0)===(q.acc||0)}
  fin(ok,btn)}
 function timeout(){const q=SES&&SES.q;if(!q||q.done)return;fin(false,null,true)}
-function fin(ok,btn,late){const q=SES.q,st=ST[SES.si];q.done=true;q.ok=ok;SES.res[SES.i]=ok?1:0;if(ok)SES.right++;tone(midiOf(q),0,.9);if(!ok)ding(false);hdr();
+function fin(ok,btn,late){const q=SES.q,st=ST[SES.si];q.done=true;q.ok=ok;if(window.IgorStats)try{const pc=(midiOf(q)%12+12)%12;IgorStats.answer('notes',pc,ok,[['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'][pc],['Do','Do♯','Re','Mi♭','Mi','Fa','Fa♯','Sol','La♭','La','Si♭','Si'][pc]])}catch(e){}SES.res[SES.i]=ok?1:0;if(ok)SES.right++;tone(midiOf(q),0,.9);if(!ok)ding(false);hdr();
  if(btn)btn.classList.add(ok?'right':'wrong');if(!ok){const rb=st.keys?bar.querySelector(`[data-s="${(midiOf(q)%12+12)%12}"]`):bar.querySelector(`[data-o="${q.opts.findIndex(o=>o.pc===pcOf(q.d)&&(o.acc||0)===(q.acc||0))}"]`);if(rb)rb.classList.add('right')}
  if(ok){if(!st.run||SES.right%4===0){const B=L.b;ANT={x:B.x+B.w*.5,y:B.y+B.h*.5,t:0}}if(!st.run||SES.right%5===0)say(T2(pick(PRAISE))+(st.run?'':' '+tt(`It’s <b>${nameOf(q)}</b>.`,`È il <b>${nameOf(q)}</b>.`)))}
  else say(late?tt(`Too quick? It was <b>${nameOf(q)}</b>. Next one!`,`Troppo veloce? Era il <b>${nameOf(q)}</b>. La prossima!`):T2(pick(SOFT))+' '+tt(`It was <b>${nameOf(q)}</b>.`,`Era il <b>${nameOf(q)}</b>.`));
  clearTimeout(SES.auto);SES.auto=setTimeout(()=>{if(!SES||SES.q!==q)return;SES.i++;if(SES.i>=NQ(SES.si))finish();else question()},st.run?(ok?260:900):(ok?1100:1900))}
-function finish(){SES.phase='end';hdr();say('');setBar('');const si=SES.si,r=SES.right,n=NQ(si),pass=r>=PASS(si),isNew=pass&&si===PR.done&&PR.done<NS;
+function finish(){SES.phase='end';hdr();say('');setBar('');if(window.IgorStats)IgorStats.game('notes','all',{pct:SES.right/Math.max(1,NQ(SES.si))});const si=SES.si,r=SES.right,n=NQ(si),pass=r>=PASS(si),isNew=pass&&si===PR.done&&PR.done<NS;
  PR.plays[si]=(PR.plays[si]|0)+1;if(!(PR.best[si]>=r))PR.best[si]=r;if(isNew)PR.done++;saveP();
  const seeds=Math.min(8,Math.ceil(r/n*5)+(isNew?3:0));let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
  p.seeds=(p.seeds|0)+seeds;p.scores=p.scores||{};p.scores.notes=p.scores.notes||{};if(!(p.scores.notes.all>=PR.done))p.scores.notes.all=PR.done;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}
