@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><script src="/lang.js?v=3"></script>
+<html lang="en"><head><script src="/lang.js?v=3"></script><script src="/stats.js?v=1"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Harmony · Igor time</title>
@@ -502,7 +502,7 @@ function question(){const q=window.__hmForce?G[window.__hmForce[0]](window.__hmF
 function answer(a,btn){const q=SES.q;if(!q||q.done)return;let ok;
  if(q.kb){const want=q.kb.want,sel=a.set;ok=sel.size===want.size&&[...want].every(s=>sel.has(s));bar.querySelectorAll('[data-s]').forEach(b=>{const s=+b.dataset.s;if(want.has(s)&&sel.has(s))b.classList.add('right');else if(want.has(s)||sel.has(s))b.classList.add(want.has(s)?'right':'wrong')})}
  else{ok=a.o===q.a;if(btn)btn.classList.add(ok?'right':'wrong');if(!ok){const rb=bar.querySelector(`[data-o="${q.a}"]`);if(rb)rb.classList.add('right')}const an=bar.querySelector('.ans');if(an)an.classList.add('done')}
- q.done=true;SES.res[SES.i]=ok?1:0;if(ok)SES.right++;hdr();ding(ok);
+ q.done=true;SES.res[SES.i]=ok?1:0;if(ok)SES.right++;if(window.IgorStats&&SES.k>=0)IgorStats.answer('harmony',null,ok);hdr();ding(ok);
  if(q.show&&q.show.kbd){VIEW.spec={...q.show,kbd:{...q.show.kbd,...(q.kbAfter||{})}};if(q.full)VIEW.spec={...VIEW.spec,res:ok,cols:q.full}}
  else if(q.show&&q.show.cols){VIEW.spec={...q.show,res:ok,cols:q.show.cols.map(c=>({...c,hide:0,qd:null,box:0}))};if(q.full)VIEW.spec.cols=q.full}
  else if(q.play&&q.play.length&&q.play[0].n&&q.play[0].n.length){VIEW.spec={clef:'t',res:ok,cols:q.play.map(c=>({...c,mel:0}))}}
@@ -510,7 +510,7 @@ function answer(a,btn){const q=SES.q;if(!q||q.done)return;let ok;
  if(ok){if(SES.right%3===0){const B=L.b;ANT={x:B.x+B.w*.5,y:B.y+B.h*.5,t:0}}say(T2(pick(PRAISE)))}else say(T2(pick(SOFT))+(q.opts?' '+tt('The answer is','La risposta è')+` <b>${q.opts[q.a]}</b>.`:''));
  const nb=document.createElement('div');nb.className='row';nb.innerHTML=`<button class="main" id="next">${SES.i+1>=SES.n?tt('Finish ▸','Fine ▸'):tt('Next ▸','Avanti ▸')}</button>`;bar.appendChild(nb);layout();placeBubble();
  const tA=performance.now();$('next').onclick=()=>{if(performance.now()-tA<450)return;/* the click of the same tap that answered lands on this new button */SES.i++;if(SES.i>=SES.n)finish();else question()}}
-function finish(){SES.phase='end';hdr();say('');setBar('');VIEW=null;const k=SES.k,r=SES.right,n=SES.n;
+function finish(){SES.phase='end';hdr();say('');setBar('');VIEW=null;const k=SES.k,r=SES.right,n=SES.n;if(window.IgorStats&&k>=0)IgorStats.game('harmony','all',{pct:r/Math.max(1,n)});
  if(k<0){const pass=r>=Math.ceil(n*.9);PR.test=pass?1:Math.max(PR.test,-1);saveP();
   $('endCard').innerHTML=`<p class="small">${tt('Entry test','Test d’ingresso')}</p><div class="big">${r}/${n}</div><p>${pass?tt('You read music well. We can begin harmony.','Leggi bene le note. Possiamo cominciare l’armonia.'):tt(`To pass you need ${Math.ceil(n*.9)} right notes. No problem: the course starts from zero, and the staff is explained in lesson 2. If you like, you can also practise with <a href="/notes/">Nadia Boulangigor</a>.`,`Per superarlo servono ${Math.ceil(n*.9)} note giuste. Nessun problema: il corso parte da zero, e il pentagramma si spiega nella lezione 2. Se vuoi, puoi esercitarti anche con <a href="/notes/">Nadia Boulangigor</a>.`)}</p>
   <div class="row"><button class="main" id="nx">${pass||PR.done?tt('To the lessons ▸','Alle lezioni ▸'):tt('To the lessons ▸','Alle lezioni ▸')}</button>${pass?'':`<button id="again">${tt('Take the test again','Rifai il test')}</button><button id="nadia">${tt('Go to Nadia','Vai da Nadia')}</button>`}</div>`;
