@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><script src="/lang.js?v=3"></script>
+<html lang="en"><head><script src="/lang.js?v=3"></script><script src="/stats.js?v=1"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>The maestros' lessons · Igor time</title>
@@ -349,7 +349,7 @@ function question(){const q=gen(SES.si,SES.i);SES.q=q;SES.phase='q';SES.ansd=fal
  const cols=opts.length<=2?2:opts.length===4?(W<620?2:4):Math.min(opts.length,W<620?3:5);
  setBar(`<div class="row"><button id="rep">▶ ${tt('Listen again','Riascolta')}</button></div><div class="ans" style="--n:${cols}">${opts.map(([k,h],j)=>`<button data-a="${k}" title="${j+1}">${h}</button>`).join('')}</div>`);
  $('rep').onclick=playQ;bar.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>answer(b.dataset.a,b));setTimeout(()=>{if(SES&&SES.q===q)playQ()},350)}
-function answer(k,btn){if(SES.ansd)return;SES.ansd=true;const q=SES.q,ok=k===q.ans;SES.res[SES.i]=ok?1:0;if(ok)SES.right++;else if(IV[q.ans])PR.miss[q.ans]=(PR.miss[q.ans]|0)+1;if(ok&&IV[q.ans]&&PR.miss[q.ans])PR.miss[q.ans]--;
+function answer(k,btn){if(SES.ansd)return;SES.ansd=true;const q=SES.q,ok=k===q.ans;if(window.IgorStats){const v=IV[q.ans];IgorStats.answer('intervals',q.ans,ok,v?(q.harm||!v.t?v.n:v.t):null)}SES.res[SES.i]=ok?1:0;if(ok)SES.right++;else if(IV[q.ans])PR.miss[q.ans]=(PR.miss[q.ans]|0)+1;if(ok&&IV[q.ans]&&PR.miss[q.ans])PR.miss[q.ans]--;
  const box=bar.querySelector('.ans');box.classList.add('done');bar.querySelectorAll('[data-a]').forEach(b=>{b.disabled=true;if(b.dataset.a===q.ans)b.classList.add('right')});if(!ok)btn.classList.add('wrong');
  SES.phase='fb';SES.fbT=T;hdr();ding(ok);
  const v=IV[q.ans],song=v&&!q.harm?(q.d>0?v.up:v.dn):null;
@@ -369,7 +369,7 @@ function playWrong(k){const q=SES.q;let n=q.n,d=q.d;if(k==='same')n=0;else if(k=
  if(k==='diff'&&!q.n)n=5;playPair(q.a,q.a+n*d,{dur:q.dur,tb:q.tb,harm:q.harm});SES.q2={n,d}}
 function next(){clearTimeout(SES.auto);hush();SES.i++;if(SES.i>=NQ)finish();else question()}
 
-function finish(){SES.phase='end';hdr();say('');setBar('');const si=SES.si,r=SES.right,pass=r>=PASS,isNew=pass&&si===PR.done&&PR.done<NS;
+function finish(){SES.phase='end';hdr();say('');setBar('');if(window.IgorStats)IgorStats.game('intervals','all',{pct:SES.right/NQ});const si=SES.si,r=SES.right,pass=r>=PASS,isNew=pass&&si===PR.done&&PR.done<NS;
  PR.plays[si]=(PR.plays[si]|0)+1;if(!(PR.best[si]>=r))PR.best[si]=r;if(isNew)PR.done++;saveP();
  const n=Math.min(8,Math.ceil(r/2)+(isNew?3:0));let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
  p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};p.scores.intervals=p.scores.intervals||{};if(!(p.scores.intervals.all>=PR.done))p.scores.intervals.all=PR.done;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}
