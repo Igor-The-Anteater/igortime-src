@@ -61,7 +61,7 @@ header h1 a{text-decoration:none}
  #islB .t,#me .t{display:none}#islB .s,#me .s{display:inline}header{flex-wrap:nowrap;gap:7px}header h1{font-size:20px;margin-left:2px}#me{max-width:30vw}}
 @media (prefers-reduced-motion:reduce){.card{transition:none}}
 </style>
-<script src="/lang.js?v=3"></script>
+<script src="/lang.js?v=3"></script><script src="/stats.js?v=1"></script>
 </head><body>
 <header>
  <a class="pill" id="islB" href="/" data-island><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="#2b2018" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>🏝<span class="t" data-k="toIsland">Take me to the island</span><span class="s" data-k="island">Island</span></a>
@@ -71,7 +71,7 @@ header h1 a{text-decoration:none}
 </header>
 <section class="hero">
  <canvas id="ig" width="420" height="573" role="img" aria-label="Igor"></canvas>
- <div class="say"><h2 data-k="h">All my games!</h2><p data-k="p">Pick one and play. Every game gives tofu ants for my island. Start with the melody of the day!</p><span id="seedsP" hidden></span></div>
+ <div class="say"><h2 data-k="h">All my games!</h2><p data-k="p">Pick one and play. Every game gives tofu ants for my island. Start with the melody of the day!</p><span id="seedsP" hidden></span><button class="pill" id="statsB" type="button" data-k="stats" style="margin-top:10px;cursor:pointer">📊 My stats</button></div>
 </section>
 <main class="grid" id="grid"></main>
 <section class="note">
@@ -84,6 +84,7 @@ header h1 a{text-decoration:none}
 /* Igor’s drawing: the same code as /house/kit.js (avatar and accessories, igorAcc) */
 const TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t,ease=u=>u*u*(3-2*u);
 const $=id=>document.getElementById(id);
+$('statsB').onclick=()=>{if(window.IgorStats){let s=null;try{s=JSON.parse(localStorage.getItem('igortime_v1'))}catch(e){}IgorStats.open({s:s||{}})}};
 const IGOR_SRC=window.IGOR_SRC||'/igor.webp';
 
 /* ================= Igor (island drawing, 663×730 coordinates) ================= */
@@ -334,7 +335,7 @@ function bestTxt(g){if(g.sc==='daily'){const D=J('igortime_daily')||{},t=new Dat
  return bl?tt('Best: ','Record: ')+bv+' · '+tt(...LVN[bl]):tt('Not played yet','Non ancora giocato')}
 
 function render(){document.documentElement.lang=LANG;document.title=tt('Igor’s games · Igor time','I giochi di Igor · Igor time');
- const T={toIsland:['Take me to the island','Portami all’isola'],island:['Island','Isola'],h:['All my games!','Tutti i miei giochi!'],p:['Pick one and play. Every game gives tofu ants for my island. Start with the melody of the day!','Scegline uno e gioca. Ogni gioco dà formiche di tofu per la mia isola. Comincia dalla melodia del giorno!'],
+ const T={stats:['📊 My stats','📊 Le mie statistiche'],toIsland:['Take me to the island','Portami all’isola'],island:['Island','Isola'],h:['All my games!','Tutti i miei giochi!'],p:['Pick one and play. Every game gives tofu ants for my island. Start with the melody of the day!','Scegline uno e gioca. Ogni gioco dà formiche di tofu per la mia isola. Comincia dalla melodia del giorno!'],
   note:['All these games are also <strong>on my island</strong>: Pitch Stairs, the kitchen, the bedroom, the window and the bathtub are in my house, Cadences, the drums, the maestros’ lessons, Rigor Star’s drum school and Nadia Boulangigor’s lessons in the music school and the abyss down the well. On the island the seeds become fields, tofu ants and Igorlets.','Tutti questi giochi sono anche <strong>sulla mia isola</strong>: Pitch Stairs, la cucina, la camera, la finestra e la vasca sono in casa mia, le Cadenze, la batteria, le lezioni dei maestri, la scuola di batteria di Rigor Star e le lezioni di Nadia Boulangigor nella scuola di musica e l’abisso giù nel pozzo. Sull’isola i semi diventano campi, formiche di tofu e Igorlets.']};
  document.querySelectorAll('[data-k]').forEach(el=>{const v=T[el.dataset.k];if(!v)return;if('html' in el.dataset)el.innerHTML=tt(...v);else el.textContent=tt(...v)});
  $('langB').innerHTML=FLAG[LANG];$('langB').setAttribute('aria-label',tt('Language: English. Switch to Italian','Lingua: italiano. Passa all’inglese'));$('langB').title=$('langB').getAttribute('aria-label');
