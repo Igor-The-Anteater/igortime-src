@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><script src="/lang.js?v=3"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>The abyss · Igor time</title><meta name="description" content="Igor dives into the abyss: eat the pale creatures, jump the red ones, duck the jellyfish, and beat the leviathans."><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#04070c;color:#dbe7ea;min-height:100vh}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html lang="en"><head><script src="/lang.js?v=3"></script><script src="/stats.js?v=1"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>The abyss · Igor time</title><meta name="description" content="Igor dives into the abyss: eat the pale creatures, jump the red ones, duck the jellyfish, and beat the leviathans."><style>:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#04070c;color:#dbe7ea;min-height:100vh}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <header id="top"><a id="back" href="/">← Igor’s island</a><h1><em>The</em> abyss</h1><span id="acct"></span></header>
 <div id="ab">
   <canvas id="ab-c" width="600" height="300"></canvas>
@@ -446,7 +446,7 @@ function submitDive(sc){const A=window.AbyssCloud;if(!A){addEventListener('abyss
 let ACCT=null;try{ACCT=JSON.parse(localStorage.getItem('igortime_acct'))}catch(e){}
 const HOME=(()=>{try{return localStorage.getItem('igortime_home')||'/'}catch(e){return '/'}})();$('back').href=HOME;
 if(ACCT&&ACCT.name)$('acct').textContent='Playing as '+ACCT.name;else if(ACCT)$('acct').textContent='Playing with your account';
-function reward(sc){const n=Math.min(10,Math.floor(sc/200));if(!n)return 0;let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
+function reward(sc){if(window.IgorStats)IgorStats.game('abyss','all',{score:sc});const n=Math.min(10,Math.floor(sc/200));if(!n)return 0;let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
  p.seeds=(p.seeds|0)+n;p.scores=p.scores||{};const g=p.scores.abyss=p.scores.abyss||{};if(!(g.best>=sc))g.best=sc;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}return n}
 let won=0;
 function avHTML(){if(ACCT)return '<p class="sub">Diving as <b>'+esc(ACCT.name||'you')+'</b> with your <span class="g">'+AVN[AVK]+'</span></p>';
