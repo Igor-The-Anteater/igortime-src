@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><script src="/lang.js?v=3"></script>
+<html lang="en"><head><script src="/lang.js?v=3"></script><script src="/stats.js?v=1"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Pitch Stairs · Igor time</title>
@@ -320,7 +320,7 @@ function drawCast(){const box=$('cast');if(!box)return;box.hidden=!DUO;if(!DUO||
  if(!igorOK)return;const cvs=box.querySelectorAll('canvas');CH.forEach((ch,i)=>{const c=cvs[i].getContext('2d'),tmp=document.createElement('canvas');tmp.width=tmp.height=512;paintChar(tmp.getContext('2d'),ch,0,0);c.clearRect(0,0,128,128);const s=128*(ch.small<1?.82:1);c.drawImage(tmp,(128-s)/2,128-s,s,s)})}
 
 /* ---------- game state ---------- */
-let phase='menu',round=0,total=0,R=null,REV=0,revT=0,sel=0;
+let phase='menu',round=0,total=0,R=null,REV=0,revT=0,sel=0,RS=[],CE=[];
 let nudgeIv=0;function nudge(){const b=$('ok');b.classList.remove('nudge');void b.offsetWidth;if(phase==='guess')b.classList.add('nudge')}
 function moved(){if(phase!=='guess'||!R||R.moved)return;R.moved=true;nudge();clearInterval(nudgeIv);nudgeIv=setInterval(nudge,6500)}
 function newUs(){if(!DUO)return[.08+Math.random()*.84];const D=DUO_LV[lvKey],semi=LV.oct*12;let a,b,d;
@@ -352,7 +352,7 @@ function confirm(){if(phase!=='guess')return;clearInterval(nudgeIv);$('ok').clas
  let m=[0];if(DUO){const d=Math.abs(cents(CH[0].u,R.us[0]))+Math.abs(cents(CH[1].u,R.us[1])),x=Math.abs(cents(CH[0].u,R.us[1]))+Math.abs(cents(CH[1].u,R.us[0]));m=x<d?[1,0]:[0,1]}
  R.match=m;const per=100/CH.length;let rp=0;
  CH.forEach((ch,i)=>{const e=cents(ch.u,R.us[m[i]]),ae=Math.abs(e);R.err[i]=e;R.pts[i]=Math.max(0,Math.round(per*(1-ae/LV.zero)));R.eat[i]=ae<=25;R.fx[i]={};rp+=R.pts[i]});
- R.pt=rp;total+=rp;$('sc').textContent=total;updateButtons();
+ R.pt=rp;total+=rp;RS.push(rp/100);R.err.forEach(e=>CE.push(Math.abs(e)));$('sc').textContent=total;updateButtons();
  setTimeout(()=>{if(DUO)duoSay(m);else soloSay()},900);
  setTimeout(()=>{if(round>=ROUNDS)finish();else newRound()},(R.eat.some(Boolean)?4600:3800)+(DUO?900:0))}
 function soloSay(){const e=R.err[0],ae=Math.abs(e),n=Math.round(ae),dir=e>0?'a little lower':'a little higher',dir2=e>0?'lower down':'higher up';let msg;
@@ -381,7 +381,7 @@ function finish(){phase='end';const bk='pitchStairsBest_'+(DUO?'duo_':'')+lvKey;
  $('endmsg').textContent=DUO?(total>=450?tt('Golden ears. A perfect duet!','Orecchie d’oro. Un duetto perfetto!'):total>=350?tt(`Great ears! ${N} are full and happy.`,`Che orecchie! ${N} sono sazi e felici.`):total>=200?tt(`Nice ears! ${N} had a tasty snack.`,`Belle orecchie! ${N} hanno fatto una buona merenda.`):tt(`${N} loved singing with you! One more duet?`,`A ${N} è piaciuto un sacco cantare con te! Un altro duetto?`))
   :total>=450?'Golden ears. '+N+' is full and very grateful.':total>=350?'Great ears! '+N+' had a lovely meal.':total>=200?'Nice ears! '+N+' had a tasty snack and is ready for a second course.':N+' loved the concert! One more round and lunch is yours.';
  $('endbest').textContent=total>best?'New personal best on '+LV.name+'!':'Your best on '+LV.name+': '+best;
- const won=reward(total);$('endants').textContent=won?'+'+won+' tofu seed'+(won>1?'s':'')+' for '+(DUO?tt('Igor','Igor'):N)+'’s field'+'. Collect them back home.':'';$('end').hidden=false;
+ const won=reward(total);if(window.IgorStats)IgorStats.game(DUO?'pitchduo':'pitchStairs',lvKey,{pct:total/(ROUNDS*100),score:total,rounds:RS,x:CE.length?{cents:CE.reduce((a,b)=>a+b,0)/CE.length}:null});$('endants').textContent=won?'+'+won+' tofu seed'+(won>1?'s':'')+' for '+(DUO?tt('Igor','Igor'):N)+'’s field'+'. Collect them back home.':'';$('end').hidden=false;
  import('/board.js?v=5').then(B=>B.show(document.querySelector('#end .card'),DUO?'pitchduo':'pitch',lvKey,total,avKey)).catch(()=>{});updateButtons()}
 function updateButtons(){const gu=phase==='guess';$('ok').disabled=!gu;$('mine').disabled=!gu;
  // two notes: listen to each of your singers alone, or both together
@@ -434,7 +434,7 @@ function begin(){audio();if(AC.state==='suspended')AC.resume();
  // the voices: one note = the soft voice; two notes = the first one soft, the second one reedy (extreme: the same voice for both)
  const vk=i=>!DUO||lvKey==='extreme'?'soft':CH[i].timbre;
  [...antV,...myV].forEach(v=>v.kill());antV=CH.map((c,i)=>voice(vk(i)));myV=CH.map((c,i)=>voice(vk(i)));
- round=0;total=0;$('sc').textContent=0;$('start').hidden=true;$('end').hidden=true;newRound()}
+ round=0;total=0;RS=[];CE=[];$('sc').textContent=0;$('start').hidden=true;$('end').hidden=true;newRound()}
 $('go').onclick=begin;$('again').onclick=()=>{pickCast();begin()};$('menu').onclick=()=>{$('end').hidden=true;$('start').hidden=false;phase='menu';pickCast();drawCast()};
 
 window.__ps={get CH(){return CH},get R(){return R}};
