@@ -51,3 +51,6 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 - Idea fiati: clarinetto rotante al centro → flauto → oboe → fagotto (lock di 4 palle) → sax (5ª palla, 10 s di frenzy con 5 palline). Dove metterla è da decidere.
 - Missione Melodia: le note compaiono come bersagli in mezzo al campo (più facili ma rischiosi), alla fine suona la melodia mostrando cosa succede. Da chiarire quali note e se in ordine.
 
+
+- 2026-11-22 Claude (Alessandro): polifonia riscritta (v11): le palline che arrivano da sopra restano ferme nelle corsie (magnete, max 7 s); da sotto suonano una volta sola; le ferme risuonano solo quando arriva un'altra pallina; timer "insieme" con bonus per secondi e voci; accordo extra; la polifonia finisce quando resta una sola pallina.
+- Idea da fare (Alessandro): vista zoomata con camera che scorre (stile Balls of Steel): tasto sul desktop, su Android girando il telefono.

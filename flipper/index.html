@@ -736,7 +736,7 @@ function misUI(){const el=$('mis'),md=MODE(),mo=GS.mode>=0?MODES[GS.mode]:null,m
  const col=GS.finale>0?'#ffd36e':GS.multi?'#c77dff':mo?'#ffd36e':GS.ready?'#ffd36e':'#ff8a5a';el.style.color=col;el.style.borderColor=col+'aa';el.querySelector('.pl').style.background=col;
  const th=THEME!=='home'?`${({carib:'🌴',lake:'🛶',shroom:'🍄'})[THEME]} `:'';let txt,frac,ct;
  if(GS.finale>0){txt=tt('Gran concerto!','Gran concerto!');frac=GS.finale/45;ct=Math.ceil(GS.finale)+'s'}
- else if(GS.multi){txt=tt('Polyphony! Hit notes together','Polifonia! Colpisci le note insieme');frac=1;ct=''}
+ else if(GS.multi){txt=GS.ovT>0?tt(`Together ${GS.ovT.toFixed(1)}s ×${GS.ovMax}`,`Insieme ${GS.ovT.toFixed(1)}s ×${GS.ovMax}`):tt('Polyphony! Hit notes together','Polifonia! Colpisci le note insieme');frac=Math.min(1,GS.ovT/3);ct=''}
  else if(mo){const need=mo.need,p=md==='tune'?GS.tuneI/GS.tune.n.length:md==='key'?GS.acc.filter((v,i)=>v===(GS.key.a[i]||0)).length/7:GS.mp/need;
   txt=`${mo.ic} ${L2(mo.N)}${md==='chords'?' · '+chordNames(mi):''}`;frac=p;ct=Math.ceil(GS.modeT)+'s'}
  else{const m=MODES[GS.sel];txt=GS.ready?tt(`${L2(m.N)} ready: to the Stage!`,`${L2(m.N)} pronta: al Palco!`):`🚩 ${L2(m.N)}`;frac=GS.flag/3;ct=GS.ready?'':`${GS.flag}/3`}
@@ -744,7 +744,7 @@ function misUI(){const el=$('mis'),md=MODE(),mo=GS.mode>=0?MODES[GS.mode]:null,m
 
 /* ================= game state ================= */
 const GS={state:'title',score:0,shown:0,ball:1,balls:3,mi:0,loop:1,bx:1,pfx:1,pfxT:0,beats:0,grooveLv:0,lit:[0,0,0,0,0,0,0],jack:0,igor:[0,0,0,0],drop:[0,0,0],bl:[0,0,0,0],polyStars:0,polyReady:false,
- multi:false,polyT:[],save:0,themeT:0,mode:-1,modeT:0,mp:0,done:[false,false,false,false,false,false,false],rank:0,sel:0,flag:0,ready:false,finale:0,acc:[0,0,0,0,0,0,0],combo:0,comboT:0,skill:-1,skillT:0,t:0,shake:0,ants:0,antsEver:0,ramps:0,orbits:0,drums:0,notes:0,plunge:0,kb:[1,1],cb:0};
+ multi:false,polyT:[],held:[],vox:[],ovT:0,ovMax:0,save:0,themeT:0,mode:-1,modeT:0,mp:0,done:[false,false,false,false,false,false,false],rank:0,sel:0,flag:0,ready:false,finale:0,acc:[0,0,0,0,0,0,0],combo:0,comboT:0,skill:-1,skillT:0,t:0,shake:0,ants:0,antsEver:0,ramps:0,orbits:0,drums:0,notes:0,plunge:0,kb:[1,1],cb:0};
 const BALLS=[];let ANT=null,antT=6;
 const grooveNeed=()=>20+GS.grooveLv*10;
 function addScore(n,x,y,col,big){if(GS.state==='title')return;n=Math.round(n*GS.loop*GS.pfx*(GS.finale>0?2:1));GS.score+=n;if(x!==undefined)pop(x,y,'+'+fmt(n),col,big)}
@@ -767,7 +767,7 @@ function nextMission(){let i=GS.mi+1;if(i>=MIS.length){i=0;GS.loop++;dmsg([tt('S
 
 /* ---------- balls ---------- */
 function newBall(x,y,mode){const b={x,y,vx:0,vy:0,mode,h:0,hv:0,stuck:0,cap:0,u:0,spd:0,...ballMesh()};b.ins={};BALLS.push(b);return b}
-function removeBall(b){table.remove(b.m);table.remove(b.sh);b.m.userData.trail.forEach(s=>table.remove(s));const i=BALLS.indexOf(b);if(i>=0)BALLS.splice(i,1)}
+function removeBall(b){if(b.held>=0&&GS.held[b.held]===b)GS.held[b.held]=null;table.remove(b.m);table.remove(b.sh);b.m.userData.trail.forEach(s=>table.remove(s));const i=BALLS.indexOf(b);if(i>=0)BALLS.splice(i,1)}
 const launchHint=()=>hint(touchUI?tt('Hold the right side, let go: launch!','Tieni premuto a destra e lascia: lancio!'):tt('Hold Space, let go: launch!','Tieni premuto Spazio e lascia: lancio!'));
 function serve(auto){const b=newBall(PLUNGE.x,PLUNGE.y,'lane');GS.plunge=0;GS.kb=[1,1];if(auto)b.auto=.7;else{GS.skill=Math.random()*7|0;launchHint()}return b}
 /* plunger: most of the travel is spent on the useful range (top lanes, the secret gap by the DO lane, the orbit) */
@@ -779,7 +779,7 @@ function alleyPass(b,s){ const pts=[V(b.x,b.y,R),V(1.75*s,2.72,R),V(.8*s,2.38,R)
 function goldPath(b){const a0=Math.atan2(b.y-16,b.x-.4),pts=[];for(let a=a0;a<2.35;a+=.12)pts.push(V(.4+4.73*Math.cos(a),16+4.73*Math.sin(a),R));
  pts.push(V(-2.45,18.35,R),V(-2.62,17.4,R),V(-2.7,16.35,R));const c=new THREE.CatmullRomCurve3(pts);b.gp=c;b.glen=c.getLength();b.u=0;b.spd=Math.max(9,Math.hypot(b.vx,b.vy));b.mode='guide'}
 function launch(b,c){b.mode='play';b.y=PLUNGE.y;b.vx=0;b.vy=plungeV(c);b.gold=false;SND.launch();GS.skillT=4;hint(null);if(GS.save<=0&&!GS.multi&&!b.auto0)setSave(10)}
-function startGame(){ac();for(const b of[...BALLS])removeBall(b);Object.assign(GS,{state:'play',score:0,shown:0,ball:1,balls:3,loop:1,bx:1,pfx:1,pfxT:0,beats:0,grooveLv:0,igor:[0,0,0,0],drop:[0,0,0],bl:[0,0,0,0],polyStars:0,polyReady:false,
+function startGame(){ac();for(const b of[...BALLS])removeBall(b);Object.assign(GS,{held:[],vox:[],ovT:0,ovMax:0,state:'play',score:0,shown:0,ball:1,balls:3,loop:1,bx:1,pfx:1,pfxT:0,beats:0,grooveLv:0,igor:[0,0,0,0],drop:[0,0,0],bl:[0,0,0,0],polyStars:0,polyReady:false,
   multi:false,save:0,combo:0,comboT:0,ants:0,antsEver:0,ramps:0,orbits:0,drums:0,notes:0,extraGiven:0,kb:[1,1],cb:0,mode:-1,modeT:0,mp:0,done:[false,false,false,false,false,false,false],rank:0,sel:0,flag:0,ready:false,finale:0});FFS.on=false;updVariants();flagTex();
  DROPS.forEach((s,i)=>{s.on=true;DMESH[i].y=.23});GATES.forEach(g=>g.on=false);setMission(0);serve();MU.on=true;antT=4;MU.bpm=88;MU.en=0;
  if(TOK){table.remove(TOK.G);TOK=null}tokT=14;setTheme('home',true);
@@ -807,9 +807,29 @@ function gameOver(){GS.state='over';MU.on=false;GS.shown=GS.score;const best=get
 function startPoly(){GS.polyReady=false;GS.multi=true;GS.polyStars=0;setSave(12);GATES.forEach(g=>g.on=true);
  dmsg([tt('POLYPHONY','POLIFONIA'),'MULTIBALL!'],2.6,true,4);SND.fanfare([0,2,4,6]);flash(.9);GS.shake=.7;say(tt('Polyphony! Three balls, and the lanes sing when you hit them!','Polifonia! Tre palline, e le corsie suonano quando le colpisci!'),3.4,true);
  for(let k=0;k<2;k++)setTimeout(()=>{if(GS.state!=='play'||!GS.multi)return;const nb=newBall(SAUCER.x,SAUCER.y,'hole');nb.u=.7;nb.awarded=1},400+k*800);misUI()}
-function endPoly(){GS.multi=false;GATES.forEach(g=>g.on=false);DROPS.forEach(s=>s.on=true);GS.drop=[0,0,0];dmsg([tt('POLYPHONY','POLIFONIA'),tt('THE END','FINE')],1.6,false,2);misUI()}
-function polyHit(k,x){if(['chords','ear','key','tune'].includes(MODE()))laneHit(k,x);const now=GS.t;GS.polyT[k]=now;GATEM[k].t=1;SND.noteBrass(k);SND.note(k,1);addScore(25000,x,LANE_Y0,NOTE_C[k]);burst(x,LANE_Y0,.4,NOTE_C[k],12,3);
- const voices=GS.polyT.filter(t=>t!==undefined&&now-t<1.2).length;if(voices>=2){addScore(50000*voices*voices,x,LANE_Y0-1,'#c77dff',true);dmsg([tt('CHORD','ACCORDO'),`${voices} ${tt('VOICES','VOCI')}!`],1.2,true,2);if(voices>=3)flash(.4)}}
+/* A ball that lands on a lane from above is held by a magnet (a ball coming from below plays its note once and bounces back).
+   Held balls only sound again when another ball arrives; notes last 1.6 s and the seconds in which two or more sound together are
+   counted and paid (more voices = more points). When only one ball is left the polyphony is over and the magnets let go. */
+function pinHeld(b){const k=b.held;b.x=LANE_X[k];b.y=LANE_Y0+.05+.08+R+.01;b.vx=b.vy=0}
+function holdBall(b,k){if(GS.held[k]||b.held>=0){return}b.held=k;b.holdT=7;GS.held[k]=b;pinHeld(b);polyHit(k,LANE_X[k]);GS.shake=.15}
+function releaseBall(b){const k=b.held;if(!(k>=0))return;if(GS.held[k]===b)GS.held[k]=null;b.held=-1;b.vy=-1.5;GATES[k].on=false;setTimeout(()=>{if(GS.multi)GATES[k].on=true},450)}
+function voiceOn(k){const now=GS.t;GS.vox=GS.vox.filter(v=>v.k!==k&&v.end>now);GS.vox.push({k,end:now+1.6});GS.polyT[k]=now;GATEM[k].t=1}
+function endPoly(){GS.multi=false;GS.held.forEach(b=>b&&releaseBall(b));GS.vox=[];if(GS.ovT>.2)ovPay();GS.ovT=0;GS.ovMax=0;GATES.forEach(g=>g.on=false);DROPS.forEach(s=>s.on=true);GS.drop=[0,0,0];dmsg([tt('POLYPHONY','POLIFONIA'),tt('THE END','FINE')],1.6,false,2);misUI()}
+function ovPay(){const p=Math.round(GS.ovT*30000*GS.ovMax*GS.ovMax);addScore(p,0,12,'#c77dff',true);dmsg([tt('TOGETHER','INSIEME'),`${GS.ovT.toFixed(1)} S`],1.4,true,2);GS.ovT=0;GS.ovMax=0}
+function polyHit(k,x){const now=GS.t;if(GS.polyT[k]!==undefined&&now-GS.polyT[k]<.3)return;
+ if(['chords','ear','key','tune'].includes(MODE()))laneHit(k,x);
+ GATEM[k].t=1;SND.noteBrass(k);SND.note(k,1);addScore(25000,x,LANE_Y0,NOTE_C[k]);burst(x,LANE_Y0,.4,NOTE_C[k],12,3);voiceOn(k);
+ GS.held.forEach((hb,j)=>{if(hb&&j!==k){SND.note(j,1);burst(LANE_X[j],LANE_Y0,.3,NOTE_C[j],8,2);voiceOn(j)}}); /* the held balls sing again with the new one */
+ const voices=GS.vox.filter(v=>v.end>now).length;if(voices>=2){addScore(30000*voices*voices,x,LANE_Y0-1,'#c77dff',true);dmsg([tt('CHORD','ACCORDO'),`${voices} ${tt('VOICES','VOCI')}!`],1.2,true,2);if(voices>=3)flash(.4)}}
+/* every frame: magnets, timers, the "together" counter */
+function polyTick(dt){if(!GS.multi||GS.state!=='play'){return}
+ for(const b of BALLS){if(b.mode!=='play'||b.held>=0)continue;
+  for(let k=0;k<7;k++){if(GS.held[k]||!GATES[k].on)continue;if(Math.abs(b.x-LANE_X[k])<.32&&b.y>GATES[k].ay+.3&&b.y<GATES[k].ay+.62&&Math.abs(b.vy)<2.2){holdBall(b,k);break}}}
+ let free=0;for(const b of BALLS)if(b.mode==='play'&&!(b.held>=0))free++;
+ GS.held.forEach(b=>{if(!b)return;b.holdT-=dt;if(b.holdT<=0||(free===0&&b.holdT<6.2))releaseBall(b)});
+ if(GS.finale<=0&&BALLS.length<=1){endPoly();return}
+ const now=GS.t,n=GS.vox.filter(v=>v.end>now).length;
+ if(n>=2){GS.ovT+=dt;GS.ovMax=Math.max(GS.ovMax,n);GS._ovU=(GS._ovU||0)+dt;if(GS._ovU>.2){GS._ovU=0;misUI()}}else if(GS.ovT>0){ovPay();misUI()}}
 
 /* ================= missions (like the old Space Cadet): choose with the flag, start at the Stage ================= */
 /* Hit the spinning flag (banderuola) to choose a mission: 3 hits light "mission ready" at the Stage (the saucer).
@@ -962,7 +982,7 @@ const ON={
    else{dmsg(['A N T',`★ ${GS.polyStars}/3`],1.6,true,2);setTimeout(resetDrops,1400)}}},
  igor(s,b){IMESH[s.i].t=1;SND.target(-3.45);if(GS.igor[s.i]){addScore(1000,-3.1,s.cy);return}GS.igor[s.i]=1;addScore(5000,-3.0,s.cy,'#9be38a');
   if(GS.igor.every(v=>v)){GS.bx=Math.min(6,GS.bx+1);addScore(50000,-2.8,11.6,'#9be38a',true);dmsg(['I G O R',`BONUS ${GS.bx}X`],1.6,true,2);SND.fanfare([0,2,4]);say(tt('That’s my name!','È il mio nome!'),2.4,true);setTimeout(()=>{GS.igor=[0,0,0,0]},1500)}},
- gate(s,b){polyHit(s.k,LANE_X[s.k])},
+ gate(s,b){if(b.held>=0)return;if(b.y>s.ay&&GS.multi)holdBall(b,s.k);else polyHit(s.k,LANE_X[s.k])},
  flag(c,b){flagHit()},
  ffs(c,b,imp){const d=imp<4?0:imp<7?1:imp<10?2:imp<13?3:imp<16?4:5;ffBar(d);GS.dynI=d;GS.dynT=GS.t;FFM.shake=1;pop(c.x,c.y+.4,DYN[d],d===5?'#ff5a5a':'#ffffff',true);osc({f:110,f2:50,v:.12+d*.06,d:.2});nz({f:900,v:.08+d*.05,d:.12});
   if(d===5){GS.mp++;GS.shake=.5;burst(c.x,c.y,.6,'#cfc8b8',20+GS.mp*10,4);addScore(50000,c.x,c.y,'#ffd36e',true);dmsg(['FORTISSIMO!',`${GS.mp}/3`],1.4,true,3);jump(SPR.igor,1);if(GS.mp>=3){FFS.on=false;burst(c.x,c.y,.6,'#cfc8b8',80,7);completeMode()}}
@@ -1043,7 +1063,7 @@ function sensors(b,ox,oy){for(const s of SENS){if(s.line){const dx=s.bx-s.ax,dy=
 let paused=false;
 function step(dt){if(paused)return;
  for(const f of FL){const tg=f.press?f.up:f.rest,d=tg-f.ang,sp=f.press?38:22;if(Math.abs(d)<=sp*dt){f.w=0;f.ang=tg}else{f.w=Math.sign(d)*sp;f.ang+=f.w*dt}}
- for(const b of BALLS){if(b.mode!=='play')continue;const ox=b.x,oy=b.y;
+ for(const b of BALLS){if(b.mode!=='play')continue;if(b.held>=0){pinHeld(b);continue}const ox=b.x,oy=b.y;
   b.vy-=G_*dt;const sp=Math.hypot(b.vx,b.vy);if(sp>VMAX){b.vx*=VMAX/sp;b.vy*=VMAX/sp}
   b.x+=b.vx*dt;b.y+=b.vy*dt;
   for(const s of SEGS)collideSeg(b,s);for(const c of CIRCS)collideCirc(b,c);for(const f of FL)collideFlip(b,f);
@@ -1104,7 +1124,7 @@ function fit(){const W=innerWidth,H=innerHeight;placeFlag();renderer.setSize(W,H
 addEventListener('resize',()=>setTimeout(fit,50));
 function gameTick(dt,t){if(paused)return;if(ARC.on){arcTick(dt);return}
  if(GS.state==='play'&&GS.cb>0){GS.cb-=dt;if(GS.cb<=0){GS.cb=0;say(tt('The bumper goes to sleep. Well played!','Il bumper va a dormire. Ben giocato!'),2,false)}}
- CB.on=CBT.on=GS.cb>0;const n=Math.ceil(dt*PHYS_HZ),h=dt/n;for(let i=0;i<n;i++)step(h);
+ CB.on=CBT.on=GS.cb>0;polyTick(dt);const n=Math.ceil(dt*PHYS_HZ),h=dt/n;for(let i=0;i<n;i++)step(h);
  ballsFrame(dt);variants(dt,t);antStep(dt);tokStep(dt,t);
  MU.bpm=lerp(MU.bpm,bpmTarget(),Math.min(1,dt*.5));MU.en=Math.max(0,MU.en-dt*.07);
  if(GS.state==='play'&&THEME!=='home'){GS.themeT-=dt;if(GS.themeT<=0)setTheme('home')}
