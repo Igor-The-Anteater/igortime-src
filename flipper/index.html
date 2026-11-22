@@ -1157,10 +1157,20 @@ function flip(side,on){if(ARC.on){arcInput(side,on);return}const fs=side<0?[FLL,
  if(on&&GS.state==='play'){SND.flip(side);if(side<0)GS.bl.push(GS.bl.shift());else GS.bl.unshift(GS.bl.pop())}}
 function charge(on){const lane=BALLS.find(b=>b.mode==='lane'&&b.auto===undefined);if(on){if(lane&&GS.state==='play'){GS.charging=true;ac()}}else if(GS.charging){GS.charging=false;if(lane&&GS.state==='play')launch(lane,GS.plunge);GS.plunge=0}}
 const KL=['ArrowLeft','KeyZ','ShiftLeft','KeyA'],KR=['ArrowRight','Slash','KeyM','ShiftRight','KeyL'],KP=['Space','ArrowDown','Enter','KeyS'];
+/* TEST MODE (open the page with ?prova): keys 1-7 jump straight into a mission as if the game started there
+   (the previous missions count as done, so the extra balls of mission 4 and 7 can be tried); 0 completes the running mission. */
+const PROVA=/[?&]prova/.test(location.search);
+function provaKey(n){if(GS.state!=='play')startGame();if(GS.state!=='play')return;
+ if(n===0){if(GS.mode>=0)completeMode();else say('Prova: premi 1-7 per entrare in una missione',2,true);return}
+ const i=n-1;if(GS.mode>=0)endMode();for(const q of[...BALLS])if(q.mode!=='lane')removeBall(q);
+ GS.done=GS.done.map((v,j)=>j<i);GS.rank=Math.min(i,RANKS.length-1);GS.balls=Math.max(GS.balls,3);GS.sel=i;GS.ready=false;GS.flag=0;flagTex();
+ if(!BALLS.length)serve(true);startMode(i);updVariants()}
+if(PROVA)setTimeout(()=>{const d=document.createElement('div');d.style.cssText='position:fixed;left:50%;bottom:60px;transform:translateX(-50%);z-index:6;background:#140b22e6;border:1.5px solid #ffd36e;color:#ffd36e;border-radius:999px;padding:4px 12px;font:600 12px Fredoka,sans-serif;pointer-events:none;white-space:nowrap';d.textContent='PROVA · tasti 1-7 = missione · 0 = completa la missione';document.body.appendChild(d)},300);
 addEventListener('keydown',e=>{if(e.repeat){if(KP.includes(e.code))e.preventDefault();return}ac();touchUI=false;
  if(GS.state==='title'&&(e.code==='Space'||e.code==='Enter')){e.preventDefault();startGame();return}
  if(GS.state==='over'&&e.code==='Enter'){startGame();return}
  if(e.code==='KeyP'||e.code==='Escape'){togglePause();return}
+ if(PROVA&&!ARC.on){const m=/^(Digit|Numpad)([0-7])$/.exec(e.code);if(m){e.preventDefault();provaKey(+m[2]);return}}
  if(KL.includes(e.code)){flip(-1,true);e.preventDefault()}if(KR.includes(e.code)){flip(1,true);e.preventDefault()}if(KP.includes(e.code)){charge(true);e.preventDefault()}});
 addEventListener('keyup',e=>{if(KL.includes(e.code))flip(-1,false);if(KR.includes(e.code))flip(1,false);if(KP.includes(e.code))charge(false)});
 const PT=new Map();

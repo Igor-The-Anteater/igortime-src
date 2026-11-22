@@ -40,3 +40,5 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 - 22 nov 2026 — Fabio: app Android 1.0 (Godot) in `app-flipper/`.
 - 22 nov 2026 — Fabio: v8 caricata sul ramo `flipper` (prestazioni migliorate per Android, PWA installabile).
 - 22 nov 2026 — Alessandro (con Claude): v9 — outlane salva-palla (una volta per palla), bumper centrale temporaneo 15 s (+5 s con la stellina), extra ball a missione 4 e 7, scenari legati alle missioni (tolti i gettoni palma/gondola/fungo), tasti-xilofono con bacchetta, minigioco con zoom sul pannello a puntini (GNAM! orizzontale con formiche rosse/bianche, istruzioni a due righe). Fabio: guarda in particolare la tolta dei gettoni e la fisica del kickback (la pallina segue un percorso guidato dal tappo al campo).
+- 22 nov 2026 — Alessandro (con Claude): modalità prova: aprendo il gioco con `?prova` (es. https://flipper.igortime.pages.dev/flipper/?prova) i tasti 1–7 saltano dentro la missione scelta (le precedenti contano come fatte, così si provano extra ball 4 e 7) e 0 completa la missione in corso (minigioco + bumper centrale + extra ball). Senza `?prova` non cambia nulla.
+
