@@ -4149,6 +4149,32 @@ function glRecycle(i){const sh=btlShelf(),s=sh[i],B=glB();if(!s||s.n<2)return 0;
    Rm.blocks.push({x:4.2,z:-2.15+k*1.0,r:.32});Rm.peds.push(P);
    hit(P,.45,()=>{const B=glB();if(B.st[S0.k]){bubbleQ.length=0;bubbleT=0;say(tt(...S0.f),3.6);snd('glass',btlF(k*2,0))}else say(tt(`An empty pedestal: here goes ${S0.n[0]} (${S0.c} pieces of glass).`,`Un piedistallo vuoto: qui va ${S0.n[1]} (${S0.c} pezzi di vetro).`),3)},'statue '+S0.k,.75)});
   BUILD='out'}}
+/* 21 Nov 2026: Igor's music pinball in the middle of the bar (game page /flipper/) */
+{const Rm=ROOMS.bar;if(Rm){try{BUILD='bar';const P=new THREE.Group();
+  const cnv=(w,h,draw)=>{const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);return new THREE.CanvasTexture(c)};
+  const field=cnv(128,256,(q,w,h)=>{const gr=q.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#1a0d3d');gr.addColorStop(1,'#0b0620');q.fillStyle=gr;q.fillRect(0,0,w,h);
+   for(let k=0;k<70;k++){q.fillStyle='rgba(255,255,255,'+(.3+Math.random()*.6)+')';q.fillRect(Math.random()*w,Math.random()*h,1.5,1.5)}
+   for(const[x,y,c]of[[44,70,'#ff7a4a'],[84,70,'#5cc2f2'],[64,100,'#c77dff']]){q.fillStyle=c;q.beginPath();q.arc(x,y,11,0,Math.PI*2);q.fill()}
+   q.strokeStyle='#ff8ab6';q.lineWidth=4;q.beginPath();q.arc(64,84,46,Math.PI*1.05,Math.PI*1.95);q.stroke();
+   q.fillStyle='#f6f2ea';q.save();q.translate(44,226);q.rotate(.5);q.fillRect(0,-4,26,8);q.restore();q.save();q.translate(84,226);q.rotate(Math.PI-.5);q.fillRect(0,-4,26,8);q.restore()});
+  const glass=cnv(256,256,(q,w,h)=>{const gr=q.createRadialGradient(128,150,10,128,128,180);gr.addColorStop(0,'#4a1f8a');gr.addColorStop(1,'#0b0620');q.fillStyle=gr;q.fillRect(0,0,w,h);
+   for(let k=0;k<80;k++){q.fillStyle='rgba(255,255,255,'+(.3+Math.random()*.7)+')';q.fillRect(Math.random()*w,Math.random()*h,2,2)}
+   q.fillStyle='#ffd36e';q.beginPath();q.arc(200,60,26,0,Math.PI*2);q.fill();q.strokeStyle='#ffd36e';q.lineWidth=5;q.beginPath();q.ellipse(200,60,44,12,-.3,0,Math.PI*2);q.stroke();
+   q.textAlign='center';q.font='700 44px Fredoka,system-ui,sans-serif';q.fillStyle='#9be38a';q.fillText('IGOR',128,150);q.font='700 30px Fredoka,system-ui,sans-serif';q.fillStyle='#7fe3ef';q.fillText(tt('PINBALL','FLIPPER'),128,190);
+   q.fillStyle='#ff8a1e';q.fillRect(58,212,140,26);q.fillStyle='#1a0d00';q.font='16px monospace';q.fillText('1.000.000',128,231)});
+  const body=new THREE.Mesh(new THREE.BoxGeometry(.78,.34,1.45),lam('#5b2a9a'));body.position.set(0,.95,0);body.rotation.x=-.07;P.add(body);
+  const top=new THREE.Mesh(new THREE.PlaneGeometry(.68,1.36),texM(field));top.rotation.x=-Math.PI/2-.07;top.position.set(0,1.125,0);P.add(top);
+  for(const[x,z]of[[-.34,-.66],[.34,-.66],[-.34,.66],[.34,.66]]){const l=new THREE.Mesh(new THREE.BoxGeometry(.07,.82,.07),lam('#2a1a40'));l.position.set(x,.41,z);P.add(l)}
+  const bb=new THREE.Mesh(new THREE.BoxGeometry(.8,.78,.16),lam('#5b2a9a'));bb.position.set(0,1.55,-.68);P.add(bb);
+  const gl=new THREE.Mesh(new THREE.PlaneGeometry(.68,.66),new THREE.MeshBasicMaterial({map:glass}));gl.position.set(0,1.55,-.595);P.add(gl);
+  const rails=[-.39,.39].map(x=>{const r=new THREE.Mesh(new THREE.BoxGeometry(.03,.03,1.45),glowM(x<0?'#7fe3ef':'#ff8ab6',1.2));r.position.set(x,1.13,0);r.rotation.x=-.07;P.add(r);return r});
+  const btns=[-.4,.4].map(x=>{const b=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.04,10),glowM('#ffd36e',.8));b.rotation.z=Math.PI/2;b.position.set(x,1.0,.55);P.add(b);return b});
+  const bulb=new THREE.Mesh(new THREE.SphereGeometry(.06,10,8),glowM('#ff5a5a',1));bulb.position.set(0,1.98,-.68);P.add(bulb);
+  P.rotation.y=-Math.PI/2;
+  station(Rm,'bar',{name:['Igor’s island pinball','Il flipper dell’isola di Igor'],sub:['walk to the pinball to play','vai al flipper per giocare'],pos:new V3(1.9,0,1.55),stand:new V3(.75,0,1.55),obj:P,
+   act:()=>launch('/flipper/',tt('Pinball time!','Si gioca a flipper!'),['bar',.75,1.55]),r:.85,y:1.2,zr:1.2});
+  updaters.push(t=>{if(where!=='bar')return;const k=(Math.sin(t*3)+1)/2;rails.forEach((r,i)=>r.material.emissiveIntensity=.6+((i?1-k:k))*1.2);bulb.material.emissiveIntensity=.4+(Math.floor(t*2)%2)*1.2;btns.forEach(b=>b.material.emissiveIntensity=.5+k)});
+ }catch(e){console.warn('pinball',e)}BUILD='out'}}
 /* the glass statues */
 const GLM=()=>lam('#c8ecff',{transparent:true,opacity:.62,emissive:'#4aa0c8',emissiveIntensity:.35});
 function statueMesh(k){const g=new THREE.Group(),m=GLM(),S=(r,x,y,z,sx=1,sy=1,sz=1)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(r,12,9),m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);g.add(o);return o};

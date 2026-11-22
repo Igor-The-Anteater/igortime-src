@@ -61,8 +61,8 @@ function merge(a,b){if(!a||!a.v)return b&&b.v?b:a;if(!b||!b.v)return a;const o=f
 const GN={daily:['Melody of the day','Melodia del giorno'],pitchStairs:['Pitch Stairs','Pitch Stairs'],pitchduo:['Pitch Stairs · two notes','Pitch Stairs · due note'],
  kitchen:['The kitchen','La cucina'],bedroom:['The bedroom','La camera'],window:['The window','La finestra'],bath:['The bathtub','La vasca'],drums:['The drums','La batteria'],
  abyss:['The abyss','L’abisso'],cadences:['Cadences','Cadenze'],intervals:['The maestros’ lessons · intervals','Le lezioni dei maestri · intervalli'],
- notes:['Reading music','Leggere le note'],harmony:['Harmony','Armonia'],drumschool:['Drum school','Scuola di batteria']};
-const ORDER=['pitchStairs','pitchduo','kitchen','bedroom','window','bath','drums','abyss','cadences','intervals','notes','harmony','drumschool'];
+ notes:['Reading music','Leggere le note'],harmony:['Harmony','Armonia'],drumschool:['Drum school','Scuola di batteria'],flipper:['Island pinball','Flipper dell’isola']};
+const ORDER=['pitchStairs','pitchduo','kitchen','bedroom','window','bath','drums','abyss','cadences','intervals','notes','harmony','drumschool','flipper'];
 const COURSES={intervals:1,notes:1,harmony:1,drumschool:1};
 const LV={easy:['Easy','Facile'],medium:['Medium','Medio'],extreme:['Extreme','Extreme'],all:['Lessons','Lezioni']};
 const ERR={p5:['Parallel fifths','Quinte parallele'],p8:['Parallel octaves/unisons','Ottave o unisoni paralleli'],hid:['Hidden fifths/octaves','Quinte o ottave nascoste'],
@@ -115,7 +115,7 @@ function dailyHTML(D){const T=GN.daily;if(!D||!D.n)return`<section class="off"><
 function gameHTML(k,st){const G=(st.g||{})[k],A=(st.a||{})[k],E=(st.e||{})[k],nm=L2(GN[k]||[k,k]),isC=COURSES[k];
  const n=nOf(G)+(G?0:0);if(!G&&!A)return`<section class="off"><h3>${esc(nm)}</h3><p class="m">${tt('Not played yet.','Non ancora giocato.')}</p></section>`;
  let h=`<section><h3>${esc(nm)}<small>${n} ${n===1?tt('game','partita'):(isC?tt('lessons','lezioni'):tt('games','partite'))}</small></h3>`;
- if(G){const rows=Object.entries(G).sort((a,b)=>['easy','medium','extreme','all'].indexOf(a[0])-['easy','medium','extreme','all'].indexOf(b[0]));const raw=k==='abyss';
+ if(G){const rows=Object.entries(G).sort((a,b)=>['easy','medium','extreme','all'].indexOf(a[0])-['easy','medium','extreme','all'].indexOf(b[0]));const raw=k==='abyss'||k==='flipper';
   h+=`<table><tr><th>${isC?'':tt('Level','Livello')}</th><th class="n">${isC?tt('Lessons','Lezioni'):tt('Games','Partite')}</th><th class="n">${raw?tt('Average','Media'):tt('Average','Media')}</th><th class="n">${tt('Best','Record')}</th>${raw?'':`<th class="n hs">${isC?tt('Perfect','Perfette'):tt('Perfect rounds','Turni perfetti')}</th>`}<th>${tt('Lately','Ultimamente')}</th></tr>`;
   for(const[l,L]of rows){const avg=raw?Math.round(L.sc/Math.max(1,L.n)):(L.s/Math.max(1,L.n)),best=raw?L.bs:L.b;
    const perf=raw?'':(L.r?pc(L.pf/L.r):(isC&&L.h.length?pc(L.h.filter(v=>v>=100).length/L.h.length):'—'));
