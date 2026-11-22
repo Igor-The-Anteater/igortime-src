@@ -4,7 +4,7 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 
 ## Dove sta
 - Ramo: `flipper` (NON `main`: `main` è il sito vero su igortime.com, ci va solo quando Fabio dice "carica").
-- Anteprima: l'anteprima Cloudflare Pages del ramo `flipper` → `https://flipper.igortime-src.pages.dev/flipper/` (se le anteprime dei rami sono attive in Cloudflare).
+- Anteprima (si aggiorna da sola a ogni push sul ramo, in 1–2 minuti): https://flipper.igortime.pages.dev/flipper/ — il bar col flipper: https://flipper.igortime.pages.dev/
 - Gioco web: `flipper/index.html` (tutto in un file: three.js r128 + fisica 2D propria + WebAudio). PWA: `manifest.webmanifest`, `sw.js`, icone.
 - Il flipper è anche nel bar dell'isola (stazione "Igor's music pinball" in `index.html`) e nelle statistiche (`stats.js`, chiave `flipper`).
 
