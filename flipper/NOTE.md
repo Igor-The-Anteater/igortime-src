@@ -46,12 +46,14 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 - 22 nov 2026 — Alessandro (con Claude): v10 — solo skill shot casuale (tolto il super skill shot), fermo a senso unico sopra le corsie-nota, GNAM! molto più veloce con accelerazione fino alla 10ª formica, BUM CIÀ! con riff a tempo e punteggio in millisecondi, segnali visivi in "Che nota è?".
 
 ## Ancora aperti (non fatti, da decidere)
-- Rotazione delle luci con i due flipper nelle missioni a corsie (come il lane change dei flipper veri): da chiarire in quali missioni e cosa ruota.
-- Missione Armatura da sostituire (proposte: "Che strumento è?" coi timbri dei fiati, canne d'organo, orchestra che attraversa il campo).
-- Idea fiati: clarinetto rotante al centro → flauto → oboe → fagotto (lock di 4 palle) → sax (5ª palla, 10 s di frenzy con 5 palline). Dove metterla è da decidere.
-- Missione Melodia: le note compaiono come bersagli in mezzo al campo (più facili ma rischiosi), alla fine suona la melodia mostrando cosa succede. Da chiarire quali note e se in ordine.
+- Missione Fiati: versione semplificata (ogni strumento sta in una corsia, i flipper li spostano). Manca il lock di 4-5 palle con 10 s di frenzy.
+- Missione Melodia: le note compaiono come bersagli in mezzo al campo (più facili ma rischiosi), alla fine suona la melodia. Da chiarire quali note e se in ordine.
+- Vista zoomata con camera che scorre (stile Balls of Steel): tasto sul desktop, su Android girando il telefono.
 
+## Tasti di prova (solo con `?prova` nell'indirizzo)
+1-7 entra nella missione · 0 completa la missione · E palla extra · P polifonia · G Gran Concerto · B bumper centrale · K ricarica i salva-palla (kickback) · F missione pronta al Palco · Q GNAM! · W BUM CIÀ! · R Igor Racing · T bicchieri.
 
 - 2026-11-22 Claude (Alessandro): polifonia riscritta (v11): le palline che arrivano da sopra restano ferme nelle corsie (magnete, max 7 s); da sotto suonano una volta sola; le ferme risuonano solo quando arriva un'altra pallina; timer "insieme" con bonus per secondi e voci; accordo extra; la polifonia finisce quando resta una sola pallina.
 - Idea da fare (Alessandro): vista zoomata con camera che scorre (stile Balls of Steel): tasto sul desktop, su Android girando il telefono.
 - 2026-11-22 Claude (Alessandro): v12: secondo flipper piccolo in alto a destra (FRU, comandato dal tasto destro, specchio di FLU) per mandare la palla ai bumper e alle lane piccole delle note; corretta la scritta "undefined → ff" all'inizio della missione Fortissimo.
+- 2026-11-22 Claude (Alessandro): v13: (1) luci a rotazione: nelle missioni Accordi e Fiati i flipper spostano le luci accese/gli strumenti tra le corsie; (2) l'Armatura è sostituita dalla missione Fiati (1ª volta clarinetto, flauto, oboe, fagotto; 2ª giro + sax; poi ottoni corno, tromba, trombone, tuba, eufonio); (3) minigioco Igor Racing (solo bici; avversari Carla la balena e la formica di tofu gigante; metronomo che accelera e rallenta se si sbaglia; Igor in affanno fa PUFF; 1º premio pieno, 2º metà, ultimo niente); (4) minigioco dei bicchieri (4 suoni, mescolata deterministica diversa a ogni volta, 3 domande; solo bianco, scuro e rosso); (5) rotazione minigiochi: GNAM, BUM CIÀ, Igor Racing, bicchieri; (6) tasti di prova estesi.
