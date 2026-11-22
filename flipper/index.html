@@ -44,11 +44,14 @@ html,body{margin:0;height:100%;background:#0e1a33;overflow:hidden;touch-action:n
 #pm b{position:absolute;left:62.5%;top:-20px;transform:translateX(-50%);color:#ffd36e;font-size:13px}
 #bigmsg{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%) scale(.6);z-index:9;font:700 clamp(40px,11vw,86px)/1 Fredoka,sans-serif;text-align:center;color:#ffd36e;text-shadow:0 5px 0 #6b3a12,0 0 30px #ffb35a;opacity:0;pointer-events:none;transition:opacity .25s,transform .35s cubic-bezier(.2,1.6,.4,1)}
 #bigmsg.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
-#arc{position:fixed;left:50%;top:50%;z-index:8;transform:translate(-50%,-90%) scale(.3);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.2,1.3,.4,1),opacity .3s;padding:10px;border-radius:16px;background:linear-gradient(#6b4325,#3d2614);border:3px solid #8a5a32;box-shadow:0 20px 60px #000a,0 0 30px #ff8a1e55;text-align:center;width:min(580px,94vw)}
-#arc.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
-#arcc{display:block;width:100%;aspect-ratio:2/1;border-radius:8px;image-rendering:pixelated;background:#0c0602}
-#arct{font:16px "Press Start 2P",monospace;color:#ffd36e;margin:2px 0 8px}
-#arch{font:600 14px Fredoka,sans-serif;color:#f3e7d3;margin-top:8px}
+#arc{position:fixed;left:50%;top:60%;z-index:8;transform:translate(-50%,10px);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.2,1.3,.4,1),opacity .3s;text-align:center;width:min(760px,94vw)}
+#arc.on{opacity:1;transform:translate(-50%,0)}
+#arch{font:700 clamp(26px,6.4vw,46px)/1.18 Fredoka,sans-serif;color:#fff;text-shadow:0 4px 0 #2b1038,0 0 18px #0009}
+#arch .w{color:#fff6d8;background:#ffffff26;border-radius:10px;padding:0 8px}#arch .r{color:#ff6b6b;background:#ff3b3b2e;border-radius:10px;padding:0 8px}
+#arck{font:600 clamp(14px,3.4vw,19px) Fredoka,sans-serif;color:#ffd36e;margin-top:10px;text-shadow:0 2px 0 #000}
+#dmdw{transition:transform .5s cubic-bezier(.2,1.1,.3,1);transform-origin:center;will-change:transform}
+body.arcon #gl{filter:brightness(.4) saturate(.8);transition:filter .4s}
+body.arcon #mis,body.arcon #ig,body.arcon #tools,body.arcon #back{opacity:.25;transition:opacity .3s}
 #flash{position:fixed;inset:0;pointer-events:none;z-index:2;opacity:0;background:radial-gradient(circle,#fff6,#fff0 70%)}
 .scr{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:#05030dcc;backdrop-filter:blur(3px)}
 .scr[hidden]{display:none}
@@ -81,7 +84,7 @@ html,body{margin:0;height:100%;background:#0e1a33;overflow:hidden;touch-action:n
 <div id="mis"><span class="pl"></span><span class="nm"></span><span class="bar"><i></i></span><span class="ct"></span></div>
 <div id="hint" style="opacity:0"></div>
 <div id="bigmsg"></div>
-<div id="arc"><div id="arct"></div><canvas id="arcc" width="512" height="256"></canvas><div id="arch"></div><div id="arck"></div></div>
+<div id="arc"><div id="arch"></div><div id="arck"></div></div>
 <div id="pm"><span id="pmz"></span><i id="pmf"></i><b>★</b></div>
 <div class="scr" id="title"><div class="card">
  <img id="tImg" src="/igor.webp" alt="">
@@ -390,7 +393,11 @@ for(const s of SEGS){if(!s.vis)continue;const h=s.h,w=Math.max(.1,s.rad*2);const
 for(const c of CIRCS){if(c.tag!=='post')continue;const m=new THREE.Mesh(new THREE.CylinderGeometry(c.R,c.R,.42,14),M.rubber);m.position.copy(VP(c.x,c.y,.21));table.add(m);
  const cap=new THREE.Mesh(new THREE.CylinderGeometry(c.R*.6,c.R*.6,.06,10),M.chrome);cap.position.copy(VP(c.x,c.y,.44));table.add(cap)}
 /* the note lanes: coloured caps on the guides and a gate that rises in POLIFONIA */
-const GATEM=GATES.map((s,k)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(.66,.36,.1),new THREE.MeshStandardMaterial({color:NOTE_C[k],emissive:NOTE_C[k],emissiveIntensity:.5,roughness:.3}));m.position.copy(VP(LANE_X[k],LANE_Y0+.05,-.3));table.add(m);return{m,t:0}});
+/* when the lanes become hard (polyphony, grand concert) they are the bars of a xylophone: different lengths, and a mallet taps the bar that is hit */
+const XLEN=[1.1,1.02,.94,.86,.78,.7,.62];
+const GATEM=GATES.map((s,k)=>{const len=XLEN[k];const m=new THREE.Mesh(new THREE.BoxGeometry(.5,.14,len),new THREE.MeshStandardMaterial({color:NOTE_C[k],emissive:NOTE_C[k],emissiveIntensity:.5,roughness:.3}));m.position.copy(VP(LANE_X[k],LANE_Y0+.05+len/2,-.3));table.add(m);
+ const mal=new THREE.Group(),st=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1.4,8),M.wood);st.position.y=.7;mal.add(st);mal.add(new THREE.Mesh(new THREE.SphereGeometry(.17,12,10),new THREE.MeshStandardMaterial({color:'#f6efe0',roughness:.6})));mal.scale.setScalar(1.5);mal.visible=false;table.add(mal);
+ return{m,t:0,mal,x:LANE_X[k],yc:LANE_Y0+.05+len*.6}});
 /* slingshots */
 const SLING=[];for(const s of[-1,1]){const A=[SL.A[0]*s,SL.A[1]],B=[SL.B[0]*s,SL.B[1]],C=[SL.C[0]*s,SL.C[1]];const sh=new THREE.Shape();[A,B,C].forEach((p,i)=>{const v=V(p[0],p[1]);i?sh.lineTo(v.x,-v.z):sh.moveTo(v.x,-v.z)});
  const geo=new THREE.ExtrudeGeometry(sh,{depth:.42,bevelEnabled:false});geo.rotateX(-Math.PI/2);const m=new THREE.Mesh(geo,plastic(s<0?'#7fe3ef':'#ff8ab6',{transparent:true,opacity:.8,emissive:s<0?'#1d5a66':'#66223a'}));table.add(m);
@@ -631,11 +638,12 @@ function spawnTok(){const kinds=['carib','lake','shroom'].filter(k=>k!==THEME);c
  const ring=new THREE.Mesh(new THREE.TorusGeometry(.46,.04,8,32),new THREE.MeshBasicMaterial({color:TH[kind].acc}));ring.rotation.x=Math.PI/2;ring.position.y=.03;G.add(ring);
  table.add(G);TOK={kind,x,y,G,m,ring,t:0};
  say(kind==='carib'?tt('Look, a palm tree! Hit it and we go to the Caribbean!','Guarda, una palma! Colpiscila e andiamo ai Caraibi!'):kind==='lake'?tt('A gondola! Hit it: Gondoligor’s lake!','Una gondola! Colpiscila: il lago di Gondoligor!'):tt('A mushroom! Hit it: the wood of John Cagigor!','Un fungo! Colpiscilo: il bosco di John Cagigor!'),2.8,false)}
-function tokStep(dt,t){if(GS.state!=='play'){return}if(!TOK){tokT-=dt;if(tokT<=0)spawnTok();return}
+function tokStep(dt,t){return; /* the islands now come only with the missions (setTheme from startMode) */
+ if(GS.state!=='play'){return}if(!TOK){tokT-=dt;if(tokT<=0)spawnTok();return}
  const T=TOK;T.t+=dt;const pop=Math.min(1,T.t*3)*(T.t>14?Math.max(0,1-(T.t-14)):1);T.G.scale.setScalar(Math.max(.01,pop));T.m.rotation.y+=dt*.8;T.m.position.y=Math.abs(Math.sin(t*3))*.08;T.ring.scale.setScalar(1+.1*Math.sin(t*6));
  if(T.t>15){table.remove(T.G);TOK=null;tokT=10;return}
  for(const b of BALLS)if(b.mode==='play'&&Math.hypot(b.x-T.x,b.y-T.y)<R+.42){table.remove(T.G);TOK=null;tokT=22;burst(T.x,T.y,.5,TH[T.kind].acc,40,5);setTheme(T.kind);break}}
-function setTheme(k,quiet){THEME=k;const T=TH[k];GS.themeT=k==='home'?0:60;paintField();
+function setTheme(k,quiet){THEME=k;const T=TH[k];GS.themeT=k==='home'?0:9999;paintField();
  scene.background.set(T.sky);scene.fog.color.set(T.sky);SEA.color.set(T.sea);hemi.color.set(T.hemi[0]);hemi.groundColor.set(T.hemi[1]);M.accent.color.set(T.acc);
  BULBS.forEach((b,i)=>b.material.color.set(i%2?T.acc:T.acc2));RAMPV.strip.material.color.set(T.ramp);
  for(const s in SCEN)SCEN[s].visible=s===k;setHost(T.host);hemi.intensity=k==='carib'?.75:.95;if(quiet)return;
@@ -701,7 +709,8 @@ function drummer(t,x0){const g=og,hit=Math.floor(t*8)%2;g.fillStyle='#ff8a1e';
  g.fillRect(x0+30,7+(hit?0:2),10,1.5);g.fillRect(x0+34,8,1,14);                            // cymbal
  g.strokeStyle='#ff8a1e';g.lineWidth=1.5;g.beginPath();g.moveTo(x0+12,12);g.lineTo(x0+5,hit?15:19);g.lineTo(x0+(hit?1:3),hit?13:20);
  g.moveTo(x0+17,12);g.lineTo(x0+25,hit?16:11);g.lineTo(x0+(hit?29:33),hit?17:6);g.stroke()}
-function dmdDraw(dt){og.clearRect(0,0,DW,DH);og.fillStyle='#ff8a1e';const m=DQ[0];const now=performance.now()/1000;
+function dmdDraw(dt){if(ARC.on&&(ARC.phase==='intro'||ARC.phase==='play'||ARC.phase==='result'))return; /* the arcade draws on the same panel */
+ og.clearRect(0,0,DW,DH);og.fillStyle='#ff8a1e';const m=DQ[0];const now=performance.now()/1000;
  if(m){m.t+=dt;if(m.t>m.dur)DQ.shift()}
  if(m&&!(m.flash&&Math.floor(m.t*8)%2)){const L=m.lines;if(m.anim==='drum'){drummer(now,4);dtext(L[0],2,8,'center',86);dtext(L[1],13,fitSize(L[1],80),'center',86)}
   else if(L.length===1){const z=fitSize(L[0],126);dtext(L[0],(DH-z)/2,z)}else{dtext(L[0],1,8);const z=fitSize(L[1],126);dtext(L[1],12,z)}}
@@ -723,7 +732,7 @@ function flash(a=.6){const f=$('flash');f.style.transition='none';f.style.opacit
 function hint(t){const h=$('hint');if(t){h.textContent=t;h.style.opacity=1}else h.style.opacity=0}
 function misUI(){const el=$('mis'),md=MODE(),mo=GS.mode>=0?MODES[GS.mode]:null,mi=MIS[GS.mi];
  const col=GS.finale>0?'#ffd36e':GS.multi?'#c77dff':mo?'#ffd36e':GS.ready?'#ffd36e':'#ff8a5a';el.style.color=col;el.style.borderColor=col+'aa';el.querySelector('.pl').style.background=col;
- const th=THEME!=='home'?`${({carib:'🌴',lake:'🛶',shroom:'🍄'})[THEME]} ${Math.ceil(GS.themeT)}s · `:'';let txt,frac,ct;
+ const th=THEME!=='home'?`${({carib:'🌴',lake:'🛶',shroom:'🍄'})[THEME]} `:'';let txt,frac,ct;
  if(GS.finale>0){txt=tt('Gran concerto!','Gran concerto!');frac=GS.finale/45;ct=Math.ceil(GS.finale)+'s'}
  else if(GS.multi){txt=tt('Polyphony! Hit notes together','Polifonia! Colpisci le note insieme');frac=1;ct=''}
  else if(mo){const need=mo.need,p=md==='tune'?GS.tuneI/GS.tune.n.length:md==='key'?GS.acc.filter((v,i)=>v===(GS.key.a[i]||0)).length/7:GS.mp/need;
@@ -733,7 +742,7 @@ function misUI(){const el=$('mis'),md=MODE(),mo=GS.mode>=0?MODES[GS.mode]:null,m
 
 /* ================= game state ================= */
 const GS={state:'title',score:0,shown:0,ball:1,balls:3,mi:0,loop:1,bx:1,pfx:1,pfxT:0,beats:0,grooveLv:0,lit:[0,0,0,0,0,0,0],jack:0,igor:[0,0,0,0],drop:[0,0,0],bl:[0,0,0,0],polyStars:0,polyReady:false,
- multi:false,polyT:[],save:0,themeT:0,mode:-1,modeT:0,mp:0,done:[false,false,false,false,false,false,false],rank:0,sel:0,flag:0,ready:false,finale:0,acc:[0,0,0,0,0,0,0],combo:0,comboT:0,skill:-1,skillT:0,t:0,shake:0,ants:0,antsEver:0,ramps:0,orbits:0,drums:0,notes:0,plunge:0};
+ multi:false,polyT:[],save:0,themeT:0,mode:-1,modeT:0,mp:0,done:[false,false,false,false,false,false,false],rank:0,sel:0,flag:0,ready:false,finale:0,acc:[0,0,0,0,0,0,0],combo:0,comboT:0,skill:-1,skillT:0,t:0,shake:0,ants:0,antsEver:0,ramps:0,orbits:0,drums:0,notes:0,plunge:0,kb:[1,1],cb:0};
 const BALLS=[];let ANT=null,antT=6;
 const grooveNeed=()=>20+GS.grooveLv*10;
 function addScore(n,x,y,col,big){if(GS.state==='title')return;n=Math.round(n*GS.loop*GS.pfx*(GS.finale>0?2:1));GS.score+=n;if(x!==undefined)pop(x,y,'+'+fmt(n),col,big)}
@@ -752,14 +761,13 @@ function chordDone(){const mi=MIS[GS.mi];[SPR.igor,SPR.host,SPR.d1,SPR.d2].forEa
  dmsg([tt('CHORD','ACCORDO'),L2(mi.N).toUpperCase().slice(0,16)],2.4,true,3);say(tt(`${L2(mi.N)}! What a sound!`,`${L2(mi.N)}! Che suono!`),2.6,true);
  LANE_X.forEach((x,k)=>{if(mi.n.includes(k))burst(x,17.5,.5,NOTE_C[k],20,4)});GS.mp++;misUI();if(GS.mp>=3){setTimeout(()=>{if(MODE()==='chords')completeMode()},900)}else setTimeout(()=>{if(MODE()==='chords')setMission((GS.mi+1)%7)},1400)}
 function nextMission(){let i=GS.mi+1;if(i>=MIS.length){i=0;GS.loop++;dmsg([tt('SYMPHONY!','SINFONIA!'),`× ${GS.loop}`],3,true,3);say(tt(`All the chords! Now everything is worth ×${GS.loop}!`,`Tutti gli accordi! Ora tutto vale ×${GS.loop}!`),3.4,true)}
- if(i===3&&!GS.extraGiven){GS.extraGiven=1;GS.balls++;setTimeout(()=>{dmsg([tt('EXTRA','PALLA'),tt('BALL!','EXTRA!')],2,true,3);say(tt('Extra ball! Igor is so happy!','Palla extra! Igor è felicissimo!'),2.6,true)},2600)}
  setTimeout(()=>setMission(i),1200)}
 
 /* ---------- balls ---------- */
 function newBall(x,y,mode){const b={x,y,vx:0,vy:0,mode,h:0,hv:0,stuck:0,cap:0,u:0,spd:0,...ballMesh()};b.ins={};BALLS.push(b);return b}
 function removeBall(b){table.remove(b.m);table.remove(b.sh);b.m.userData.trail.forEach(s=>table.remove(s));const i=BALLS.indexOf(b);if(i>=0)BALLS.splice(i,1)}
 const launchHint=()=>hint(touchUI?tt('Hold the right side, let go: launch!','Tieni premuto a destra e lascia: lancio!'):tt('Hold Space, let go: launch!','Tieni premuto Spazio e lascia: lancio!'));
-function serve(auto){const b=newBall(PLUNGE.x,PLUNGE.y,'lane');GS.plunge=0;if(auto)b.auto=.7;else{GS.skill=Math.random()*7|0;launchHint()}return b}
+function serve(auto){const b=newBall(PLUNGE.x,PLUNGE.y,'lane');GS.plunge=0;GS.kb=[1,1];if(auto)b.auto=.7;else{GS.skill=Math.random()*7|0;launchHint()}return b}
 /* plunger: most of the travel is spent on the useful range (top lanes, the secret gap by the DO lane, the orbit) */
 const plungeV=c=>c<.15?31+c/.15*2.5:c<.85?33.5+(c-.15)/.7*5:38.5+(c-.85)/.15*7.5;
 let RAMP_VY=4.5;const GOLD=[.55,.7];
@@ -770,7 +778,7 @@ function goldPath(b){const a0=Math.atan2(b.y-16,b.x-.4),pts=[];for(let a=a0;a<2.
  pts.push(V(-2.45,18.35,R),V(-2.62,17.4,R),V(-2.7,16.35,R));const c=new THREE.CatmullRomCurve3(pts);b.gp=c;b.glen=c.getLength();b.u=0;b.spd=Math.max(9,Math.hypot(b.vx,b.vy));b.mode='guide'}
 function launch(b,c){b.mode='play';b.y=PLUNGE.y;b.vx=0;b.vy=plungeV(c);b.gold=!b.auto0&&c>=GOLD[0]&&c<=GOLD[1];SND.launch();GS.skillT=4;hint(null);if(GS.save<=0&&!GS.multi&&!b.auto0)setSave(10)}
 function startGame(){ac();for(const b of[...BALLS])removeBall(b);Object.assign(GS,{state:'play',score:0,shown:0,ball:1,balls:3,loop:1,bx:1,pfx:1,pfxT:0,beats:0,grooveLv:0,igor:[0,0,0,0],drop:[0,0,0],bl:[0,0,0,0],polyStars:0,polyReady:false,
-  multi:false,save:0,combo:0,comboT:0,ants:0,antsEver:0,ramps:0,orbits:0,drums:0,notes:0,extraGiven:0,mode:-1,modeT:0,mp:0,done:[false,false,false,false,false,false,false],rank:0,sel:0,flag:0,ready:false,finale:0});FFS.on=false;updVariants();flagTex();
+  multi:false,save:0,combo:0,comboT:0,ants:0,antsEver:0,ramps:0,orbits:0,drums:0,notes:0,extraGiven:0,kb:[1,1],cb:0,mode:-1,modeT:0,mp:0,done:[false,false,false,false,false,false,false],rank:0,sel:0,flag:0,ready:false,finale:0});FFS.on=false;updVariants();flagTex();
  DROPS.forEach((s,i)=>{s.on=true;DMESH[i].y=.23});GATES.forEach(g=>g.on=false);setMission(0);serve();MU.on=true;antT=4;MU.bpm=88;MU.en=0;
  if(TOK){table.remove(TOK.G);TOK=null}tokT=14;setTheme('home',true);
  dmsg([tt('CHOOSE','SCEGLI'),tt('A MISSION','UNA MISSIONE')],2.2,false,2);say(tt('Let’s make music! Hit the flag three times to choose a mission, then the Stage!','Facciamo musica! Colpisci tre volte la banderuola per scegliere la missione, poi il Palco!'),3.8,true);$('title').hidden=true;$('over').hidden=true}
@@ -808,7 +816,8 @@ function polyHit(k,x){if(['chords','ear','key','tune'].includes(MODE()))laneHit(
 const MODE=()=>GS.mode>=0?MODES[GS.mode].k:null;
 const METRO_P=.8;
 function nextSel(from){for(let i=1;i<=7;i++){const j=(from+i)%7;if(!GS.done[j])return j}return from}
-function startMode(i){const m=MODES[i];GS.mode=i;GS.modeT=m.T;GS.mp=0;GS.ready=false;GS.flag=0;GS.lit=[0,0,0,0,0,0,0];
+const THEME_OF={chords:'home',drums:'shroom',ff:'lake',ear:'lake',key:'carib',metro:'carib',tune:'carib'};
+function startMode(i){const m=MODES[i];{const tk=THEME_OF[m.k];if(tk!==THEME){setTheme(tk,true);burst(0,10,1,TH[tk].acc,50,6);if(tk!=='home')setTimeout(()=>{if(GS.mode===i)say(L2(TH[tk].hi),3.2,false)},4800)}}GS.mode=i;GS.modeT=m.T;GS.mp=0;GS.ready=false;GS.flag=0;GS.lit=[0,0,0,0,0,0,0];
  if(m.k==='chords')setMission((GS.mi+1)%6);
  if(m.k==='ff'){FFS.on=true;GS.ffHits=0;FFM.t=0;ffBar(-1)}
  if(m.k==='ear'){GS.ear=Math.random()*7|0;GS.earT=1.2}
@@ -819,14 +828,14 @@ function startMode(i){const m=MODES[i];GS.mode=i;GS.modeT=m.T;GS.mp=0;GS.ready=f
  dmsg([tt('MISSION','MISSIONE'),L2(m.N).toUpperCase().slice(0,16)],2.6,true,4);
  const extra=m.k==='key'?` ${L2(GS.key.N)}: ${Object.keys(GS.key.a).map(k=>NOTE_N[k]+accOf(GS.key.a[k])).join(' ')}`:m.k==='tune'?` ${L2(GS.tune.N)}: ${GS.tune.n.map(k=>NOTE_N[k]).join(' ')}`:'';
  say(L2(m.how)+extra,4.2,true);misUI()}
-function completeMode(){const m=MODES[GS.mode];const v=300000*(GS.rank+1);addScore(v,0,10,'#ffd36e',true);GS.done[GS.mode]=true;GS.rank=Math.min(RANKS.length-1,GS.rank+1);
+function completeMode(){const m=MODES[GS.mode];startCB();const v=300000*(GS.rank+1);addScore(v,0,10,'#ffd36e',true);GS.done[GS.mode]=true;GS.rank=Math.min(RANKS.length-1,GS.rank+1);
  SND.fanfare([0,2,4,6]);flash(.8);GS.shake=.5;[SPR.igor,SPR.host,SPR.d1,SPR.d2].forEach(s=>jump(s,1));MU.en=1;burst(0,10,1,'#ffd36e',60,7);
  dmsg([L2(m.N).toUpperCase().slice(0,16),tt('COMPLETE!','COMPIUTA!')],2.6,true,4);
  setTimeout(()=>{if(GS.state==='play'||GS.state==='bonus'){dmsg([tt('NEW RANK','NUOVO GRADO'),L2(RANKS[GS.rank]).toUpperCase().slice(0,16)],2.4,true,3);say(tt(`Mission complete! You are now: ${L2(RANKS[GS.rank])}!`,`Missione compiuta! Ora sei: ${L2(RANKS[GS.rank])}!`),3.4,true)}},2700);
- if(GS.rank===3&&!GS.extraGiven){GS.extraGiven=1;GS.balls++;setTimeout(()=>{dmsg([tt('EXTRA','PALLA'),tt('BALL!','EXTRA!')],2,true,3)},5400)}
+ {const nd=GS.done.filter(Boolean).length;if(nd===4||nd===7){GS.balls++;setTimeout(()=>{dmsg([tt('EXTRA','PALLA'),tt('BALL!','EXTRA!')],2,true,3);say(tt(`Mission ${nd}: extra ball! Igor is so happy!`,`Missione ${nd}: palla extra! Igor è felicissimo!`),2.8,true)},5400)}}
  endMode();const fin=GS.done.every(v=>v);missionCompleteShow(fin?()=>setTimeout(startFinale,600):null)}
 function failMode(){const m=MODES[GS.mode];dmsg([tt('TIME!','TEMPO!'),L2(m.N).toUpperCase().slice(0,16)],1.8,false,3);say(tt('Time’s up! No problem: the flag is waiting for you, we’ll try again!','Tempo scaduto! Nessun problema: la banderuola ti aspetta, ci riproviamo!'),3.2,true);endMode()}
-function endMode(){GS.mode=-1;GS.flag=0;FFS.on=false;GS.lit=[0,0,0,0,0,0,0];GS.sel=nextSel(GS.sel);flagTex();updVariants();misUI()}
+function endMode(){if(THEME!=='home')setTheme('home',true);GS.mode=-1;GS.flag=0;FFS.on=false;GS.lit=[0,0,0,0,0,0,0];GS.sel=nextSel(GS.sel);flagTex();updVariants();misUI()}
 function updVariants(){WAND.on=GS.rank>=2&&MODE()!=='ff';WANDM.visible=WAND.on}
 function startFinale(){if(GS.state!=='play')return;GS.finale=45;GS.multi=true;setSave(15);dmsg(['GRAN','CONCERTO!'],3,true,5);SND.fanfare([0,2,4,6]);flash(1);GS.shake=.8;MU.en=1;
  say(tt('All seven missions! GRAN CONCERTO: four balls and everything is worth double!','Tutte e sette le missioni! GRAN CONCERTO: quattro palline e tutto vale doppio!'),4,true);
@@ -862,62 +871,84 @@ function modeTick(dt){const m=MODE();
  if(m==='ear'){GS.earT-=dt;if(GS.earT<=0){GS.earT=5;SND.note(GS.ear,1);osc({f:mtof(NOTE_M[GS.ear]+12),type:'triangle',v:.1,d:.8,t:.02,rv:1});say(tt('🎵 Which note is this?','🎵 Che nota è questa?'),2,true);jump(SPR.igor,.6)}}
  if(m==='metro'){const n=Math.floor((GS.t-GS.metro0)/METRO_P);if(n!==GS.metroN){GS.metroN=n;osc({f:n%4?1500:2200,v:.06,d:.04})}}}
 /* ================= the arcade on the dot-matrix display =================
-   Every mission completed: big "MISSION COMPLETE", the ball is locked (the table freezes), the display grows
-   into an arcade screen played with the two flipper buttons. Then a countdown and the ball goes on.
-   Games: GNAM! (Igor catches 15 falling tofu ants) and BUM CIÀ! (hit the left/right drum when the note arrives). */
-const AW=128,AH=64,ARC={on:false,phase:'',t:0,game:null,n:0};
-const aoff=document.createElement('canvas');aoff.width=AW;aoff.height=AH;const aog=aoff.getContext('2d',{willReadFrequently:true});
-const acv=$('arcc'),acx=acv.getContext('2d');
-const amask=document.createElement('canvas');function arcMask(){amask.width=acv.width;amask.height=acv.height;const m=amask.getContext('2d'),cw=acv.width/AW,ch=acv.height/AH;m.fillStyle='#0c0602';m.fillRect(0,0,amask.width,amask.height);for(let y=0;y<AH;y++)for(let x=0;x<AW;x++)m.clearRect(x*cw+cw*.08,y*ch+ch*.08,cw*.84,ch*.84)}
-function arcDots(){acx.imageSmoothingEnabled=false;acx.drawImage(aoff,0,0,acv.width,acv.height);acx.drawImage(amask,0,0)}
+   Every mission completed: big "MISSION COMPLETE", the ball is locked (the table freezes), the camera zooms on the
+   dot-matrix panel of the top bar (same 128×32 dots, just bigger) and it becomes an arcade screen played with the two
+   flipper buttons. Big two-line instructions stay under the panel. Then a countdown and the ball goes on.
+   Games: GNAM! (horizontal: Igor goes up/down, 12 white tofu ants walk towards him, red ants end the game; the pattern
+   is random-looking but always the same, so it can be learned) and BUM CIÀ! (hit the top/bottom drum on the beat). */
+const AW=DW,AH=DH,ARC={on:false,phase:'',t:0,game:null,n:0};
+const aog=og;
+function arcDots(){dg.drawImage(dbg,0,0);dg.imageSmoothingEnabled=false;dg.drawImage(off,0,0,dmd.width,dmd.height);dg.drawImage(dmask,0,0)}
 function atext(s,x,y,size=8,col='#ff8a1e',al='center'){aog.font=`${size}px ${DFONT}`;aog.textAlign=al;aog.textBaseline='top';aog.fillStyle=col;aog.fillText(s,x,y)}
-/* little pixel Igor (seen from the front, 14×10) */
-function pIgor(x,y,open){const g=aog;g.fillStyle='#9be38a';g.fillRect(x-6,y-6,12,7);g.fillRect(x-4,y-8,8,2);g.fillRect(x+5,y-3,5,3);g.fillStyle='#fff';g.fillRect(x-3,y-5,3,3);g.fillRect(x+1,y-5,3,3);g.fillStyle='#000';g.fillRect(x-2,y-4,1,2);g.fillRect(x+2,y-4,1,2);
- g.fillStyle='#ff5a8a';if(open)g.fillRect(x+9,y-2,3,1)}
-function pAnt(x,y){const g=aog;g.fillStyle='#fbf7ea';g.fillRect(x-2,y-1,2,2);g.fillRect(x,y-1,2,2);g.fillRect(x+2,y-1,2,2);g.fillStyle='#bdb7a6';g.fillRect(x-1,y+1,1,1);g.fillRect(x+1,y+1,1,1);g.fillRect(x+3,y+1,1,1)}
+/* the camera zooms on the panel: the panel is moved to the middle of the screen and scaled, the dots stay the same */
+function zoomDMD(on){const w=$('dmdw');document.body.classList.toggle('arcon',on);
+ if(!on){w.style.transform='';$('arc').classList.remove('on');setTimeout(dmdSize,560);return}
+ w.style.transform='';const r=w.getBoundingClientRect(),s=Math.min(innerWidth*.94/r.width,900/r.width),cx=r.left+r.width/2,cy=r.top+r.height/2,ty=innerHeight*.3;
+ w.style.transform=`translate(${innerWidth/2-cx}px,${ty-cy}px) scale(${s})`;$('arc').style.top=(ty+r.height*s/2+22)+'px';setTimeout(dmdSize,560)}
+/* little pixel Igor, facing right, (x,y) = centre of the body */
+function pIgor(x,y,open,happy){const g=aog;g.fillStyle='#9be38a';g.fillRect(x-7,y-4,13,8);g.fillRect(x-5,y-6,9,2);g.fillRect(x-10,y+1,3,2);g.fillRect(x+6,y-1,4,4);
+ g.fillStyle='#fff';g.fillRect(x+1,y-4,4,4);g.fillStyle='#1b1030';g.fillRect(x+3,y-3,2,3);g.fillStyle='#fff';g.fillRect(x+3,y-3,1,1);
+ g.fillStyle='#ff8ab6';g.fillRect(x-1,y+1,3,2);
+ g.fillStyle='#ff5a8a';if(open)g.fillRect(x+7,y+1,4,2);else g.fillRect(x+7,y+2,3,1);
+ if(happy){g.fillStyle='#ff8ab6';g.fillRect(x-2,y-9,2,2);g.fillRect(x+1,y-9,2,2);g.fillRect(x-1,y-7,3,1)}}
+/* a tofu ant walking to the left (head on the left) */
+function pAnt(x,y,red){const g=aog,c=red?'#ff3b3b':'#fbf7ea',d=red?'#9a1818':'#bdb7a6';g.fillStyle=c;g.fillRect(x,y-1,2,2);g.fillRect(x+2,y-1,3,2);g.fillRect(x+5,y-1,2,2);
+ g.fillStyle=d;g.fillRect(x+1,y+1,1,1);g.fillRect(x+3,y+1,1,1);g.fillRect(x+5,y+1,1,1);g.fillRect(x-1,y-2,1,1);g.fillStyle='#000';g.fillRect(x,y-1,1,1)}
+/* the fixed pattern of the ants: white ones are all reachable by a path made first, red ones stay away from it */
+function gnamPattern(){let s=20261122;const rnd=()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^s>>>15,1|s);t=(t+Math.imul(t^t>>>7,61|t))^t;return((t^t>>>14)>>>0)/4294967296};
+ const kinds='WWRWWRWRWWRWWRWRWW',L=[],path=[];let T=3.3,y=16;
+ for(let i=0;i<kinds.length;i++){const red=kinds[i]==='R';T+=.62+rnd()*.34;const v=40+rnd()*16;L.push({T,v,red,y:0});
+  if(!red){const dt=T-(path.length?path[path.length-1][0]:0),md=Math.min(20,48*(path.length?dt:2));y=Math.max(6,Math.min(26,Math.round(y+(rnd()*2-1)*md)));L[i].y=y;path.push([T,y])}}
+ const at=t=>{if(t<=path[0][0])return path[0][1];for(let i=1;i<path.length;i++)if(t<=path[i][0]){const a=path[i-1],b=path[i];return a[1]+(b[1]-a[1])*(t-a[0])/(b[0]-a[0])}return path[path.length-1][1]};
+ for(const a of L)if(a.red){let best=6,bd=-1;for(let k=0;k<40;k++){const yy=Math.round(6+rnd()*20);let m=99;for(let dt=-.45;dt<=.45;dt+=.05)m=Math.min(m,Math.abs(yy-at(a.T+dt)));if(m>=12.5){best=yy;bd=99;break}if(m>bd){bd=m;best=yy}}a.y=best}
+ return L}
 const ARC_GAMES={
- gnam:{N:['GNAM!','GNAM!'],how:['Move Igor with the flippers: catch the 15 tofu ants!','Muovi Igor con i flipper: prendi le 15 formiche di tofu!'],
-  init(G){G.x=64;G.ants=[];G.spawned=0;G.caught=0;G.next=.8;G.L=0;G.R=0;G.open=0},
-  tick(G,dt){const sp=78;G.x=clamp(G.x+(G.R-G.L)*sp*dt,8,120);G.open=Math.max(0,G.open-dt);
-   G.next-=dt;if(G.next<=0&&G.spawned<15){G.ants.push({x:8+Math.random()*112,y:-2,v:18+G.spawned*2.2});G.spawned++;G.next=Math.max(.55,1.15-G.spawned*.04)}
-   for(const a of G.ants){a.y+=a.v*dt;if(!a.done&&a.y>=54&&a.y<=60&&Math.abs(a.x-G.x)<9){a.done='ok';G.caught++;G.open=.25;SND.ant();addScoreRaw(20000)}else if(!a.done&&a.y>64){a.done='miss';osc({f:300,f2:200,v:.06,d:.15})}}
-   G.ants=G.ants.filter(a=>!a.done);return G.spawned>=15&&!G.ants.length},
-  draw(G){aog.fillStyle='#14304a';aog.fillRect(0,0,AW,AH);for(let i=0;i<14;i++){aog.fillStyle='#2a5a2a';aog.fillRect(i*10,58,9,6)}
-   for(const a of G.ants)pAnt(a.x,a.y);pIgor(G.x,57,G.open>0);atext(`${G.caught}/15`,2,1,8,'#ffd36e','left');atext('GNAM!',126,1,8,'#9be38a','right')},
-  end(G){return{score:G.caught===15?300000:0,line:`${G.caught}/15`,perfect:G.caught===15}}},
- bumcia:{N:['BUM CIÀ!','BUM CIÀ!'],how:['Hit the drum (left or right flipper) when the note reaches the line!','Batti il tamburo (flipper sinistro o destro) quando la nota arriva sulla riga!'],
-  init(G){const beat=60/100;G.notes=[];const pat='LRLRLLRRLRLRRLRLLRLRLLRR';for(let i=0;i<pat.length;i++)G.notes.push({s:pat[i]==='L'?-1:1,t:2+i*beat*(i%4===3?1:.5)*1.6});G.t=0;G.hit=0;G.flash={'-1':0,'1':0};G.msg='';G.msgT=0},
-  press(G,side){const k=String(side);G.flash[k]=.15;let best=null;for(const n of G.notes){if(n.s!==side||n.done)continue;const d=Math.abs(n.t-G.t);if(d<.16&&(!best||d<Math.abs(best.t-G.t)))best=n}
-   if(best){best.done='ok';G.hit++;(side<0?SND.kick:SND.snare)(0);addScoreRaw(15000);G.msg=Math.abs(best.t-G.t)<.06?tt('PERFECT','PERFETTO'):'OK';G.msgT=.4}else{osc({f:180,f2:120,v:.05,d:.1})}},
-  tick(G,dt){G.t+=dt;for(const k in G.flash)G.flash[k]=Math.max(0,G.flash[k]-dt);G.msgT=Math.max(0,G.msgT-dt);for(const n of G.notes)if(!n.done&&G.t-n.t>.16)n.done='miss';return G.notes.every(n=>n.done)&&G.t>G.notes[G.notes.length-1].t+.6},
-  draw(G){aog.fillStyle='#1a0d22';aog.fillRect(0,0,AW,AH);const lx={'-1':40,'1':88};
-   for(const k of['-1','1']){aog.fillStyle='#3a2030';aog.fillRect(lx[k]-9,0,18,AH);aog.fillStyle=G.flash[k]>0?'#ffd36e':'#ff8a1e';aog.fillRect(lx[k]-10,50,20,3);aog.fillStyle=G.flash[k]>0?'#ffffff':'#7a4a2a';aog.fillRect(lx[k]-8,54,16,8)}
-   for(const n of G.notes){if(n.done==='ok')continue;const y=50-(n.t-G.t)*40;if(y<-4||y>64)continue;aog.fillStyle=n.done==='miss'?'#553333':n.s<0?'#ff5a5a':'#4fd1e8';aog.fillRect(lx[String(n.s)]-6,y-2,12,4)}
-   atext(`${G.hit}/${G.notes.length}`,2,1,8,'#ffd36e','left');if(G.msgT>0)atext(G.msg,64,24,8,'#ffffff')},
+ gnam:{N:['GNAM!','GNAM!'],how:['Catch the <span class="w">white</span> ants<br>Avoid the <span class="r">red</span> ones!','Prendi le formiche <span class="w">bianche</span><br>Evita le <span class="r">rosse</span>!'],key:['Left flipper = up · right flipper = down','Flipper sinistro = su · destro = giù'],
+  init(G){G.y=16;G.L=0;G.R=0;G.open=0;G.t=0;G.caught=0;G.dead=0;G.fx=[];G.ants=gnamPattern().map(a=>({...a,x:132,done:0}));G.total=G.ants.filter(a=>!a.red).length;G.end=Math.max(...G.ants.map(a=>a.T))+1},
+  tick(G,dt){G.t+=dt;G.y=clamp(G.y+(G.R-G.L)*62*dt,5,27);G.open=Math.max(0,G.open-dt);
+   for(const a of G.ants){if(a.done)continue;a.x=18+(a.T-G.t)*a.v;if(a.x>26||a.x<2){if(a.x<2)a.done='miss';continue}
+    if(a.x>=10&&Math.abs(a.y-G.y)<=5){a.done='hit';if(a.red){G.dead=1;SND.drain&&osc({f:300,f2:90,v:.1,d:.4});break}G.caught++;G.open=.25;G.fx.push({x:30,y:G.y-8,t:.6});SND.ant();addScoreRaw(20000)}}
+   for(const f of G.fx){f.t-=dt;f.y-=14*dt}G.fx=G.fx.filter(f=>f.t>0);
+   return G.dead||G.t>G.end},
+  draw(G){aog.fillStyle='#14304a';aog.fillRect(0,0,AW,AH);aog.fillStyle='#1d4466';for(let y=4;y<AH;y+=8)aog.fillRect(0,y,AW,1);aog.fillStyle='#2a5a2a';aog.fillRect(0,AH-2,AW,2);
+   atext(`${G.caught}/${G.total}`,126,1,8,'#ffd36e','right');
+   for(const a of G.ants)if(!a.done&&G.t>=a.T-(130-18)/a.v)pAnt(Math.round(a.x),Math.round(a.y),a.red);
+   pIgor(14,Math.round(G.y),G.open>0,G.open>0);for(const f of G.fx){aog.fillStyle='#ff8ab6';aog.fillRect(Math.round(f.x),Math.round(f.y),2,2);aog.fillRect(Math.round(f.x)+3,Math.round(f.y),2,2);aog.fillRect(Math.round(f.x)+1,Math.round(f.y)+2,3,1)}
+   if(G.dead&&Math.floor(G.t*10)%2)atext('OUCH!',64,12,8,'#ff5a5a')},
+  end(G){const all=G.caught===G.total&&!G.dead;return{score:all?300000:0,line:`${G.caught}/${G.total}`,perfect:all}}},
+ bumcia:{N:['BUM CIÀ!','BUM CIÀ!'],how:['Hit the drum when the note arrives!<br>Top note: left flipper · bottom: right','Colpisci il tamburo quando arriva la nota!<br>In alto: flipper sinistro · in basso: destro'],key:['Left / right flipper','Flipper sinistro / destro'],
+  init(G){const beat=60/100;G.notes=[];const pat='LRLRLLRRLRLRRLRLLRLRLLRR';for(let i=0;i<pat.length;i++)G.notes.push({s:pat[i]==='L'?-1:1,t:3+i*beat*(i%4===3?1:.5)*1.6});G.t=0;G.hit=0;G.flash={'-1':0,'1':0};G.msg='';G.msgT=0},
+  press(G,side){const k=String(side);G.flash[k]=.15;let best=null;for(const n of G.notes){if(n.s!==side||n.done)continue;const d=Math.abs(n.t-G.t);if(d<.18&&(!best||d<Math.abs(best.t-G.t)))best=n}
+   if(best){best.done='ok';G.hit++;(side<0?SND.kick:SND.snare)(0);addScoreRaw(15000);G.msg=Math.abs(best.t-G.t)<.07?tt('PERFECT','PERFETTO'):'OK';G.msgT=.4}else{osc({f:180,f2:120,v:.05,d:.1})}},
+  tick(G,dt){G.t+=dt;for(const k in G.flash)G.flash[k]=Math.max(0,G.flash[k]-dt);G.msgT=Math.max(0,G.msgT-dt);for(const n of G.notes)if(!n.done&&G.t-n.t>.18)n.done='miss';return G.notes.every(n=>n.done)&&G.t>G.notes[G.notes.length-1].t+.6},
+  draw(G){aog.fillStyle='#1a0d22';aog.fillRect(0,0,AW,AH);const ly={'-1':9,'1':23};
+   for(const k of['-1','1']){aog.fillStyle='#3a2030';aog.fillRect(0,ly[k]-5,AW,10);aog.fillStyle=G.flash[k]>0?'#ffd36e':'#ff8a1e';aog.fillRect(15,ly[k]-6,2,12);aog.fillStyle=G.flash[k]>0?'#ffffff':'#7a4a2a';aog.fillRect(3,ly[k]-4,9,8);aog.fillStyle='#1a0d22';aog.fillRect(5,ly[k]-2,5,4)}
+   for(const n of G.notes){if(n.done==='ok')continue;const x=16+(n.t-G.t)*50;if(x<14||x>130)continue;aog.fillStyle=n.done==='miss'?'#553333':n.s<0?'#ff5a5a':'#4fd1e8';aog.fillRect(Math.round(x)-2,ly[String(n.s)]-3,5,6)}
+   atext(`${G.hit}/${G.notes.length}`,126,0,8,'#ffd36e','right');if(G.msgT>0)atext(G.msg,76,12,8,'#ffffff')},
   end(G){return{score:G.hit===G.notes.length?300000:0,line:`${G.hit}/${G.notes.length}`,perfect:G.hit===G.notes.length}}}};
 function addScoreRaw(n){GS.score+=Math.round(n*GS.loop)}
 const ARC_ORDER=['gnam','bumcia'];
-setTimeout(()=>{const k=$('arck');if(k){k.style.cssText='font:600 13px Fredoka,sans-serif;color:#ffd36e;margin-top:4px';k.textContent=touchUI?tt('Tap left / right','Tocca a sinistra / a destra'):tt('← → or Z / M','← → oppure Z / M')}},500);
 function missionCompleteShow(after){ARC.on=true;ARC.phase='banner';ARC.t=2.4;ARC.after=after;const b=$('bigmsg');b.innerHTML=`${tt('MISSION','MISSIONE')}<br>${tt('COMPLETE!','COMPIUTA!')}`;b.classList.add('on');
  BALLS.forEach(q=>{q.lockGlow=1});FL.forEach(f=>f.press=false);GS.charging=false}
-function arcStart(){const k=ARC_ORDER[ARC.n++%ARC_ORDER.length],G=ARC_GAMES[k];ARC.key=k;ARC.G={};G.init(ARC.G);ARC.phase='intro';ARC.t=2.2;$('bigmsg').classList.remove('on');
- const box=$('arc');box.classList.add('on');$('arct').textContent=L2(G.N);$('arch').textContent=L2(G.how);acv.width=Math.round(Math.min(560,innerWidth*.92)*Math.min(2,devicePixelRatio||1));acv.height=acv.width/2;arcMask();
- say(L2(G.how),3,true)}
+function arcStart(){const k=ARC_ORDER[ARC.n++%ARC_ORDER.length],G=ARC_GAMES[k];ARC.key=k;ARC.G={};G.init(ARC.G);ARC.phase='intro';ARC.t=3.6;$('bigmsg').classList.remove('on');
+ $('arch').innerHTML=L2(G.how);$('arck').textContent=L2(G.key);$('arc').classList.add('on');zoomDMD(true)}
 function arcEnd(){const G=ARC_GAMES[ARC.key],r=G.end(ARC.G);if(r.score)addScoreRaw(r.score);ARC.phase='result';ARC.t=2.4;ARC.res=r;if(r.perfect){SND.fanfare([0,2,4,6]);flash(.5)}else SND.jackpot()}
-function arcClose(){$('arc').classList.remove('on');ARC.phase='count';ARC.t=2.4;$('bigmsg').classList.add('on')}
+function arcClose(){zoomDMD(false);ARC.phase='count';ARC.t=2.4;$('bigmsg').classList.add('on')}
 function arcInput(side,on){if(ARC.phase!=='play')return;const G=ARC_GAMES[ARC.key];if(ARC.key==='gnam'){if(side<0)ARC.G.L=on?1:0;else ARC.G.R=on?1:0}else if(on&&G.press)G.press(ARC.G,side)}
 function arcTick(dt){ARC.t-=dt;const bm=$('bigmsg');
  if(ARC.phase==='banner'){if(ARC.t<=0)arcStart();return}
  const G=ARC_GAMES[ARC.key];
- if(ARC.phase==='intro'){aog.clearRect(0,0,AW,AH);aog.fillStyle='#120802';aog.fillRect(0,0,AW,AH);atext(L2(G.N),64,14,16,'#ffd36e');atext(tt('GET READY','PRONTI'),64,40,8,'#ff8a1e');arcDots();if(ARC.t<=0)ARC.phase='play';return}
+ if(ARC.phase==='intro'){aog.clearRect(0,0,AW,AH);aog.fillStyle='#120802';aog.fillRect(0,0,AW,AH);atext(L2(G.N),64,4,16,'#ffd36e');atext(ARC.t>1?tt('READ BELOW','LEGGI SOTTO'):tt('GET READY','PRONTI'),64,23,8,'#ff8a1e');arcDots();if(ARC.t<=0)ARC.phase='play';return}
  if(ARC.phase==='play'){aog.clearRect(0,0,AW,AH);const done=G.tick(ARC.G,dt);G.draw(ARC.G);arcDots();if(done)arcEnd();return}
- if(ARC.phase==='result'){const r=ARC.res;aog.fillStyle='#120802';aog.fillRect(0,0,AW,AH);atext(r.perfect?tt('PERFECT!','PERFETTO!'):tt('WELL DONE!','BRAVO!'),64,10,16,'#ffd36e');atext(r.line,64,34,12,'#ff8a1e');if(r.score)atext('+'+fmt(r.score*GS.loop),64,50,8,'#9be38a');arcDots();if(ARC.t<=0)arcClose();return}
+ if(ARC.phase==='result'){const r=ARC.res;aog.fillStyle='#120802';aog.fillRect(0,0,AW,AH);atext(r.perfect?tt('PERFECT!','PERFETTO!'):tt('WELL DONE!','BRAVO!'),64,1,12,'#ffd36e');atext(r.line,64,16,8,'#ff8a1e');if(r.score)atext('+'+fmt(r.score*GS.loop),64,25,8,'#9be38a');arcDots();if(ARC.t<=0)arcClose();return}
  if(ARC.phase==='count'){const n=Math.ceil(ARC.t/.8);bm.textContent=n>0?String(n):tt('GO!','VIA!');if(ARC.t<=0){bm.classList.remove('on');ARC.on=false;BALLS.forEach(q=>{q.lockGlow=0});setSave(6);if(ARC.after)ARC.after()}}}
 /* ---------- events ---------- */
 function combo(x,y){if(GS.comboT>0){GS.combo++;const c=GS.combo;addScore(10000*c,x,y-.6,'#7fe3ef');dmsg(['COMBO',`×${c+1}`],1.2,true,2)}else GS.combo=0;GS.comboT=4}
 const ON={
  bumper(c,b){const i=c.i,bm=BMESH[i];bm.t=1;addScore(1000*thMul('drums'),c.x,c.y,DRUM_C[i]);MU.en=Math.min(1,MU.en+.05);if(thMul('drums')>1)jump(SPR.host,.5);GS.drums++;[SND.kick,SND.snare,SND.cymbal][i](c.x);burst(c.x,c.y,.6,DRUM_C[i],10,3);GS.shake=Math.max(GS.shake,.12);
   if(GS.state!=='play')return;if(MODE()==='drums'){GS.mp++;if(GS.mp>=40)completeMode();else if(GS.mp%10===0)dmsg([tt('DRUM SOLO','ASSOLO'),`${GS.mp}/40`],1,false,2,'drum')}GS.beats++;if(GS.beats>=grooveNeed()){GS.beats=0;GS.grooveLv++;GS.pfx=Math.min(4,GS.pfx+1);GS.pfxT=30;dmsg(['GROOVE!',`${GS.pfx}X`],2.4,false,3,'drum');SND.fanfare(MIS[GS.mi].n);sayL('drum',true)}},
+ cbump(c,b){CBM.t=1;addScore(300);SND.sling(0)},
+ cbt(c,b){GS.cb=Math.min(40,GS.cb+5);addScore(10000,c.x,c.y,'#7fe3ef',true);SND.target(c.x);burst(c.x,c.y,.4,'#7fe3ef',20,4);dmsg(['+5',tt('SECONDS','SECONDI')],1.2,true,3)},
  sling(s,b){const sl=SLING[s.ax<0?0:1];sl.t=1;addScore(110);SND.sling(s.ax)},
  drop(s,b){if(!s.on)return;s.on=false;GS.drop[s.i]=1;addScore(3000,s.cx,8.5,'#ffd36e');SND.drop(s.cx);burst(s.cx,8.5,.4,'#ffd36e',8,2);
   if(GS.drop.every(v=>v)){addScore(30000,-.9,8.2,'#ffd36e',true);SND.target(-.9);
@@ -944,6 +975,16 @@ sensLine(2.22,10.85,3.5,10.6,(b,up)=>{if(up&&Math.hypot(b.vx,b.vy)>9){b.mode='ra
 LANE_X.forEach((x,k)=>sensCirc(x,18.0,.28,b=>{if(GS.multi&&GS.finale<=0)return;
  if(GS.skillT>0&&k===GS.skill){GS.skillT=0;addScore(75000,x,18.2,'#ffffff',true);dmsg(['SKILL','SHOT!'],1.6,true,3);SND.jackpot();say(tt('Skill shot! Bullseye!','Skill shot! Centro perfetto!'),2.4,true)}
  GS.skillT=0;laneHit(k,x)}));
+/* outlane kickbacks: a green plug in each side lane sends the ball back up, once per ball */
+const KBM=[-1,1].map(sd=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.27,.3,.16,16),new THREE.MeshStandardMaterial({color:'#9be38a',emissive:'#9be38a',emissiveIntensity:.7,roughness:.4}));m.position.copy(VP(4.175*sd,3.3,.1));table.add(m);return m});
+[-1,1].forEach((sd,i)=>sensLine(sd<0?-4.6:3.75,3.3,sd<0?-3.75:4.6,3.3,(b,up)=>{if(up||GS.state!=='play'||!GS.kb[i])return;GS.kb[i]=0;kickback(b,sd);SND.sling(sd*4);burst(4.175*sd,3.3,.4,'#9be38a',22,4);addScore(2000,4.175*sd,3.6,'#9be38a');say(tt('Boing! Igor pushed it back!','Boing! Igor l’ha rimandata su!'),1.8,false)}));
+function kickback(b,sd){b.gp=new THREE.CatmullRomCurve3([V(4.2*sd,3.35,R),V(4.2*sd,5.3,R),V(4.05*sd,6.05,R),V(3.5*sd,6.45,R),V(2.7*sd,6.9,R)]);b.u=0;b.mode='kick';b.ex=2.7*sd;b.ey=6.9;b.evx=-sd*3.2;b.evy=5.5}
+/* central bumper: a temporary ball saver between the flippers (15 s, a small star adds 5 s) */
+const CB=circ(0,1.2,.4,{e:.7,kick:12,tag:'cbump',on:false}),CBT=circ(.15,6.7,.2,{e:.5,kick:2,tag:'cbt',on:false});
+const CBM=(()=>{const G=new THREE.Group();G.position.copy(VP(0,1.2,0));const b=new THREE.Mesh(new THREE.CylinderGeometry(.4,.46,.34,20),new THREE.MeshStandardMaterial({color:'#ffd36e',emissive:'#ff9a2e',emissiveIntensity:.35,roughness:.35,metalness:.2}));b.position.y=.17;G.add(b);
+ const cap=new THREE.Mesh(new THREE.SphereGeometry(.3,14,10,0,TAU,0,Math.PI/2),new THREE.MeshStandardMaterial({color:'#fff3c4',emissive:'#ffd36e',emissiveIntensity:.2}));cap.position.y=.34;G.add(cap);G.visible=false;table.add(G);return{G,b,t:0}})();
+const CBS=(()=>{const m=new THREE.Mesh(new THREE.OctahedronGeometry(.24),new THREE.MeshStandardMaterial({color:'#7fe3ef',emissive:'#7fe3ef',emissiveIntensity:.9}));m.position.copy(VP(.15,6.7,.3));m.visible=false;table.add(m);return m})();
+function startCB(){GS.cb=Math.max(GS.cb,15);dmsg([tt('SAVER','BUMPER'),tt('15 SECONDS','15 SECONDI')],1.8,true,3);say(tt('A bumper between the flippers: it guards your ball! Hit the little star for more time!','Un bumper tra i flipper: protegge la pallina! Colpisci la stellina per avere più tempo!'),3.4,true)}
 /* the four bottom lanes: light them all for Igor's ball saver and a higher bonus */
 BLANES.forEach(([x,y],i)=>sensCirc(x,y,.3,()=>{SND.roll();addScore(500,x,y);if(GS.state!=='play')return;GS.bl[i]=1;
  if(i===0||i===3){if(GS.save<=0)say(tt('Careful… Igor believes in you!','Attenzione… Igor crede in te!'),2,false)}
@@ -1010,7 +1051,8 @@ function step(dt){if(paused)return;
 function ballsFrame(dt){if(paused)return;for(const b of[...BALLS]){
   if(b.mode==='lane'){b.x=PLUNGE.x;b.y=PLUNGE.y-GS.plunge*.7;b.vx=b.vy=0;if(b.auto!==undefined){b.auto-=dt;if(b.auto<=0){delete b.auto;b.auto0=1;launch(b,rnd(.5,.7))}}}
   else if(b.mode==='guide'){b.spd=Math.max(6,b.spd-dt*14);b.u+=b.spd*dt/b.glen;if(b.u>=1){b.mode='play';b.x=-2.7;b.y=16.35;b.vx=0;b.vy=-3;b.gold=false;superSkill()}else{const p=b.gp.getPointAt(b.u);b.m.position.copy(p);b.sh.position.set(p.x,.012,p.z);continue}}
-  else if(b.mode==='pass'){b.u+=dt/.34;if(b.u>=1){b.mode='play';const s=b.ps;b.x=1.15*-s;b.y=2.62;b.vx=.6*-s;b.vy=-.4}else{const p=b.gp.getPointAt(b.u);b.m.position.copy(p);b.sh.position.set(p.x,.012,p.z);continue}}
+  else if(b.mode==='kick'){b.u+=dt/.4;if(b.u>=1){b.mode='play';b.x=b.ex;b.y=b.ey;b.vx=b.evx;b.vy=b.evy}else{const p=b.gp.getPointAt(b.u);b.m.position.copy(p);b.sh.position.set(p.x,.012,p.z);continue}}
+ else if(b.mode==='pass'){b.u+=dt/.34;if(b.u>=1){b.mode='play';const s=b.ps;b.x=1.15*-s;b.y=2.62;b.vx=.6*-s;b.vy=-.4}else{const p=b.gp.getPointAt(b.u);b.m.position.copy(p);b.sh.position.set(p.x,.012,p.z);continue}}
   else if(b.mode==='ramp'){b.u+=b.spd*dt/RAMP_LEN;if(b.u>=1){rampDone(b)}else{const p=RAMP.getPointAt(b.u);b.m.position.copy(p);b.sh.position.set(p.x,.012,p.z);b.sh.material.opacity=.35;continue}}
   else if(b.mode==='hole'){b.u+=dt;const sink=b.u<.4?b.u/.4:b.u<.9?1:Math.max(0,1-(b.u-.9)/.25);
    b.m.position.copy(VP(SAUCER.x,SAUCER.y,R-sink*.55));b.m.scale.setScalar(1-sink*.5);b.sh.position.copy(VP(SAUCER.x,SAUCER.y,.012));
@@ -1056,7 +1098,9 @@ function fit(){const W=innerWidth,H=innerHeight;placeFlag();renderer.setSize(W,H
  camBase.copy(camera.position);
  if(composer){composer.setSize(W,H);composer.setPixelRatio&&composer.setPixelRatio(DPR)}}
 addEventListener('resize',()=>setTimeout(fit,50));
-function gameTick(dt,t){if(paused)return;if(ARC.on){arcTick(dt);return}const n=Math.ceil(dt*PHYS_HZ),h=dt/n;for(let i=0;i<n;i++)step(h);
+function gameTick(dt,t){if(paused)return;if(ARC.on){arcTick(dt);return}
+ if(GS.state==='play'&&GS.cb>0){GS.cb-=dt;if(GS.cb<=0){GS.cb=0;say(tt('The bumper goes to sleep. Well played!','Il bumper va a dormire. Ben giocato!'),2,false)}}
+ CB.on=CBT.on=GS.cb>0;const n=Math.ceil(dt*PHYS_HZ),h=dt/n;for(let i=0;i<n;i++)step(h);
  ballsFrame(dt);variants(dt,t);antStep(dt);tokStep(dt,t);
  MU.bpm=lerp(MU.bpm,bpmTarget(),Math.min(1,dt*.5));MU.en=Math.max(0,MU.en-dt*.07);
  if(GS.state==='play'&&THEME!=='home'){GS.themeT-=dt;if(GS.themeT<=0)setTheme('home')}
@@ -1076,7 +1120,8 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(.05,(now-last)/
  SLING.forEach(s=>{s.t=Math.max(0,s.t-dt*6);s.band.material.color.setRGB(.4+s.t*.6,.4+s.t*.6,.47+s.t*.53)});
  DROPS.forEach((s,i)=>{const d=DMESH[i];d.y=lerp(d.y,s.on?.23:-.25,Math.min(1,dt*14));d.m.position.y=d.y});
  IMESH.forEach((o,i)=>{o.t=Math.max(0,o.t-dt*5);o.m.position.copy(VP(-3.43-o.t*.06,IGT[i].cy,.25))});
- GATEM.forEach((o,k)=>{o.t=Math.max(0,o.t-dt*4);const up=GATES[k].on?.18:-.3;o.m.position.y=lerp(o.m.position.y,up,Math.min(1,dt*10));o.m.material.emissiveIntensity=.4+o.t*1.6});
+ CBM.G.visible=GS.cb>0;CBS.visible=GS.cb>0;CBM.t=Math.max(0,CBM.t-dt*5);CBM.G.scale.setScalar(1+CBM.t*.18);CBM.b.material.emissiveIntensity=(GS.cb>0&&GS.cb<4&&Math.floor(t*8)%2)?.05:.35+CBM.t;CBS.rotation.y+=dt*3;CBS.position.y=VP(.15,6.7,.3).y+Math.sin(t*4)*.05;KBM.forEach((m,i)=>{m.visible=!!GS.kb[i]&&GS.state==='play';m.rotation.y+=dt*2});
+ GATEM.forEach((o,k)=>{o.t=Math.max(0,o.t-dt*4);const up=GATES[k].on?.18:-.3;o.m.position.y=lerp(o.m.position.y,up,Math.min(1,dt*10));o.m.material.emissiveIntensity=.4+o.t*1.6;o.mal.visible=GATES[k].on&&o.t>.04;if(o.mal.visible){o.mal.position.copy(VP(o.x,o.yc,.3+(1-o.t)*.5));o.mal.rotation.x=.4+(1-o.t)*.9}});
  SPIN.w*=Math.pow(.25,dt);const pa=SPIN.a;SPIN.a+=SPIN.w*dt;if(Math.floor(SPIN.a/Math.PI)!==Math.floor(pa/Math.PI)&&SPIN.w>2){addScore(200);SND.spin()}SPIN.plate.parent.rotation.x=SPIN.a;
  FLAGM.w*=Math.pow(.3,dt);FLAGM.a+=FLAGM.w*dt;FLAGM.rot.rotation.y=FLAGM.a+Math.sin(t*2)*.15;
  FFBAR.sp.visible=FFS.on&&GS.state==='play';FFBAR.sp.position.copy(VP(FFS.x,FFS.y+.2,2.2));
