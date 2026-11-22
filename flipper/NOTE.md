@@ -33,9 +33,10 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 - Niente pubblicazione sul sito (`main`) senza il via di Fabio.
 
 ## Prossimi passi
-- App Android nativa (Godot 4.3, molto più fluida del browser): in lavorazione da Fabio con Claude; il progetto andrà in `app-flipper/` su questo ramo, con le istruzioni per creare l'APK.
+- App Android nativa (Godot 4.3): in `app-flipper/` (vedi il suo README). Le modifiche alle regole vanno fatte sia in `flipper/index.html` sia in `app-flipper/main.gd`.
 - Giro di feedback sulla v8.
 
 ## Registro
+- 22 nov 2026 — Fabio: app Android 1.0 (Godot) in `app-flipper/`.
 - 22 nov 2026 — Fabio: v8 caricata sul ramo `flipper` (prestazioni migliorate per Android, PWA installabile).
 - 22 nov 2026 — Alessandro (con Claude): v9 — outlane salva-palla (una volta per palla), bumper centrale temporaneo 15 s (+5 s con la stellina), extra ball a missione 4 e 7, scenari legati alle missioni (tolti i gettoni palma/gondola/fungo), tasti-xilofono con bacchetta, minigioco con zoom sul pannello a puntini (GNAM! orizzontale con formiche rosse/bianche, istruzioni a due righe). Fabio: guarda in particolare la tolta dei gettoni e la fisica del kickback (la pallina segue un percorso guidato dal tappo al campo).
