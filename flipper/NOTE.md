@@ -54,3 +54,4 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 
 - 2026-11-22 Claude (Alessandro): polifonia riscritta (v11): le palline che arrivano da sopra restano ferme nelle corsie (magnete, max 7 s); da sotto suonano una volta sola; le ferme risuonano solo quando arriva un'altra pallina; timer "insieme" con bonus per secondi e voci; accordo extra; la polifonia finisce quando resta una sola pallina.
 - Idea da fare (Alessandro): vista zoomata con camera che scorre (stile Balls of Steel): tasto sul desktop, su Android girando il telefono.
+- 2026-11-22 Claude (Alessandro): v12: secondo flipper piccolo in alto a destra (FRU, comandato dal tasto destro, specchio di FLU) per mandare la palla ai bumper e alle lane piccole delle note; corretta la scritta "undefined → ff" all'inizio della missione Fortissimo.
