@@ -8,7 +8,7 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 - Gioco web: `flipper/index.html` (tutto in un file: three.js r128 + fisica 2D propria + WebAudio). PWA: `manifest.webmanifest`, `sw.js`, icone.
 - Il flipper è anche nel bar dell'isola (stazione "Igor's music pinball" in `index.html`) e nelle statistiche (`stats.js`, chiave `flipper`).
 
-## Com'è fatto (v9, 22 nov 2026)
+## Com'è fatto (v10, 22 nov 2026)
 - Tema musicale: 7 corsie-nota DO…SI in alto, bumper = batteria (cassa, rullante, piatto) con contatore GROOVE (moltiplicatore), drop target A-N-T ×3 → POLIFONIA (multiball), rampa jackpot, Palco (saucer, "mistero"), orbita a sinistra, flipper piccolo in alto a sinistra.
 - Quando le corsie diventano dure (POLIFONIA, GRAN CONCERTO) sono i tasti di uno **xilofono**: lunghezze diverse (DO il più lungo) e una bacchetta batte il tasto colpito.
 - Flipper = lingue verdi di Igor che escono dal muso.
@@ -18,11 +18,13 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 - **Extra ball**: alla 4ª e alla 7ª missione completata (più la 5ª formica di tofu).
 - **Scenari legati alle missioni** (le palme/gondole/funghi a gettone sono stati tolti): lo scenario cambia solo mentre una missione è in corso e torna "casa" a fine missione. Accordi=casa, Assolo=bosco di John Cagigor, Fortissimo e Che nota è?=lago di Gondoligor, Armatura/Metronomo/Melodia=isola caraibica (musica con steel pan). I bonus ×2 dell'isola restano (rampa/orbita/batteria).
 - Missione compiuta: scritta grande, pallina bloccata, **la telecamera zooma sul pannello a puntini già esistente** (stessa risoluzione 128×32) che diventa il minigioco; sotto, istruzioni di due righe in testo grande. Giochi: GNAM! e BUM CIÀ!
-  - GNAM!: in orizzontale, Igor va su/giù coi due flipper; 12 formiche bianche camminano verso di lui (da prendere), 6 rosse (da evitare: toccarne una finisce il gioco). Pattern casuale ma sempre uguale, così si impara; è sempre possibile prenderle tutte (bonus 300.000).
-  - BUM CIÀ!: note che scorrono su due righe: riga alta = flipper sinistro, riga bassa = destro.
+  - GNAM!: in orizzontale, Igor va su/giù coi due flipper; 12 formiche bianche (da prendere) e 6 rosse (da evitare: toccarne una finisce il gioco). Le formiche **accelerano** fino alla 10ª (da ~60 a ~160 px/s, intervalli sempre più corti) e poi restano velocissime. Pattern casuale ma sempre uguale, così si impara; è sempre possibile prenderle tutte (bonus 300.000).
+  - BUM CIÀ!: riff di batteria a tempo (100 bpm, griglia regolare, senza pause lunghe), 40 note su due righe: alta = flipper sinistro (cassa), bassa = destro (rullante). Il pannello mostra lo scarto in millisecondi di ogni colpo; punti = 20.000·(1−scarto/180 ms)²; il bonus finale dipende dallo scarto medio, non dal numero di colpi.
+- **Che nota è?**: quando Igor suona la nota ci sono segnali visivi: scritta "IGOR SUONA / ASCOLTA!" sul pannello, salto di Igor, note ♪ che salgono e scintille.
 - Musica di sottofondo generativa: tempo dalla velocità della pallina, energia dai colpi, stile per scenario.
 - Una sola formica di tofu che gira: mangiata = salva-palla (la quinta = palla extra).
-- Super skill shot: lancio nella zona dorata → la pallina passa dal varco segreto vicino al DO e scende sul flipper piccolo.
+- Skill shot: una delle 7 corsie-nota a caso, diversa a ogni palla (4 s dal lancio). Il super skill shot e la zona dorata sono stati tolti.
+- Sopra le 7 corsie c'è un **fermo a senso unico**: la pallina che sale dalle corsie rimbalza e ricade nella stessa corsia (quella che arriva dall'alto dopo il lancio entra normalmente). Una pallina che ricade non conta due volte.
 
 ## Regole decise da Fabio (non cambiarle senza chiedergli)
 - Niente fisica finta, mai: la pallina non deve mai passare sotto le palette né fare cose fisicamente sbagliate. Non deve mai fermarsi sopra i flipper.
@@ -41,4 +43,11 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 - 22 nov 2026 — Fabio: v8 caricata sul ramo `flipper` (prestazioni migliorate per Android, PWA installabile).
 - 22 nov 2026 — Alessandro (con Claude): v9 — outlane salva-palla (una volta per palla), bumper centrale temporaneo 15 s (+5 s con la stellina), extra ball a missione 4 e 7, scenari legati alle missioni (tolti i gettoni palma/gondola/fungo), tasti-xilofono con bacchetta, minigioco con zoom sul pannello a puntini (GNAM! orizzontale con formiche rosse/bianche, istruzioni a due righe). Fabio: guarda in particolare la tolta dei gettoni e la fisica del kickback (la pallina segue un percorso guidato dal tappo al campo).
 - 22 nov 2026 — Alessandro (con Claude): modalità prova: aprendo il gioco con `?prova` (es. https://flipper.igortime.pages.dev/flipper/?prova) i tasti 1–7 saltano dentro la missione scelta (le precedenti contano come fatte, così si provano extra ball 4 e 7) e 0 completa la missione in corso (minigioco + bumper centrale + extra ball). Senza `?prova` non cambia nulla.
+- 22 nov 2026 — Alessandro (con Claude): v10 — solo skill shot casuale (tolto il super skill shot), fermo a senso unico sopra le corsie-nota, GNAM! molto più veloce con accelerazione fino alla 10ª formica, BUM CIÀ! con riff a tempo e punteggio in millisecondi, segnali visivi in "Che nota è?".
+
+## Ancora aperti (non fatti, da decidere)
+- Rotazione delle luci con i due flipper nelle missioni a corsie (come il lane change dei flipper veri): da chiarire in quali missioni e cosa ruota.
+- Missione Armatura da sostituire (proposte: "Che strumento è?" coi timbri dei fiati, canne d'organo, orchestra che attraversa il campo).
+- Idea fiati: clarinetto rotante al centro → flauto → oboe → fagotto (lock di 4 palle) → sax (5ª palla, 10 s di frenzy con 5 palline). Dove metterla è da decidere.
+- Missione Melodia: le note compaiono come bersagli in mezzo al campo (più facili ma rischiosi), alla fine suona la melodia mostrando cosa succede. Da chiarire quali note e se in ordine.
 

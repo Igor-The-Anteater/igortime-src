@@ -40,8 +40,8 @@ html,body{margin:0;height:100%;background:#0e1a33;overflow:hidden;touch-action:n
 #hint{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);background:#140b22e6;border:1.5px solid #9be38a88;color:#e8ffe0;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600;z-index:4;pointer-events:none;white-space:nowrap;transition:opacity .3s}
 #pm{position:fixed;left:50%;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 44px);transform:translateX(-50%);width:min(260px,60vw);height:14px;border-radius:9px;background:#140b22e6;border:1.5px solid #ffffff55;z-index:4;opacity:0;transition:opacity .2s;pointer-events:none;overflow:visible}
 #pm i{position:absolute;left:0;top:0;bottom:0;border-radius:9px;background:#9be38a}
-#pmz{position:absolute;left:55%;width:15%;top:-3px;bottom:-3px;border:2px solid #ffd36e;border-radius:6px;box-shadow:0 0 8px #ffd36e}
-#pm b{position:absolute;left:62.5%;top:-20px;transform:translateX(-50%);color:#ffd36e;font-size:13px}
+#pmz{display:none;position:absolute;left:55%;width:15%;top:-3px;bottom:-3px;border:2px solid #ffd36e;border-radius:6px;box-shadow:0 0 8px #ffd36e}
+#pm b{display:none;position:absolute;left:62.5%;top:-20px;transform:translateX(-50%);color:#ffd36e;font-size:13px}
 #bigmsg{position:fixed;left:50%;top:42%;transform:translate(-50%,-50%) scale(.6);z-index:9;font:700 clamp(40px,11vw,86px)/1 Fredoka,sans-serif;text-align:center;color:#ffd36e;text-shadow:0 5px 0 #6b3a12,0 0 30px #ffb35a;opacity:0;pointer-events:none;transition:opacity .25s,transform .35s cubic-bezier(.2,1.6,.4,1)}
 #bigmsg.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
 #arc{position:fixed;left:50%;top:60%;z-index:8;transform:translate(-50%,10px);opacity:0;pointer-events:none;transition:transform .45s cubic-bezier(.2,1.3,.4,1),opacity .3s;text-align:center;width:min(760px,94vw)}
@@ -295,6 +295,8 @@ for(const s of[-1,1]){
 const LANE_G=[-1.95,-1.15,-.35,.45,1.25,2.05,2.85,3.65],LANE_X=LANE_G.slice(0,7).map(x=>x+.4),LANE_Y0=17.4,LANE_Y1=18.6;
 for(const x of LANE_G)seg(x,LANE_Y0,x,LANE_Y1,{rad:.07});
 const GATES=LANE_X.map((x,k)=>{const s=seg(x-.33,LANE_Y0+.05,x+.33,LANE_Y0+.05,{rad:.08,tag:'gate',e:.5,vis:false,on:false});s.k=k;return s});
+/* stopper above the note lanes: one-way, blocks the ball coming up so it falls back down the lane it entered */
+seg(LANE_G[0],18.68,LANE_G[7],18.68,{one:true,rad:.07,e:.3,vis:'chrome',h:.4});
 /* drums: kick, snare, cymbal */
 const DRUM_POS=[[.2,11.7,.56],[-1.05,13.5,.5],[1.45,13.5,.5]];
 const BUMPS=DRUM_POS.map((p,i)=>{const c=circ(p[0],p[1],p[2],{e:.7,kick:10,tag:'bumper'});c.i=i;c.hx=c.x;c.hy=c.y;return c});
@@ -776,7 +778,7 @@ let RAMP_VY=4.5;const GOLD=[.55,.7];
 function alleyPass(b,s){ const pts=[V(b.x,b.y,R),V(1.75*s,2.72,R),V(.8*s,2.38,R),V(-.2*s,2.3,R),V(-1.15*s,2.62,R)];b.gp=new THREE.CatmullRomCurve3(pts);b.u=0;b.ps=s;b.mode='pass';SND.roll();addScore(2000)}
 function goldPath(b){const a0=Math.atan2(b.y-16,b.x-.4),pts=[];for(let a=a0;a<2.35;a+=.12)pts.push(V(.4+4.73*Math.cos(a),16+4.73*Math.sin(a),R));
  pts.push(V(-2.45,18.35,R),V(-2.62,17.4,R),V(-2.7,16.35,R));const c=new THREE.CatmullRomCurve3(pts);b.gp=c;b.glen=c.getLength();b.u=0;b.spd=Math.max(9,Math.hypot(b.vx,b.vy));b.mode='guide'}
-function launch(b,c){b.mode='play';b.y=PLUNGE.y;b.vx=0;b.vy=plungeV(c);b.gold=!b.auto0&&c>=GOLD[0]&&c<=GOLD[1];SND.launch();GS.skillT=4;hint(null);if(GS.save<=0&&!GS.multi&&!b.auto0)setSave(10)}
+function launch(b,c){b.mode='play';b.y=PLUNGE.y;b.vx=0;b.vy=plungeV(c);b.gold=false;SND.launch();GS.skillT=4;hint(null);if(GS.save<=0&&!GS.multi&&!b.auto0)setSave(10)}
 function startGame(){ac();for(const b of[...BALLS])removeBall(b);Object.assign(GS,{state:'play',score:0,shown:0,ball:1,balls:3,loop:1,bx:1,pfx:1,pfxT:0,beats:0,grooveLv:0,igor:[0,0,0,0],drop:[0,0,0],bl:[0,0,0,0],polyStars:0,polyReady:false,
   multi:false,save:0,combo:0,comboT:0,ants:0,antsEver:0,ramps:0,orbits:0,drums:0,notes:0,extraGiven:0,kb:[1,1],cb:0,mode:-1,modeT:0,mp:0,done:[false,false,false,false,false,false,false],rank:0,sel:0,flag:0,ready:false,finale:0});FFS.on=false;updVariants();flagTex();
  DROPS.forEach((s,i)=>{s.on=true;DMESH[i].y=.23});GATES.forEach(g=>g.on=false);setMission(0);serve();MU.on=true;antT=4;MU.bpm=88;MU.en=0;
@@ -865,10 +867,11 @@ function laneHit(k,x){const m=MODE();
 function metroShot(x,y){if(MODE()!=='metro')return;const ph=((GS.t-GS.metro0)%METRO_P+METRO_P)%METRO_P/METRO_P,off=Math.min(ph,1-ph)*METRO_P;
  if(off<.15){GS.mp++;addScore(80000,x,y,'#ffd36e',true);dmsg([tt('ON THE BEAT!','A TEMPO!'),`${GS.mp}/3`],1.4,true,3);SND.jackpot();jump(SPR.host,1);if(GS.mp>=3)completeMode()}
  else{dmsg([ph<.5?tt('A BIT LATE','UN PO’ TARDI'):tt('A BIT EARLY','UN PO’ PRESTO'),tt('LISTEN TO THE TICK','ASCOLTA IL TIC')],1.4,false,2)}}
+function earCue(){jump(SPR.igor,1);jump(SPR.host,.7);flash(.3);dmsg([tt('IGOR PLAYS','IGOR SUONA'),tt('LISTEN!','ASCOLTA!')],1.6,true,3);burst(-3.3,14,1,'#ffd36e',30,4);burst(0,10,1,'#7fe3ef',20,3);pop(0,12,'♪  ♪  ♪','#ffd36e',true);setTimeout(()=>pop(-2,13,'♪','#7fe3ef',true),250);setTimeout(()=>pop(2,13,'♪','#ff8ab6',true),450)}
 function modeTick(dt){const m=MODE();
  if(GS.finale>0){GS.finale-=dt;if(GS.finale<=0)endFinale()}
  if(!m)return;GS.modeT-=dt;if(GS.modeT<=0)return failMode();
- if(m==='ear'){GS.earT-=dt;if(GS.earT<=0){GS.earT=5;SND.note(GS.ear,1);osc({f:mtof(NOTE_M[GS.ear]+12),type:'triangle',v:.1,d:.8,t:.02,rv:1});say(tt('🎵 Which note is this?','🎵 Che nota è questa?'),2,true);jump(SPR.igor,.6)}}
+ if(m==='ear'){GS.earT-=dt;if(GS.earT<=0){GS.earT=5;earCue();SND.note(GS.ear,1);osc({f:mtof(NOTE_M[GS.ear]+12),type:'triangle',v:.1,d:.8,t:.02,rv:1});say(tt('🎵 Which note is this?','🎵 Che nota è questa?'),2,true);jump(SPR.igor,.6)}}
  if(m==='metro'){const n=Math.floor((GS.t-GS.metro0)/METRO_P);if(n!==GS.metroN){GS.metroN=n;osc({f:n%4?1500:2200,v:.06,d:.04})}}}
 /* ================= the arcade on the dot-matrix display =================
    Every mission completed: big "MISSION COMPLETE", the ball is locked (the table freezes), the camera zooms on the
@@ -897,15 +900,15 @@ function pAnt(x,y,red){const g=aog,c=red?'#ff3b3b':'#fbf7ea',d=red?'#9a1818':'#b
 /* the fixed pattern of the ants: white ones are all reachable by a path made first, red ones stay away from it */
 function gnamPattern(){let s=20261122;const rnd=()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^s>>>15,1|s);t=(t+Math.imul(t^t>>>7,61|t))^t;return((t^t>>>14)>>>0)/4294967296};
  const kinds='WWRWWRWRWWRWWRWRWW',L=[],path=[];let T=3.3,y=16;
- for(let i=0;i<kinds.length;i++){const red=kinds[i]==='R';T+=.62+rnd()*.34;const v=40+rnd()*16;L.push({T,v,red,y:0});
-  if(!red){const dt=T-(path.length?path[path.length-1][0]:0),md=Math.min(20,48*(path.length?dt:2));y=Math.max(6,Math.min(26,Math.round(y+(rnd()*2-1)*md)));L[i].y=y;path.push([T,y])}}
+ for(let i=0;i<kinds.length;i++){const red=kinds[i]==='R';T+=Math.max(.38,.86-.05*i)+rnd()*.1;const v=60+10*Math.min(i,10)+rnd()*6;L.push({T,v,red,y:0});
+  if(!red){const dt=T-(path.length?path[path.length-1][0]:0),md=Math.min(20,88*(path.length?dt:2));y=Math.max(6,Math.min(26,Math.round(y+(rnd()*2-1)*md)));L[i].y=y;path.push([T,y])}}
  const at=t=>{if(t<=path[0][0])return path[0][1];for(let i=1;i<path.length;i++)if(t<=path[i][0]){const a=path[i-1],b=path[i];return a[1]+(b[1]-a[1])*(t-a[0])/(b[0]-a[0])}return path[path.length-1][1]};
- for(const a of L)if(a.red){let best=6,bd=-1;for(let k=0;k<40;k++){const yy=Math.round(6+rnd()*20);let m=99;for(let dt=-.45;dt<=.45;dt+=.05)m=Math.min(m,Math.abs(yy-at(a.T+dt)));if(m>=12.5){best=yy;bd=99;break}if(m>bd){bd=m;best=yy}}a.y=best}
+ for(const a of L)if(a.red){let best=6,bd=-1;for(let k=0;k<40;k++){const yy=Math.round(6+rnd()*20);let m=99;const w=10/a.v+.12;for(let dt=-w;dt<=w;dt+=.03)m=Math.min(m,Math.abs(yy-at(a.T+dt)));if(m>=12.5){best=yy;bd=99;break}if(m>bd){bd=m;best=yy}}a.y=best}
  return L}
 const ARC_GAMES={
  gnam:{N:['GNAM!','GNAM!'],how:['Catch the <span class="w">white</span> ants<br>Avoid the <span class="r">red</span> ones!','Prendi le formiche <span class="w">bianche</span><br>Evita le <span class="r">rosse</span>!'],key:['Left flipper = up · right flipper = down','Flipper sinistro = su · destro = giù'],
   init(G){G.y=16;G.L=0;G.R=0;G.open=0;G.t=0;G.caught=0;G.dead=0;G.fx=[];G.ants=gnamPattern().map(a=>({...a,x:132,done:0}));G.total=G.ants.filter(a=>!a.red).length;G.end=Math.max(...G.ants.map(a=>a.T))+1},
-  tick(G,dt){G.t+=dt;G.y=clamp(G.y+(G.R-G.L)*62*dt,5,27);G.open=Math.max(0,G.open-dt);
+  tick(G,dt){G.t+=dt;G.y=clamp(G.y+(G.R-G.L)*110*dt,5,27);G.open=Math.max(0,G.open-dt);
    for(const a of G.ants){if(a.done)continue;a.x=18+(a.T-G.t)*a.v;if(a.x>26||a.x<2){if(a.x<2)a.done='miss';continue}
     if(a.x>=10&&Math.abs(a.y-G.y)<=5){a.done='hit';if(a.red){G.dead=1;SND.drain&&osc({f:300,f2:90,v:.1,d:.4});break}G.caught++;G.open=.25;G.fx.push({x:30,y:G.y-8,t:.6});SND.ant();addScoreRaw(20000)}}
    for(const f of G.fx){f.t-=dt;f.y-=14*dt}G.fx=G.fx.filter(f=>f.t>0);
@@ -917,15 +920,16 @@ const ARC_GAMES={
    if(G.dead&&Math.floor(G.t*10)%2)atext('OUCH!',64,12,8,'#ff5a5a')},
   end(G){const all=G.caught===G.total&&!G.dead;return{score:all?300000:0,line:`${G.caught}/${G.total}`,perfect:all}}},
  bumcia:{N:['BUM CIÀ!','BUM CIÀ!'],how:['Hit the drum when the note arrives!<br>Top note: left flipper · bottom: right','Colpisci il tamburo quando arriva la nota!<br>In alto: flipper sinistro · in basso: destro'],key:['Left / right flipper','Flipper sinistro / destro'],
-  init(G){const beat=60/100;G.notes=[];const pat='LRLRLLRRLRLRRLRLLRLRLLRR';for(let i=0;i<pat.length;i++)G.notes.push({s:pat[i]==='L'?-1:1,t:3+i*beat*(i%4===3?1:.5)*1.6});G.t=0;G.hit=0;G.flash={'-1':0,'1':0};G.msg='';G.msgT=0},
+  init(G){const E=60/100/2,A='L.R.L.R.',B='L.R.LLR.',C='LLR.L.RL',F='LRLRLRRR',bars=[A,A,B,A,C,B,A,F];G.notes=[];bars.forEach((bar,bi)=>{for(let k=0;k<8;k++){const c=bar[k];if(c!=='.')G.notes.push({s:c==='L'?-1:1,t:3+(bi*8+k)*E})}});
+   G.t=0;G.hit=0;G.errs=[];G.flash={'-1':0,'1':0};G.msg='';G.msgT=0;G.pts=0},
   press(G,side){const k=String(side);G.flash[k]=.15;let best=null;for(const n of G.notes){if(n.s!==side||n.done)continue;const d=Math.abs(n.t-G.t);if(d<.18&&(!best||d<Math.abs(best.t-G.t)))best=n}
-   if(best){best.done='ok';G.hit++;(side<0?SND.kick:SND.snare)(0);addScoreRaw(15000);G.msg=Math.abs(best.t-G.t)<.07?tt('PERFECT','PERFETTO'):'OK';G.msgT=.4}else{osc({f:180,f2:120,v:.05,d:.1})}},
+   if(best){const e=(G.t-best.t)*1000,ae=Math.abs(e),p=Math.round(20000*Math.pow(1-ae/180,2));best.done='ok';G.hit++;G.errs.push(ae);G.pts+=p;(side<0?SND.kick:SND.snare)(0);addScoreRaw(p);G.msg=`${e>0?'+':'-'}${Math.round(ae)} MS`;G.msgT=.5;G.msgC=ae<40?'#9be38a':ae<100?'#ffd36e':'#ff8a1e'}else{osc({f:180,f2:120,v:.05,d:.1})}},
   tick(G,dt){G.t+=dt;for(const k in G.flash)G.flash[k]=Math.max(0,G.flash[k]-dt);G.msgT=Math.max(0,G.msgT-dt);for(const n of G.notes)if(!n.done&&G.t-n.t>.18)n.done='miss';return G.notes.every(n=>n.done)&&G.t>G.notes[G.notes.length-1].t+.6},
   draw(G){aog.fillStyle='#1a0d22';aog.fillRect(0,0,AW,AH);const ly={'-1':9,'1':23};
    for(const k of['-1','1']){aog.fillStyle='#3a2030';aog.fillRect(0,ly[k]-5,AW,10);aog.fillStyle=G.flash[k]>0?'#ffd36e':'#ff8a1e';aog.fillRect(15,ly[k]-6,2,12);aog.fillStyle=G.flash[k]>0?'#ffffff':'#7a4a2a';aog.fillRect(3,ly[k]-4,9,8);aog.fillStyle='#1a0d22';aog.fillRect(5,ly[k]-2,5,4)}
-   for(const n of G.notes){if(n.done==='ok')continue;const x=16+(n.t-G.t)*50;if(x<14||x>130)continue;aog.fillStyle=n.done==='miss'?'#553333':n.s<0?'#ff5a5a':'#4fd1e8';aog.fillRect(Math.round(x)-2,ly[String(n.s)]-3,5,6)}
-   atext(`${G.hit}/${G.notes.length}`,126,0,8,'#ffd36e','right');if(G.msgT>0)atext(G.msg,76,12,8,'#ffffff')},
-  end(G){return{score:G.hit===G.notes.length?300000:0,line:`${G.hit}/${G.notes.length}`,perfect:G.hit===G.notes.length}}}};
+   for(const n of G.notes){if(n.done==='ok')continue;const x=16+(n.t-G.t)*60;if(x<14||x>130)continue;aog.fillStyle=n.done==='miss'?'#553333':n.s<0?'#ff5a5a':'#4fd1e8';aog.fillRect(Math.round(x)-2,ly[String(n.s)]-3,5,6)}
+   if(G.msgT>0)atext(G.msg,84,12,8,G.msgC)},
+  end(G){const n=G.notes.length,avg=G.errs.length?G.errs.reduce((a,b)=>a+b,0)/G.errs.length:180,bonus=Math.round(300000*Math.max(0,1-avg/120)*(G.hit/n));return{score:bonus,line:tt(`AVG ${Math.round(avg)} MS`,`MEDIA ${Math.round(avg)} MS`),perfect:G.hit===n&&avg<40}}}};
 function addScoreRaw(n){GS.score+=Math.round(n*GS.loop)}
 const ARC_ORDER=['gnam','bumcia'];
 function missionCompleteShow(after){ARC.on=true;ARC.phase='banner';ARC.t=2.4;ARC.after=after;const b=$('bigmsg');b.innerHTML=`${tt('MISSION','MISSIONE')}<br>${tt('COMPLETE!','COMPIUTA!')}`;b.classList.add('on');
@@ -970,9 +974,9 @@ function resetDrops(){if(GS.polyReady)return;if(BALLS.some(b=>Math.abs(b.y-8.5)<
 sensLine(-4.6,10.4,-3.55,10.4,(b,up)=>{if(up&&b.vy>9){GS.orbits++;addScore(15000*thMul('orbit'),-4.07,10.8,'#7fe3ef');MU.en=Math.min(1,MU.en+.2);jump(SPR.igor,.6);if(thMul('orbit')>1)jump(SPR.host,1);SND.roll();combo(-4.07,10.8);burst(-4.07,10.4,.3,'#7fe3ef',10,3);metroShot(-4.07,11.2)}});
 sensLine(-4.6,12.6,-3.55,12.6,b=>{SPIN.w+=Math.min(60,Math.abs(b.vy)*2.2)});
 function superSkill(){if(GS.skillT<=0)return;GS.skillT=0;addScore(250000,-2.6,16.6,'#ffd36e',true);setSave(15);dmsg(['SUPER','SKILL SHOT!'],2.2,true,4);SND.jackpot();flash(.6);jump(SPR.igor,1);jump(SPR.host,1);burst(-2.6,16.9,.4,'#ffd36e',40,5);say(tt('Super skill shot! The secret passage!','Super skill shot! Il passaggio segreto!'),2.8,true)}
-sensLine(-3.25,16.9,-2.0,16.9,(b,up)=>{if(up)return;if(GS.skillT>0)superSkill();else{addScore(5000,-2.6,16.6,'#ffd36e');SND.roll()}});
+sensLine(-3.25,16.9,-2.0,16.9,(b,up)=>{if(up)return;addScore(5000,-2.6,16.6,'#ffd36e');SND.roll()});
 sensLine(2.22,10.85,3.5,10.6,(b,up)=>{if(up&&Math.hypot(b.vx,b.vy)>9){b.mode='ramp';b.u=0;b.spd=clamp(Math.hypot(b.vx,b.vy)*.7,14,24);SND.ramp()}});
-LANE_X.forEach((x,k)=>sensCirc(x,18.0,.28,b=>{if(GS.multi&&GS.finale<=0)return;
+LANE_X.forEach((x,k)=>sensCirc(x,18.0,.28,b=>{if(GS.multi&&GS.finale<=0)return;if(b.vy<0)return; /* only the ball going up counts: the one that bounces back down the lane does not count twice */
  if(GS.skillT>0&&k===GS.skill){GS.skillT=0;addScore(75000,x,18.2,'#ffffff',true);dmsg(['SKILL','SHOT!'],1.6,true,3);SND.jackpot();say(tt('Skill shot! Bullseye!','Skill shot! Centro perfetto!'),2.4,true)}
  GS.skillT=0;laneHit(k,x)}));
 /* outlane kickbacks: a green plug in each side lane sends the ball back up, once per ball */
