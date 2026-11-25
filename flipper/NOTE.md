@@ -67,3 +67,4 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
   Ancora da fare: pannello inclinato/integrato come nei flipper veri, lingua disegnata più realistica, oggetti più lucidi, test su touch/Android.
 - v21: camera riportata a prospettiva marcata (fov 36, pitch ~1.0) e margini minimi: il campo ora riempie tutta la larghezza dello schermo (prima in v19 sprecava ~30% di spazio ai lati).
 - v22: tavolo allargato del 30% (KX=1.3): il campo riempie tutto lo schermo del telefono; fisica invariata (solo le posizioni sono allargate, le forme tonde restano tonde). Trucco: table.scale.x=KX + controscala sulle geometrie tonde.
+- v23: seconda rampa 'Ponte' sopraelevata sopra il Palco e i piccoli target (entrata davanti al flipper alto sinistro, uscita sul flipper alto destro), guide di metallo e sostegni, +25.000.

@@ -471,7 +471,7 @@ const PLG=(()=>{const G=new THREE.Group();table.add(G);const rod=new THREE.Mesh(
 const RAMP_P=[[2.8,10.9,0],[3.05,13.0,.5],[3.7,15.4,.95],[3.95,17.6,1.3],[3.2,19.6,1.55],[1.0,20.35,1.65],[-1.4,20.0,1.65],[-2.9,18.6,1.55],[-3.4,16.4,1.4],[-3.35,13.0,1.15],[-3.32,10.0,.95],[-3.3,8.0,.78],[-3.3,6.4,.62]];
 const RAMP=new THREE.CatmullRomCurve3(RAMP_P.map(p=>V(p[0],p[1],p[2]+R)),false,'catmullrom',.5);
 const RAMP_LEN=RAMP.getLength();
-const RAMPV=(()=>{const N=180,pts=RAMP.getSpacedPoints(N),up=new THREE.Vector3(0,1,0);const L=[],Rr=[],B=[];
+const mkRampVis=((RAMP)=>{const N=180,pts=RAMP.getSpacedPoints(N),up=new THREE.Vector3(0,1,0);const L=[],Rr=[],B=[];
  for(let i=0;i<=N;i++){const t=RAMP.getTangentAt(i/N);const side=new THREE.Vector3().crossVectors(t,up).normalize();const p=pts[i].clone();p.y-=R*.15;
   L.push(p.clone().addScaledVector(side,.36));Rr.push(p.clone().addScaledVector(side,-.36));B.push(p.clone().setY(p.y-R*.85))}
  const mk=(pp,r,mat)=>{const m=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pp),220,r,6,false),mat);table.add(m);return m};
@@ -485,7 +485,13 @@ const RAMPV=(()=>{const N=180,pts=RAMP.getSpacedPoints(N),up=new THREE.Vector3(0
  const sp=[],si=[];let k=0;for(let i=0;i<=N;i++){const p=pts[i];if(p.y<.2){continue}const t=RAMP.getTangentAt(i/N),side=new THREE.Vector3().crossVectors(t,new THREE.Vector3(0,1,0)).normalize(),off=p.y*.35,w=.5+p.y*.18;
   const cx=p.x+off*.6,cz=p.z-off*.4;sp.push(cx+side.x*w,.03,cz+side.z*w,cx-side.x*w,.03,cz-side.z*w);if(k>0){const q=(k-1)*2;si.push(q,q+1,q+2,q+1,q+3,q+2)}k++}
  const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));sg.setIndex(si);table.add(new THREE.Mesh(sg,new THREE.MeshBasicMaterial({color:'#000',transparent:true,opacity:.32,depthWrite:false,side:THREE.DoubleSide})))}
- return{tx,strip}})();
+ return{tx,strip}});
+const RAMPV=mkRampVis(RAMP);
+/* second ramp: a bridge over the middle of the field (over the Stage and the little targets), from the upper-left flipper to the upper-right one */
+const RAMP2_P=[[-2.15,15.2,0],[-1.6,15.45,.5],[-.5,15.8,.9],[1.2,15.85,1.1],[2.6,15.6,.95],[3.15,15.0,.6],[3.0,14.3,.3]];
+const RAMP2=new THREE.CatmullRomCurve3(RAMP2_P.map(p=>V(p[0],p[1],p[2]+R)),false,'catmullrom',.5);
+const RAMP2_LEN=RAMP2.getLength();
+const RAMP2V=mkRampVis(RAMP2);
 const ballGeo=new THREE.SphereGeometry(R,32,20);
 const shadowTex=(()=>{const c=document.createElement('canvas');c.width=64;c.height=64;const g=c.getContext('2d');const rg=g.createRadialGradient(32,32,0,32,32,32);rg.addColorStop(0,'rgba(0,0,0,.6)');rg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=rg;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
 const dotTex=(()=>{const c=document.createElement('canvas');c.width=32;c.height=32;const g=c.getContext('2d');const rg=g.createRadialGradient(16,16,0,16,16,16);rg.addColorStop(0,'#fff');rg.addColorStop(.3,'rgba(255,255,255,.7)');rg.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=rg;g.fillRect(0,0,32,32);return new THREE.CanvasTexture(c)})();
@@ -664,7 +670,7 @@ function tokStep(dt,t){return; /* the islands now come only with the missions (s
  for(const b of BALLS)if(b.mode==='play'&&Math.hypot(b.x-T.x,b.y-T.y)<R+.42){table.remove(T.G);TOK=null;tokT=22;burst(T.x,T.y,.5,TH[T.kind].acc,40,5);setTheme(T.kind);break}}
 function setTheme(k,quiet){THEME=k;const T=TH[k];GS.themeT=k==='home'?0:9999;paintField();
  scene.background.set(T.sky);scene.fog.color.set(T.sky);SEA.color.set(T.sea);hemi.color.set(T.hemi[0]);hemi.groundColor.set(T.hemi[1]);M.accent.color.set(T.acc);
- BULBS.forEach((b,i)=>b.material.color.set(i%2?T.acc:T.acc2));RAMPV.strip.material.color.set(T.ramp);
+ BULBS.forEach((b,i)=>b.material.color.set(i%2?T.acc:T.acc2));RAMPV.strip.material.color.set(T.ramp);RAMP2V.strip.material.color.set(T.ramp);
  for(const s in SCEN)SCEN[s].visible=s===k;setHost(T.host);hemi.intensity=k==='carib'?.75:.95;if(quiet)return;
  SND.fanfare(MIS[GS.mi].n);flash(.6);jump(SPR.host,1);jump(SPR.igor,1);
  dmsg([k==='home'?tt('BACK HOME','SI TORNA A CASA'):tt('ISLAND','ISOLA'),L2(T.N).toUpperCase().slice(0,16)],2.4,true,3);
@@ -1131,7 +1137,8 @@ sensLine(-4.6,10.4,-3.55,10.4,(b,up)=>{if(up&&b.vy>9){GS.orbits++;addScore(15000
 sensLine(-4.6,12.6,-3.55,12.6,b=>{SPIN.w+=Math.min(60,Math.abs(b.vy)*2.2)});
 function superSkill(){if(GS.skillT<=0)return;GS.skillT=0;addScore(250000,-2.6,16.6,'#ffd36e',true);setSave(15);dmsg(['SUPER','SKILL SHOT!'],2.2,true,4);SND.jackpot();flash(.6);jump(SPR.igor,1);jump(SPR.host,1);burst(-2.6,16.9,.4,'#ffd36e',40,5);say(tt('Super skill shot! The secret passage!','Super skill shot! Il passaggio segreto!'),2.8,true)}
 sensLine(-3.25,16.9,-2.0,16.9,(b,up)=>{if(up)return;addScore(5000,-2.6,16.6,'#ffd36e');SND.roll()});
-sensLine(2.22,10.85,3.5,10.6,(b,up)=>{if(up&&Math.hypot(b.vx,b.vy)>9){b.mode='ramp';b.u=0;b.spd=clamp(Math.hypot(b.vx,b.vy)*.7,14,24);SND.ramp()}});
+sensLine(-2.55,15.0,-1.75,15.0,(b,up)=>{if(up&&b.mode==='play'&&Math.hypot(b.vx,b.vy)>7){b.mode='ramp';b.rp=2;b.u=0;b.spd=clamp(Math.hypot(b.vx,b.vy)*.7,12,22);SND.ramp()}});
+sensLine(2.22,10.85,3.5,10.6,(b,up)=>{if(up&&Math.hypot(b.vx,b.vy)>9){b.mode='ramp';b.rp=1;b.u=0;b.spd=clamp(Math.hypot(b.vx,b.vy)*.7,14,24);SND.ramp()}});
 LANE_X.forEach((x,k)=>sensCirc(x,18.0,.28,b=>{if(GS.multi&&GS.finale<=0)return;if(b.vy<0)return; /* only the ball going up counts: the one that bounces back down the lane does not count twice */
  if(GS.skillT>0&&k===GS.skill){GS.skillT=0;addScore(75000,x,18.2,'#ffffff',true);dmsg(['SKILL','SHOT!'],1.6,true,3);SND.jackpot();say(tt('Skill shot! Bullseye!','Skill shot! Centro perfetto!'),2.4,true)}
  GS.skillT=0;laneHit(k,x)}));
@@ -1185,6 +1192,7 @@ BLANES.forEach(([x,y],i)=>sensCirc(x,y,.3,()=>{SND.roll();addScore(500,x,y);if(G
  if(i===0||i===3){if(GS.save<=0)say(tt('Careful… Igor believes in you!','Attenzione… Igor crede in te!'),2,false)}
  if(GS.bl.every(v=>v)){GS.bl=[0,0,0,0];setSave(15);GS.bx=Math.min(6,GS.bx+1);addScore(25000,0,5,'#9be38a',true);dmsg([tt('ALL LANES','CORSIE OK'),tt('BALL SAVER','SALVA PALLA')],1.8,true,3);say(tt('All four lanes: I’ll save your ball!','Tutte e quattro le corsie: ti salvo la pallina!'),2.6,true)}}));
 /* ramp end, saucer */
+function ramp2Done(b){b.mode='play';b.x=2.75;b.y=14.35;b.vx=-1.6;b.vy=-6;b.h=.3;b.hv=0;GS.bridge=(GS.bridge||0)+1;addScore(25000*thMul('ramp'),2.75,14.6,'#9fe3ff',true);SND.target(1);burst(2.75,14.5,.5,'#9fe3ff',16,3);MU.en=Math.min(1,MU.en+.2);jump(SPR.igor,.6);dmsg([tt('BRIDGE','PONTE'),'+25.000'],1,true,2)}
 function rampDone(b){MU.en=Math.min(1,MU.en+.3);jump(SPR.igor,.7);b.mode='play';b.x=-3.3;b.y=6.3;b.vx=0;b.vy=-RAMP_VY;b.h=.62;b.hv=0;GS.ramps++;burst(-3.3,6.4,.6,'#ff8ab6',16,3);
  if(GS.polyReady&&!GS.multi){addScore(50000,-3.3,7,'#c77dff',true);startPoly();return}
  if(GS.multi){addScore(500000,-3.3,7,'#ffd36e',true);dmsg(['JACKPOT!',fmt(500000*GS.loop*GS.pfx)],1.8,true,3);SND.jackpot();flash(.7);GS.shake=.5;say(tt('JACKPOT! Igor is dancing!','JACKPOT! Igor balla!'),2.4,true);return}
@@ -1249,7 +1257,7 @@ function ballsFrame(dt){if(paused)return;for(const b of[...BALLS]){
   else if(b.mode==='guide'){b.spd=Math.max(6,b.spd-dt*14);b.u+=b.spd*dt/b.glen;if(b.u>=1){b.mode='play';b.x=-2.7;b.y=16.35;b.vx=0;b.vy=-3;b.gold=false;superSkill()}else{const p=b.gp.getPointAt(b.u);b.m.position.copy(p);b.sh.position.set(p.x,.012,p.z);continue}}
   else if(b.mode==='kick'){b.u+=dt/.4;if(b.u>=1){b.mode='play';b.x=b.ex;b.y=b.ey;b.vx=b.evx;b.vy=b.evy}else{const p=b.gp.getPointAt(b.u);b.m.position.copy(p);b.sh.position.set(p.x,.012,p.z);continue}}
  else if(b.mode==='pass'){b.u+=dt/.34;if(b.u>=1){b.mode='play';const s=b.ps;b.x=1.15*-s;b.y=2.62;b.vx=.6*-s;b.vy=-.4}else{const p=b.gp.getPointAt(b.u);b.m.position.copy(p);b.sh.position.set(p.x,.012,p.z);continue}}
-  else if(b.mode==='ramp'){b.spd=Math.min(30,b.spd+dt*7);b.u+=b.spd*dt/RAMP_LEN;if(b.u>=1){rampDone(b)}else{const p=RAMP.getPointAt(b.u);b.m.position.copy(p);b.sh.position.set(p.x,.012,p.z);b.sh.material.opacity=.35;continue}}
+  else if(b.mode==='ramp'){const r2=b.rp===2;b.spd=Math.min(30,b.spd+dt*7);b.u+=b.spd*dt/(r2?RAMP2_LEN:RAMP_LEN);if(b.u>=1){if(r2)ramp2Done(b);else rampDone(b)}else{const p=(r2?RAMP2:RAMP).getPointAt(b.u);b.m.position.copy(p);b.sh.position.set(p.x,.012,p.z);b.sh.material.opacity=.35;continue}}
   else if(b.mode==='bell'){b.u+=dt;const a=CBI.G.rotation.y,mx=.15+Math.cos(a)*.5,my=6.7+Math.sin(a)*.5,k=Math.min(1,b.u/.3);b.m.position.copy(VP(mx,my,R+.28-k*.1));b.m.scale.setScalar(1-k*.6);b.sh.position.copy(VP(mx,my,.012));
    if(b.u>.3&&!b.blow){b.blow=1;bellBlow()}
    if(b.u>=.7){b.mode='play';b.blow=0;b.m.scale.setScalar(1);let dx=Math.cos(a),dy=Math.sin(a);if(dy<-.3){dx=(dx>=0?1:-1)*.85;dy=.5}const n=Math.hypot(dx,dy);dx/=n;dy/=n;b.x=.15+dx*.85;b.y=6.7+dy*.85;b.vx=dx*17;b.vy=dy*17;b.cap2=1;burst(b.x,b.y,.3,'#ffb0e0',20,5)}continue}
@@ -1327,7 +1335,7 @@ ORCM.forEach((o,k)=>{const w=GS.wd[k],up=MODE()==='winds'&&w&&w.open;o.t=Math.mi
  FLAGM.w*=Math.pow(.3,dt);FLAGM.a+=FLAGM.w*dt;FLAGM.rot.rotation.y=FLAGM.a+Math.sin(t*2)*.15;
  FFBAR.sp.visible=FFS.on&&GS.state==='play';FFBAR.sp.position.copy(VP(FFS.x,FFS.y+.2,2.2));
  FFM.y=lerp(FFM.y,FFS.on?0:-1.2,Math.min(1,dt*3));FFM.shake=Math.max(0,FFM.shake-dt*4);FFM.G.position.copy(VP(FFS.x+rnd(-1,1)*FFM.shake*.05,FFS.y,FFM.y));FFM.st.scale.y=1-(GS.mp/4)*(MODE()==='ff'?1:0);
- SAU.sw.rotation.z-=dt*2;SAU.L.intensity=.6+Math.sin(t*4)*.3;RAMPV.tx.offset.x-=dt*(GS.multi||GS.jack>0||GS.polyReady?3:1.2);RAMPV.strip.material.color.set(GS.jack>0||GS.multi?'#ffd36e':GS.polyReady?'#c77dff':'#ffffff');
+ SAU.sw.rotation.z-=dt*2;SAU.L.intensity=.6+Math.sin(t*4)*.3;RAMP2V.tx.offset.x-=dt*1.6;RAMPV.tx.offset.x-=dt*(GS.multi||GS.jack>0||GS.polyReady?3:1.2);RAMPV.strip.material.color.set(GS.jack>0||GS.multi?'#ffd36e':GS.polyReady?'#c77dff':'#ffffff');
  {const pm=$('pm');if(GS.charging&&GS.state==='play'){pm.style.opacity=1;$('pmf').style.width=(GS.plunge*100)+'%';$('pmf').style.background=GS.plunge>=GOLD[0]&&GS.plunge<=GOLD[1]?'#ffd36e':'#9be38a'}else pm.style.opacity=0}
  const lane=BALLS.find(b=>b.mode==='lane');PLG.position.copy(VP(5.0,.9-.8-.06-(lane?GS.plunge*.7:0),.22));PLG.userData.spring.forEach((s,i)=>s.position.z=-.6+i*.18*(1-(lane?GS.plunge*.55:0)));
  /* inserts */
