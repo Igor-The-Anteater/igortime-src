@@ -72,3 +72,4 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 - v25: materiali più lucidi: mappa di riflessi con softbox bianchi e bande scure, cromo/oro/plastica con più riflesso (bumper, guide, rampe).
 - v26: pannello più piccolo (max 600px, mobile 100vw-64px); fumetto di Igor compatto, messo al posto della pillola missione sotto il pannello (non copre più il campo).
 - v27: lingue più realistiche: il muso di Igor è un tubo che si apre in una bocca tonda con labbra rosa e interno scuro; il flipper-lingua esce dalla bocca.
+- v28: vista DRITTA dall’alto (pitch 1.5), niente cornice di legno né lampadine, scenario spostato fuori inquadratura; KX ora dipende dall’aspetto dello schermo (1.25–1.7) così il campo riempie tutta la larghezza e l’altezza disponibili.
