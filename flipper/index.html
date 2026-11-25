@@ -248,10 +248,12 @@ const _vp=new THREE.Vector3(),VP=(x,y,h=0)=>_vp.set(x-CX,h,CY-y);
 const R=.27;
 const envTex=(()=>{const c=document.createElement('canvas');c.width=512;c.height=256;const g=c.getContext('2d');const gr=g.createLinearGradient(0,0,0,256);gr.addColorStop(0,'#1a1440');gr.addColorStop(.45,'#5b4a8a');gr.addColorStop(.5,'#f2e9ff');gr.addColorStop(.55,'#3a2a5a');gr.addColorStop(1,'#0a0618');g.fillStyle=gr;g.fillRect(0,0,512,256);
  for(const[x,y,r,col]of[[90,60,40,'#ffffff'],[300,50,55,'#ffe1b0'],[420,90,30,'#9be3ff'],[200,180,40,'#ff8ab6'],[470,200,30,'#9be38a']]){const rg=g.createRadialGradient(x,y,0,x,y,r);rg.addColorStop(0,col);rg.addColorStop(1,col+'00');g.fillStyle=rg;g.fillRect(x-r,y-r,2*r,2*r)}
+ /* studio softboxes: bright bars and deep dark bands, so chrome and plastic get bold reflections */
+ g.fillStyle='#ffffff';for(const[x,y,w,h]of[[40,30,150,18],[250,20,200,14],[60,120,90,10],[330,100,150,12],[170,205,160,12]])g.fillRect(x,y,w,h);g.fillStyle='#05030c';for(const[x,y,w,h]of[[0,150,512,26],[0,70,512,10]])g.fillRect(x,y,w,h);
  const t=new THREE.CanvasTexture(c);t.mapping=THREE.EquirectangularReflectionMapping;const pm=new THREE.PMREMGenerator(renderer);return pm.fromEquirectangular(t).texture})();
 const M={
- chrome:new THREE.MeshStandardMaterial({color:'#cfd6df',metalness:.95,roughness:.2,envMap:envTex}),
- gold:new THREE.MeshStandardMaterial({color:'#e8b84a',metalness:1,roughness:.22,envMap:envTex}),
+ chrome:new THREE.MeshStandardMaterial({color:'#e4eaf2',metalness:1,roughness:.1,envMap:envTex,envMapIntensity:1.6}),
+ gold:new THREE.MeshStandardMaterial({color:'#f0be4a',metalness:1,roughness:.14,envMap:envTex,envMapIntensity:1.5}),
  ball:new THREE.MeshStandardMaterial({color:'#eef3f8',metalness:1,roughness:.08,envMap:envTex,envMapIntensity:1.4}),
  cab:new THREE.MeshStandardMaterial({color:'#5b3820',metalness:.05,roughness:.62,envMap:envTex,envMapIntensity:.25}),
  wood:new THREE.MeshStandardMaterial({color:'#6b4325',roughness:.7}),
@@ -263,7 +265,7 @@ const M={
  tofu:new THREE.MeshStandardMaterial({color:'#fbf7ea',roughness:.55,emissive:'#5a5648',emissiveIntensity:.4}),
  black:new THREE.MeshBasicMaterial({color:'#000000'})};
 const neon=c=>new THREE.MeshBasicMaterial({color:c});
-const plastic=(c,o)=>new THREE.MeshStandardMaterial({color:c,roughness:.3,metalness:.1,envMap:envTex,envMapIntensity:.6,...o});
+const plastic=(c,o)=>new THREE.MeshStandardMaterial({color:c,roughness:.18,metalness:.15,envMap:envTex,envMapIntensity:1.1,...o});
 const hemi=new THREE.HemisphereLight('#ffe2b8','#24406a',.95);scene.add(hemi);
 const sun=new THREE.DirectionalLight('#fff0d8',.8);sun.position.set(-3,14,10);scene.add(sun);
 const gi=new THREE.PointLight('#d7defa',.9,30,1.6);gi.position.copy(VP(0,10,6));scene.add(gi);

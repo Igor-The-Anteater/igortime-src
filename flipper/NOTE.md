@@ -69,3 +69,4 @@ Fabio e Alessandro lavorano qui con i loro Claude. **Prima di ogni lavoro: `git 
 - v22: tavolo allargato del 30% (KX=1.3): il campo riempie tutto lo schermo del telefono; fisica invariata (solo le posizioni sono allargate, le forme tonde restano tonde). Trucco: table.scale.x=KX + controscala sulle geometrie tonde.
 - v23: seconda rampa 'Ponte' sopraelevata sopra il Palco e i piccoli target (entrata davanti al flipper alto sinistro, uscita sul flipper alto destro), guide di metallo e sostegni, +25.000.
 - v24: orbita destra sopraelevata (entrata sul muro destro a y≈9.5, uscita nei tamburi, +20.000, combo).
+- v25: materiali più lucidi: mappa di riflessi con softbox bianchi e bande scure, cromo/oro/plastica con più riflesso (bumper, guide, rampe).
