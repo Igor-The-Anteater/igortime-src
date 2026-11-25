@@ -14,8 +14,8 @@ html,body{margin:0;height:100%;background:#0e1a33;overflow:hidden;touch-action:n
 #top{position:fixed;left:0;right:0;top:0;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 10px 6px;padding-top:max(8px,env(safe-area-inset-top));background:linear-gradient(#0e1a33f2,#0e1a33cc 70%,#0e1a3300);pointer-events:none;z-index:5}
 #top>*{pointer-events:auto}
 #back{position:absolute;left:10px;top:max(8px,env(safe-area-inset-top));color:#f1b46e;text-decoration:none;font-weight:600;font-size:14px;background:#1d1230cc;border:1.5px solid #f1b46e66;border-radius:999px;padding:4px 10px;z-index:6}
-#dmdw{position:relative;padding:5px;border-radius:10px;background:linear-gradient(#6b4325,#3d2614);border:2px solid #8a5a32;box-shadow:0 0 22px #ff8a1e33,inset 0 0 10px #000}
-#dmd{display:block;width:min(440px,calc(100vw - 150px));aspect-ratio:4/1;border-radius:5px;background:#0c0602;image-rendering:pixelated}
+#dmdw{position:relative;padding:0;border-radius:6px;background:#07040e;border:1px solid #6a4a9a88;box-shadow:0 0 26px #a060ff55,0 0 2px #fff4}
+#dmd{display:block;width:min(560px,calc(100vw - 150px));aspect-ratio:4/1;border-radius:5px;background:#0c0602;image-rendering:pixelated}
 #ig{position:relative;width:64px;height:64px;flex:none;border-radius:50%;background:radial-gradient(circle at 40% 35%,#2f4a6e,#132238);border:2px solid #9be38a88;overflow:visible}
 #igc{width:100%;height:100%;display:block;border-radius:50%}
 #ig.talk{animation:bob .35s ease-in-out 3}
@@ -479,6 +479,10 @@ const RAMPV=(()=>{const N=180,pts=RAMP.getSpacedPoints(N),up=new THREE.Vector3(0
  const c=document.createElement('canvas');c.width=64;c.height=32;const q=c.getContext('2d');q.fillStyle='rgba(190,230,255,.14)';q.fillRect(0,0,64,32);q.fillStyle='rgba(255,220,240,.9)';q.font='700 24px sans-serif';q.textAlign='center';q.textBaseline='middle';q.fillText('♪',32,17);
  const tx=new THREE.CanvasTexture(c);tx.wrapS=THREE.RepeatWrapping;const strip=new THREE.Mesh(g,new THREE.MeshBasicMaterial({map:tx,transparent:true,side:THREE.DoubleSide,depthWrite:false}));table.add(strip);
  for(let i=8;i<N;i+=12){const p=pts[i],hh=p.y-R*.9;if(hh<.25)continue;for(const sd of[-1,1]){const t=RAMP.getTangentAt(i/N),side=new THREE.Vector3().crossVectors(t,new THREE.Vector3(0,1,0)).normalize();const post=new THREE.Mesh(new THREE.CylinderGeometry(.045,.07,hh,8),M.chrome);post.position.set(p.x+side.x*.36*sd,hh/2,p.z+side.z*.36*sd);table.add(post);const bs=new THREE.Mesh(new THREE.CylinderGeometry(.12,.14,.05,10),M.chrome);bs.position.set(post.position.x,.025,post.position.z);table.add(bs)}}
+ {/* soft drop shadow of the ramp on the playfield: depth cue */
+ const sp=[],si=[];let k=0;for(let i=0;i<=N;i++){const p=pts[i];if(p.y<.2){continue}const t=RAMP.getTangentAt(i/N),side=new THREE.Vector3().crossVectors(t,new THREE.Vector3(0,1,0)).normalize(),off=p.y*.35,w=.5+p.y*.18;
+  const cx=p.x+off*.6,cz=p.z-off*.4;sp.push(cx+side.x*w,.03,cz+side.z*w,cx-side.x*w,.03,cz-side.z*w);if(k>0){const q=(k-1)*2;si.push(q,q+1,q+2,q+1,q+3,q+2)}k++}
+ const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));sg.setIndex(si);table.add(new THREE.Mesh(sg,new THREE.MeshBasicMaterial({color:'#000',transparent:true,opacity:.32,depthWrite:false,side:THREE.DoubleSide})))}
  return{tx,strip}})();
 const ballGeo=new THREE.SphereGeometry(R,32,20);
 const shadowTex=(()=>{const c=document.createElement('canvas');c.width=64;c.height=64;const g=c.getContext('2d');const rg=g.createRadialGradient(32,32,0,32,32,32);rg.addColorStop(0,'rgba(0,0,0,.6)');rg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=rg;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
@@ -1230,8 +1234,8 @@ function placeFlag(){const f=$('igLangB'),bk=$('back');if(f){f.style.setProperty
 setInterval(placeFlag,700);
 function fit(){const W=innerWidth,H=innerHeight;placeFlag();renderer.setSize(W,H,false);dmdSize();HUDH=$('top').getBoundingClientRect().bottom+30;
  $('mis').style.top=($('top').getBoundingClientRect().bottom-2)+'px';
- const avH=Math.max(200,H-HUDH-8),asp=W/avH;camera.aspect=asp;camera.fov=asp<.8?38:32;
- const pitch=asp<.6?1.0:asp<1?.95:.9;const tgt=V(.4,9.6,0);const dir=new THREE.Vector3(0,Math.sin(pitch),Math.cos(pitch));
+ const avH=Math.max(200,H-HUDH-8),asp=W/avH;camera.aspect=asp;camera.fov=asp<.8?26:24;
+ const pitch=asp<.6?1.22:asp<1?1.18:1.1;const tgt=V(.4,9.6,0);const dir=new THREE.Vector3(0,Math.sin(pitch),Math.cos(pitch));
  const pts=[];for(const x of[XL-.2,XO+.2])for(const y of[YB-.2,YT+.3])for(const h of[0,1])pts.push(V(x,y,h));pts.push(V(0,20.4,1.9));
  let lo=5,hi=120;for(let k=0;k<30;k++){const mid=(lo+hi)/2;camera.position.copy(tgt).addScaledVector(dir,mid);camera.lookAt(tgt);camera.clearViewOffset();camera.updateProjectionMatrix();camera.updateMatrixWorld();
   let ok=true,ya=9,yb=-9;for(const p of pts){const q=p.clone().project(camera);ya=Math.min(ya,q.y);yb=Math.max(yb,q.y);if(Math.abs(q.x)>.97){ok=false;break}}if(ok&&yb-ya>1.95)ok=false;if(ok)hi=mid;else lo=mid}
@@ -1358,7 +1362,7 @@ const _lost=ballLost;ballLost=function(b){if(GS.state==='title'){removeBall(b);c
 setInterval(()=>{if(GS.state==='title'){const l=BALLS.some(b=>b.x<0&&b.y<3.6&&b.y>1.4),r=BALLS.some(b=>b.x>0&&b.x<XR&&b.y<3.6&&b.y>1.4);FLL.press=l;FLU.press=l;FLR.press=r;FRU.press=r}},60);
 (document.fonts&&document.fonts.load?Promise.all([document.fonts.load('16px "Press Start 2P"'),document.fonts.load('700 20px Silkscreen')]).then(()=>{try{location.search.includes('prova')||0}catch(e){}}):Promise.resolve()).catch(()=>{});
 fit();setTimeout(fit,300);requestAnimationFrame(frame);
-window.__pin={CIRCS,SENS,ARC_GAMES,rotateLights,provaArc,tick:(dt,t)=>gameTick(dt,t),FLL,FLR,FLU,FRU,launch,I,GS,BALLS,FL,startGame,step,SEGS,MIS,setMission,flip,charge,lightNote,get ANT(){return ANT},startPoly,ON,DROPS,newBall,removeBall,startMode,ARC,arcInput,setRampVY:v=>RAMP_VY=v,setPass:v=>FLIP_PASS=v,completeMode,laneHit,MODES,flagHit,setTheme,spawnTok,get TOK(){return TOK},TH_:()=>THEME,MU};
+window.__pin={sun,table,pf,scene,CIRCS,SENS,ARC_GAMES,rotateLights,provaArc,tick:(dt,t)=>gameTick(dt,t),FLL,FLR,FLU,FRU,launch,I,GS,BALLS,FL,startGame,step,SEGS,MIS,setMission,flip,charge,lightNote,get ANT(){return ANT},startPoly,ON,DROPS,newBall,removeBall,startMode,ARC,arcInput,setRampVY:v=>RAMP_VY=v,setPass:v=>FLIP_PASS=v,completeMode,laneHit,MODES,flagHit,setTheme,spawnTok,get TOK(){return TOK},TH_:()=>THEME,MU};
 })();
 </script>
 </body></html>
