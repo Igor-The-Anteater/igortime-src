@@ -144,7 +144,7 @@ function chordMidi(n){const r=[];let last=-1;for(const k of n){let m=NOTE_M[k]-1
 const chordNames=mi=>mi.n.map(k=>NOTE_N[k]).join(' · ');
 let THEME='home';
 const MODES=[
- {k:'chords',N:['Chords','Accordi'],ic:'🎹',T:80,need:3,how:['Light the notes of 3 chords in the top lanes!','Accendi nelle corsie in alto le note di 3 accordi!']},
+ {k:'chords',N:['Chords','Accordi'],ic:'🎹',T:75,need:3,how:['Light the notes of 3 chords in the top lanes!','Accendi nelle corsie in alto le note di 3 accordi!']},
  {k:'drums',N:['Drum solo','Assolo di batteria'],ic:'🥁',T:40,need:40,how:['Drum solo: hit the drums 40 times!','Assolo: colpisci la batteria 40 volte!']},
  {k:'ff',N:['Fortissimo','Fortissimo'],ic:'💥',T:50,need:3,how:['Knock down the statue: only fortissimo hits count!','Abbatti la statua: valgono solo i colpi fortissimo!']},
  {k:'ear',N:['Which note?','Che nota è?'],ic:'👂',T:60,need:3,how:['Listen to my note and hit its lane!','Ascolta la mia nota e prendi la sua corsia!']},
@@ -1164,7 +1164,7 @@ function eatAnt(){const a=ANT;jump(SPR.igor,1);table.remove(a.m);ANT=null;antT=3
  else{setSave(12);dmsg(['GNAM!',tt('BALL SAVER','SALVA PALLA')],1.6,true,3);say(tt('Gnam! Now Igor protects your ball!','Gnam! Ora Igor protegge la tua pallina!'),2.6,true)}}
 
 /* ================= physics ================= */
-const G_=32,VMAX=48;let FLIP_PASS=7;
+const G_=28,VMAX=30;let FLIP_PASS=7;
 function collideSeg(b,s){if(!s.on)return;const px=b.x-s.ax,py=b.y-s.ay;let t=(px*s.dx+py*s.dy)/s.l2;t=t<0?0:t>1?1:t;const qx=s.ax+s.dx*t,qy=s.ay+s.dy*t;let nx=b.x-qx,ny=b.y-qy;const d2=nx*nx+ny*ny,rr=R+s.rad;
  if(d2>=rr*rr)return;if(s.one&&(px*s.onx+py*s.ony)<0)return;const d=Math.sqrt(d2)||1e-6;nx/=d;ny/=d;b.x=qx+nx*rr;b.y=qy+ny*rr;const vn=b.vx*nx+b.vy*ny;
  if(vn<0){b.vx-=(1+s.e)*vn*nx;b.vy-=(1+s.e)*vn*ny;if(s.kick&&-vn>1.2){b.vx+=nx*s.kick;b.vy+=ny*s.kick}if(ON[s.tag]&&-vn>.6)ON[s.tag](s,b);else if(-vn>3)SND.wall(-vn)}}
@@ -1186,7 +1186,7 @@ function step(dt){if(paused)return;
   b.vy-=G_*dt;const sp=Math.hypot(b.vx,b.vy);if(sp>VMAX){b.vx*=VMAX/sp;b.vy*=VMAX/sp}
   b.x+=b.vx*dt;b.y+=b.vy*dt;
   for(const s of SEGS)collideSeg(b,s);for(const c of CIRCS)collideCirc(b,c);for(const f of FL)collideFlip(b,f);
-  {const s2=Math.hypot(b.vx,b.vy);if(s2>VMAX+8){b.vx*=(VMAX+8)/s2;b.vy*=(VMAX+8)/s2}}
+  {const s2=Math.hypot(b.vx,b.vy);if(s2>VMAX+4){b.vx*=(VMAX+4)/s2;b.vy*=(VMAX+4)/s2}}
   sensors(b,ox,oy);
   if(b.cap>0)b.cap-=dt;else if(Math.hypot(b.x-SAUCER.x,b.y-SAUCER.y)<.36&&Math.hypot(b.vx,b.vy)<19)saucerCatch(b)}
  for(let i=0;i<BALLS.length;i++)for(let j=i+1;j<BALLS.length;j++){const a=BALLS[i],b=BALLS[j];if(a.mode!=='play'||b.mode!=='play')continue;const dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;if(d2<4*R*R&&d2>1e-8){const d=Math.sqrt(d2),nx=dx/d,ny=dy/d,o=(2*R-d)/2;
