@@ -1284,11 +1284,11 @@ if(!MOBILE)setupBloom();
 let HUDH=100,camBase=new THREE.Vector3();
 function placeFlag(){const f=$('igLangB'),bk=$('back');if(f){f.style.setProperty('position','absolute','important');f.style.top=bk.offsetTop+'px';f.style.left=(bk.offsetLeft+bk.offsetWidth+6)+'px';f.style.margin='0';f.style.zIndex=6;f.style.padding='4px 8px'}}
 setInterval(placeFlag,700);
-function fit(){const W=innerWidth,H=innerHeight;placeFlag();renderer.setSize(W,H,false);dmdSize();HUDH=$('top').getBoundingClientRect().bottom+30;
+function fit(){const W=innerWidth,H=innerHeight;placeFlag();renderer.setSize(W,H,false);dmdSize();HUDH=$('top').getBoundingClientRect().bottom+6;
  $('mis').style.top=($('top').getBoundingClientRect().bottom-2)+'px';
- const avH=Math.max(200,H-HUDH-8),asp=W/avH;camera.aspect=asp;camera.fov=asp<.8?26:24;
- const pitch=asp<.6?1.22:asp<1?1.18:1.1;const tgt=V(.4,9.6,0);const dir=new THREE.Vector3(0,Math.sin(pitch),Math.cos(pitch));
- const pts=[];for(const x of[XL-.2,XO+.2])for(const y of[YB-.2,YT+.3])for(const h of[0,1])pts.push(V(x,y,h));pts.push(V(0,20.4,1.9));
+ const avH=Math.max(200,H-HUDH-8),asp=W/avH;camera.aspect=asp;camera.fov=asp<.8?36:32;
+ const pitch=asp<.6?.98:asp<1?.95:.9;const tgt=V(.4,9.6,0);const dir=new THREE.Vector3(0,Math.sin(pitch),Math.cos(pitch));
+ const pts=[];for(const x of[XL-.05,XO+.05])for(const y of[YB-.1,YT+.1])for(const h of[0,1])pts.push(V(x,y,h));pts.push(V(0,20.4,1.9));
  let lo=5,hi=120;for(let k=0;k<30;k++){const mid=(lo+hi)/2;camera.position.copy(tgt).addScaledVector(dir,mid);camera.lookAt(tgt);camera.clearViewOffset();camera.updateProjectionMatrix();camera.updateMatrixWorld();
   let ok=true,ya=9,yb=-9;for(const p of pts){const q=p.clone().project(camera);ya=Math.min(ya,q.y);yb=Math.max(yb,q.y);if(Math.abs(q.x)>.97){ok=false;break}}if(ok&&yb-ya>1.95)ok=false;if(ok)hi=mid;else lo=mid}
  camera.position.copy(tgt).addScaledVector(dir,hi);camera.lookAt(tgt);camera.updateProjectionMatrix();camera.updateMatrixWorld();
