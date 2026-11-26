@@ -8465,7 +8465,7 @@ addEventListener('pageshow',e=>{if(e.persisted){leaving=false;diving=0;igor.posi
 window.__evOK=1;try{simTo(Date.now(),false);saveLocal()}catch(e){console.error(e)}
 syncZones();requestAnimationFrame(frame);
 /* a newer version online? reload when nothing is going on (checked every 2 minutes and when the page comes back) */
-const IGVER='20261121-1600';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
+const IGVER='20261127-0005';window.IGVER=IGVER;window.__igVer=()=>{verAt=0;verCheck()};updaters.push(()=>{if(S&&S.farm&&S.igv!==IGVER){S.igv=IGVER;try{save()}catch(e){}}});let verNew=false,verAt=0;
 async function verCheck(){if(verNew||Date.now()-verAt<60000)return;verAt=Date.now();try{const r=await fetch('/ver.txt?'+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=(await r.text()).trim();/* 14 Nov 2026: reload only for a NEWER version, and only once per version per tab: an old or half-published build can never make the island reload in a loop */if(v&&v>IGVER){let k='igv_rl_'+v;try{if(sessionStorage.getItem(k))return;sessionStorage.setItem(k,'1')}catch(e){}verNew=true}}catch(e){}}
 setInterval(verCheck,120000);addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck()});setTimeout(verCheck,2500);
 updaters.push(()=>{if(!verNew||CUT||where==='ufo'||!sheet.hidden||diving)return;if(['adm','igc','igNote'].some(id=>{const e=$(id);return e&&!e.hidden}))return;verNew=false;try{save()}catch(e){}bubbleQ.length=0;bubbleT=0;say(tt('A new version of the island is here: one moment…','È arrivata una nuova versione dell’isola: un attimo…'),3);setTimeout(()=>location.reload(),1800)});
