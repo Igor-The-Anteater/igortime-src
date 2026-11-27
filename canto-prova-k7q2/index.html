@@ -248,10 +248,10 @@ function listenTick(){if(!LS||LS.done)return;const r=detect(),t=nowA()-LS.t0;let
  if(o.timed){if(t>=o.end)stopListen();return}
  if(o.calib)return;
  if(t>o.max){stopListen();return}
- if(o.n===1){const st=t>1.6?stable(LS.fr,t,1):null;if(st!=null){LS.stable=st;stopListen()}return}
+ if(o.n===1){const st=t>3?stable(LS.fr,t,1.6):null;if(st!=null){LS.stable=st;stopListen()}else if(LS.heard>20&&t-lastVoiced(LS.fr)>2.5)stopListen();return}
  // several notes: stop when they are all there and the voice has rested a bit
  if(t-(LS.lastSeg||0)>.25){LS.lastSeg=t;const S=segment(LS.fr);const lastV=lastVoiced(LS.fr);
-  if(S.length>=o.n&&t-lastV>1.5)stopListen();else if(S.length&&t-lastV>3.2)stopListen()}}
+  if(S.length>=o.n&&t-lastV>2.5)stopListen();else if(S.length&&t-lastV>4.5)stopListen()}}
 const lastVoiced=fr=>{for(let i=fr.length-1;i>=0;i--)if(fr[i].m!=null)return fr[i].t;return-9};
 /* one held note: the last ~0.55 s are steady enough */
 function stable(fr,t,W=.55){a=fr.filter(f=>f.t>t-W);if(a.length<8)return null;const v=a.filter(f=>f.m!=null).map(f=>f.m);if(v.length<a.length*.75)return null;
@@ -481,7 +481,7 @@ function prompt(it){const S=SES,les=S.les;let dur=0,instr='';stopListen(true);
   // we start listening at the first beat of the song; the playhead follows
   setBar(micHtml(true));say(instr);const tA=nowA()+c0;VIEW.t0=tA+4*spb;S.tm=setTimeout(()=>{if(SES!==S||S.cur!==it)return;listen({timed:true,end:4*spb+tot*spb+.6});LS.t0=tA;LS.pre=4*spb;LS.off=4*spb;LS.item=it;setBar(micHtml(false))},(c0-.05)*1000);return}
  say(instr);setBar(micHtml(true));
- S.tm=setTimeout(()=>{if(SES!==S||S.cur!==it)return;const n=it.tg.length;listen({n,max:n===1?9:n*2.2+7});LS.item=it;setBar(micHtml(false));if(it.k==='one'||it.k==='echo')say(tt('Now you!','Ora tu!')+' 🎤')},dur*1000)}
+ S.tm=setTimeout(()=>{if(SES!==S||S.cur!==it)return;const n=it.tg.length;listen({n,max:n===1?13:n*3+10});LS.item=it;setBar(micHtml(false));if(it.k==='one'||it.k==='echo')say(tt('Now you!','Ora tu!')+' 🎤')},dur*1000)}
 function micHtml(wait){return`<div class="row"><div class="mic ${wait?'wait':''}"><span class="dot">🎤</span>${wait?tt('Listen…','Ascolta…'):tt('Sing!','Canta!')}<span class="lv"><i></i></span></div></div>
  <div class="row"><button id="rep">↻ ${tt('Hear it again','Riascolta')}</button>${wait?'':`<button id="dn">✓ ${tt('Done','Fatto')}</button>`}<button id="skip">${tt('Skip','Salta')}</button></div>`}
 bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!SES)return;const it=SES.cur;
