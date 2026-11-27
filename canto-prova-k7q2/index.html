@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en"><head><script src="/lang.js?v=3"></script><script src="/stats.js?v=1"></script>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sing! · Igor time</title>
+<meta name="description" content="Learn to sing in tune in Igor's music school: Zoltán Kodigor listens through the microphone. One note, intervals, three notes, intervals by name, the notes of a key, sight-singing and solfège in time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+:root{--night:#140d09;--ink:#f3e7d3;--dim:#b49f86;--warm:#f1b46e;--bone:#efe4cf;--glow:#ffd38a;--ok:#7fe08a;
+ --display:'Instrument Serif',Georgia,serif;--toon:'Fredoka','Trebuchet MS',system-ui,sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+html,body{height:100%;margin:0;background:var(--night);color:var(--ink);overflow:hidden;font-family:var(--mono);-webkit-user-select:none;user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+header{position:fixed;z-index:2;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;pointer-events:none;background:linear-gradient(rgba(20,13,9,.85) 30%,rgba(20,13,9,0));
+ padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px))}
+.igback{pointer-events:auto;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);text-decoration:none;border:1px solid rgba(243,231,211,.35);border-radius:999px;padding:9px 13px;white-space:nowrap;background:rgba(20,13,9,.6)}.igback:hover{border-color:var(--glow);color:var(--glow)}
+h1{margin:0;font:400 clamp(20px,3.2vw,32px)/1 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}h1 em{color:var(--warm)}h1 a{color:inherit;text-decoration:none;pointer-events:auto}
+#stat{flex:1;display:flex;justify-content:flex-end;align-items:center;gap:10px;pointer-events:auto;cursor:pointer;font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+#prog{width:min(260px,38vw);height:12px;border-radius:99px;background:rgba(243,231,211,.15);overflow:hidden;display:none}#prog i{display:block;height:100%;width:0;background:var(--ok);border-radius:99px;transition:width .4s}
+#bar{position:fixed;z-index:2;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 12px calc(14px + env(safe-area-inset-bottom,0px))}
+#bar .row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;max-width:980px}
+button{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;padding:13px 18px;border-radius:999px;cursor:pointer;background:rgba(20,13,9,.62);color:var(--ink);border:1px solid rgba(243,231,211,.4);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button.main{background:var(--warm);color:#2b1a0e;border-color:var(--warm)}
+button:disabled{opacity:.35;cursor:default}button:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
+button.ex{font:600 16px/1.1 var(--toon);letter-spacing:0;text-transform:none;background:#f7ecd4;color:#2b2018;border:3px solid #2b2018;box-shadow:0 3px 0 #2b2018;padding:11px 18px}
+button.ex.go{background:#bff2b0}button.ex.again{background:#ffe08a}
+.mic{display:flex;align-items:center;gap:12px;font:600 20px var(--toon);color:#2b2018;background:#f7ecd4;border:3px solid #2b2018;box-shadow:0 4px 0 #2b2018;border-radius:999px;padding:9px 22px 9px 12px}
+.mic .dot{width:38px;height:38px;border-radius:50%;background:#e0463c;display:grid;place-items:center;font-size:20px;box-shadow:0 0 0 0 rgba(224,70,60,.5);animation:pu 1.2s infinite}
+.mic.wait .dot{background:#9a8f80;animation:none}
+.mic .lv{width:80px;height:8px;border-radius:9px;background:rgba(43,32,24,.15);overflow:hidden}.mic .lv i{display:block;height:100%;width:0;background:#3c8a3a}
+@keyframes pu{0%{box-shadow:0 0 0 0 rgba(224,70,60,.55)}70%{box-shadow:0 0 0 14px rgba(224,70,60,0)}100%{box-shadow:0 0 0 0 rgba(224,70,60,0)}}
+@media (max-width:620px){.igback{padding:8px 10px;font-size:10px}h1 .gm{display:none}button{padding:12px 13px;font-size:10.5px;letter-spacing:.08em}button.ex{font-size:15px;padding:10px 14px}.mic{font-size:17px}}
+#bubble{position:fixed;left:0;top:0;z-index:3;box-sizing:border-box;pointer-events:none;font:500 19px/1.25 var(--toon);color:#2b2018;background:#f7ecd4;border:3px solid #2b2018;
+ padding:9px 15px 10px;border-radius:16px;box-shadow:0 4px 0 #2b2018;max-width:min(400px,60vw);opacity:0;transition:opacity .25s}
+#bubble b{color:#a5481c}#bubble .big{font-size:1.35em;font-weight:700}
+#bubble::after{content:'';position:absolute;left:calc(var(--tx,40px) - 8px);bottom:-11px;width:14px;height:14px;background:#f7ecd4;border:3px solid #2b2018;border-top:0;border-left:0;transform:rotate(45deg);border-radius:0 0 4px 0}
+@media (max-width:620px){#bubble{font-size:16px;max-width:calc(100vw - 28px)}}
+.ov{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 55%,rgba(20,13,9,.8),rgba(20,13,9,.97) 75%);padding:16px;box-sizing:border-box;overflow:auto}
+.ov[hidden]{display:none}.card{max-width:40rem;width:100%}
+.card h2{margin:0;font:400 clamp(36px,7vw,64px)/.95 var(--display);letter-spacing:-.02em}.card h2 em{color:var(--warm)}
+.card p{font-size:12px;line-height:1.7;color:var(--dim);margin:1em 0}.card p b{color:var(--ink);font-weight:500}
+.card .row{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 10px}
+.card .big{font:400 clamp(56px,12vw,96px)/1 var(--display);color:var(--bone)}
+.card .small{font-size:10.5px;letter-spacing:.08em;color:var(--dim)}.card a{color:var(--warm)}
+.unit{margin:14px 0 4px;font:600 15px var(--toon);color:var(--bone);display:flex;align-items:center;gap:8px}.unit small{font:500 10px var(--mono);color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+.map{display:flex;flex-wrap:wrap;gap:7px}
+.map button{font:600 13px/1.15 var(--toon);letter-spacing:0;text-transform:none;border-radius:14px;padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;background:rgba(243,231,211,.07);min-width:92px}
+.map button small{font:500 10px var(--mono);letter-spacing:.06em;color:var(--dim)}
+.map button.done{border-color:var(--ok)}.map button.done small{color:var(--ok)}.map button.cur{border-color:var(--warm);background:rgba(241,180,110,.18)}.map button.cur small{color:var(--warm)}
+.voice{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(243,231,211,.3);border-radius:999px;padding:6px 12px;font:500 11px var(--mono);color:var(--bone)}
+.voice button{padding:5px 10px;font-size:10px}
+#endnew{font:600 18px/1.3 var(--toon);color:var(--glow)}
+.stars{font-size:38px;letter-spacing:6px}
+</style>
+</head><body>
+<canvas id="c" aria-label="Igor's music school: Zoltán Kodigor, with a white mane and a big white beard, next to a blackboard that shows your voice"></canvas>
+<header><a class="igback" href="/">← Island</a><h1><a href="/"><em>Igor</em> time</a><span class="gm" id="gm"></span></h1><div id="stat"><span id="st1"></span><div id="prog"><i></i></div><span id="sx" title="map" style="display:none;font-size:18px;color:var(--bone)">✕</span></div></header>
+<div id="bubble"></div>
+<div id="bar"></div>
+<div class="ov" id="start"><div class="card" id="startCard"></div></div>
+<div class="ov" id="end" hidden><div class="card" id="endCard"></div></div>
+<script src="/house/kit.js?v=4"></script>
+<script src="/notes/nadia.js?v=1"></script>
+<script>/* Zoltán Kodigor, the teacher of singing and dictation (a homage to Zoltán Kodály, who taught a whole country to sing):
+   an Igorlet with a white mane swept back, bushy white eyebrows, a big white beard and a dark jacket with a bow.
+   Drawn in the 663×730 coordinates of Igor's picture. Also: his tuning fork. */
+(function(){
+const INK='#141414',TAU=Math.PI*2,WH='#f4f1ea',SH='rgba(150,145,135,.55)';
+function hair(c){c.save();c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=6;
+ // the mane: thick white hair swept back over the top of the head, with curly ends behind
+ c.fillStyle=WH;c.beginPath();c.moveTo(392,122);
+ c.bezierCurveTo(380,70,300,44,220,46);c.bezierCurveTo(150,46,90,58,46,84);
+ c.bezierCurveTo(20,92,4,104,6,124);c.bezierCurveTo(-2,150,14,176,34,186);
+ c.bezierCurveTo(30,160,40,140,58,132);c.bezierCurveTo(52,154,62,176,80,184);
+ c.bezierCurveTo(80,154,100,128,140,112);c.bezierCurveTo(200,96,300,94,392,122);c.closePath();c.fill();c.stroke();
+ c.strokeStyle=SH;c.lineWidth=4;for(let k=0;k<5;k++){c.beginPath();c.moveTo(360-k*58,90+k*4);c.quadraticCurveTo(300-k*58,64+k*6,230-k*50,72+k*10);c.stroke()}
+ // bushy white eyebrows over the two eyes
+ c.strokeStyle=INK;c.lineWidth=5;c.fillStyle=WH;
+ for(const[x,y,r,w]of[[438,166,-.55,74],[536,146,.08,66]]){c.save();c.translate(x,y);c.rotate(r);c.beginPath();c.moveTo(-w/2,8);c.quadraticCurveTo(-w/2-6,-14,-w/4,-16);c.quadraticCurveTo(-w/8,-30,w/8,-20);c.quadraticCurveTo(w/3,-32,w/2+8,-10);c.quadraticCurveTo(w/2,8,w/4,8);c.quadraticCurveTo(0,16,-w/2,8);c.closePath();c.fill();c.stroke();c.restore()}
+ c.restore()}
+function beard(c){c.save();c.lineJoin='round';c.lineCap='round';c.strokeStyle=INK;c.lineWidth=6;
+ // the jacket and the bow under the beard
+ c.fillStyle='#2e2a3a';c.beginPath();c.moveTo(226,470);c.quadraticCurveTo(330,500,482,466);c.lineTo(500,570);c.quadraticCurveTo(360,600,206,566);c.closePath();c.fill();c.stroke();
+ // a big white beard hanging under the head (the snout stays free on the right)
+ c.fillStyle=WH;c.beginPath();c.moveTo(222,392);
+ c.bezierCurveTo(260,420,380,446,476,432);
+ c.bezierCurveTo(490,470,476,506,456,520);c.bezierCurveTo(450,548,424,560,404,556);
+ c.bezierCurveTo(396,590,370,612,344,628);c.bezierCurveTo(328,600,300,588,284,566);
+ c.bezierCurveTo(252,566,232,540,240,512);c.bezierCurveTo(214,498,210,470,226,452);
+ c.bezierCurveTo(208,436,206,410,222,392);c.closePath();c.fill();c.stroke();
+ c.strokeStyle=SH;c.lineWidth=4;for(let k=0;k<6;k++){const x=256+k*36;c.beginPath();c.moveTo(x,448+((k*7)%3)*6);c.quadraticCurveTo(x+8,494,x-2,532-((k*5)%3)*8);c.stroke()}
+ // a little moustache over the smile
+ c.strokeStyle=INK;c.lineWidth=5;c.fillStyle=WH;c.beginPath();c.moveTo(316,350);c.quadraticCurveTo(340,326,372,346);c.quadraticCurveTo(402,330,424,356);c.quadraticCurveTo(396,372,370,360);c.quadraticCurveTo(344,374,316,350);c.closePath();c.fill();c.stroke();
+ c.restore()}
+/* a tuning fork, centred at x,y, size s (for the boards and the room) */
+function fork(c,x,y,s,col){c.save();c.translate(x,y);c.strokeStyle=col||'#c9a24a';c.lineCap='round';c.lineWidth=Math.max(2,s*.12);
+ c.beginPath();c.moveTo(-s*.28,-s);c.lineTo(-s*.28,-s*.1);c.quadraticCurveTo(-s*.28,s*.18,0,s*.18);c.quadraticCurveTo(s*.28,s*.18,s*.28,-s*.1);c.lineTo(s*.28,-s);c.moveTo(0,s*.18);c.lineTo(0,s);c.stroke();c.restore()}
+window.IgorKodigor={hair,beard,fork,LOOK:{avatar:'igor'}};
+})();
+</script>
+<script>
+(()=>{
+const H=IgorHouse,{TAU,clamp,lerp,rr,drawAnt,paintAvatar,ME,AVN}=H,PAD=H.PAD||.24;
+let IT=false;try{IT=(localStorage.getItem('igortime_lang')||window.SV_LANG||((navigator.language||'').toLowerCase().startsWith('it')?'it':'en'))==='it'}catch(e){IT=window.SV_LANG==='it'}
+const tt=(en,it)=>IT?it:en,T2=a=>a?(IT?a[1]:a[0]):'';
+const $=id=>document.getElementById(id);
+const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const med=a=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y),n=s.length;return n%2?s[n>>1]:(s[n/2-1]+s[n/2])/2};
+const TEACHER='Zoltán Kodigor';
+try{const h=localStorage.getItem('igortime_home');if(h)document.querySelectorAll('a[href="/"]').forEach(a=>a.href=h)}catch(e){}
+if(IT)document.documentElement.lang='it';
+$('gm').textContent=' · '+tt('Sing!','Canta!');
+const SEEDR=6;
+
+/* ================= names ================= */
+const NM=IT?['Do','Re','Mi','Fa','Sol','La','Si']:['C','D','E','F','G','A','B'];
+const PCN=IT?['Do','Do♯','Re','Mi♭','Mi','Fa','Fa♯','Sol','La♭','La','Si♭','Si']:['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
+const LPC=[0,2,4,5,7,9,11];
+const nameM=m=>PCN[((Math.round(m)%12)+12)%12];
+const IVN={1:['minor 2nd','seconda minore'],2:['major 2nd','seconda maggiore'],3:['minor 3rd','terza minore'],4:['major 3rd','terza maggiore'],5:['perfect 4th','quarta giusta'],6:['tritone','tritono'],
+ 7:['perfect 5th','quinta giusta'],8:['minor 6th','sesta minore'],9:['major 6th','sesta maggiore'],10:['minor 7th','settima minore'],11:['major 7th','settima maggiore'],12:['octave','ottava']};
+/* the little songs of Amadigor and Gubaigorina, to remember the intervals */
+const SONG={1:['Jaws','Lo squalo'],'-1':['Für Elise','Per Elisa'],2:['Frère Jacques','Fra Martino'],3:['Brahms’ lullaby','la Ninna nanna di Brahms'],'-3':['cuck-oo!','cu-cù!'],
+ 4:['When the Saints','When the Saints'],'-4':['Beethoven’s Fifth','la Quinta di Beethoven'],5:['Here comes the bride','la Marcia nuziale'],6:['The Simpsons','i Simpson'],7:['Star Wars','Star Wars'],
+ 8:['The Entertainer','The Entertainer'],9:['My Bonnie','My Bonnie'],10:['Star Trek','Star Trek'],12:['Over the Rainbow','Over the Rainbow']};
+const ivTxt=iv=>`<b>${T2(IVN[Math.abs(iv)])}</b> ${iv>0?'↑':'↓'}`;
+
+/* ================= keys (for the notes of a key and for reading) =================
+   t = tonic pc, L = letter of the tonic (0=C), m = mode, d = where the tonic sits on the treble staff (0 = middle C), sig = key signature */
+const KEYS=[{t:0,L:0,m:'M',d:0,sig:[]},{t:7,L:4,m:'M',d:4,sig:[['s',10]]},{t:5,L:3,m:'M',d:3,sig:[['f',6]]},{t:2,L:1,m:'M',d:1,sig:[['s',10],['s',7]]},
+ {t:9,L:5,m:'m',d:5,sig:[]},{t:4,L:2,m:'m',d:2,sig:[['s',10]]},{t:2,L:1,m:'m',d:1,sig:[['f',6]]}];
+const SCALE={M:[0,2,4,5,7,9,11],m:[0,2,3,5,7,8,10]};
+const kName=K=>spell(K,0)+' '+(K.m==='M'?tt('major','maggiore'):tt('minor','minore'));
+/* degree (0 = tonic, 7 = the tonic above, -1 = below…), raised = the leading tone of minor */
+const degPc=(K,g,raised)=>{const o=Math.floor(g/7),k=((g%7)+7)%7;return K.t+SCALE[K.m][k]+12*o+(raised&&k===6&&K.m==='m'?1:0)};
+function spell(K,g,raised){const k=((g%7)+7)%7,L=(K.L+k)%7,want=((K.t+SCALE[K.m][k]+(raised&&k===6&&K.m==='m'?1:0))%12+12)%12;let a=want-LPC[L];if(a>6)a-=12;if(a<-6)a+=12;
+ return NM[L]+(a===1?'♯':a===-1?'♭':a===2?'𝄪':a===-2?'𝄫':'')}
+
+/* ================= progress ================= */
+const KEY='igortime_solfege';
+let PR={done:{},plays:{},voice:0,met:0};
+try{Object.assign(PR,JSON.parse(localStorage.getItem(KEY))||{})}catch(e){}
+const saveP=()=>{try{localStorage.setItem(KEY,JSON.stringify(PR))}catch(e){}};
+const V=()=>PR.voice||55; // the comfortable note of the player's voice (MIDI)
+
+/* ================= the course ================= */
+const L=(id,n,k,p,cnt)=>({id,n,k,p:p||{},cnt:cnt||8});
+const UNITS=[
+ {ic:'🎤',n:['Your voice','La tua voce'],les:[
+  L('v1',['Sing with me','Canta con me'],'one',{r:[-2,2],show:1,tol:.5},6),
+  L('v2',['Other notes','Altre note'],'one',{r:[-5,5],show:1,tol:.5}),
+  L('v3',['High and low','Acute e gravi'],'one',{r:[-7,8],show:1}),
+  L('v4',['On the fly','Al volo'],'one',{r:[-6,7],show:1,short:1})]},
+ {ic:'👣',n:['Little steps','Passetti'],les:[
+  L('s1',['Same, then up','Uguale, poi su'],'echo',{ivs:[0,2,0,2],show:1,tol:.5}),
+  L('s2',['Up and down','Su e giù'],'echo',{ivs:[2,-2],show:1}),
+  L('s3',['Half steps','Mezzi passi'],'echo',{ivs:[1,-1,2,-2],show:1})]},
+ {ic:'🪜',n:['Thirds','Le terze'],les:[
+  L('t1',['Thirds up','Terze in su'],'echo',{ivs:[4,3],show:1}),
+  L('t2',['Thirds down','Terze in giù'],'echo',{ivs:[-4,-3],show:1}),
+  L('t3',['Steps and thirds','Passi e terze'],'echo',{ivs:[2,-2,3,-3,4,-4,1]})]},
+ {ic:'🦘',n:['Big jumps','Salti grandi'],les:[
+  L('j1',['Fifth and fourth up','Quinta e quarta in su'],'echo',{ivs:[7,5],show:1}),
+  L('j2',['Fifth and fourth down','Quinta e quarta in giù'],'echo',{ivs:[-7,-5],show:1}),
+  L('j3',['Octaves too','Anche le ottave'],'echo',{ivs:[12,-12,7,-7,5,-5]})]},
+ {ic:'🎢',n:['Wide intervals','Intervalli larghi'],les:[
+  L('w1',['Sixths','Le seste'],'echo',{ivs:[9,8,-9,-8]}),
+  L('w2',['Sevenths and the tritone','Settime e tritono'],'echo',{ivs:[10,-10,6,-6,11]})]},
+ {ic:'🎶',n:['Three notes','Tre note'],les:[
+  L('m1',['Little steps','Passetti'],'echoN',{n:3,step:1,show:1}),
+  L('m2',['Arpeggios','Arpeggi'],'echoN',{n:3,arp:1,show:1}),
+  L('m3',['Anything goes','Un po’ di tutto'],'echoN',{n:3})]},
+ {ic:'🎼',n:['Four and five notes','Quattro e cinque note'],les:[
+  L('m4',['Four notes','Quattro note'],'echoN',{n:4,show:1},6),
+  L('m5',['Five notes','Cinque note'],'echoN',{n:5},6)]},
+ {ic:'🏷️',n:['Sing the interval','Canta l’intervallo'],les:[
+  L('n1',['Seconds up','Seconde in su'],'name',{ivs:[2,1]}),
+  L('n2',['Thirds up','Terze in su'],'name',{ivs:[3,4]}),
+  L('n3',['Fifth, fourth, octave','Quinta, quarta, ottava'],'name',{ivs:[7,5,12]}),
+  L('n4',['Seconds down','Seconde in giù'],'name',{ivs:[-2,-1]}),
+  L('n5',['Thirds down','Terze in giù'],'name',{ivs:[-3,-4]}),
+  L('n6',['Big ones down','Grandi in giù'],'name',{ivs:[-5,-7,-12]}),
+  L('n7',['Sixths','Le seste'],'name',{ivs:[9,8]}),
+  L('n8',['Seventh and tritone','Settima e tritono'],'name',{ivs:[10,6]}),
+  L('n9',['All together','Tutti insieme'],'name',{ivs:[1,2,3,4,5,7,9,12,-1,-2,-3,-4,-5,-7],nodemo:1},10)]},
+ {ic:'🔑',n:['Sing in a key','Canta nella tonalità'],les:[
+  L('k1',['The first three','Le prime tre'],'deg',{pool:[0,1,2],len:1}),
+  L('k2',['Up to the fifth','Fino alla quinta'],'deg',{pool:[0,1,2,3,4],len:1}),
+  L('k3',['The whole scale','Tutta la scala'],'deg',{pool:[0,1,2,3,4,5,6,7],len:1}),
+  L('k4',['Little tunes','Piccole melodie'],'deg',{pool:[0,1,2,3,4,5,6,7],len:3},6)]},
+ {ic:'👀',n:['Read and sing','Leggi e canta'],les:[
+  L('r1',['Three notes','Tre note'],'read',{n:3,leap:0,names:1},6),
+  L('r2',['Five notes','Cinque note'],'read',{n:5,leap:0,names:1},6),
+  L('r3',['With jumps','Con i salti'],'read',{n:5,leap:.4},6),
+  L('r4',['Other keys','Altre tonalità'],'read',{n:6,leap:.35,keys:1},6)]},
+ {ic:'⏱️',n:['Solfège in time','Solfeggio a tempo'],les:[
+  L('p1',['One bar','Una battuta'],'tempo',{bars:1,rl:1,bpm:72},5),
+  L('p2',['Two bars','Due battute'],'tempo',{bars:2,rl:2,bpm:72},4),
+  L('p3',['Eighth notes','Le crome'],'tempo',{bars:2,rl:3,bpm:66},4),
+  L('p4',['Four bars','Quattro battute'],'tempo',{bars:4,rl:2,bpm:72,keys:1},3),
+  L('p5',['In minor','In minore'],'tempo',{bars:4,rl:2,bpm:72,minor:1},3),
+  L('p6',['The great solfège','Il grande solfeggio'],'tempo',{bars:4,rl:3,bpm:72,keys:1,minor:.5},3)]}];
+const LES=[];UNITS.forEach((u,ui)=>u.les.forEach(l=>{l.u=ui;l.i=LES.length;LES.push(l)}));
+const NL=LES.length,PASS=.7;
+const nDone=()=>LES.filter(l=>PR.done[l.id]>=PASS).length;
+
+/* ================= sound ================= */
+let AC=null,OUT=null;
+function audio(){if(AC){if(AC.state==='suspended')AC.resume();return AC}AC=new(window.AudioContext||window.webkitAudioContext)();OUT=AC.createGain();OUT.gain.value=.55;OUT.connect(AC.destination);return AC}
+/* a round, singable tone (like a soft voice on "oo"): what Kodigor sings to you */
+function voice(m,t=0,dur=1.1,vol=.32){if(!AC)return;const t0=AC.currentTime+t,f=440*Math.pow(2,(m-69)/12),g=AC.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.06);g.gain.setValueAtTime(vol,t0+dur-.12);g.gain.linearRampToValueAtTime(0,t0+dur);g.connect(OUT);
+ const lfo=AC.createOscillator(),lg=AC.createGain();lfo.frequency.value=5.2;lg.gain.setValueAtTime(0,t0);lg.gain.linearRampToValueAtTime(f*.006,t0+.35);lfo.connect(lg);lfo.start(t0);lfo.stop(t0+dur+.05);
+ for(const[k,a]of[[1,1],[2,.45],[3,.22],[4,.1],[5,.05]]){const o=AC.createOscillator(),ga=AC.createGain();o.type='sine';o.frequency.value=f*k;lg.connect(o.frequency);ga.gain.value=a*(k>1?1/k:1);o.connect(ga);ga.connect(g);o.start(t0);o.stop(t0+dur+.05)}}
+function piano(m,t=0,dur=1.2,vol=.2){if(!AC)return;const t0=AC.currentTime+t,f=440*Math.pow(2,(m-69)/12),g=AC.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.01);g.gain.exponentialRampToValueAtTime(vol*.3,t0+.3);g.gain.exponentialRampToValueAtTime(.001,t0+dur);g.connect(OUT);
+ for(const[k,a]of[[1,1],[2,.35],[3,.12],[4,.06]]){const o=AC.createOscillator(),ga=AC.createGain();o.type='sine';o.frequency.value=f*k;ga.gain.value=a;o.connect(ga);ga.connect(g);o.start(t0);o.stop(t0+dur+.05)}}
+function click(t=0,acc=false){if(!AC)return;const t0=AC.currentTime+t,o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=acc?2600:2000;g.gain.setValueAtTime(acc?.12:.07,t0);g.gain.exponentialRampToValueAtTime(.0005,t0+.035);o.connect(g);g.connect(OUT);o.start(t0);o.stop(t0+.05)}
+function ding(ok){if(!AC)return;(ok?[79,84]:[67,64]).forEach((m,i)=>piano(m,i*.09,.4,.1))}
+/* the tonic chord, to set the key in your ears */
+function chord(K,root,t=0){const th=SCALE[K.m];[0,th[2],7].forEach((x,i)=>piano(root+x,t+i*.16,1.6,.13));[0,th[2],7].forEach(x=>piano(root+x,t+.6,1.4,.08))}
+
+/* ================= the microphone and the pitch ================= */
+let MIC=null,AN=null,DEC=2,YB=null;const YH=new Float32Array(1100),YD=new Float32Array(800);let NF=.004;
+async function micOn(){if(MIC)return true;audio();try{const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  const src=AC.createMediaStreamSource(st);DEC=AC.sampleRate>70000?4:AC.sampleRate>30000?2:1;AN=AC.createAnalyser();AN.fftSize=1024*DEC;YB=new Float32Array(AN.fftSize);src.connect(AN);MIC=st;return true}
+ catch(e){console.warn(e);return false}}
+function micOff(){if(MIC){MIC.getTracks().forEach(t=>t.stop());MIC=null;AN=null}}
+/* YIN on a slightly downsampled window: returns the MIDI pitch (with decimals) or null, and the loudness */
+function detect(){if(!AN)return{m:null,rms:0};AN.getFloatTimeDomainData(YB);const sr=AC.sampleRate/DEC,N=1024;let rms=0;
+ for(let i=0;i<N;i++){let x=0;for(let k=0;k<DEC;k++)x+=YB[i*DEC+k];x/=DEC;YH[i]=x;rms+=x*x}rms=Math.sqrt(rms/N);
+ const thr=Math.max(.007,NF*3);if(rms<thr){NF=NF*.97+rms*.03;return{m:null,rms}}
+ const W=512,tmin=Math.max(2,Math.floor(sr/1050)),tmax=Math.min(N-W-2,Math.ceil(sr/68));let sum=0,best=-1;YD[0]=1;
+ for(let t=1;t<=tmax;t++){let s=0;for(let i=0;i<W;i++){const x=YH[i]-YH[i+t];s+=x*x}sum+=s;YD[t]=sum?s*t/sum:1}
+ for(let t=tmin;t<=tmax;t++)if(YD[t]<.15){while(t+1<=tmax&&YD[t+1]<YD[t])t++;best=t;break}
+ if(best<0){let mn=9;for(let t=tmin;t<=tmax;t++)if(YD[t]<mn){mn=YD[t];best=t}if(mn>.32)return{m:null,rms}}
+ const a=YD[best-1],b=YD[best],c=best+1<=tmax?YD[best+1]:b,den=a-2*b+c,sh=den?clamp(.5*(a-c)/den,-1,1):0,f=sr/(best+sh);
+ if(f<65||f>1100)return{m:null,rms};return{m:69+12*Math.log2(f/440),rms}}
+
+/* a listening session: frames {t, m} while the player sings */
+let LS=null;const nowA=()=>AC?AC.currentTime:T;
+function listen(o){LS={t0:nowA(),fr:[],o,last:null,lvl:0,done:false,heard:0};}
+function listenTick(){if(!LS||LS.done)return;const r=detect(),t=nowA()-LS.t0;let m=r.m;LS.lvl=r.rms;
+ // octave slips of the detector: keep the line continuous
+ if(m!=null&&LS.last!=null){const d=m-LS.last;if(Math.abs(d-12)<.8)m-=12;else if(Math.abs(d+12)<.8)m+=12}
+ if(m!=null){LS.last=m;LS.heard+=1}
+ LS.fr.push({t,m});const o=LS.o;
+ if(o.timed){if(t>=o.end)stopListen();return}
+ if(o.calib)return;
+ if(t>o.max){stopListen();return}
+ if(o.n===1){const st=stable(LS.fr,t);if(st!=null){LS.stable=st;stopListen()}return}
+ // several notes: stop when they are all there and the voice has rested a bit
+ if(t-(LS.lastSeg||0)>.25){LS.lastSeg=t;const S=segment(LS.fr);const lastV=lastVoiced(LS.fr);
+  if(S.length>=o.n&&t-lastV>.7)stopListen();else if(S.length&&t-lastV>2.2)stopListen()}}
+const lastVoiced=fr=>{for(let i=fr.length-1;i>=0;i--)if(fr[i].m!=null)return fr[i].t;return-9};
+/* one held note: the last ~0.55 s are steady enough */
+function stable(fr,t){const W=.55,a=fr.filter(f=>f.t>t-W);if(a.length<8)return null;const v=a.filter(f=>f.m!=null).map(f=>f.m);if(v.length<a.length*.75)return null;
+ const md=med(v);if(med(v.map(x=>Math.abs(x-md)))>.22)return null;if(Math.max(...v)-Math.min(...v)>1.2)return null;return md}
+/* cut the pitch line into sung notes */
+function segment(fr,minDur=.16){const S=[];let cur=null,dev=[],lastV=-9;
+ const close=()=>{if(cur)S.push(cur);cur=null;dev=[]};
+ for(const f of fr){if(f.m==null){if(f.t-lastV>.11)close();continue}
+  const gap=f.t-lastV;lastV=f.t;
+  if(!cur){cur={t0:f.t,t1:f.t,v:[f.m],gap};continue}
+  const ref=med(cur.v.slice(-8));
+  if(Math.abs(f.m-ref)>.7){dev.push(f);if(dev.length>=4){const d=dev;S.push(cur);cur={t0:d[0].t,t1:f.t,v:d.map(x=>x.m),gap:0};dev=[]}continue}
+  for(const x of dev)cur.v.push(x.m);dev=[];cur.v.push(f.m);cur.t1=f.t}
+ close();
+ const out=[];for(const s of S){const n=s.v.length,dur=s.t1-s.t0;if(dur<minDur||n<4)continue;const a=Math.floor(n*.25),b=Math.max(a+1,Math.ceil(n*.9));s.m=med(s.v.slice(a,b));s.dur=dur;out.push(s)}
+ const M=[];for(const s of out){const p=M[M.length-1];if(p&&s.gap<.05&&s.t0-p.t1<.12&&Math.abs(s.m-p.m)<.6){p.v=p.v.concat(s.v);p.t1=s.t1;p.dur=p.t1-p.t0;p.m=med(p.v.slice(Math.floor(p.v.length*.2)))}else M.push(s)}
+ return M}
+/* match the sung notes with the notes to sing (any octave: a deep voice can sing an octave lower) */
+function align(seg,tg){const k=seg.length,n=tg.length,CAP=2.5,SKT=2.5,SKS=.3;let best=null;
+ for(const o of[-24,-12,0,12,24]){const D=[],B=[];for(let i=0;i<=k;i++){D.push(new Array(n+1).fill(1e9));B.push(new Array(n+1).fill(0))}D[0][0]=0;
+  for(let i=0;i<=k;i++)for(let j=0;j<=n;j++){const d=D[i][j];if(d>=1e9)continue;
+   if(i<k&&j<n){const c=d+Math.min(CAP,Math.abs(seg[i].m-o-tg[j]));if(c<D[i+1][j+1]){D[i+1][j+1]=c;B[i+1][j+1]=1}}
+   if(i<k&&d+SKS<D[i+1][j]){D[i+1][j]=d+SKS;B[i+1][j]=2}
+   if(j<n&&d+SKT<D[i][j+1]){D[i][j+1]=d+SKT;B[i][j+1]=3}}
+  const tot=D[k][n]+Math.abs(o)/48;if(!best||tot<best.tot){const res=new Array(n).fill(null);let i=k,j=n;while(i>0||j>0){const b=B[i][j];if(b===1){res[j-1]={m:seg[i-1].m-o,s:seg[i-1]};i--;j--}else if(b===2)i--;else j--}best={tot,res,o}}}
+ return best}
+const centsTxt=e=>(e>0?'+':'')+Math.round(e*100);
+
+/* ================= the scene ================= */
+const cv=$('c'),g=cv.getContext('2d');let W=0,Hh=0,DPR=1,T=0;
+const SW=420,SH=462,ksp=document.createElement('canvas'),kx=ksp.getContext('2d');ksp.width=SW;ksp.height=Math.round(SH*(1+PAD));
+let igOK=false;H.loadIgor(()=>{igOK=true});
+const BL={next:1.5,start:-9};function blinkK(t){if(t>BL.next){BL.start=t;BL.next=t+(Math.random()<.2?.45:2.4+Math.random()*3.8)}const u=t-BL.start;return u<0||u>.26?0:u<.07?u/.07:u<.12?1:1-(u-.12)/.14}
+function paintK(t){const k=blinkK(t);paintAvatar(kx,IgorKodigor.LOOK,k,k,SW,ksp.height);const sc=Math.min(SW/663,ksp.height/(730*(1+PAD)));kx.setTransform(sc,0,0,sc,(SW-663*sc)/2,PAD*730*sc);IgorKodigor.hair(kx);IgorKodigor.beard(kx);kx.setTransform(1,0,0,1,0,0)}
+let Lo={};
+function layout(){const top=58,barH=$('bar').offsetHeight||120,sh=Math.max(120,Hh-top-barH),land=W>Hh*1.05;
+ if(land){const mh=Math.min(sh*.78,W*.22);Lo={land,top,sh,m:{x:W*.13,y:top+sh*.52,h:mh},b:{x:W*.27,y:top+sh*.04,w:W*.7,h:sh*.88}}}
+ else{const bh=Math.min(sh*.66,VIEW&&VIEW.kind==='staff'?sh*.66:W*.95);Lo={land,top,sh,b:{x:10,y:top+4,w:W-20,h:bh},m:{x:W*.2,y:top+bh+(sh-bh)*.52,h:Math.min((sh-bh)*.95,W*.42)}}}}
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;Hh=innerHeight;cv.width=W*DPR;cv.height=Hh*DPR;layout()}
+addEventListener('resize',()=>{resize();placeBubble()});
+function room(){const gr=g.createLinearGradient(0,0,0,Hh);gr.addColorStop(0,'#2a2238');gr.addColorStop(.25,'#d9cfb8');gr.addColorStop(.7,'#cfc3a8');g.fillStyle=gr;g.fillRect(0,0,W,Hh);
+ const wy=Hh*.72;g.fillStyle='#4a3a5a';g.fillRect(0,wy,W,Hh*.1);g.fillStyle='#8c8174';g.fillRect(0,wy+Hh*.1,W,Hh);g.fillStyle='#2b2238';g.fillRect(0,wy-4,W,6);
+ // a rug, a choir bench and a tuning fork on the wall
+ const M=Lo.m,s=clamp(Math.min(W,Hh)/700,.5,1.3);g.fillStyle='#3d5a8a';g.beginPath();g.ellipse(M.x,M.y+M.h*.5,M.h*.55,M.h*.09,0,0,TAU);g.fill();g.strokeStyle='#e8c27a';g.lineWidth=3;g.beginPath();g.ellipse(M.x,M.y+M.h*.5,M.h*.44,M.h*.065,0,0,TAU);g.stroke();
+ if(Lo.land){IgorKodigor.fork(g,W*.05,Hh*.2,34*s,'#c9a24a');const bx=W*.012,by=wy+Hh*.07;g.fillStyle='#7b5638';rr(g,bx,by-26*s,W*.07,12*s,3);g.fill();g.fillRect(bx+6,by-14*s,6*s,24*s);g.fillRect(bx+W*.07-12*s,by-14*s,6*s,24*s)}}
+const CH='rgba(238,242,230,.92)';
+const chalk=(sz,w=500,col=CH)=>{g.font=`${w} ${sz}px Fredoka, sans-serif`;g.fillStyle=col;g.textAlign='center';g.textBaseline='middle'};
+function board(){const B=Lo.b;g.fillStyle='#6b4a2e';rr(g,B.x-9,B.y-9,B.w+18,B.h+18,10);g.fill();g.fillStyle='#2f4a3a';rr(g,B.x,B.y,B.w,B.h,4);g.fill();
+ g.fillStyle='#7a5232';g.fillRect(B.x+B.w*.1,B.y+B.h+6,B.w*.8,7);g.save();g.beginPath();g.rect(B.x,B.y,B.w,B.h);g.clip();try{boardContent(B)}catch(e){console.error(e)}g.restore()}
+function drawK(){const F=Lo.m,w=F.h*SW/SH,hop=bubTxt?Math.abs(Math.sin(T*4))*F.h*.012:0,by=F.y-hop+Math.sin(T*1.6)*F.h*.01;g.save();g.translate(F.x,by);g.fillStyle='rgba(40,20,8,.25)';g.beginPath();g.ellipse(0,F.h*.5,w*.34,F.h*.05,0,0,TAU);g.fill();
+ if(igOK)g.drawImage(ksp,-w/2,-F.h/2-F.h*PAD,w,F.h*(1+PAD));g.restore()}
+let ANT=null;
+function frame(ts){const t=ts/1000,dt=Math.min(.05,t-(frame.l||t));frame.l=t;T+=dt;listenTick();g.setTransform(DPR,0,0,DPR,0,0);room();board();if(igOK)paintK(T);drawK();
+ if(ANT){ANT.t+=dt;const F=Lo.m,u=clamp(ANT.t/.6,0,1),x=lerp(ANT.x,F.x+F.h*.32,u),y=lerp(ANT.y,F.y+F.h*.42,u)-Math.sin(u*Math.PI)*80;if(u<1)drawAnt(g,x,y,Math.max(.5,F.h/260),-.5+u,T,{});if(ANT.t>1)ANT=null}
+ if(LS&&!LS.done){const lv=document.querySelector('.mic .lv i');if(lv)lv.style.width=clamp(LS.lvl*900,0,100)+'%'}
+ requestAnimationFrame(frame)}
+
+/* ================= the board: the voice line, or the staff ================= */
+let VIEW=null; // {kind:'graph', tg:[...], show:[...], res} or {kind:'staff', ...} or {kind:'idle'}
+function boardContent(B){const cx=B.x+B.w/2;
+ if(!VIEW||VIEW.kind==='idle'){chalk(Math.min(B.w/12,B.h/6)*.9,600);g.fillText(tt('Sing!','Canta!'),cx,B.y+B.h*.28);IgorKodigor.fork(g,cx,B.y+B.h*.62,Math.min(B.h*.22,60),'#ffe08a');
+  // a gentle wave of the voice
+  g.strokeStyle='rgba(255,224,138,.6)';g.lineWidth=3;g.beginPath();for(let x=0;x<=B.w*.8;x+=4){const y=B.y+B.h*.85+Math.sin(x*.03+T*2)*10;x?g.lineTo(B.x+B.w*.1+x,y):g.moveTo(B.x+B.w*.1,y)}g.stroke();return}
+ if(VIEW.kind==='graph')graph(B);else staffView(B)}
+/* the voice line: targets are coloured bands, your voice is the trail */
+function graph(B){const V0=VIEW,tg=V0.tg,lo=Math.min(...tg)-3.5,hi=Math.max(...tg)+3.5,rng=Math.max(10,hi-lo),mid=(lo+hi)/2,y0=mid-rng/2,y1=mid+rng/2;
+ const px=B.x+B.w*.1,pw=B.w*.86,yOf=m=>B.y+B.h*.92-(m-y0)/(y1-y0)*B.h*.8;
+ // the semitone grid, with the names of the notes
+ g.lineWidth=1;for(let m=Math.ceil(y0);m<=y1;m++){const y=yOf(m),pc=((m%12)+12)%12,white=LPC.includes(pc);g.strokeStyle=white?'rgba(238,242,230,.16)':'rgba(238,242,230,.06)';g.beginPath();g.moveTo(px,y);g.lineTo(px+pw,y);g.stroke();
+  if(white){chalk(Math.max(10,B.h*.034),500,'rgba(238,242,230,.4)');g.textAlign='right';g.fillText(PCN[pc],px-6,y)}}
+ const n=tg.length,col=k=>px+pw*(k+.5)/n,bw=pw/n*.8,tol=V0.tol||.45;
+ // the time of the trail: across the whole board
+ const span=V0.span||Math.max(3,n*1.3+1.2);
+ tg.forEach((m,k)=>{const vis=V0.show[k]||V0.res;if(!vis){chalk(Math.max(14,B.h*.07),700,'rgba(255,224,138,.6)');g.fillText('?',col(k),yOf(V0.tg[0]+(V0.hintDir||1)*2));return}
+  const r=V0.res&&V0.res[k],c=r?(r.ok?'#7fe08a':'#ffb36a'):'#ffe08a',y=yOf(m),hh=Math.abs(yOf(m+tol)-yOf(m-tol));
+  g.fillStyle=c;g.globalAlpha=.28;rr(g,col(k)-bw/2,y-hh/2,bw,hh,6);g.fill();g.globalAlpha=1;g.strokeStyle=c;g.lineWidth=2.5;g.beginPath();g.moveTo(col(k)-bw/2,y);g.lineTo(col(k)+bw/2,y);g.stroke();
+  chalk(Math.max(12,B.h*.045),600,c);g.fillText((V0.lab&&V0.lab[k])||nameM(m),col(k),y-hh/2-Math.max(10,B.h*.035));
+  if(r&&r.m!=null){const ys=yOf(r.m);g.fillStyle='#fff';g.beginPath();g.arc(col(k),ys,Math.max(4,B.h*.016),0,TAU);g.fill();chalk(Math.max(11,B.h*.036),600,r.ok?'#bff2b0':'#ffd6a6');g.fillText(r.ok?(Math.abs(r.err)<=.2?'✓':centsTxt(r.err)+'¢'):centsTxt(r.err)+'¢',col(k)+bw/2-Math.max(14,B.h*.05),ys+(r.err>0?-1:1)*Math.max(12,B.h*.04))}
+  if(r&&r.m==null){chalk(Math.max(12,B.h*.04),600,'#ffd6a6');g.fillText('…',col(k),y+hh)}});
+ // the trail of your voice (folded into the octave of the targets)
+ const fr=V0.fr||(LS&&!LS.done?LS.fr:null);if(fr&&fr.length){const ref=(V0.res&&V0.oct!=null)?V0.oct:null;let o=ref;
+  if(o==null){const v=fr.filter(f=>f.m!=null).map(f=>f.m);if(v.length)o=12*Math.round((med(v)-(tg.reduce((a,b)=>a+b,0)/n))/12)}
+  g.lineWidth=Math.max(2.5,B.h*.012);g.lineCap='round';let prev=null;const tmax=Math.max(span,fr[fr.length-1].t+.3);
+  for(const f of fr){if(f.m==null){prev=null;continue}const x=px+pw*f.t/tmax,y=yOf(clamp(f.m-o,y0,y1)),near=tg.some(m=>Math.abs(f.m-o-m)<=tol);
+   g.strokeStyle=near?'#bff2b0':'#f7ecd4';if(prev){g.beginPath();g.moveTo(prev.x,prev.y);g.lineTo(x,y);g.stroke()}prev={x,y}}
+  // the live dot and the name of what you are singing
+  if(LS&&!LS.done&&fr===LS.fr){const lf=fr[fr.length-1];if(lf&&lf.m!=null){const x=px+pw*lf.t/tmax,y=yOf(clamp(lf.m-o,y0,y1));g.fillStyle='#fff';g.beginPath();g.arc(x,y,Math.max(5,B.h*.02),0,TAU);g.fill();
+   chalk(Math.max(12,B.h*.045),700,'#fff');g.fillText(nameM(lf.m),Math.min(x+28,px+pw-10),y-16)}}}}
+
+/* the staff (reading and solfège in time) */
+function staffGeom(B,clefOnly){const s=Math.min(B.h*.075,B.w*.032,24),y0=B.y+B.h*.66,x0=B.x+B.w*.03,x1=B.x+B.w*.97,yOf=d=>y0-(d-2)*s/2;return{s,y0,x0,x1,yOf}}
+function drawStaff(S,K,ts){g.strokeStyle=CH;g.lineWidth=Math.max(1.5,S.s*.09);for(let i=0;i<5;i++){g.beginPath();g.moveTo(S.x0,S.y0-i*S.s);g.lineTo(S.x1,S.y0-i*S.s);g.stroke()}
+ if(window.IgorNadia)IgorNadia.treble(g,S.x0+S.s*.1,S.y0,S.s,CH);let x=S.x0+S.s*3.1;
+ for(const[t,d]of K.sig){acc(S,x,S.yOf(d),t==='s'?'♯':'♭',CH);x+=S.s*1}
+ if(ts){chalk(S.s*1.6,700);g.fillText('4',x+S.s*.7,S.y0-S.s*3);g.fillText('4',x+S.s*.7,S.y0-S.s*1);x+=S.s*1.8}return x+S.s*.6}
+function acc(S,x,y,ch,col){g.fillStyle=col;g.font=`${Math.round(S.s*2.1)}px "Apple Symbols","Segoe UI Symbol","DejaVu Sans",serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(ch,x,y-(ch==='♭'?S.s*.45:0))}
+function head(S,x,d,col,open,whole,stem){const y=S.yOf(d),s=S.s;g.strokeStyle=CH;g.lineWidth=Math.max(1.5,s*.09);
+ for(let dd=0;dd>=d;dd-=2){g.beginPath();g.moveTo(x-s*.95,S.yOf(dd));g.lineTo(x+s*.95,S.yOf(dd));g.stroke()}for(let dd=12;dd<=d;dd+=2){g.beginPath();g.moveTo(x-s*.95,S.yOf(dd));g.lineTo(x+s*.95,S.yOf(dd));g.stroke()}
+ g.save();g.translate(x,y);g.rotate(-.35);g.beginPath();g.ellipse(0,0,s*.66,s*.46,0,0,TAU);if(open){g.strokeStyle=col;g.lineWidth=Math.max(2,s*.17);g.stroke()}else{g.fillStyle=col;g.fill()}g.restore();
+ if(whole||stem===false)return null;const up=d<6;g.strokeStyle=col;g.lineWidth=Math.max(1.6,s*.11);g.beginPath();const sx=up?x+s*.6:x-s*.6;g.moveTo(sx,y+(up?-s*.1:s*.1));const ey=up?y-s*3.3:y+s*3.3;g.lineTo(sx,ey);g.stroke();return{sx,ey,up}}
+/* VIEW for the staff: notes [{d, acc, dur(beats), m}]; long solfèges wrap on two or more lines */
+function staffView(B){const V0=VIEW,K=V0.K,N=V0.notes,tot=N.reduce((a,n)=>a+n.dur,0),bars=Math.max(1,Math.ceil(tot/4));
+ const tm=!!V0.timed,hd0=3.6+K.sig.length+(tm?1.8:0);let lines=1,s=0;
+ if(tm){for(let l=1;l<=Math.min(4,bars);l++){const bpl=Math.ceil(bars/l),sh=B.h/(l*9.6+.4),sw=B.w*.94/(hd0+bpl*4.5*2.4),v=Math.min(sh,sw,26);if(v>s*1.06){s=v;lines=l}}lines=Math.ceil(bars/Math.ceil(bars/lines))}
+ else s=Math.min(B.h/10,B.w*.94/(hd0+(tot+.6)*2.6),26);
+ const bpl=Math.ceil(bars/lines),lineH=B.h/lines,G=[];
+ for(let li=0;li<lines;li++){const y0=B.y+lineH*li+lineH*.5+s*1.6,S={s,y0,x0:B.x+B.w*.03,x1:B.x+B.w*.97,yOf:d=>y0-(d-2)*s/2};S.xs=drawStaff(S,K,tm&&li===0);
+  const nb=Math.min(bpl,bars-li*bpl);
+  if(tm){S.unit=(S.x1-S.xs-s*.5)/(bpl*4.5);S.bx=bl=>S.xs+S.unit*(Math.floor(bl/4)*4.5+bl%4+.4)}else{S.unit=(S.x1-S.xs-s*1.2)/(tot+.3);S.bx=bl=>S.xs+S.unit*(bl+.5)}
+  for(let b=1;b<=(tm?nb:1);b++){const bx=tm?S.xs+S.unit*(b*4.5-.12):S.x1-s*.8,last=!tm||li*bpl+b===bars;g.strokeStyle=CH;g.lineWidth=Math.max(1.5,s*.1);g.beginPath();g.moveTo(bx,y0);g.lineTo(bx,y0-4*s);g.stroke();if(last){g.lineWidth=s*.3;g.beginPath();g.moveTo(bx+s*.4,y0);g.lineTo(bx+s*.4,y0-4*s);g.stroke()}}
+  G.push(S)}
+ const pos=[];let beat=0;for(const n of N){const li=tm?Math.min(lines-1,Math.floor(beat/4/bpl)):0,S=G[li],bl=beat-li*bpl*4;pos.push({S,x:S.bx(bl),beat});beat+=n.dur}
+ // which eighths are beamed in pairs
+ const pair=new Array(N.length).fill(0);beat=0;for(let i=0;i<N.length;i++){const n=N[i];if(n.dur<1&&N[i+1]&&N[i+1].dur<1&&Math.floor(beat+1e-6)===Math.floor(beat+n.dur+N[i+1].dur-1e-6)&&pos[i].S===pos[i+1].S){pair[i]=1;pair[i+1]=2;beat+=n.dur+N[i+1].dur;i++;continue}beat+=n.dur}
+ N.forEach((n,i)=>{const{S,x}=pos[i],r=V0.res&&V0.res[i];const col=r?(r.ok?'#7fe08a':'#ffb36a'):CH;
+  if(n.acc)acc(S,x-s*1.5,S.yOf(n.d),'♯',col);
+  let dir;if(pair[i]){const a=pair[i]===1?i:i-1;dir=(N[a].d+N[a+1].d)/2<6}
+  const st=head(S,x,n.d,col,n.dur>=2,n.dur>=4,pair[i]?false:undefined);
+  if(n.dur===3||n.dur===1.5){g.fillStyle=col;g.beginPath();g.arc(x+s*1.05,S.yOf(n.d)-(n.d%2===0?s*.3:0),s*.16,0,TAU);g.fill()}
+  if(n.dur<1&&!pair[i]&&st){g.strokeStyle=col;g.lineWidth=Math.max(1.6,s*.13);g.beginPath();g.moveTo(st.sx,st.ey);g.quadraticCurveTo(st.sx+s*1.1,st.ey+(st.up?s*1.2:-s*1.2),st.sx+s*.6,st.ey+(st.up?s*2.2:-s*2.2));g.stroke()}
+  if(pair[i]===2){const a=pos[i-1],b=pos[i],da=N[i-1].d,db=n.d,ya=S.yOf(da),yb=S.yOf(db),up=dir,ex=up?Math.min(ya,yb)-s*3.2:Math.max(ya,yb)+s*3.2,xa=a.x+(up?s*.6:-s*.6),xb=b.x+(up?s*.6:-s*.6);
+   g.strokeStyle=CH;g.lineWidth=Math.max(1.6,s*.11);g.beginPath();g.moveTo(xa,ya);g.lineTo(xa,ex);g.moveTo(xb,yb);g.lineTo(xb,ex);g.stroke();g.lineWidth=s*.45;g.beginPath();g.moveTo(xa,ex);g.lineTo(xb,ex);g.stroke()}
+  if(V0.names){chalk(Math.max(10,s*.78),600,col);g.fillText(spell(K,n.g,n.raised),x,S.y0+s*2.1)}
+  if(r&&!r.ok){chalk(Math.max(11,s*.9),700,'#ffd6a6');g.fillText(r.m==null?'?':r.err>0?'↓':'↑',x,S.y0-s*5.3)}});
+ // the playhead while singing in time, and the count-in
+ if(V0.timed&&LS&&!LS.done&&V0.t0!=null){const bt=(nowA()-V0.t0)/V0.spb;
+  if(bt>=0&&bt<=tot){const li=Math.min(lines-1,Math.floor(bt/4/bpl)),S=G[li],hx=S.bx(bt-li*bpl*4);g.strokeStyle='rgba(255,192,106,.9)';g.lineWidth=3;g.beginPath();g.moveTo(hx,S.y0+s*1.4);g.lineTo(hx,S.y0-s*5.4);g.stroke()}
+  else if(bt<0){chalk(Math.max(26,s*2.4),700,'#ffe08a');g.fillText(String(Math.min(4,Math.ceil(-bt))),B.x+B.w/2,B.y+Math.min(B.h*.12,lineH*.25))}}
+ if(LS&&!LS.done){const lf=LS.fr[LS.fr.length-1];chalk(Math.max(13,s*.95),700,'#fff');g.textAlign='right';g.fillText(lf&&lf.m!=null?'🎤 '+nameM(lf.m):'🎤 …',B.x+B.w-12,B.y+Math.max(16,s*1.1))}}
+
+/* ================= Kodigor talks ================= */
+const bub=$('bubble');let bubTxt='';
+function say(html){bubTxt=html;bub.innerHTML=html?`<small style="display:block;font-size:.66em;opacity:.65">${TEACHER}</small>`+html:'';bub.style.opacity=html?1:0;placeBubble()}
+function placeBubble(){if(!bubTxt)return;const M=Lo.m;if(!M)return;bub.style.maxWidth=Lo.land&&Lo.b.x-16>=230?(Lo.b.x-16)+'px':'';const bw=bub.offsetWidth,bh=bub.offsetHeight,headY=M.y-M.h*.5-M.h*PAD*.55;
+ let x=Lo.land?M.x-bw*.25:M.x-M.h*.2,y=headY-bh-14;x=clamp(x,10,W-bw-10);if(Lo.land&&Lo.b.x-16>=230)x=Math.max(10,Math.min(x,Lo.b.x-8-bw));
+ if(!Lo.land){y=clamp(y,Lo.b.y+Lo.b.h+8,Hh);if(y+bh>M.y-M.h*.1)y=Math.max(64,Lo.b.y+Lo.b.h-bh*.55)}else y=Math.max(64,Math.min(y,Lo.b.y+Lo.b.h*.55));
+ bub.style.transform=`translate(${x}px,${y}px)`;bub.style.setProperty('--tx',clamp(M.x-x,24,bw-24)+'px')}
+const bar=$('bar');
+function setBar(html){bar.innerHTML=html;layout();placeBubble()}
+const PRAISE=[['In tune!','Intonato!'],['Bravo!','Bravo!'],['Perfect!','Perfetto!'],['What a voice!','Che voce!'],['Exactly!','Esatto!'],['Beautiful!','Bellissimo!'],['Spot on!','Preciso!']];
+
+/* ================= making the exercises ================= */
+const inVoice=(a,b)=>{const v=V();return ri(v+a,v+Math.max(a,b))};
+const baseFor=iv=>inVoice(Math.max(-6,-8-iv),Math.min(6,8-iv));
+function itemsFor(les){const p=les.p,out=[],n=les.cnt;
+ if(les.k==='one'){let last=null;for(let i=0;i<n;i++){let m;do m=inVoice(p.r[0],p.r[1]);while(m===last&&p.r[1]-p.r[0]>1);last=m;out.push({k:'one',tg:[m],short:p.short})}}
+ else if(les.k==='echo'){const iv=shuffle([...p.ivs,...p.ivs,...p.ivs,...p.ivs]).slice(0,n);for(const x of iv){const a=baseFor(x);out.push({k:'echo',tg:[a,a+x]})}}
+ else if(les.k==='echoN'){for(let i=0;i<n;i++)out.push({k:'echo',tg:motif(p)})}
+ else if(les.k==='name'){const ivs=p.ivs;if(!p.nodemo)for(const iv of ivs){const a=baseFor(iv);out.push({k:'demo',iv,tg:[a,a+iv]})}
+  const pool=shuffle([...ivs,...ivs,...ivs,...ivs,...ivs]);for(let i=0;i<n;i++){const iv=pool[i%pool.length];const a=baseFor(iv);out.push({k:'name',iv,tg:[a,a+iv]})}}
+ else if(les.k==='deg'){for(let i=0;i<n;i++){const K=pick(KEYS.slice(0,4));const root=keyRoot(K);let seq=[];if(p.len===1){let d;do d=pick(p.pool);while(i&&out[i-1]&&out[i-1].seq[0]===d&&p.pool.length>2);seq=[d]}else{seq=degTune(p.pool,p.len)}
+   out.push({k:'deg',K,root,seq,tg:seq.map(d=>root+degPc(K,d)-K.t)})}}
+ else if(les.k==='read'){for(let i=0;i<n;i++){const K=p.keys?pick(KEYS):KEYS[0];const mel=melody(K,p.n,p.leap,null);out.push(readItem(K,mel,p))}}
+ else if(les.k==='tempo'){for(let i=0;i<n;i++){const K=p.minor&&Math.random()<(p.minor===1?1:p.minor)?pick(KEYS.slice(4)):p.keys?pick(KEYS.slice(0,4)):KEYS[0];const R=rhythm(p.bars,p.rl);const mel=melody(K,R.length,.3,R);out.push(readItem(K,mel,p,true))}}
+ return out}
+/* where the tonic of a key sits in your voice */
+const keyRoot=K=>{const v=V()-5;let r=K.t;while(r<v-6)r+=12;while(r>v+5)r-=12;return r};
+/* short tunes to sing back */
+function motif(p){const v=V(),out=[];let m=inVoice(-4,3);out.push(m);const arps=[[0,4,7],[0,3,7],[7,4,0],[0,4,7,12],[0,7,4],[7,3,0]];
+ if(p.arp){const a=pick(arps).slice(0,p.n);const b=inVoice(-5,0);return a.map(x=>b+x)}
+ for(let i=1;i<p.n;i++){const st=p.step?pick([1,2,2,-1,-2,-2]):pick([1,2,2,-2,-2,-1,3,4,-3,-4,5,-5,7,-7]);let x=m+st;if(x>v+8||x<v-7)x=m-st;out.push(x);m=x}return out}
+function degTune(pool,len){const s=[0];for(let i=1;i<len;i++){const c=pool.filter(d=>d!==s[i-1]&&Math.abs(d-s[i-1])<=4);s.push(pick(c.length?c:pool))}return s}
+/* rhythms in 4/4: level 1 quarters, 2 with halves, 3 with eighths and dotted notes; the last bar ends long */
+function rhythm(bars,rl){const B1=[[1,1,1,1]],B2=[[2,1,1],[1,1,2],[2,2],[1,2,1]],B3=[[1,.5,.5,1,1],[.5,.5,1,1,1],[1,1,.5,.5,1],[1.5,.5,1,1],[1,1,1.5,.5],[.5,.5,.5,.5,2]],END=rl>=2?[[2,2],[1,1,2],[4],[3,1]]:[[1,1,1,1]];
+ const pool=rl===1?B1:rl===2?[...B1,...B2]:[...B1,...B2,...B3,...B3];const out=[];for(let b=0;b<bars;b++){const r=b===bars-1&&bars>1?pick(END.filter(x=>x[x.length-1]>=2)):(b===bars-1?pick(rl>=2?[[1,1,2],[2,2],[1,1,1,1]]:B1):pick(pool));out.push(...r)}
+ if(bars===1&&rl===1)return[1,1,1,1];return out}
+/* a melody on the degrees of a key: mostly steps, a few leaps on the chord, starts on do/mi/sol, ends on do */
+function melody(K,n,leap,R){const deg=[pick([0,0,2,4])];const minor=K.m==='m';
+ for(let i=1;i<n;i++){const p=deg[i-1];let c;
+  if(i===n-1){c=0}
+  else if(i===n-2&&n>3){c=pick(p>=4?[1,2]:[1,-1,2])}
+  else if(Math.random()<leap){const ch=[0,2,4,7].filter(x=>x!==p&&Math.abs(x-p)<=4);c=pick(ch.length?ch:[p+1])}
+  else{c=p+pick([1,-1,1,-1,2,-2].filter(()=>true));c=clamp(c,-1,7)}
+  if(c===p&&Math.random()<.7)c=p+(p<4?1:-1);deg.push(c)}
+ // the last note: the tonic nearest to the one before
+ if(n>1)deg[n-1]=deg[n-2]>=5?7:0;
+ return deg.map((g,i)=>{let raised=false;if(minor&&((g%7)+7)%7===6){const nx=deg[i+1];if(nx===7||nx===0||nx===-7)raised=!(i>0&&((deg[i-1]%7)+7)%7===5)}
+  return{g,raised,dur:R?R[i]:1}})}
+function readItem(K,mel,p,timed){const root=keyRoot(K);const notes=mel.map(n=>({...n,d:K.d+n.g,acc:n.raised?1:0,m:root+degPc(K,n.g,n.raised)-K.t}));
+ // a tonic written at the top of the staff (A minor at A4): sing it where your voice is anyway
+ return{k:timed?'tempo':'read',K,root,notes,tg:notes.map(n=>n.m),names:p.names,bpm:p.bpm}}
+
+/* ================= a lesson ================= */
+let SES=null;
+function hdr(){const pr=$('prog');if(!SES){pr.style.display='none';$('sx').style.display='none';$('st1').innerHTML=`${tt('lessons','lezioni')} <b style="color:var(--bone)">${nDone()}/${NL}</b>`;return}
+ pr.style.display='block';$('sx').style.display='inline';$('st1').textContent='';pr.firstChild.style.width=(100*SES.k/SES.items.length)+'%'}
+$('stat').onclick=()=>{if(SES&&!SES.over)openMap()};
+function begin(li){audio();const les=LES[li];stopAll();
+ if(!MIC){return micAsk(()=>begin(li))}
+ if(!PR.voice){return calib(()=>begin(li))}
+ if(!PR.met){PR.met=1;saveP()}
+ $('start').hidden=true;$('end').hidden=true;SES={li,les,items:itemsFor(les),k:0,first:[],again:[],over:false};SES.nOrig=SES.items.length;hdr();
+ const intro={one:['Listen to my note, then sing it back.','Ascolta la mia nota, poi cantala.'],echo:['I sing two notes: sing them back.','Canto due note: ricantale.'],
+  echoN:['A little tune: sing it back.','Una piccola melodia: ricantala.'],name:['I give you a note. You sing it, then the interval.','Ti do una nota. Tu la canti, e poi l’intervallo.'],
+  deg:['I play the key. You sing the note I ask for.','Ti suono la tonalità. Tu canti la nota che ti chiedo.'],read:['Read the notes and sing them. I give you the first one.','Leggi le note e cantale. La prima te la do io.'],
+  tempo:['Read and sing in time with the clicks. I give you the first note and four clicks.','Leggi e canta a tempo coi clic. Ti do la prima nota e quattro clic.']}[les.k];
+ say(T2(intro));setTimeout(()=>{if(SES&&SES.k===0&&!SES.cur)item()},1700)}
+function stopAll(){if(LS)LS.done=true;LS=null;clearTimeout(SES&&SES.tm);if(SES)SES.cur=null}
+/* ---- one exercise ---- */
+function item(){const S=SES;if(!S)return;clearTimeout(S.tm);if(S.k>=S.items.length){if(S.again.length){S.items.push(...S.again.splice(0));}else return finish()}
+ const it=S.items[S.k];S.cur=it;it.tries=it.tries||0;hdr();prompt(it)}
+const TOL=it=>SES.les.p.tol||(it.k==='tempo'?.55:.45);
+function prompt(it){const S=SES,les=S.les;let dur=0,instr='';stopListen(true);
+ const showAll=!!les.p.show||it.tries>=2;
+ if(it.k==='one'){VIEW={kind:'graph',tg:it.tg,show:[1],tol:TOL(it)};const d=it.short?.45:1.3;voice(it.tg[0],0,d);dur=d+.25;instr=it.tries?tt('Again: listen…','Ancora: ascolta…'):tt('Listen…','Ascolta…')}
+ else if(it.k==='echo'){VIEW={kind:'graph',tg:it.tg,show:it.tg.map(()=>showAll?1:0),tol:TOL(it),hintDir:it.tg[1]>=it.tg[0]?1:-1};const d=.75;it.tg.forEach((m,i)=>voice(m,i*(d+.08),d));dur=it.tg.length*(d+.08)+.2;instr=tt('Listen…','Ascolta…')}
+ else if(it.k==='demo'){VIEW={kind:'graph',tg:it.tg,show:[1,1],tol:TOL(it),lab:[nameM(it.tg[0]),T2(IVN[Math.abs(it.iv)])]};voice(it.tg[0],0,.8);voice(it.tg[1],.9,.9);dur=2;
+  const sg=SONG[it.iv];instr=tt('This is a ','Questa è una ')+ivTxt(it.iv)+(sg?`<br><small>🎵 ${tt('like','come')} ${T2(sg)}</small>`:'')+`<br>${tt('Sing both notes!','Canta tutte e due le note!')}`}
+ else if(it.k==='name'){VIEW={kind:'graph',tg:it.tg,show:[1,showAll?1:0],tol:TOL(it),hintDir:it.iv>0?1:-1,lab:[nameM(it.tg[0]),showAll?T2(IVN[Math.abs(it.iv)]):'?']};voice(it.tg[0],0,1);dur=1.15;
+  const sg=SONG[it.iv],hint=(it.tries>=1||SES.les.i<LES.findIndex(l=>l.id==='n5'))&&sg?`<br><small>🎵 ${T2(sg)}</small>`:'';instr=`${tt('This note, then a','Questa nota, poi una')}<br><span class="big">${ivTxt(it.iv)}</span>${hint}`}
+ else if(it.k==='deg'){VIEW={kind:'graph',tg:it.tg,show:it.tg.map(()=>it.tries>=2?1:0),tol:TOL(it),lab:it.seq.map(d=>spell(it.K,d))};chord(it.K,it.root);voice(it.root,1.7,.9);dur=2.8;
+  instr=`${kName(it.K)} · ${tt('sing','canta')}<br><span class="big">${it.seq.map(d=>spell(it.K,d)).join(' ')}</span>`}
+ else if(it.k==='read'){VIEW={kind:'staff',K:it.K,notes:it.notes,names:it.names||it.tries>=2};chord(it.K,it.root);voice(it.tg[0],1.7,.9);dur=2.8;instr=tt('Here is the first note. Read and sing!','Ecco la prima nota. Leggi e canta!')}
+ else if(it.k==='tempo'){VIEW={kind:'staff',K:it.K,notes:it.notes,timed:true,names:it.tries>=2};chord(it.K,it.root);voice(it.tg[0],1.7,.9);
+  const spb=60/(it.bpm||72);VIEW.spb=spb;const c0=2.9;for(let k=0;k<4;k++)click(c0+k*spb,k===0);
+  const tot=it.notes.reduce((a,n)=>a+n.dur,0);for(let k=0;k<tot;k++)click(c0+(4+k)*spb,k%4===0);
+  dur=c0+4*spb;it.spb=spb;instr=kName(it.K)+' · '+tt('1, 2, 3, 4… sing!','1, 2, 3, 4… canta!');
+  // we start listening at the first beat of the song; the playhead follows
+  setBar(micHtml(true));say(instr);const tA=nowA()+c0;VIEW.t0=tA+4*spb;S.tm=setTimeout(()=>{if(SES!==S||S.cur!==it)return;listen({timed:true,end:4*spb+tot*spb+.6});LS.t0=tA;LS.pre=4*spb;LS.off=4*spb;LS.item=it;setBar(micHtml(false))},(c0-.05)*1000);return}
+ say(instr);setBar(micHtml(true));
+ S.tm=setTimeout(()=>{if(SES!==S||S.cur!==it)return;const n=it.tg.length;listen({n,max:n===1?6.5:n*1.6+4.5});LS.item=it;setBar(micHtml(false));if(it.k==='one'||it.k==='echo')say(tt('Now you!','Ora tu!')+' 🎤')},dur*1000)}
+function micHtml(wait){return`<div class="row"><div class="mic ${wait?'wait':''}"><span class="dot">🎤</span>${wait?tt('Listen…','Ascolta…'):tt('Sing!','Canta!')}<span class="lv"><i></i></span></div></div>
+ <div class="row"><button id="rep">↻ ${tt('Hear it again','Riascolta')}</button>${wait?'':`<button id="dn">✓ ${tt('Done','Fatto')}</button>`}<button id="skip">${tt('Skip','Salta')}</button></div>`}
+bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!SES)return;const it=SES.cur;
+ if(b.id==='rep'&&it){stopListen(true);prompt(it)}
+ else if(b.id==='dn'){stopListen()}
+ else if(b.id==='skip'&&it){stopListen(true);if(!it.rep&&SES.first[SES.k]==null)SES.first[SES.k]=0;next()}
+ else if(b.id==='again'&&it){prompt(it)}
+ else if(b.id==='nx'){next()}
+ else if(b.id==='hearA'&&it){playAnswer(it)}});
+function playAnswer(it){if(it.k==='tempo'||it.k==='read'){chord(it.K,it.root);let t=1.7;const spb=it.spb||.6;it.notes.forEach(n=>{voice(n.m,t,Math.max(.3,n.dur*spb*.92));t+=n.dur*spb});return}
+ it.tg.forEach((m,i)=>voice(m,i*.95,.85))}
+function stopListen(cancel){if(!LS||LS.done)return;LS.done=true;const ls=LS;if(cancel){LS=null;return}judge(ls)}
+/* ---- judging ---- */
+function judge(ls){const it=ls.item,S=SES;if(!S||S.cur!==it)return;const tol=TOL(it);let res,oct=0;
+ const voiced=ls.fr.filter(f=>f.m!=null).length;
+ if(voiced<6){LS=null;VIEW.fr=null;say(tt('I couldn’t hear you. Sing a little louder, close to the microphone!','Non ti ho sentito. Canta un po’ più forte, vicino al microfono!'));
+  setBar(`<div class="row"><button class="ex again" id="again">🎤 ${tt('Try again','Riprova')}</button><button id="skip">${tt('Skip','Salta')}</button></div>`);return}
+ if(it.k==='tempo')({res,oct}=judgeTimed(ls,it,tol));
+ else if(it.tg.length===1){let m=ls.stable;if(m==null){const sg=segment(ls.fr);const lg=sg.sort((a,b)=>b.dur-a.dur)[0];m=lg?lg.m:med(ls.fr.filter(f=>f.m!=null).map(f=>f.m))}
+  const o=12*Math.round((m-it.tg[0])/12),e=m-o-it.tg[0];oct=o;res=[{m:m-o,err:e,ok:Math.abs(e)<=tol}]}
+ else{const sg=segment(ls.fr,it.k==='read'?.14:.16);const A=align(sg,it.tg);oct=A.o;res=A.res.map((r,k)=>r?{m:r.m,err:r.m-it.tg[k],ok:Math.abs(r.m-it.tg[k])<=tol}:{m:null,err:0,ok:false})}
+ VIEW.res=res;VIEW.oct=oct;VIEW.fr=ls.fr;VIEW.liveI=null;LS=null;
+ const ok=res.every(r=>r.ok),first=it.tries===0;it.tries++;
+ if(window.IgorStats)try{IgorStats.answer('solfege',it.k==='name'||it.k==='demo'?'iv'+it.iv:it.k,ok&&first,it.k==='name'||it.k==='demo'?[IVN[Math.abs(it.iv)][0]+(it.iv>0?' ↑':' ↓'),IVN[Math.abs(it.iv)][1]+(it.iv>0?' ↑':' ↓')]:null)}catch(e){}
+ if(S.first[S.k]==null&&!it.rep)S.first[S.k]=ok?1:0;
+ ding(ok);
+ if(ok){const B=Lo.b;ANT={x:B.x+B.w*.5,y:B.y+B.h*.5,t:0};const e=Math.max(...res.map(r=>Math.abs(r.err)));
+  say(T2(pick(PRAISE))+(e<=.2?' ✨':' '+tt('<small>(a hair off, but good!)</small>','<small>(un pelo fuori, ma va bene!)</small>')));
+  setBar(`<div class="row"><button class="ex go" id="nx">${tt('Next','Avanti')} ▸</button></div>`);S.tm=setTimeout(()=>{if(SES===S&&S.cur===it)next()},1700);return}
+ // not yet: say what to fix, simply
+ const bad=res.findIndex(r=>!r.ok),r=res[bad];let tip;
+ if(r.m==null)tip=res.length>1?tt(`I heard ${res.filter(x=>x.m!=null).length} notes out of ${res.length}. Sing them all, one after the other!`,`Ho sentito ${res.filter(x=>x.m!=null).length} note su ${res.length}. Cantale tutte, una dopo l’altra!`):tt('Hold the note a little longer!','Tieni la nota un po’ più a lungo!');
+ else{const which=res.length>1?(IT?` (nota ${bad+1})`:` (note ${bad+1})`):'',dir=r.err<0?tt('A bit higher ↑','Un po’ più su ↑'):tt('A bit lower ↓','Un po’ più giù ↓');tip=(Math.abs(r.err)>1.5?tt('Not quite: ','Non ancora: '):tt('Almost! ','Quasi! '))+dir+which}
+ if(it.tries>=3){S.again.push({...it,tries:2,rep:true});say(tip+'<br>'+tt('Here’s how it goes. We’ll try it again later!','Ecco com’è. La riproviamo dopo!'));playAnswer(it);
+  setBar(`<div class="row"><button id="hearA">🔊 ${tt('Hear it','Ascolta')}</button><button class="ex go" id="nx">${tt('Next','Avanti')} ▸</button></div>`);return}
+ say(tip);setBar(`<div class="row"><button class="ex again" id="again">🎤 ${tt('Try again','Riprova')}</button><button id="hearA">🔊 ${tt('Hear it','Ascolta')}</button><button id="nx">${tt('Next','Avanti')} ▸</button></div>`)}
+/* in time: every note has its window; your voice inside the window must be on the note (a little delay is fine) */
+function judgeTimed(ls,it,tol){const spb=it.spb,pre=ls.off,N=it.notes;let best=null;
+ const vs=ls.fr.filter(f=>f.m!=null),mt=it.tg.reduce((a,b)=>a+b,0)/it.tg.length;const o=12*Math.round((med(vs.map(f=>f.m))-mt)/12);
+ for(const lat of[0,.06,.12,.18,.24,.3,.36]){let beat=0,ok=0;const res=N.map(n=>{const a=pre+(beat+n.dur*.22)*spb+lat,b=pre+(beat+n.dur*.88)*spb+lat;beat+=n.dur;
+   const w=ls.fr.filter(f=>f.t>=a&&f.t<=b),v=w.filter(f=>f.m!=null).map(f=>f.m-o);if(v.length<Math.max(2,w.length*.35))return{m:null,err:0,ok:false};
+   // fold the octave of each note to the nearest (one slip of a deep voice should not ruin a phrase)
+   let m=med(v),e=m-n.m;if(Math.abs(e)>9){const f=12*Math.round(e/12);m-=f;e-=f}const k=Math.abs(e)<=tol;if(k)ok++;return{m,err:e,ok:k}});
+  if(!best||ok>best.ok)best={ok,res,lat}}
+ return{res:best.res,oct:o}}
+function next(){const S=SES;if(!S)return;clearTimeout(S.tm);stopListen(true);S.k++;VIEW={kind:'idle'};item()}
+
+/* ================= end of a lesson ================= */
+function finish(){const S=SES;S.over=true;hdr();say('');setBar('');VIEW={kind:'idle'};const n=S.nOrig||1,r=S.first.filter(x=>x===1).length,pct=r/n,les=S.les;
+ if(window.IgorStats)IgorStats.game('solfege','all',{pct});
+ const was=PR.done[les.id]>=PASS,pass=pct>=PASS;PR.plays[les.id]=(PR.plays[les.id]|0)+1;if(!(PR.done[les.id]>=pct))PR.done[les.id]=Math.round(pct*100)/100;saveP();
+ const isNew=pass&&!was,seeds=Math.min(8,Math.ceil(pct*4)+(isNew?3:0)),nd=nDone();let p={};try{p=JSON.parse(localStorage.getItem('igortime_pending'))||{}}catch(e){}
+ p.seeds=(p.seeds|0)+seeds;p.scores=p.scores||{};p.scores.solfege=p.scores.solfege||{};if(!(p.scores.solfege.all>=nd))p.scores.solfege.all=nd;try{localStorage.setItem('igortime_pending',JSON.stringify(p))}catch(e){}
+ const stars=pct>=.95?3:pct>=.8?2:pct>=PASS?1:0,nx=LES.findIndex(l=>!(PR.done[l.id]>=PASS)),all=nx<0;
+ const msg=pass?(all?tt('You sang the whole course. Bravo! Now any song is yours.','Hai cantato tutto il corso. Bravo! Ora ogni canzone è tua.'):isNew?tt('Lesson done! Your voice is getting surer.','Lezione fatta! La tua voce è sempre più sicura.'):tt('Done again: well sung!','Rifatta: ben cantata!')):
+  tt('Good singing! One more go and it’s yours.','Bel lavoro! Un altro giro ed è tua.');
+ $('endCard').innerHTML=`<p class="small">${T2(UNITS[les.u].n)} · ${T2(les.n)}</p><div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3-stars)}</div><div class="big">${r}/${n}</div><p>${msg}</p>
+ ${!pct&&!r&&S.first.every(x=>x===0)?`<p>${tt('Tip: start from the lesson before, it helps!','Consiglio: riparti dalla lezione prima, aiuta!')}</p>`:''}
+ <p style="color:var(--warm)">${seeds?tt(`+${seeds*SEEDR} tofu ants for the island`,`+${seeds*SEEDR} formiche di tofu per l’isola`):''}</p>
+ <div class="row">${pass&&!all&&nx>=0?`<button class="main" id="enx">${tt('Next lesson ▸','Prossima lezione ▸')}</button>`:''}<button ${pass&&!all?'':'class="main"'} id="eag">${tt('Sing it again','Ricantala')}</button><button id="emap">${tt('All the lessons','Tutte le lezioni')}</button></div>
+ ${pass&&!all&&nx>=0?`<p id="endnew">${UNITS[LES[nx].u].ic} ${T2(LES[nx].n)}</p>`:''}
+ <p class="small"><a href="${document.querySelector('a.igback').href}">${tt('← back to the island','← torna all’isola')}</a></p>`;
+ $('end').hidden=false;if($('enx'))$('enx').onclick=()=>begin(nx);$('eag').onclick=()=>begin(les.i);$('emap').onclick=openMap;
+ if(nd>0)Promise.reject().then(B=>B.show($('endCard'),'solfege','all',nd,ME.avatar,tt('How far everyone got · lessons','Fin dove siete arrivati · lezioni'))).catch(()=>{});
+ hdr();$('sx').style.display='none';$('prog').style.display='none'}
+
+/* ================= the microphone, the voice test ================= */
+function micAsk(then){$('end').hidden=true;$('start').hidden=false;
+ $('startCard').innerHTML=`<h2>🎤 ${tt('The <em>microphone</em>','Il <em>microfono</em>')}</h2><p>${tt('To hear you sing, I need the microphone. Nothing is recorded or sent anywhere: I only listen to the pitch, here, while you sing.','Per sentirti cantare mi serve il microfono. Niente viene registrato né mandato da nessuna parte: ascolto solo l’altezza, qui, mentre canti.')}</p>
+ <div class="row"><button class="main" id="mok">🎤 ${tt('Turn on the microphone','Accendi il microfono')}</button><button id="mno">${tt('Back','Indietro')}</button></div><p class="small" id="merr"></p>`;
+ $('mno').onclick=openMap;$('mok').onclick=async()=>{const ok=await micOn();if(ok){then()}else $('merr').innerHTML=tt('I can’t use the microphone. Allow it in the browser (the 🎤 or 🔒 icon next to the address) and try again. On a computer, check that a microphone is connected.','Non riesco a usare il microfono. Consentilo nel browser (l’icona 🎤 o 🔒 accanto all’indirizzo) e riprova. Sul computer, controlla che ci sia un microfono collegato.')}}
+/* the voice test: sing a comfortable "aaah", I find your middle */
+function calib(then){$('start').hidden=true;$('end').hidden=true;SES=null;hdr();VIEW={kind:'graph',tg:[V()],show:[0],tol:.5,span:5};
+ say(tt('First, your voice. Sing a long, comfortable <b>“aaah”</b>: not high, not low. Like when you talk.','Prima, la tua voce. Canta un <b>“aaah”</b> lungo e comodo: né alto né basso. Come quando parli.'));
+ const go=()=>{listen({n:1,max:99,calib:1});LS.item={calib:1};setBar(`<div class="row"><div class="mic"><span class="dot">🎤</span>${tt('Aaah…','Aaah…')}<span class="lv"><i></i></span></div></div>`);
+  const chk=setInterval(()=>{if(!LS||LS.done||!LS.item||!LS.item.calib){clearInterval(chk);return}const t=nowA()-LS.t0,st=stable(LS.fr.filter(f=>f.t>t-1.1),t);
+   if(st!=null&&LS.fr.filter(f=>f.t>t-1.1&&f.m!=null).length>25){clearInterval(chk);LS.done=true;const fr=LS.fr;LS=null;done(st,fr)}else if(t>9){clearInterval(chk);LS.done=true;LS=null;fail()}},120)};
+ const done=(m,fr)=>{let v=Math.round(m);v=clamp(v,40,76);PR.voice=v;saveP();VIEW={kind:'graph',tg:[v],show:[1],tol:.5,fr,span:5,res:[{m,err:m-v,ok:true}],oct:0};
+  say(tt(`Your voice is at home around <b>${nameM(v)}</b>. I’ll sing to you around there.`,`La tua voce sta comoda intorno al <b>${nameM(v)}</b>. Ti canterò lì intorno.`));
+  setBar(`<div class="row"><button class="ex go" id="cok">${tt('Let’s sing!','Cantiamo!')} ▸</button><button id="cre">↻ ${tt('Again','Rifai')}</button></div>`);$('cok').onclick=then;$('cre').onclick=()=>calib(then)};
+ const fail=()=>{say(tt('I couldn’t hear a steady note. Hold one “aaah”, a bit louder!','Non ho sentito una nota ferma. Tieni un “aaah”, un po’ più forte!'));
+  setBar(`<div class="row"><button class="ex again" id="cre">🎤 ${tt('Try again','Riprova')}</button><button id="clow">${tt('Low voice','Voce grave')}</button><button id="chi">${tt('High voice','Voce acuta')}</button></div>`);
+  $('cre').onclick=()=>calib(then);$('clow').onclick=()=>{PR.voice=50;saveP();then()};$('chi').onclick=()=>{PR.voice=60;saveP();then()}};
+ setBar('');setTimeout(go,900)}
+
+/* ================= the map of the course ================= */
+function openMap(){stopAll();SES=null;say('');setBar('');VIEW={kind:'idle'};hdr();const nx=LES.findIndex(l=>!(PR.done[l.id]>=PASS)),all=nx<0;
+ const units=UNITS.map((u,ui)=>{const ok=u.les.filter(l=>PR.done[l.id]>=PASS).length;return`<div class="unit">${u.ic} ${T2(u.n)} <small>${ok}/${u.les.length}</small></div><div class="map">${u.les.map(l=>{const d=PR.done[l.id],cls=d>=PASS?'done':l.i===nx?'cur':'';
+  return`<button data-l="${l.i}" class="${cls}">${T2(l.n)}<small>${d>=PASS?(d>=.95?'★★★':d>=.8?'★★':'★'):l.i===nx?tt('next','prossima'):(l.i+1)}</small></button>`}).join('')}</div>`}).join('');
+ $('startCard').innerHTML=`<h2>${tt('<em>Sing</em> with Kodigor','<em>Canta</em> con Kodigor')}</h2>
+ <p>${tt(`<b>${TEACHER}</b> teaches you to sing in tune: first one note, then two, then little tunes; then the intervals by name, the notes of a key, and at the end you read and sing a whole solfège in time. He listens through the microphone.`,`<b>${TEACHER}</b> ti insegna a cantare intonato: prima una nota, poi due, poi piccole melodie; poi gli intervalli per nome, le note della tonalità, e alla fine leggi e canti un solfeggio intero a tempo. Ti ascolta dal microfono.`)}</p>
+ ${PR.voice?`<p><span class="voice">🎤 ${tt('your voice','la tua voce')}: <b>${nameM(PR.voice)}</b> <button id="rev">${tt('test again','rifai il test')}</button></span></p>`:''}
+ <div class="row"><button class="main" id="go">${all?tt('Sing the great solfège again','Ricanta il grande solfeggio'):nDone()?tt('Continue','Continua')+' · '+T2(LES[nx].n):tt('Start singing','Inizia a cantare')}</button></div>
+ ${units}
+ <p class="small">${tt('Earphones help: I hear only you, not me. For reading the notes there is Nadia Boulangigor, by the staff.','Con gli auricolari è meglio: sento solo te, non me. Per imparare a leggere le note c’è Nadia Boulangigor, al pentagramma.')}</p>
+ <p class="small"><a href="${document.querySelector('a.igback').href}">${tt('← back to the island','← torna all’isola')}</a></p>`;
+ $('start').hidden=false;$('end').hidden=true;$('go').onclick=()=>begin(all?NL-1:nx);document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>begin(+b.dataset.l));
+ if($('rev'))$('rev').onclick=()=>{audio();const go=()=>calib(openMap);MIC?go():micAsk(go)}}
+
+resize();openMap();requestAnimationFrame(frame);
+addEventListener('pagehide',micOff);
+window.__sv={nowA:()=>nowA(),PR,LES,UNITS,get SES(){return SES},get LS(){return LS},begin,segment,align,detect,openMap,next,get VIEW(){return VIEW}};
+})();
+</script>
+</body></html>
