@@ -212,7 +212,7 @@ function audio(){if(AC){if(AC.state==='suspended')AC.resume();return AC}AC=new(w
 /* a round, singable tone (like a soft voice on "oo"): what Kodigor sings to you */
 function voice(m,t=0,dur=1.1,vol=.32){if(!AC)return;const t0=AC.currentTime+t,f=440*Math.pow(2,(m-69)/12),g=AC.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.06);g.gain.setValueAtTime(vol,t0+dur-.12);g.gain.linearRampToValueAtTime(0,t0+dur);g.connect(OUT);
  const lfo=AC.createOscillator(),lg=AC.createGain();lfo.frequency.value=5.2;lg.gain.setValueAtTime(0,t0);lg.gain.linearRampToValueAtTime(f*.006,t0+.35);lfo.connect(lg);lfo.start(t0);lfo.stop(t0+dur+.05);
- for(const[k,a]of[[1,1],[2,.45],[3,.22],[4,.1],[5,.05]]){const o=AC.createOscillator(),ga=AC.createGain();o.type='sine';o.frequency.value=f*k;lg.connect(o.frequency);ga.gain.value=a*(k>1?1/k:1);o.connect(ga);ga.connect(g);o.start(t0);o.stop(t0+dur+.05)}}
+ for(const[k,a]of[[1,1],[2,.62],[3,.5],[4,.34],[5,.26],[6,.17],[7,.11],[8,.08],[9,.05],[10,.03]]){if(f*k>9000)break;const o=AC.createOscillator(),ga=AC.createGain();o.type='sine';o.frequency.value=f*k;lg.connect(o.frequency);ga.gain.value=a*.46;o.connect(ga);ga.connect(g);o.start(t0);o.stop(t0+dur+.05)}}
 function piano(m,t=0,dur=1.2,vol=.2){if(!AC)return;const t0=AC.currentTime+t,f=440*Math.pow(2,(m-69)/12),g=AC.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.01);g.gain.exponentialRampToValueAtTime(vol*.3,t0+.3);g.gain.exponentialRampToValueAtTime(.001,t0+dur);g.connect(OUT);
  for(const[k,a]of[[1,1],[2,.35],[3,.12],[4,.06]]){const o=AC.createOscillator(),ga=AC.createGain();o.type='sine';o.frequency.value=f*k;ga.gain.value=a;o.connect(ga);ga.connect(g);o.start(t0);o.stop(t0+dur+.05)}}
 function click(t=0,acc=false){if(!AC)return;const t0=AC.currentTime+t,o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=acc?2600:2000;g.gain.setValueAtTime(acc?.12:.07,t0);g.gain.exponentialRampToValueAtTime(.0005,t0+.035);o.connect(g);g.connect(OUT);o.start(t0);o.stop(t0+.05)}
@@ -248,13 +248,13 @@ function listenTick(){if(!LS||LS.done)return;const r=detect(),t=nowA()-LS.t0;let
  if(o.timed){if(t>=o.end)stopListen();return}
  if(o.calib)return;
  if(t>o.max){stopListen();return}
- if(o.n===1){const st=stable(LS.fr,t);if(st!=null){LS.stable=st;stopListen()}return}
+ if(o.n===1){const st=t>1.6?stable(LS.fr,t,1):null;if(st!=null){LS.stable=st;stopListen()}return}
  // several notes: stop when they are all there and the voice has rested a bit
  if(t-(LS.lastSeg||0)>.25){LS.lastSeg=t;const S=segment(LS.fr);const lastV=lastVoiced(LS.fr);
-  if(S.length>=o.n&&t-lastV>.7)stopListen();else if(S.length&&t-lastV>2.2)stopListen()}}
+  if(S.length>=o.n&&t-lastV>1.5)stopListen();else if(S.length&&t-lastV>3.2)stopListen()}}
 const lastVoiced=fr=>{for(let i=fr.length-1;i>=0;i--)if(fr[i].m!=null)return fr[i].t;return-9};
 /* one held note: the last ~0.55 s are steady enough */
-function stable(fr,t){const W=.55,a=fr.filter(f=>f.t>t-W);if(a.length<8)return null;const v=a.filter(f=>f.m!=null).map(f=>f.m);if(v.length<a.length*.75)return null;
+function stable(fr,t,W=.55){a=fr.filter(f=>f.t>t-W);if(a.length<8)return null;const v=a.filter(f=>f.m!=null).map(f=>f.m);if(v.length<a.length*.75)return null;
  const md=med(v);if(med(v.map(x=>Math.abs(x-md)))>.22)return null;if(Math.max(...v)-Math.min(...v)>1.2)return null;return md}
 /* cut the pitch line into sung notes */
 function segment(fr,minDur=.16){const S=[];let cur=null,dev=[],lastV=-9;
@@ -334,13 +334,22 @@ function graph(B){const V0=VIEW,tg=V0.tg,lo=Math.min(...tg)-3.5,hi=Math.max(...t
  // the trail of your voice (folded into the octave of the targets)
  const fr=V0.fr||(LS&&!LS.done?LS.fr:null);if(fr&&fr.length){const ref=(V0.res&&V0.oct!=null)?V0.oct:null;let o=ref;
   if(o==null){const v=fr.filter(f=>f.m!=null).map(f=>f.m);if(v.length)o=12*Math.round((med(v)-(tg.reduce((a,b)=>a+b,0)/n))/12)}
-  g.lineWidth=Math.max(2.5,B.h*.012);g.lineCap='round';let prev=null;const tmax=Math.max(span,fr[fr.length-1].t+.3);
-  for(const f of fr){if(f.m==null){prev=null;continue}const x=px+pw*f.t/tmax,y=yOf(clamp(f.m-o,y0,y1)),near=tg.some(m=>Math.abs(f.m-o-m)<=tol);
+  g.lineWidth=Math.max(2.5,B.h*.012);g.lineCap='round';let prev=null,pm=null;const tmax=Math.max(span,fr[fr.length-1].t+.3),cl=cleanTrail(fr);
+  for(const f of cl){if(f.m==null||(pm!=null&&Math.abs(f.m-pm)>.6)){prev=null;pm=f.m;if(f.m==null)continue}pm=f.m;const x=px+pw*f.t/tmax,y=yOf(clamp(f.m-o,y0,y1)),near=tg.some(m=>Math.abs(f.m-o-m)<=tol);
    g.strokeStyle=near?'#bff2b0':'#f7ecd4';if(prev){g.beginPath();g.moveTo(prev.x,prev.y);g.lineTo(x,y);g.stroke()}prev={x,y}}
   // the live dot and the name of what you are singing
-  if(LS&&!LS.done&&fr===LS.fr){const lf=fr[fr.length-1];if(lf&&lf.m!=null){const x=px+pw*lf.t/tmax,y=yOf(clamp(lf.m-o,y0,y1));g.fillStyle='#fff';g.beginPath();g.arc(x,y,Math.max(5,B.h*.02),0,TAU);g.fill();
+  if(LS&&!LS.done&&fr===LS.fr){const lf=cl[cl.length-1];if(lf&&lf.m!=null){const x=px+pw*lf.t/tmax,y=yOf(clamp(lf.m-o,y0,y1));g.fillStyle='#fff';g.beginPath();g.arc(x,y,Math.max(5,B.h*.02),0,TAU);g.fill();
    chalk(Math.max(12,B.h*.045),700,'#fff');g.fillText(nameM(lf.m),Math.min(x+28,px+pw-10),y-16)}}}}
 
+/* what the board draws of your voice: the start of each note (where the detector wobbles) is cut, every point is the median of its neighbours,
+   and a change of note is a jump, never a line: so a clean step does not look like a glide */
+function cleanTrail(fr){const out=[];let on=null,last=-9,pm=null;
+ for(let i=0;i<fr.length;i++){const f=fr[i];if(f.m==null){if(f.t-last>.08){on=null;pm=null}out.push({t:f.t,m:null});continue}
+  if(on==null)on=f.t;last=f.t;const w=[];for(let j=Math.max(0,i-4);j<=Math.min(fr.length-1,i+4);j++)if(fr[j].m!=null)w.push(fr[j].m);const md=med(w);
+  if(pm!=null&&Math.abs(md-pm)>.7){on=f.t;pm=md;out.push({t:f.t,m:null});continue}
+  if(f.t-on<.15||Math.abs(f.m-md)>.45){out.push({t:f.t,m:null});continue}
+  pm=md;out.push({t:f.t,m:md})}
+ return out}
 /* the staff (reading and solfège in time) */
 function staffGeom(B,clefOnly){const s=Math.min(B.h*.075,B.w*.032,24),y0=B.y+B.h*.66,x0=B.x+B.w*.03,x1=B.x+B.w*.97,yOf=d=>y0-(d-2)*s/2;return{s,y0,x0,x1,yOf}}
 function drawStaff(S,K,ts){g.strokeStyle=CH;g.lineWidth=Math.max(1.5,S.s*.09);for(let i=0;i<5;i++){g.beginPath();g.moveTo(S.x0,S.y0-i*S.s);g.lineTo(S.x1,S.y0-i*S.s);g.stroke()}
@@ -472,7 +481,7 @@ function prompt(it){const S=SES,les=S.les;let dur=0,instr='';stopListen(true);
   // we start listening at the first beat of the song; the playhead follows
   setBar(micHtml(true));say(instr);const tA=nowA()+c0;VIEW.t0=tA+4*spb;S.tm=setTimeout(()=>{if(SES!==S||S.cur!==it)return;listen({timed:true,end:4*spb+tot*spb+.6});LS.t0=tA;LS.pre=4*spb;LS.off=4*spb;LS.item=it;setBar(micHtml(false))},(c0-.05)*1000);return}
  say(instr);setBar(micHtml(true));
- S.tm=setTimeout(()=>{if(SES!==S||S.cur!==it)return;const n=it.tg.length;listen({n,max:n===1?6.5:n*1.6+4.5});LS.item=it;setBar(micHtml(false));if(it.k==='one'||it.k==='echo')say(tt('Now you!','Ora tu!')+' 🎤')},dur*1000)}
+ S.tm=setTimeout(()=>{if(SES!==S||S.cur!==it)return;const n=it.tg.length;listen({n,max:n===1?9:n*2.2+7});LS.item=it;setBar(micHtml(false));if(it.k==='one'||it.k==='echo')say(tt('Now you!','Ora tu!')+' 🎤')},dur*1000)}
 function micHtml(wait){return`<div class="row"><div class="mic ${wait?'wait':''}"><span class="dot">🎤</span>${wait?tt('Listen…','Ascolta…'):tt('Sing!','Canta!')}<span class="lv"><i></i></span></div></div>
  <div class="row"><button id="rep">↻ ${tt('Hear it again','Riascolta')}</button>${wait?'':`<button id="dn">✓ ${tt('Done','Fatto')}</button>`}<button id="skip">${tt('Skip','Salta')}</button></div>`}
 bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!SES)return;const it=SES.cur;
