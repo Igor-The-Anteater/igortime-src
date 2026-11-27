@@ -351,7 +351,7 @@ function graph(B){const V0=VIEW,tg=V0.tg,lo=Math.min(...tg)-3.5,hi=Math.max(...t
   if(r&&r.m==null){chalk(Math.max(12,sh*.12),600,'#ffd6a6');g.fillText('…',x,y+sh*.6)}});
  // while you sing: your Igorlet goes up and down with your voice
  if(live&&V0.disp!=null&&vNow!=null){const y=yOf(clamp(V0.disp,y0-1,y1+1)),x=col(cur);put(IGL,x,y,1);
-  chalk(Math.max(12,sh*.12),700,'#fff');g.fillText(nameM(V0.disp),x+sw*.6,y-sh*.25)}}
+  chalk(Math.max(12,sh*.12),700,'#fff');const nk=tg.findIndex((m,k)=>Math.abs(V0.disp-m)<.5&&V0.lab&&V0.lab[k]&&!/[a-z]{4}/.test(V0.lab[k])&&(V0.show[k]||k===cur)),nm=nk>=0?V0.lab[nk]:nameM(V0.disp);g.fillText(nm,x+sw*.6,y-sh*.25)}}
 
 /* what the board draws of your voice: the start of each note (where the detector wobbles) is cut, every point is the median of its neighbours,
    and a change of note is a jump, never a line: so a clean step does not look like a glide */
@@ -417,16 +417,40 @@ const PRAISE=[['In tune!','Intonato!'],['Bravo!','Bravo!'],['Perfect!','Perfetto
 /* ================= making the exercises ================= */
 const inVoice=(a,b)=>{const v=V();return ri(v+a,v+Math.max(a,b))};
 const baseFor=iv=>inVoice(Math.max(-6,-8-iv),Math.min(6,8-iv));
+/* every pair or little tune comes from a real major or minor scale, so the names are right (Do♯–Mi, never Do♯–Mi♭),
+   and the intervals are the ones of the scale: augmented or diminished only for the tritone */
+const SPK=[[0,0,'M'],[7,4,'M'],[2,1,'M'],[9,5,'M'],[4,2,'M'],[11,6,'M'],[5,3,'M'],[10,6,'M'],[3,2,'M'],[8,5,'M'],[1,1,'M'],
+ [9,5,'m'],[4,2,'m'],[11,6,'m'],[6,3,'m'],[1,0,'m'],[2,1,'m'],[7,4,'m'],[0,0,'m'],[5,3,'m']].map(([t,L,m])=>({t,L,m,d:0,sig:[]}));
+const IVSTEP={0:0,1:1,2:1,3:2,4:2,5:3,6:3,7:4,8:5,9:5,10:6,11:6,12:7};
+/* a note of the key placed in [lo,hi] of the voice, or null */
+const fitIn=(pc,lo,hi)=>{const v=V();for(let m=pc-48;m<=pc+48;m+=12)if(m>=v+lo&&m<=v+hi)return m;return null};
+function pairIn(iv){const st=Math.sign(iv)*IVSTEP[Math.abs(iv)];let best=null;
+ for(let t=0;t<200;t++){const K=pick(iv===6||iv===-6?SPK.filter(k=>k.m==='M'):SPK),d1=ri(0,6),d2=d1+st;
+  if(degPc(K,d2)-degPc(K,d1)!==iv)continue;const m1=fitIn(degPc(K,d1),Math.max(-6,-8-iv),Math.min(6,8-iv));if(m1==null)continue;
+  best={tg:[m1,m1+iv],lab:[spell(K,d1),spell(K,d2)],K};break}
+ if(!best){const a=baseFor(iv);best={tg:[a,a+iv],lab:[nameM(a),nameM(a+iv)]}}return best}
+function motifIn(p){for(let t=0;t<200;t++){const K=pick(SPK);let d;
+  if(p.arp)d=pick([[0,2,4],[0,2,4,7],[4,2,0],[0,4,2],[7,4,2],[2,4,7]]).slice(0,p.n);
+  else{d=[ri(0,4)];for(let i=1;i<p.n;i++){const st=p.step?pick([1,-1,1,-1,2,-2]):pick([1,-1,1,-1,2,-2,3,-3,4,-4]);let x=d[i-1]+st;if(x>8||x<-2)x=d[i-1]-st;d.push(x)}}
+  const rel=d.map(x=>degPc(K,x)),lo=Math.min(...rel),hi=Math.max(...rel),v=V();let r=null;
+  for(let k=-48;k<=48;k+=12)if(lo+k>=v-7&&hi+k<=v+8){r=k;break}
+  if(r==null||rel.some((x,i)=>i&&Math.abs(x-rel[i-1])===6))continue;return{tg:rel.map(x=>x+r),lab:d.map(x=>spell(K,x))}}
+ const tg=motif(p);return{tg,lab:tg.map(nameM)}}
+/* never the same exercise twice in a row (nor the same one moved by a note or two) */
+const sameEx=(a,b)=>!!(a&&b&&a.tg.length===b.tg.length&&(a.tg.every((m,i)=>m===b.tg[i])||(a.tg.every((m,i)=>m-a.tg[0]===b.tg[i]-b.tg[0])&&Math.abs(a.tg[0]-b.tg[0])<3)));
+function fresh(out,gen){let it;for(let t=0;t<40;t++){it=gen();if(!sameEx(out[out.length-1],it))break}out.push(it)}
+/* a shuffled list where the same value is never twice in a row (when it can be avoided) */
+function noRepeat(a){a=shuffle(a);for(let i=1;i<a.length;i++)if(a[i]===a[i-1]){const j=a.findIndex((x,k)=>k>i&&x!==a[i]&&(k+1>=a.length||a[k+1]!==a[i])&&a[k-1]!==a[i]);if(j>0)[a[i],a[j]]=[a[j],a[i]]}return a}
 function itemsFor(les){const p=les.p,out=[],n=les.cnt;
- if(les.k==='one'){let last=null;for(let i=0;i<n;i++){let m;do m=inVoice(p.r[0],p.r[1]);while(m===last&&p.r[1]-p.r[0]>1);last=m;out.push({k:'one',tg:[m],short:p.short})}}
- else if(les.k==='echo'){const iv=shuffle([...p.ivs,...p.ivs,...p.ivs,...p.ivs]).slice(0,n);for(const x of iv){const a=baseFor(x);out.push({k:'echo',tg:[a,a+x]})}}
- else if(les.k==='echoN'){for(let i=0;i<n;i++)out.push({k:'echo',tg:motif(p)})}
- else if(les.k==='name'){const ivs=p.ivs;if(!p.nodemo)for(const iv of ivs){const a=baseFor(iv);out.push({k:'demo',iv,tg:[a,a+iv]})}
-  const pool=shuffle([...ivs,...ivs,...ivs,...ivs,...ivs]);for(let i=0;i<n;i++){const iv=pool[i%pool.length];const a=baseFor(iv);out.push({k:'name',iv,tg:[a,a+iv]})}}
- else if(les.k==='deg'){for(let i=0;i<n;i++){const K=pick(KEYS.slice(0,4));const root=keyRoot(K);let seq=[];if(p.len===1){let d;do d=pick(p.pool);while(i&&out[i-1]&&out[i-1].seq[0]===d&&p.pool.length>2);seq=[d]}else{seq=degTune(p.pool,p.len)}
-   out.push({k:'deg',K,root,seq,tg:seq.map(d=>root+degPc(K,d)-K.t)})}}
- else if(les.k==='read'){for(let i=0;i<n;i++){const K=p.keys?pick(KEYS):KEYS[0];const mel=melody(K,p.n,p.leap,null);out.push(readItem(K,mel,p))}}
- else if(les.k==='tempo'){for(let i=0;i<n;i++){const K=p.minor&&Math.random()<(p.minor===1?1:p.minor)?pick(KEYS.slice(4)):p.keys?pick(KEYS.slice(0,4)):KEYS[0];const R=rhythm(p.bars,p.rl);const mel=melody(K,R.length,.3,R);out.push(readItem(K,mel,p,true))}}
+ if(les.k==='one'){for(let i=0;i<n;i++)fresh(out,()=>{const m=inVoice(p.r[0],p.r[1]);return{k:'one',tg:[m],short:p.short}})}
+ else if(les.k==='echo'){const iv=noRepeat([...p.ivs,...p.ivs,...p.ivs,...p.ivs]).slice(0,n);for(const x of iv)fresh(out,()=>({k:'echo',...pairIn(x)}))}
+ else if(les.k==='echoN'){for(let i=0;i<n;i++)fresh(out,()=>({k:'echo',...motifIn(p)}))}
+ else if(les.k==='name'){const ivs=p.ivs;if(!p.nodemo)for(const iv of ivs)fresh(out,()=>({k:'demo',iv,...pairIn(iv)}));
+  const pool=noRepeat([...ivs,...ivs,...ivs,...ivs,...ivs]);for(let i=0;i<n;i++){const iv=pool[i%pool.length];fresh(out,()=>({k:'name',iv,...pairIn(iv)}))}}
+ else if(les.k==='deg'){for(let i=0;i<n;i++)fresh(out,()=>{const K=pick(KEYS.slice(0,4));const root=keyRoot(K);let seq;if(p.len===1){let d;do d=pick(p.pool);while(out.length&&out[out.length-1].seq[0]===d&&p.pool.length>2);seq=[d]}else seq=degTune(p.pool,p.len);
+   return{k:'deg',K,root,seq,tg:seq.map(d=>root+degPc(K,d)-K.t)}})}
+ else if(les.k==='read'){for(let i=0;i<n;i++)fresh(out,()=>{const K=p.keys?pick(KEYS):KEYS[0];return readItem(K,melody(K,p.n,p.leap,null),p)})}
+ else if(les.k==='tempo'){for(let i=0;i<n;i++)fresh(out,()=>{const K=p.minor&&Math.random()<(p.minor===1?1:p.minor)?pick(KEYS.slice(4)):p.keys?pick(KEYS.slice(0,4)):KEYS[0];const R=rhythm(p.bars,p.rl);return readItem(K,melody(K,R.length,.3,R),p,true)})}
  return out}
 /* where the tonic of a key sits in your voice */
 const keyRoot=K=>{const v=V()-5;let r=K.t;while(r<v-6)r+=12;while(r>v+5)r-=12;return r};
@@ -478,10 +502,10 @@ const TOL=it=>SES.les.p.tol||(it.k==='tempo'?.55:.45);
 function prompt(it){const S=SES,les=S.les;let dur=0,instr='';stopListen(true);
  const showAll=!!les.p.show||it.tries>=2;
  if(it.k==='one'){VIEW={kind:'graph',tg:it.tg,show:[1],tol:TOL(it)};const d=it.short?.45:1.3;voice(it.tg[0],0,d);dur=d+.25;instr=it.tries?tt('Again: listen…','Ancora: ascolta…'):tt('Listen…','Ascolta…')}
- else if(it.k==='echo'){VIEW={kind:'graph',tg:it.tg,show:it.tg.map(()=>showAll?1:0),tol:TOL(it),hintDir:it.tg[1]>=it.tg[0]?1:-1};const d=.75;it.tg.forEach((m,i)=>voice(m,i*(d+.08),d));dur=it.tg.length*(d+.08)+.2;instr=tt('Listen…','Ascolta…')}
- else if(it.k==='demo'){VIEW={kind:'graph',tg:it.tg,show:[1,1],tol:TOL(it),lab:[nameM(it.tg[0]),T2(IVN[Math.abs(it.iv)])]};voice(it.tg[0],0,.8);voice(it.tg[1],.9,.9);dur=2;
+ else if(it.k==='echo'){VIEW={kind:'graph',tg:it.tg,show:it.tg.map(()=>showAll?1:0),tol:TOL(it),hintDir:it.tg[1]>=it.tg[0]?1:-1,lab:it.lab};const d=.75;it.tg.forEach((m,i)=>voice(m,i*(d+.08),d));dur=it.tg.length*(d+.08)+.2;instr=tt('Listen…','Ascolta…')}
+ else if(it.k==='demo'){VIEW={kind:'graph',tg:it.tg,show:[1,1],tol:TOL(it),lab:[(it.lab||[])[0]||nameM(it.tg[0]),T2(IVN[Math.abs(it.iv)])]};voice(it.tg[0],0,.8);voice(it.tg[1],.9,.9);dur=2;
   const sg=SONG[it.iv];instr=tt('This is a ','Questa è una ')+ivTxt(it.iv)+(sg?`<br><small>🎵 ${tt('like','come')} ${T2(sg)}</small>`:'')+`<br>${tt('Sing both notes!','Canta tutte e due le note!')}`}
- else if(it.k==='name'){VIEW={kind:'graph',tg:it.tg,show:[1,showAll?1:0],tol:TOL(it),hintDir:it.iv>0?1:-1,lab:[nameM(it.tg[0]),showAll?T2(IVN[Math.abs(it.iv)]):'?']};voice(it.tg[0],0,1);dur=1.15;
+ else if(it.k==='name'){VIEW={kind:'graph',tg:it.tg,show:[1,showAll?1:0],tol:TOL(it),hintDir:it.iv>0?1:-1,lab:[(it.lab||[])[0]||nameM(it.tg[0]),showAll?T2(IVN[Math.abs(it.iv)]):'?'],lab2:it.lab};voice(it.tg[0],0,1);dur=1.15;
   const sg=SONG[it.iv],hint=(it.tries>=1||SES.les.i<LES.findIndex(l=>l.id==='n5'))&&sg?`<br><small>🎵 ${T2(sg)}</small>`:'';instr=`${tt('This note, then a','Questa nota, poi una')}<br><span class="big">${ivTxt(it.iv)}</span>${hint}`}
  else if(it.k==='deg'){VIEW={kind:'graph',tg:it.tg,show:it.tg.map(()=>it.tries>=2?1:0),tol:TOL(it),lab:it.seq.map(d=>spell(it.K,d))};chord(it.K,it.root);voice(it.root,1.7,.9);dur=2.8;
   instr=`${kName(it.K)} · ${tt('sing','canta')}<br><span class="big">${it.seq.map(d=>spell(it.K,d)).join(' ')}</span>`}
@@ -595,7 +619,7 @@ function openMap(){stopAll();SES=null;say('');setBar('');VIEW={kind:'idle'};hdr(
 
 resize();openMap();requestAnimationFrame(frame);
 addEventListener('pagehide',micOff);
-window.__sv={nowA:()=>nowA(),PR,LES,UNITS,get SES(){return SES},get LS(){return LS},begin,segment,align,detect,openMap,next,get VIEW(){return VIEW}};
+window.__sv={itemsFor,nowA:()=>nowA(),PR,LES,UNITS,get SES(){return SES},get LS(){return LS},begin,segment,align,detect,openMap,next,get VIEW(){return VIEW}};
 })();
 </script>
 </body></html>
