@@ -249,10 +249,10 @@ function listenTick(){if(!LS||LS.done)return;const r=detect(),t=nowA()-LS.t0;let
  if(o.timed){if(t>=o.end)stopListen();return}
  if(o.calib)return;
  if(t>o.max){stopListen();return}
- if(o.n===1){if((LS.firstV!=null&&t-LS.firstV>4.5)||(LS.heard>20&&t-lastVoiced(LS.fr)>1.8))stopListen();return}
+ if(o.n===1){if((LS.firstV!=null&&t-LS.firstV>3)||(LS.heard>20&&t-lastVoiced(LS.fr)>1.8))stopListen();return}
  // several notes: stop when they are all there and the voice has rested a bit
- if(t-(LS.lastSeg||0)>.25){LS.lastSeg=t;const S=segment(LS.fr);const lastV=lastVoiced(LS.fr);
-  if((LS.firstV!=null&&t-LS.firstV>o.n*1.6+3)||(S.length>=o.n&&t-lastV>2)||(S.length&&t-lastV>3.5))stopListen()}}
+ if(t-(LS.lastSeg||0)>.2){LS.lastSeg=t;const S=segment(LS.fr);LS.segN=S.length;const lastV=lastVoiced(LS.fr);
+  if((LS.firstV!=null&&t-LS.firstV>o.n*1.6+1.5)||(S.length>=o.n&&t-lastV>2)||(S.length&&t-lastV>3.5))stopListen()}}
 const lastVoiced=fr=>{for(let i=fr.length-1;i>=0;i--)if(fr[i].m!=null)return fr[i].t;return-9};
 /* one held note: the last ~0.55 s are steady enough */
 function stable(fr,t,W=.55){a=fr.filter(f=>f.t>t-W);if(a.length<8)return null;const v=a.filter(f=>f.m!=null).map(f=>f.m);if(v.length<a.length*.75)return null;
@@ -318,29 +318,40 @@ function boardContent(B){const cx=B.x+B.w/2;
   g.strokeStyle='rgba(255,224,138,.6)';g.lineWidth=3;g.beginPath();for(let x=0;x<=B.w*.8;x+=4){const y=B.y+B.h*.85+Math.sin(x*.03+T*2)*10;x?g.lineTo(B.x+B.w*.1+x,y):g.moveTo(B.x+B.w*.1,y)}g.stroke();return}
  if(VIEW.kind==='graph')graph(B);else staffView(B)}
 /* the voice line: targets are coloured bands, your voice is the trail */
+/* the Igorlet that sings with your voice, and its shadow on the right note */
+let IGL=null,IGD=null,IGG=null,IGO=null,IGA={x:.36,y:.5};
+function igSprites(){if(IGL||!igOK||!H.igorReady||!H.igorReady())return!!IGL;const w=220,h=Math.round(w*(1+PAD)*SH/SW);
+ IGL=document.createElement('canvas');IGL.width=w;IGL.height=h;paintAvatar(IGL.getContext('2d'),{avatar:'igor',head:'cap',hcol:'#f0a020'},0,0,w,h);
+ const sc=Math.min(w/663,h/(730*(1+PAD)));IGA={x:((w-663*sc)/2+250*sc)/w,y:(PAD*730*sc+250*sc)/h};
+ // a flat shape of the Igorlet in one colour
+ const tint=col=>{const c=document.createElement('canvas');c.width=w;c.height=h;const q=c.getContext('2d');q.drawImage(IGL,0,0);q.globalCompositeOperation='source-in';q.fillStyle=col;q.fillRect(0,0,w,h);return c};
+ // the shadow to fill: dark inside, a chalk outline around (and a green one when you are in)
+ const shadow=line=>{const c=document.createElement('canvas'),P=10;c.width=w+P*2;c.height=h+P*2;const q=c.getContext('2d'),L=tint(line),D=tint('#0b1610');
+  for(let a=0;a<20;a++)q.drawImage(L,P+Math.cos(a/20*TAU)*6,P+Math.sin(a/20*TAU)*6);q.drawImage(D,P,P);return c};
+ IGD=shadow('rgba(238,242,230,.85)');IGG=shadow('#7fe08a');IGO=shadow('#ffb36a');return true}
 function graph(B){const V0=VIEW,tg=V0.tg,lo=Math.min(...tg)-3.5,hi=Math.max(...tg)+3.5,rng=Math.max(10,hi-lo),mid=(lo+hi)/2,y0=mid-rng/2,y1=mid+rng/2;
- const px=B.x+B.w*.1,pw=B.w*.86,yOf=m=>B.y+B.h*.92-(m-y0)/(y1-y0)*B.h*.8;
- // the semitone grid, with the names of the notes
- g.lineWidth=1;for(let m=Math.ceil(y0);m<=y1;m++){const y=yOf(m),pc=((m%12)+12)%12,white=LPC.includes(pc);g.strokeStyle=white?'rgba(238,242,230,.16)':'rgba(238,242,230,.06)';g.beginPath();g.moveTo(px,y);g.lineTo(px+pw,y);g.stroke();
-  if(white){chalk(Math.max(10,B.h*.034),500,'rgba(238,242,230,.4)');g.textAlign='right';g.fillText(PCN[pc],px-6,y)}}
- const n=tg.length,col=k=>px+pw*(k+.5)/n,bw=pw/n*.8,tol=V0.tol||.45;
- // the time of the trail: across the whole board
- const span=V0.span||Math.max(3,n*1.3+1.2);
- tg.forEach((m,k)=>{const vis=V0.show[k]||V0.res;if(!vis){chalk(Math.max(14,B.h*.07),700,'rgba(255,224,138,.6)');g.fillText('?',col(k),yOf(V0.tg[0]+(V0.hintDir||1)*2));return}
-  const r=V0.res&&V0.res[k],c=r?(r.ok?'#7fe08a':'#ffb36a'):'#ffe08a',y=yOf(m),hh=Math.abs(yOf(m+tol)-yOf(m-tol));
-  g.fillStyle=c;g.globalAlpha=.28;rr(g,col(k)-bw/2,y-hh/2,bw,hh,6);g.fill();g.globalAlpha=1;g.strokeStyle=c;g.lineWidth=2.5;g.beginPath();g.moveTo(col(k)-bw/2,y);g.lineTo(col(k)+bw/2,y);g.stroke();
-  chalk(Math.max(12,B.h*.045),600,c);g.fillText((V0.lab&&V0.lab[k])||nameM(m),col(k),y-hh/2-Math.max(10,B.h*.035));
-  if(r&&r.m!=null){const ys=yOf(r.m);g.fillStyle='#fff';g.beginPath();g.arc(col(k),ys,Math.max(4,B.h*.016),0,TAU);g.fill();chalk(Math.max(11,B.h*.036),600,r.ok?'#bff2b0':'#ffd6a6');g.fillText(r.ok?(Math.abs(r.err)<=.2?'✓':centsTxt(r.err)+'¢'):centsTxt(r.err)+'¢',col(k)+bw/2-Math.max(14,B.h*.05),ys+(r.err>0?-1:1)*Math.max(12,B.h*.04))}
-  if(r&&r.m==null){chalk(Math.max(12,B.h*.04),600,'#ffd6a6');g.fillText('…',col(k),y+hh)}});
- // the trail of your voice (folded into the octave of the targets)
- const fr=V0.fr||(LS&&!LS.done?LS.fr:null);if(fr&&fr.length){const ref=(V0.res&&V0.oct!=null)?V0.oct:null;let o=ref;
-  if(o==null){const v=fr.filter(f=>f.m!=null).map(f=>f.m);if(v.length)o=12*Math.round((med(v)-(tg.reduce((a,b)=>a+b,0)/n))/12)}
-  g.lineWidth=Math.max(2.5,B.h*.012);g.lineCap='round';let prev=null,pm=null;const tmax=Math.max(span,fr[fr.length-1].t+.3),cl=cleanTrail(fr);
-  for(const f of cl){if(f.m==null||(pm!=null&&Math.abs(f.m-pm)>.6)){prev=null;pm=f.m;if(f.m==null)continue}pm=f.m;const x=px+pw*f.t/tmax,y=yOf(clamp(f.m-o,y0,y1)),near=tg.some(m=>Math.abs(f.m-o-m)<=tol);
-   g.strokeStyle=near?'#bff2b0':'#f7ecd4';if(prev){g.beginPath();g.moveTo(prev.x,prev.y);g.lineTo(x,y);g.stroke()}prev={x,y}}
-  // the live dot and the name of what you are singing
-  if(LS&&!LS.done&&fr===LS.fr){const lf=cl[cl.length-1];if(lf&&lf.m!=null){const x=px+pw*lf.t/tmax,y=yOf(clamp(lf.m-o,y0,y1));g.fillStyle='#fff';g.beginPath();g.arc(x,y,Math.max(5,B.h*.02),0,TAU);g.fill();
-   chalk(Math.max(12,B.h*.045),700,'#fff');g.fillText(nameM(lf.m),Math.min(x+28,px+pw-10),y-16)}}}}
+ const px=B.x+B.w*.06,pw=B.w*.88,yOf=m=>B.y+B.h*.9-(m-y0)/(y1-y0)*B.h*.76;
+ const n=tg.length,col=k=>px+pw*(k+.5)/n,tol=V0.tol||.45,ok=igSprites();if(!ok)return;
+ const asp=IGL.width/IGL.height,sh=Math.min(B.h*.42,pw/n*.85/asp),sw=sh*asp,P=10*sh/IGL.height;
+ const put=(img,x,y,a=1,pad=0)=>{g.globalAlpha=a;g.drawImage(img,x-IGA.x*sw-pad,y-IGA.y*sh-pad,sw+pad*2,sh+pad*2);g.globalAlpha=1};
+ // where your voice is now (folded into the octave of the notes to sing, smoothed)
+ const live=LS&&!LS.done&&!V0.res,fr=live?LS.fr:null;let vNow=null,cur=0;
+ if(live){const cl=cleanTrail(fr.slice(-40)),lv=[...cl].reverse().find(f=>f.m!=null),lt=fr[fr.length-1];
+  if(lv&&lt&&lt.t-lv.t<.25){const mt=tg.reduce((a,b)=>a+b,0)/n,o=12*Math.round((lv.m-mt)/12);vNow=lv.m-o}
+  cur=n===1?0:Math.min(n-1,Math.max(0,(LS.segN||0)-(vNow!=null?1:0)));
+  if(vNow!=null)V0.disp=V0.disp==null||V0.dispK!==cur?vNow:lerp(V0.disp,vNow,.35);V0.dispK=cur}
+ tg.forEach((m,k)=>{const x=col(k),y=yOf(m),r=V0.res&&V0.res[k],vis=V0.show[k]||V0.res;
+  if(!vis){if(!V0.noQ){chalk(Math.max(18,sh*.35),700,'rgba(255,224,138,.65)');g.fillText('?',x,yOf(tg[0]+(V0.hintDir||1)*2))}return}
+  const inNow=live&&k===cur&&vNow!=null&&Math.abs(V0.disp-m)<=tol;
+  put(r?(r.ok?IGG:IGO):inNow?IGG:IGD,x,y,live&&k!==cur&&n>1?.45:.9,P);
+  chalk(Math.max(12,sh*.13),600,r?(r.ok?'#7fe08a':'#ffb36a'):'#ffe08a');g.fillText((V0.lab&&V0.lab[k])||nameM(m),x,y-IGA.y*sh-Math.max(10,sh*.1));
+  // after the verdict: your Igorlet where you sang
+  if(r&&r.m!=null){const ys=yOf(clamp(r.m,y0,y1));put(IGL,x,ys,.95);
+   chalk(Math.max(11,sh*.11),700,r.ok?'#bff2b0':'#ffd6a6');g.fillText(r.ok&&Math.abs(r.err)<=.2?'✓':centsTxt(r.err)+'¢',x+sw*.55,ys)}
+  if(r&&r.m==null){chalk(Math.max(12,sh*.12),600,'#ffd6a6');g.fillText('…',x,y+sh*.6)}});
+ // while you sing: your Igorlet goes up and down with your voice
+ if(live&&V0.disp!=null&&vNow!=null){const y=yOf(clamp(V0.disp,y0-1,y1+1)),x=col(cur);put(IGL,x,y,1);
+  chalk(Math.max(12,sh*.12),700,'#fff');g.fillText(nameM(V0.disp),x+sw*.6,y-sh*.25)}}
 
 /* what the board draws of your voice: the start of each note (where the detector wobbles) is cut, every point is the median of its neighbours,
    and a change of note is a jump, never a line: so a clean step does not look like a glide */
@@ -555,7 +566,7 @@ function micAsk(then){$('end').hidden=true;$('start').hidden=false;
  <div class="row"><button class="main" id="mok">🎤 ${tt('Turn on the microphone','Accendi il microfono')}</button><button id="mno">${tt('Back','Indietro')}</button></div><p class="small" id="merr"></p>`;
  $('mno').onclick=openMap;$('mok').onclick=async()=>{const ok=await micOn();if(ok){then()}else $('merr').innerHTML=tt('I can’t use the microphone. Allow it in the browser (the 🎤 or 🔒 icon next to the address) and try again. On a computer, check that a microphone is connected.','Non riesco a usare il microfono. Consentilo nel browser (l’icona 🎤 o 🔒 accanto all’indirizzo) e riprova. Sul computer, controlla che ci sia un microfono collegato.')}}
 /* the voice test: sing a comfortable "aaah", I find your middle */
-function calib(then){$('start').hidden=true;$('end').hidden=true;SES=null;hdr();VIEW={kind:'graph',tg:[V()],show:[0],tol:.5,span:5};
+function calib(then){$('start').hidden=true;$('end').hidden=true;SES=null;hdr();VIEW={kind:'graph',tg:[V()],show:[0],tol:.5,span:5,noQ:1};
  say(tt('First, your voice. Sing a long, comfortable <b>“aaah”</b>: not high, not low. Like when you talk.','Prima, la tua voce. Canta un <b>“aaah”</b> lungo e comodo: né alto né basso. Come quando parli.'));
  const go=()=>{listen({n:1,max:99,calib:1});LS.item={calib:1};setBar(`<div class="row"><div class="mic"><span class="dot">🎤</span>${tt('Aaah…','Aaah…')}<span class="lv"><i></i></span></div></div>`);
   const chk=setInterval(()=>{if(!LS||LS.done||!LS.item||!LS.item.calib){clearInterval(chk);return}const t=nowA()-LS.t0,st=stable(LS.fr.filter(f=>f.t>t-1.1),t);
