@@ -221,19 +221,19 @@ function ding(ok){if(!AC)return;(ok?[79,84]:[67,64]).forEach((m,i)=>piano(m,i*.0
 function chord(K,root,t=0){const th=SCALE[K.m];[0,th[2],7].forEach((x,i)=>piano(root+x,t+i*.16,1.6,.13));[0,th[2],7].forEach(x=>piano(root+x,t+.6,1.4,.08))}
 
 /* ================= the microphone and the pitch ================= */
-let MIC=null,AN=null,DEC=2,YB=null;const YH=new Float32Array(1100),YD=new Float32Array(800);let NF=.004;
-async function micOn(){if(MIC)return true;audio();try{const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+let MIC=null,AN=null,DEC=2,YB=null;const YH=new Float32Array(1100),YD=new Float32Array(800);let NF=.001;
+async function micOn(){if(MIC)return true;audio();try{const st=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});
   const src=AC.createMediaStreamSource(st);DEC=AC.sampleRate>70000?4:AC.sampleRate>30000?2:1;AN=AC.createAnalyser();AN.fftSize=1024*DEC;YB=new Float32Array(AN.fftSize);src.connect(AN);MIC=st;return true}
  catch(e){console.warn(e);return false}}
 function micOff(){if(MIC){MIC.getTracks().forEach(t=>t.stop());MIC=null;AN=null}}
 /* YIN on a slightly downsampled window: returns the MIDI pitch (with decimals) or null, and the loudness */
 function detect(){if(!AN)return{m:null,rms:0};AN.getFloatTimeDomainData(YB);const sr=AC.sampleRate/DEC,N=1024;let rms=0;
  for(let i=0;i<N;i++){let x=0;for(let k=0;k<DEC;k++)x+=YB[i*DEC+k];x/=DEC;YH[i]=x;rms+=x*x}rms=Math.sqrt(rms/N);
- const thr=Math.max(.007,NF*3);if(rms<thr){NF=NF*.97+rms*.03;return{m:null,rms}}
+ const thr=Math.max(.003,NF*2.5);if(rms<thr){NF=NF*.97+rms*.03;return{m:null,rms}}
  const W=512,tmin=Math.max(2,Math.floor(sr/1050)),tmax=Math.min(N-W-2,Math.ceil(sr/68));let sum=0,best=-1;YD[0]=1;
  for(let t=1;t<=tmax;t++){let s=0;for(let i=0;i<W;i++){const x=YH[i]-YH[i+t];s+=x*x}sum+=s;YD[t]=sum?s*t/sum:1}
- for(let t=tmin;t<=tmax;t++)if(YD[t]<.15){while(t+1<=tmax&&YD[t+1]<YD[t])t++;best=t;break}
- if(best<0){let mn=9;for(let t=tmin;t<=tmax;t++)if(YD[t]<mn){mn=YD[t];best=t}if(mn>.32)return{m:null,rms}}
+ for(let t=tmin;t<=tmax;t++)if(YD[t]<.2){while(t+1<=tmax&&YD[t+1]<YD[t])t++;best=t;break}
+ if(best<0){let mn=9;for(let t=tmin;t<=tmax;t++)if(YD[t]<mn){mn=YD[t];best=t}if(mn>.4)return{m:null,rms}}
  const a=YD[best-1],b=YD[best],c=best+1<=tmax?YD[best+1]:b,den=a-2*b+c,sh=den?clamp(.5*(a-c)/den,-1,1):0,f=sr/(best+sh);
  if(f<65||f>1100)return{m:null,rms};return{m:69+12*Math.log2(f/440),rms}}
 
@@ -243,7 +243,8 @@ function listen(o){LS={t0:nowA(),fr:[],o,last:null,lvl:0,done:false,heard:0};}
 function listenTick(){if(!LS||LS.done)return;const r=detect(),t=nowA()-LS.t0;let m=r.m;LS.lvl=r.rms;
  // octave slips of the detector: keep the line continuous
  if(m!=null&&LS.last!=null){const d=m-LS.last;if(Math.abs(d-12)<.8)m-=12;else if(Math.abs(d+12)<.8)m+=12}
- if(m!=null){LS.last=m;LS.heard+=1;if(LS.firstV==null)LS.firstV=t}
+ if(!LS.o.timed&&t<.3)m=null; // the room still rings with Kodigor's note
+ if(m!=null){LS.last=m;LS.heard+=1;LS.run=(LS.run||0)+1;if(LS.firstV==null&&LS.run>=12)LS.firstV=t-.2}else LS.run=0;
  LS.fr.push({t,m});const o=LS.o;
  if(o.timed){if(t>=o.end)stopListen();return}
  if(o.calib)return;
